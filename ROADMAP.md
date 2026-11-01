@@ -18,6 +18,7 @@ Key: ✅ done · 🔨 in progress · ⏳ to do · 🔬 to research · 💡 idea,
 - ✅ **Saves above 2 GB** (`save_over_2gb`), the same as save2gb.
 - ✅ **Regen ages** from a table (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Younger regens**, petermf23's idea: 22 or older, 6 years younger (`younger_from_age`, `younger_by`).
+- 🔨 **Clubless only without room** (`unattached = only_if_no_room`): every youngster from a nation in the game goes to the contest; to be measured in a career against `original`.
 - ✅ **The contest by proportional draw** (`rule = new`): level × facilities × staff × room.
 - ✅ The tools: `calibrar.py` (both rules with a save's real clubs), `regens_por_clube.py`, `simula_nota.py`.
 

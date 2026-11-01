@@ -18,6 +18,7 @@ Legenda: ✅ feito · 🔨 em andamento · ⏳ a fazer · 🔬 a pesquisar · �
 - ✅ **Save acima de 2 GB** (`save_over_2gb`), o mesmo do save2gb.
 - ✅ **Idade dos regens** por tabela (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Regens mais novos**, a ideia de petermf23: com 22 anos ou mais, 6 a menos (`younger_from_age`, `younger_by`).
+- 🔨 **Sem clube só sem vaga** (`unattached = only_if_no_room`): todo jovem de nação no jogo vai à disputa; a medir numa carreira contra a de `original`.
 - ✅ **A disputa por sorteio proporcional** (`rule = new`): nível × instalações × comissão × vaga.
 - ✅ As ferramentas: `calibrar.py` (as duas regras com os clubes reais de um save), `regens_por_clube.py`, `simula_nota.py`.
 

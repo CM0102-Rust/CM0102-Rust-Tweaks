@@ -121,6 +121,17 @@ const INATIVOS: Parte = Parte {
     corpo: &[(0x7a8050, 0x143)],
     assinatura_do_corpo: 0x286a5dd95fa250e1,
 };
+
+/// Quem vai à disputa (fim da 0x7abac0): na nação no jogo, só com menos de 19 anos (`jge` em 0x7ace6a, depois do `cmp` que a
+/// IDADE ajusta) e 3 vezes em 4 (`sorteio(4)` em 0x7ace89..0x7ace9b); os outros ficam sem clube. Sem corpo à parte: o trecho é
+/// a borda, e um exe que o mude não liga a parte.
+const SEM_CLUBE: Parte = Parte {
+    nome: "unattached",
+    bordas: &[(0x7ace6a, 0x31)],
+    assinatura_das_bordas: 0x78a11e46a6bf2458,
+    corpo: &[],
+    assinatura_do_corpo: 0xcbf29ce484222325,
+};
 /// Pode ligar a parte? Escreve no log o motivo quando não liga, ou quando sobrescreve uma modificação do exe.
 unsafe fn pode_ligar(p: &Parte, sobrescrever: bool) -> bool {
     let b = assinatura(p.bordas);
@@ -165,6 +176,15 @@ unsafe fn desviar(de: usize, para: usize) {
     core::ptr::write_unaligned((de + 1) as *mut i32, para.wrapping_sub(de + 5) as i32);
     VirtualProtect(de as *mut c_void, 5, antiga, &mut antiga);
     FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
+}
+
+/// Troca `n` bytes do exe por NOP.
+unsafe fn nops(de: usize, n: usize) {
+    let mut antiga = 0u32;
+    VirtualProtect(de as *mut c_void, n, 0x40, &mut antiga);
+    core::ptr::write_bytes(de as *mut u8, 0x90, n);
+    VirtualProtect(de as *mut c_void, n, antiga, &mut antiga);
+    FlushInstructionCache(GetCurrentProcess(), de as *const c_void, n);
 }
 
 // ---------- diagnóstico (só com log = 1) ----------
@@ -312,6 +332,9 @@ struct Regras {
     surpresa: f64,
     temperatura: f64,
     registrar: bool,
+    /// unattached = only_if_no_room: todo jovem de nação no jogo vai à disputa (qualquer idade, sem o 1 em 4); fica sem
+    /// clube só quando nenhum clube do país é elegível.
+    so_sem_vaga: bool,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -350,6 +373,7 @@ const PADRAO: Regras = Regras {
     surpresa: 15.0,
     temperatura: 1.0,
     registrar: false,
+    so_sem_vaga: false,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -391,6 +415,10 @@ fn ler_regras() -> Regras {
         }
         if k == "retire_idle_players" {
             r.inativos = v == "1";
+            continue;
+        }
+        if k == "unattached" {
+            r.so_sem_vaga = v == "only_if_no_room"; // unattached = original | only_if_no_room
             continue;
         }
         if k == "save_over_2gb" {
@@ -845,6 +873,14 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             if *(0x7a5806 as *const u8) == 0xe9 {
                 registro::linha("retire idle players: note: this exe skips retirements under 34 (a NickPatcher option), so this rule will rarely find anyone");
             }
+        }
+        // depois da IDADE, que confere 0x7ace65..0x7ace6b antes de mexer no corte
+        if !r.so_sem_vaga {
+            registro::linha("unattached: original (under 19, 3 times in 4, go to the clubs' contest; the rest start without a club)");
+        } else if pode_ligar(&SEM_CLUBE, s) {
+            nops(0x7ace6a, 6); // o corte da idade
+            nops(0x7ace89, 0x12); // o sorteio de 1 em 4
+            registro::linha("unattached: only_if_no_room (every youngster from a nation in the game goes to the contest; without a club only if no club there has room)");
         }
         if !r.novo && r.registrar {
             if assinatura(DISPUTA.bordas) == DISPUTA.assinatura_das_bordas && instalar_observacao() {
