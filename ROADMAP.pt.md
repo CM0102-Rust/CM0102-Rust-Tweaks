@@ -35,7 +35,6 @@ A configuração que a DLL distribui.
 | idades | a tabela original + regens mais novos | a ideia de petermf23 |
 
 **Aberto:**
-- ⏳ **Surpresa** (`surprise`, proposta 15%): uma parte dos jovens sorteada ignorando o nível, só entre clubes que disputam uma competição. É o jovem de PA alto que nasce no clube pequeno (Ronaldo no São Cristóvão); o mercado o leva depois.
 - ⏳ **A aleatoriedade** (`temperature`, proposta 1, o sorteio proporcional puro): com a surpresa, ela deixa de ser o botão da aleatoriedade.
 - ⏳ **A comissão** (`staff_min` e `staff_max`, hoje de 0,8 a 1,2): confirmar o peso.
 - ⏳ **Calibrar** a configuração completa na Inglaterra, no Brasil e numa liga média (Itália ou Portugal), e fechar os números.

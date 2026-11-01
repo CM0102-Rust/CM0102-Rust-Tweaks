@@ -35,7 +35,6 @@ The configuration the DLL ships with.
 | ages | the original table + younger regens | petermf23's idea |
 
 **Open:**
-- ⏳ **Surprise** (`surprise`, proposed 15%): a share of the youngsters drawn ignoring the level, only among clubs that play in a competition. It's the high-PA youngster born at a small club (Ronaldo at São Cristóvão); the market moves him later.
 - ⏳ **Randomness** (`temperature`, proposed 1, the plain proportional draw): with surprise, it stops being the randomness knob.
 - ⏳ **Staff** (`staff_min` and `staff_max`, now 0.8 to 1.2): confirm the weight.
 - ⏳ **Calibrate** the full configuration on England, Brazil and a mid-size league (Italy or Portugal), and settle the numbers.
