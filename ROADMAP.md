@@ -57,6 +57,14 @@ The configuration the DLL ships with.
 - ⏳ Saves: write and load with and without the DLL, and a save above 2 GB.
 - ⏳ NickPatcher and CLZ exes, with `override_exe_changes` at 0 and at 1.
 
+## Phase 2b: the exe snapshot 🔨
+
+Today the DLL only notices changes in the routines it replaces. On CLZ, NickPatcher changed the caller of the idle rule (the retirement search, 0x7a5790), and that went unnoticed. To document behaviour without depending on other people's exes (Lucas's decision, 11/01/2026), in three layers:
+
+1. 🔨 **A snapshot of the whole exe** against the original 3.9.68: code function by function, data (`.rdata`, `.data`) in blocks, and new sections (like `.nick`), with the jumps into them. In the DLL, two snapshots: the file on disk (what the patcher wrote) and memory after the other DLLs load (what changes at run time). First as a standalone tool (`tools/retrato_exe.py`, ready: on CLZ it recognises 85 catalogue patches, among them RetirePatchV4, which zeroed the idle retirements, and lists the 16 thousand unnamed bytes by function), then inside the DLL.
+2. 🔨 **Naming the changes**, from NickPatcher's catalogue (the community patches in `MiscPatches.zip`, with bytes and descriptions, and Nick's own options in `Patcher.cs`), read as data and crediting Nick+Co and the authors. Anything not in the catalogue shows as an unknown change, with the function's name.
+3. ⏳ **What affects each tweak:** from the original exe's call graph, who calls and who is called by the routine each tweak replaces; if any of them is changed, the log warns.
+
 ## Phase 3: the configurator (options picker) ⏳
 
 A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't need to be Tauri, but it should look good and be visual:

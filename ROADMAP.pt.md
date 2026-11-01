@@ -57,6 +57,14 @@ A configuração que a DLL distribui.
 - ⏳ Save: gravar e carregar com e sem a DLL, e um save acima de 2 GB.
 - ⏳ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
 
+## Fase 2b: o retrato do exe 🔨
+
+Hoje a DLL só percebe as mudanças nas rotinas que ela troca. No CLZ, o NickPatcher mudou quem chama a regra dos inativos (a busca de aposentadorias, 0x7a5790), e isso passou despercebido. Para documentar comportamentos sem depender do exe alheio (decisão do Lucas, 01/11/2026), em três camadas:
+
+1. 🔨 **O retrato do exe inteiro** contra o 3.9.68 original: o código função por função, os dados (`.rdata`, `.data`) em blocos e as seções novas (como a `.nick`), com os desvios que saltam para elas. Na DLL, dois retratos: o do arquivo no disco (o que o patcher gravou) e o da memória depois que as outras DLLs carregaram (o que muda em tempo de execução). Primeiro como ferramenta à parte (`tools/retrato_exe.py`, pronta: no CLZ, reconhece 85 patches do catálogo, entre eles o RetirePatchV4 que zerou os inativos, e lista por função os 16 mil bytes sem nome), depois dentro da DLL.
+2. 🔨 **O nome das mudanças**, pelo catálogo do NickPatcher (os patches da comunidade em `MiscPatches.zip`, com bytes e descrição, e as opções do próprio Nick no `Patcher.cs`), lido como dado e com o crédito a Nick+Co e aos autores. O que não estiver no catálogo aparece como mudança desconhecida, com o nome da função.
+3. ⏳ **O que afeta cada ajuste:** pelo grafo de chamadas do exe original, quem chama e quem é chamado pela rotina que cada ajuste troca; alterada alguma, o log avisa.
+
 ## Fase 3: o configurador (seletor de opções) ⏳
 
 Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precisa ser Tauri, mas deve ser bonito e visual:

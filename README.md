@@ -30,6 +30,7 @@ The plan is in [ROADMAP.md](ROADMAP.md).
 | `tools/simula_nota.py` | The document's made-up clubs example (§7) |
 | `tools/regens_por_clube.py` | Regens per club in a save, by reputation and Training band |
 | `tools/sav.py` | Reads the items of a `.sav` |
+| `tools/retrato_exe.py` | A snapshot of an exe against the original 3.9.68: what changed, function by function (`tools/mapa_funcoes.csv` and the community map's names), new sections and the jumps into them, and each change's name from NickPatcher's catalogue (`MiscPatches.zip`); anything not in the catalogue shows as an unnamed change. `python tools/retrato_exe.py original.exe other.exe --catalogo MiscPatches.zip --nomes cm0102-function-map/map --saida snapshot.md` |
 
 Build: `cargo build --release` (output in `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
