@@ -30,6 +30,8 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
 | `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
 | `tools/sav.py` | Leitura dos itens de um `.sav` |
+| `tools/gerar_referencia.py` | Gera `src/referencia.rs` (o hash de cada função e bloco do 3.9.68) para o retrato da DLL |
+| `tools/ler_retrato.py` | Dá nome às linhas do retrato no `tweaks.log` |
 | `tools/retrato_exe.py` | O retrato de um exe contra o 3.9.68 original: o que mudou, função por função (`tools/mapa_funcoes.csv` e os nomes do mapa da comunidade), as seções novas e os desvios para elas, e o nome de cada mudança pelo catálogo do NickPatcher (`MiscPatches.zip`); o que não está no catálogo aparece como mudança sem nome. `python tools/retrato_exe.py original.exe outro.exe --catalogo MiscPatches.zip --nomes cm0102-function-map/map --saida retrato.md` |
 
 Compilar: `cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`).
@@ -127,6 +129,8 @@ Cada clube recebe um **peso**, e o clube é sorteado **na proporção do peso**,
 | Temperatura | expoente: 1 proporcional, maior mais previsível, menor mais aleatório | `temperature` |
 
 Com `log = 1`, o `tweaks.log` registra o que acontece, uma linha por evento: `tick` (a data do jogo a cada mês, com o resumo, para saber se a carreira anda mesmo quando nenhum ajuste escreve), `regen` (cada jovem da disputa, pela regra nova, pela original ou pela do exe), `birth` (cada nascimento pela tabela de idades), `idle` (cada aposentadoria pelos inativos), `check` (os desvios conferidos depois das DLLs do exe) e `crash` (a primeira violação de acesso, com endereço e registradores). O `tools/comparar_logs.py` compara dois logs.
+
+**O retrato do exe**, sempre no começo do log: `exe` diz se o exe é o 3.9.68 sem mudanças ou quantas funções e blocos de dados mudaram, o ponto de entrada, as seções novas e os casos já identificados (Regen Tweak, opções do NickPatcher, faixas de idade do CLZ); `runtime` diz se outra DLL mudou o código do exe depois de carregar e avisa quando a mudança cai num trecho que um ajuste conferiu na abertura. Com `log = 1`, as linhas `exe-fn`, `exe-data` e `runtime-fn` listam cada função e bloco; `python tools/ler_retrato.py tweaks.log --exe o_exe.exe --catalogo MiscPatches.zip --nomes cm0102-function-map/map` põe o nome da função e dos patches do catálogo do NickPatcher. Assim, um `tweaks.log` enviado por alguém já diz com que exe ele joga.
 
 ## A calibração (simulador, `TesteTelas.sav`, 200 temporadas)
 

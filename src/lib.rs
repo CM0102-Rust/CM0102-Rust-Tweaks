@@ -20,6 +20,9 @@ use core::ffi::c_void;
 
 // O save acima de 2 GB (o do save2gb): as três rotinas do contêiner.
 mod conteiner;
+// O retrato do exe contra o 3.9.68 (o arquivo na abertura, a memória depois das DLLs do exe).
+mod referencia;
+mod retrato;
 
 /// Os contadores de ramo do projeto: aqui não contam nada.
 mod comparacao {
@@ -141,12 +144,14 @@ unsafe fn pode_ligar(p: &Parte, sobrescrever: bool) -> bool {
     }
     let c = assinatura(p.corpo);
     if c == p.assinatura_do_corpo {
+        (*core::ptr::addr_of_mut!(LIGADAS)).push((p.nome, p.bordas));
         return true;
     }
     // o Regen Tweak de xeno/Saturn (elenco 45 em 0x7ad1bd) é o caso conhecido; nomeá-lo ajuda quem lê o log
     let conhecido = if p.nome == DISPUTA.nome && *(0x7ad1bf as *const u8) == 0x2d { " (the Regen Tweak by xeno/Saturn: squad limit 45)" } else { "" };
     if sobrescrever {
         registro::linha(&format!("{}: this exe already changes this routine{} (signature {:016x}); overriding it (override_exe_changes = 1)", p.nome, conhecido, c));
+        (*core::ptr::addr_of_mut!(LIGADAS)).push((p.nome, p.bordas));
         true
     } else {
         registro::linha(&format!("{}: this exe already changes this routine{} (signature {:016x}); keeping the exe's own routine (override_exe_changes = 0)", p.nome, conhecido, c));
@@ -170,6 +175,7 @@ unsafe fn assinatura(trechos: &[(usize, usize)]) -> u64 {
 /// Salto (E9) da entrada da rotina original para a versão em Rust.
 unsafe fn desviar(de: usize, para: usize) {
     (*core::ptr::addr_of_mut!(DESVIOS)).push((de, para));
+    (*core::ptr::addr_of_mut!(MARCAS)).push((de, 5));
     let mut antiga = 0u32;
     VirtualProtect(de as *mut c_void, 5, 0x40, &mut antiga);
     *(de as *mut u8) = 0xe9;
@@ -180,6 +186,7 @@ unsafe fn desviar(de: usize, para: usize) {
 
 /// Troca `n` bytes do exe por NOP.
 unsafe fn nops(de: usize, n: usize) {
+    (*core::ptr::addr_of_mut!(MARCAS)).push((de, n));
     let mut antiga = 0u32;
     VirtualProtect(de as *mut c_void, n, 0x40, &mut antiga);
     core::ptr::write_bytes(de as *mut u8, 0x90, n);
@@ -198,6 +205,10 @@ static NASCIDOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::
 static APOSENTADOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 /// Os desvios instalados: (endereço no exe, destino), para conferir depois que as outras DLLs do exe carregaram.
 static mut DESVIOS: Vec<(usize, usize)> = Vec::new();
+/// Todo trecho do exe que esta DLL escreve (início, tamanho): o retrato da memória não os conta como de outra DLL.
+static mut MARCAS: Vec<(usize, usize)> = Vec::new();
+/// As partes que ligaram e as bordas que conferiram: o retrato da memória avisa se outra DLL mexeu nelas depois.
+static mut LIGADAS: Vec<(&'static str, &'static [(usize, usize)])> = Vec::new();
 
 /// As primeiras exceções graves (até 3: violação de acesso, divisão por zero, estouro de pilha, instrução inválida) vão para o log com o endereço, os registradores e o topo da pilha, antes de o
 /// jogo cair: sem isso, uma queda num exe com outra DLL (a NickDLL do CLZ) não deixa rastro.
@@ -742,6 +753,7 @@ unsafe fn instalar_idade(r: &Regras) -> bool {
     core::ptr::copy_nonoverlapping(c.as_ptr(), t, c.len());
     desviar(0x7ac597, t as usize);
     let mut antiga = 0u32;
+    (*core::ptr::addr_of_mut!(MARCAS)).push((0x7ace69, 1));
     VirtualProtect(0x7ace69 as *mut c_void, 1, 0x40, &mut antiga);
     *(0x7ace69 as *mut u8) = (r.idade_max_disputa + 1) as u8;
     VirtualProtect(0x7ace69 as *mut c_void, 1, antiga, &mut antiga);
@@ -839,6 +851,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         if r.registrar {
             AddVectoredExceptionHandler(1, ao_falhar);
         }
+        retrato::do_disco(r.registrar);
         let s = r.sobrescrever;
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
@@ -931,10 +944,13 @@ unsafe fn proxima_ddraw() -> Option<FnDirectDrawCreate> {
 #[no_mangle]
 pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *mut c_void, externo: *mut c_void) -> i32 {
     static mut CONFERIDO: bool = false;
-    if REGRAS.registrar && !CONFERIDO {
+    if !CONFERIDO {
         CONFERIDO = true;
-        conferir_desvios();
-        iniciar_batida();
+        retrato::da_memoria(&*core::ptr::addr_of!(MARCAS), &*core::ptr::addr_of!(LIGADAS), REGRAS.registrar);
+        if REGRAS.registrar {
+            conferir_desvios();
+            iniciar_batida();
+        }
     }
     match proxima_ddraw() {
         Some(f) => f(guid, saida, externo),
