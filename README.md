@@ -10,6 +10,7 @@ Each tweak has its own switch in `tweaks.cfg`, next to the exe. **They all start
 |---|---|
 | `save_over_2gb = 1` | **Saves above 2 GB** (up to 4 GB), the same fix as save2gb: the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs` |
 | `ages = custom` | **Regen ages** from a table (§ Ages) |
+| `retire_idle_players = 1` | **Retiring idle players**: a player without a club that nobody wants retires sooner, and his record becomes a regen (§ Retiring idle players) |
 | `rule = new` | The **clubs' contest** for a youth regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) becomes a proportional draw (§ The new rule). The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md) |
 
 When this repository goes public, it replaces `CM0102-Rust/cm0102-save2gb`, which will point here: every future change lives here. That's why the save fix is in this DLL; with a single DLL, nobody needs to chain two `ddraw.dll` files.
@@ -38,11 +39,11 @@ Each tweak checks two signatures (FNV-1a) before turning on:
 
 On the exes we have [observed]:
 
-| Exe | Save | Ages | Ages (not in the game) | Contest |
-|---|---|---|---|---|
-| `cm0102.exe`, `cm0102-1080.exe`, portable | on | on | on | on |
-| the three CLZ exes | on | exe's | exe's | exe's (Regen Tweak) |
-| `cm0102_GDI.exe` | never | never | never | never |
+| Exe | Save | Ages | Ages (not in the game) | Idle players | Contest |
+|---|---|---|---|---|---|
+| `cm0102.exe`, `cm0102-1080.exe`, portable | on | on | on | on | on |
+| the three CLZ exes | on | exe's | exe's | on | exe's (Regen Tweak) |
+| `cm0102_GDI.exe` | never | never | never | never | never |
 
 "Exe's" becomes "on" with `override_exe_changes = 1`. The log names the xeno/Saturn Regen Tweak when it finds it.
 
@@ -55,6 +56,45 @@ The youngster's age is drawn in a block of `regenerate_as_youth_player` (0x7ac59
 - A deliberate difference: the CA cap becomes one value per age. In the original, the cap at 17 and 18 depends on the band that was drawn (80 or 90, 100 or 110).
 - Nations not in the game with reputation < 350 have their own draw in the original: mostly 23 to 27, sometimes 17 to 23, and there the age picks the CA formula (younger, lower CA), with no cap. With `ages_out_of_game = table` they use the table too (0x7abeb1..0x7abeea); the CA formula by age stays the original one, and the table's caps don't apply there. The default is `original`.
 - **The CLZ exes already change the ages** [observed in the bytes]: the very rare 15-to-18 band becomes 14 to 17 (0x7ac5b1), the rare 21-to-26 band becomes 20 to 25 (0x7ac699), and nations not in the game use the playable nations' draw (`jmp` at 0x7abeab). They also carry the full Regen Tweak (0x7ad1bf `0x2d` and 0x7a6f48 `jl`) and another change to the youngsters' nationality switch (0x7abcd7..0x7abd1c). By default the DLL leaves those routines to the exe.
+
+## Retiring idle players
+
+Every regen is born from a retired player's record. So retiring players nobody wants sooner means more regens a year. The total population doesn't change, and neither does the save format.
+
+**How the original game retires players** (on days 0, 80, 173 and 250 of the year, `find_new_retirements` 0x7a5790) [observed in the code]:
+
+1. **The age rule** (`player_regen_check_retirement` 0x7a7310) only applies past the position's age limit, taken from the player record:
+
+   | Position | Limit |
+   |---|---|
+   | goalkeeper | 34 |
+   | striker, or attacking midfielder | 30 |
+   | the others | 31 |
+
+   Past the limit, he retires, among other cases:
+   - over 45;
+   - over 34 and 65+ days without a club: in practice, automatic;
+   - by the score (1 − 0.075 × years past the limit) × reputation, with random draws.
+2. **The unemployed rule** (`player_regen_check_unemployed_retirement` 0x7a8050), when the first one didn't retire him. **It ignores age**: 365+ days without a club, he retires with random(current reputation) < 750. Even a 22-year-old regen nobody signed can go this way. Anyone on a club's shortlist doesn't retire.
+
+**There's a queue:** a retiring player goes to a list with a date (today, for the unemployed rule; usually the end of the season, for the age rule). On that date his record goes to the pool, his slot joins the regen queue (today, or in 1 to 65 days from age 30), and the regen is born when there's a record. So one more retirement means one more regen, a few weeks later.
+
+**What `retire_idle_players = 1` changes** (0x7a8050 replaced; the age rule stays as it is), for players only:
+
+| Switch | Default | What |
+|---|---|---|
+| `idle_days` | 180 | days without a club (the original: 365) |
+| `idle_min_age` | 28 | from this age the new rule applies; below it, the original one |
+| `idle_rep` | 1500 | the draw threshold at `idle_min_age` (the original: 750) |
+| `idle_rep_per_year` | 250 | how much the threshold rises per year of age |
+| `protect_young_unemployed` | 23 | below this age, the unemployed rule never retires him (0: no protection) |
+
+He retires when random(current reputation) < `idle_rep` + `idle_rep_per_year` × (age − `idle_min_age`). Example, with reputation 3000:
+- at 28, 50% per check;
+- at 31, 75%;
+- at 34, 100%.
+
+A good unemployed 28-year-old (reputation 6000) gets 25% per check and has time to find a club. Managers without a club keep the original rule, and anyone on a shortlist still doesn't retire.
 
 ## The new rule
 

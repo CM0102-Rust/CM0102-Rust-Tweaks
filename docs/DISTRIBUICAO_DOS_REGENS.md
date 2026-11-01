@@ -24,6 +24,19 @@ Complementa [MARCA_DO_REGEN.md](MARCA_DO_REGEN.md) (§4 e §8: a fila, a reserva
 
 A reserva de fichas é o gargalo. Os não jogadores também entram na fila, mas sem ficha. Logo, **regens jogadores por temporada = fichas de jogador liberadas por temporada** [observado; ver MARCA_DO_REGEN §8].
 
+**As duas regras da aposentadoria do jogador** [observado; as duas estão reescritas em Rust no projeto]:
+
+1. `player_regen_check_retirement` 0x7a7310: só para quem passou do **limite de idade da posição**, pela ficha (goleiro, +0xf ≥ 15: 34; atacante, +0x15 ≥ 15: 30; meia ofensivo, +0x14 ≥ 15: 30; os outros: 31). Acima do limite, aposenta, entre outros casos:
+   - acima de 45 anos;
+   - acima de 34 anos e sem clube há mais de 65 dias (na prática, automático);
+   - 3 anos acima do limite, sem clube ou com o contrato perto do fim;
+   - pela nota v = ⌊(1 − 0,075 × anos acima do limite) × reputação atual⌋, com sorteios (v > 5500 não aposenta; v < 1500 aposenta, entre outros cortes).
+2. `player_regen_check_unemployed_retirement` 0x7a8050, quando a primeira não aposentou. **Não olha a idade**: sem clube e sem seleção há mais de 365 dias, aposenta com sorteio(reputação atual) < 750. Quem está numa lista de observados não se aposenta; o técnico sem clube com +0xa < 50, em 1 de 5.
+
+Quem se aposenta entra na lista de aposentadorias com uma data: hoje, na regra do desempregado; na da idade, em geral o fim da temporada da nação (sem nação-chave válida, hoje + sorteio(20)). Na data, `process_retirements` 0x7a59e0 manda a ficha para a reserva e a vaga para a fila dos regens.
+
+**Como dar mais regens por ano sem tabela nova** [inferência pelo fluxo acima]: aposentar mais cedo quem ninguém quer. A ficha liberada vira um regen algumas semanas depois, e a população total não muda. É o `retire_idle_players` do CM0102-Rust-Tweaks.
+
 Contagens nos saves [observado]:
 
 | Save | Duração | Regens jogadores vivos |

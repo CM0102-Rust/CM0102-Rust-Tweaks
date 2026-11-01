@@ -106,6 +106,15 @@ const DISPUTA: Parte = Parte {
     assinatura_do_corpo: 0xa59f8acea76c7152,
 };
 
+/// A aposentadoria do desempregado (`player_regen_check_unemployed_retirement`, 0x7a8050..0x7a8193, stdcall ret 8): a
+/// entrada e o começo das rotinas que a nova chama (a lista de observados 0x842080 e o sorteio); o corpo é a rotina.
+const INATIVOS: Parte = Parte {
+    nome: "retire idle players",
+    bordas: &[(0x7a8050, 5), (0x842080, 32), (0x90cfc0, 32)],
+    assinatura_das_bordas: 0x2e5b640ea518fc61,
+    corpo: &[(0x7a8050, 0x143)],
+    assinatura_do_corpo: 0x286a5dd95fa250e1,
+};
 /// Pode ligar a parte? Escreve no log o motivo quando não liga, ou quando sobrescreve uma modificação do exe.
 unsafe fn pode_ligar(p: &Parte, sobrescrever: bool) -> bool {
     let b = assinatura(p.bordas);
@@ -181,6 +190,16 @@ struct Regras {
     elenco_teto: f64,
     elenco_exp: f64,
     teto_temporada: f64,
+    /// retire_idle_players: a aposentadoria do desempregado com as chaves abaixo (a 0x7a8050 trocada).
+    inativos: bool,
+    /// idle_days, idle_min_age, idle_rep, idle_rep_per_year: com idle_min_age anos ou mais e sem clube há mais de idle_days
+    /// dias, aposenta com sorteio(reputação atual) < idle_rep + idle_rep_per_year × (idade − idle_min_age).
+    inativo_dias: i32,
+    inativo_idade: i32,
+    inativo_rep: f64,
+    inativo_rep_por_ano: f64,
+    /// protect_young_unemployed: abaixo dessa idade a regra do desempregado não aposenta jogador (0: sem proteção).
+    proteger_jovens: i32,
     /// surprise: % dos jovens sorteados sem o fator do nível, só entre clubes de competição que roda no jogo.
     surpresa: f64,
     temperatura: f64,
@@ -213,6 +232,12 @@ const PADRAO: Regras = Regras {
     elenco_teto: 48.0,
     elenco_exp: 0.5,
     teto_temporada: 2.0,
+    inativos: false,
+    inativo_dias: 180,
+    inativo_idade: 28,
+    inativo_rep: 1500.0,
+    inativo_rep_por_ano: 250.0,
+    proteger_jovens: 23,
     surpresa: 15.0,
     temperatura: 1.0,
     registrar: false,
@@ -255,6 +280,10 @@ fn ler_regras() -> Regras {
             r.sobrescrever = v == "1";
             continue;
         }
+        if k == "retire_idle_players" {
+            r.inativos = v == "1";
+            continue;
+        }
         if k == "save_over_2gb" {
             r.save = v == "1";
             continue;
@@ -272,6 +301,11 @@ fn ler_regras() -> Regras {
             "squad_limit" => r.elenco_teto = x.clamp(1.0, 50.0),
             "squad_exp" => r.elenco_exp = x,
             "season_cap" => r.teto_temporada = x,
+            "idle_days" => r.inativo_dias = (x as i32).max(0),
+            "idle_min_age" => r.inativo_idade = x as i32,
+            "idle_rep" => r.inativo_rep = x.max(0.0),
+            "idle_rep_per_year" => r.inativo_rep_por_ano = x.max(0.0),
+            "protect_young_unemployed" => r.proteger_jovens = (x as i32).max(0),
             "surprise" => r.surpresa = x.clamp(0.0, 100.0),
             "temperature" => r.temperatura = x,
             "log" => r.registrar = x != 0.0,
@@ -527,6 +561,65 @@ unsafe fn instalar_idade_fora() -> bool {
     desviar(0x7abeb1, t as usize);
     true
 }
+/// Está na lista de observados de algum clube (0x842080 do gerente de listas em [[0xde1f54] + 0x856])?
+unsafe fn observado(pessoa: usize) -> bool {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
+    f(d(d(0xde1f54) + 0x856), pessoa, 0) != 0
+}
+
+/// { 0x7a8050 } (stdcall, ret 8): `player_regen_check_unemployed_retirement(pessoa, saida)`, com `retire_idle_players`.
+/// A original (a mesma cópia em Rust do projeto CM0102, comparada sem divergência): o observado não se aposenta; o
+/// técnico (+0x69) sem clube e sem seleção, com +0xa < 50, em 1 de 5; o jogador (+0x61) sem clube e sem seleção,
+/// desempregado há mais de 365 dias, com sorteio(reputação atual +0xb) < 750; sem nenhum dos dois registros, sempre.
+/// O que muda, só no jogador:
+/// - abaixo de `proteger_jovens` anos (+0x18), não se aposenta por esta regra;
+/// - com `inativo_idade` anos ou mais e desempregado há mais de `inativo_dias` dias, aposenta com sorteio(reputação) <
+///   `inativo_rep` + `inativo_rep_por_ano` × (idade − `inativo_idade`); os outros seguem a regra original.
+/// Aposenta: a saída (26 bytes) recebe a pessoa, o motivo 0x10, o clube (−1 sem) e a data de hoje, e devolve 1.
+unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: usize) -> u8 {
+    let r = REGRAS;
+    if observado(pessoa) {
+        return 0;
+    }
+    let tecnico = d(pessoa + 0x69);
+    let sem_registro = tecnico == 0 && d(pessoa + 0x61) == 0;
+    let aposenta = if tecnico != 0 {
+        if d(pessoa + 0x39) != 0 || d(pessoa + 0x24) != 0 {
+            return 0;
+        }
+        w(tecnico + 0xa) < 50 && sorteio(5) == 0 // o técnico fraco, como na original
+    } else if d(pessoa + 0x61) == 0 {
+        false
+    } else if d(pessoa + 0x39) != 0 || d(pessoa + 0x24) != 0 {
+        false
+    } else {
+        let idade = b(pessoa + 0x18) as i32;
+        let anos = (w(0xae2c92) as u16 as i32) - (w(pessoa + 0x40) as u16 as i32);
+        let dias = anos * 365 - w(pessoa + 0x3e) as i32 + w(0xae2c90) as i32;
+        let rep = w(d(pessoa + 0x61) + 0xb) as i32;
+        if r.proteger_jovens > 0 && idade < r.proteger_jovens {
+            false
+        } else if idade >= r.inativo_idade && dias > r.inativo_dias {
+            let limiar = r.inativo_rep + r.inativo_rep_por_ano * (idade - r.inativo_idade) as f64;
+            rep <= 0 || (sorteio(rep) as f64) < limiar
+        } else {
+            dias > 365 && sorteio(rep) < 750 // a regra original
+        }
+    };
+    if !aposenta && !sem_registro {
+        return 0;
+    }
+    core::ptr::write_unaligned(saida as *mut usize, d(pessoa));
+    *((saida + 0x18) as *mut u8) = 0x10; // o motivo: desempregado
+    *((saida + 0x19) as *mut u8) = 0;
+    let clube = d(pessoa + 0x39);
+    core::ptr::write_unaligned((saida + 4) as *mut u32, if clube != 0 { d(clube) as u32 } else { u32::MAX });
+    for o in [8usize, 0x10] {
+        core::ptr::write_unaligned((saida + o) as *mut u16, w(0xae2c90) as u16);
+        core::ptr::write_unaligned((saida + o + 2) as *mut u16, w(0xae2c92) as u16);
+    }
+    1
+}
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     if motivo == 1 {
@@ -554,6 +647,12 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha("regen ages (nations not in the game): off");
         } else if pode_ligar(&IDADE_FORA, s) && instalar_idade_fora() {
             registro::linha(&format!("regen ages (nations not in the game): on ({}; {} or older made {} years younger)", if r.idades_fora { "age table" } else { "original draw" }, r.mais_novo_a_partir, r.mais_novo_em));
+        }
+        if !r.inativos {
+            registro::linha("retire idle players: off (retire_idle_players = 0)");
+        } else if pode_ligar(&INATIVOS, s) {
+            desviar(0x7a8050, aposentadoria_do_desempregado as *const () as usize);
+            registro::linha(&format!("retire idle players: on ({}+ years and {}+ days without a club; young players under {} protected)", r.inativo_idade, r.inativo_dias, r.proteger_jovens));
         }
         if !r.novo {
             registro::linha("regens 0.1: off (rule = original)");

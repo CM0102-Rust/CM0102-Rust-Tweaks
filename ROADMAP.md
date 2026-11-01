@@ -33,6 +33,10 @@ The configuration the DLL ships with.
 | `squad_limit` | 48 | big squads stay in the contest; the 2-a-year cap does the braking (Saturn uses 45) |
 | `surprise` | 15% | the high-PA youngster born at a small club (Ronaldo at São Cristóvão), only among clubs in a competition; the market moves him later |
 | ages | the original table + younger regens | petermf23's idea |
+| `retire_idle_players` | on | retiring players nobody wants frees records, and more records mean more regens a year (implemented: 0x7a8050 replaced) |
+| `idle_days`, `idle_min_age` | 180 days, age 28 | half a season without a club, from 28 |
+| `idle_rep`, `idle_rep_per_year` | 1500, +250 a year | the chance rises with age (reputation 3000: 50% at 28, 100% at 34) |
+| `protect_young_unemployed` | 23 | under 23 the unemployed rule never retires him (the original could retire a regen nobody signed) |
 
 **Open:**
 - ⏳ **Randomness** (`temperature`, proposed 1, the plain proportional draw): with surprise, it stops being the randomness knob.
@@ -46,6 +50,7 @@ The configuration the DLL ships with.
   - that the career gets through one or two seasons without hanging;
   - the regens with `log = 1`: each one's age, club and chance.
 - ⏳ Compare the distribution by band with and without the DLL (`regens_por_clube.py`) against what the simulator predicted.
+- ⏳ Measure **how many more regens a year** with `retire_idle_players`, and the age of those it retires.
 - ⏳ Measure **who signs the youngsters born without a club** (about 44%). This decides the phase 4 idea.
 - ⏳ Saves: write and load with and without the DLL, and a save above 2 GB.
 - ⏳ NickPatcher and CLZ exes, with `override_exe_changes` at 0 and at 1.
@@ -64,10 +69,6 @@ A single `.exe`, with its own interface (not copying NickPatcher's):
   - managers, assistants, coaches, scouts and physios keep developing until about 55, instead of about 40;
   - improves the quality and variety of staff in long-term saves;
   - to do: find the threshold in the code (the development of non-player attributes), check the routine and expose the age in the `.cfg` (`staff_development_age`), crediting him.
-- ⏳ **Retire idle players** (`retire_idle_players`, approved on 11/01; the numbers are under discussion): bring forward the retirement of players who have been without a club for a long time, aged 30 or more and with low CA.
-  - It frees player records, and more records mean more regens per year.
-  - The total population doesn't change, nor does the save format.
-  - The retirement rule (0x7a7310) is already decoded in the CM0102 project.
 - 💡 **Youngsters born without a club** go through the draw, only among lower-division clubs. Depends on the phase 2 measurement.
 - 💡 **Facilities on PA**: on signing, PA + (Training − 10) × 0.5 ± 2. Off by default.
 - 🔬 **Creating new records** to get more regens than retirements: growing `player.dat` and the per-person tables. A research project, with risk to the save; not in the first version.

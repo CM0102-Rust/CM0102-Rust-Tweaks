@@ -10,6 +10,7 @@ Cada ajuste tem a sua chave no `tweaks.cfg`, ao lado do exe. **Todos começam de
 |---|---|
 | `save_over_2gb = 1` | O **save acima de 2 GB** (até 4 GB), o mesmo do save2gb: as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `src/conteiner.rs` |
 | `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
+| `retire_idle_players = 1` | **Aposentar os inativos**: o jogador sem clube que ninguém quer se aposenta antes, e a ficha dele vira um regen (§ Aposentar os inativos) |
 | `rule = new` | A **disputa dos clubes** pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova). A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md) |
 
 Quando este repositório for aberto, ele substitui o `CM0102-Rust/cm0102-save2gb`, que passa a apontar para cá: as evoluções ficam todas aqui. Por isso o save está nesta DLL; com uma DLL só, ninguém precisa encadear duas `ddraw.dll`.
@@ -38,11 +39,11 @@ Cada ajuste confere duas assinaturas (FNV-1a) antes de ligar:
 
 Nos exes que temos [observado]:
 
-| Exe | Save | Idade | Idade (fora do jogo) | Disputa |
-|---|---|---|---|---|
-| `cm0102.exe`, `cm0102-1080.exe`, portátil | liga | liga | liga | liga |
-| os três do CLZ | liga | do exe | do exe | do exe (Regen Tweak) |
-| `cm0102_GDI.exe` | nunca | nunca | nunca | nunca |
+| Exe | Save | Idade | Idade (fora do jogo) | Inativos | Disputa |
+|---|---|---|---|---|---|
+| `cm0102.exe`, `cm0102-1080.exe`, portátil | liga | liga | liga | liga | liga |
+| os três do CLZ | liga | do exe | do exe | liga | do exe (Regen Tweak) |
+| `cm0102_GDI.exe` | nunca | nunca | nunca | nunca | nunca |
 
 "Do exe" vira "liga" com `override_exe_changes = 1`. O log nomeia o Regen Tweak de xeno/Saturn quando o acha.
 
@@ -55,6 +56,45 @@ A idade do jovem é sorteada num bloco da `regenerate_as_youth_player` (0x7ac597
 - Diferença assumida: o teto do CA vira um valor por idade. Na original, o de 17 e o de 18 dependem da faixa sorteada (80 ou 90, 100 ou 110).
 - As nações fora do jogo de reputação < 350 têm um sorteio próprio na original: quase sempre 23 a 27 anos, às vezes 17 a 23, e ali a idade escolhe a fórmula do CA (mais novo, CA menor), sem teto. Com `ages_out_of_game = table` elas também usam a tabela (0x7abeb1..0x7abeea); a fórmula do CA pela idade continua a da original, e os tetos da tabela não valem ali. O padrão é `original`.
 - **Os exes do CLZ já mexem na idade** [observado nos bytes]: a faixa raríssima de 15 a 18 vira 14 a 17 (0x7ac5b1), a rara de 21 a 26 vira 20 a 25 (0x7ac699), e as nações fora do jogo passam a usar o sorteio das jogáveis (`jmp` em 0x7abeab). Também trazem o Regen Tweak completo (0x7ad1bf `0x2d` e 0x7a6f48 `jl`) e outra troca de nacionalidade dos jovens (0x7abcd7..0x7abd1c). Por padrão a DLL deixa essas rotinas com o exe.
+
+## Aposentar os inativos
+
+Cada regen nasce da ficha de um jogador que se aposentou. Então, aposentar mais cedo quem ninguém quer dá mais regens por ano. A população total não muda, e o formato do save também não.
+
+**Como o jogo original aposenta** (nos dias 0, 80, 173 e 250 do ano, `find_new_retirements` 0x7a5790) [observado no código]:
+
+1. **A regra da idade** (`player_regen_check_retirement` 0x7a7310) só vale para quem passou do limite de idade da posição, tirado da ficha:
+
+   | Posição | Limite |
+   |---|---|
+   | goleiro | 34 |
+   | atacante, ou meia ofensivo | 30 |
+   | os outros | 31 |
+
+   Acima do limite, aposenta, entre outros casos:
+   - acima de 45 anos;
+   - acima de 34 anos e sem clube há mais de 65 dias: na prática, automático;
+   - pela nota (1 − 0,075 × anos acima do limite) × reputação, com sorteios.
+2. **A regra do desempregado** (`player_regen_check_unemployed_retirement` 0x7a8050), quando a primeira não aposentou. **Não olha a idade**: sem clube há mais de 365 dias, aposenta com sorteio(reputação atual) < 750. Até um regen de 22 anos que ninguém contratou pode sair por ela. Quem está na lista de observados de algum clube não se aposenta.
+
+**Há fila:** quem se aposenta entra numa lista com uma data (hoje, na regra do desempregado; em geral o fim da temporada, na da idade). Na data, a ficha vai para a reserva, a vaga entra na fila dos regens (hoje, ou em 1 a 65 dias a partir dos 30 anos), e o regen nasce quando há ficha. Então uma aposentadoria a mais vira um regen a mais, com algumas semanas de atraso.
+
+**O que `retire_idle_players = 1` muda** (a 0x7a8050 trocada; a regra da idade fica como está), só para jogadores:
+
+| Chave | Padrão | O quê |
+|---|---|---|
+| `idle_days` | 180 | dias sem clube (a original: 365) |
+| `idle_min_age` | 28 | a partir dessa idade vale a regra nova; abaixo, a original |
+| `idle_rep` | 1500 | o limiar do sorteio aos `idle_min_age` anos (a original: 750) |
+| `idle_rep_per_year` | 250 | quanto o limiar sobe por ano de idade |
+| `protect_young_unemployed` | 23 | abaixo dessa idade, a regra do desempregado não aposenta (0: sem proteção) |
+
+Aposenta quando sorteio(reputação atual) < `idle_rep` + `idle_rep_per_year` × (idade − `idle_min_age`). Exemplo, com reputação 3000:
+- aos 28 anos, 50% por busca;
+- aos 31, 75%;
+- aos 34, 100%.
+
+Um bom desempregado de 28 anos (reputação 6000) fica com 25% por busca e tem tempo de achar clube. Os técnicos sem clube seguem a regra original, e quem está numa lista de observados continua sem se aposentar.
 
 ## A regra nova
 

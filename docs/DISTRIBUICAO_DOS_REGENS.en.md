@@ -24,6 +24,19 @@ Companion to [MARCA_DO_REGEN.en.md](MARCA_DO_REGEN.en.md) (§4 and §8: the queu
 
 The pool is the bottleneck. Non-players also enter the queue, but without a record. So **player regens per season = player records freed per season** [observed; see MARCA_DO_REGEN §8].
 
+**The two player retirement rules** [observed; both are rewritten in Rust in the project]:
+
+1. `player_regen_check_retirement` 0x7a7310: only past the **position's age limit**, from the player record (goalkeeper, +0xf ≥ 15: 34; striker, +0x15 ≥ 15: 30; attacking midfielder, +0x14 ≥ 15: 30; the others: 31). Past the limit, he retires, among other cases:
+   - over 45;
+   - over 34 and 65+ days without a club (in practice, automatic);
+   - 3 years past the limit, without a club or with the contract near its end;
+   - by the score v = ⌊(1 − 0.075 × years past the limit) × current reputation⌋, with random draws (v > 5500 doesn't retire; v < 1500 retires, among other cuts).
+2. `player_regen_check_unemployed_retirement` 0x7a8050, when the first one didn't retire him. **It ignores age**: without a club or national team for more than 365 days, he retires with random(current reputation) < 750. Anyone on a shortlist doesn't retire; a manager without a club with +0xa < 50, 1 time in 5.
+
+A retiring player joins the retirement list with a date: today, for the unemployed rule; for the age rule, usually the end of the nation's season (with no valid key nation, today + random(20)). On that date, `process_retirements` 0x7a59e0 sends the record to the pool and the slot to the regen queue.
+
+**How to get more regens a year without a new table** [inference from the flow above]: retire players nobody wants sooner. The freed record becomes a regen a few weeks later, and the total population doesn't change. That's `retire_idle_players` in CM0102-Rust-Tweaks.
+
 Counts in saves [observed]:
 
 | Save | Span | Living player regens |

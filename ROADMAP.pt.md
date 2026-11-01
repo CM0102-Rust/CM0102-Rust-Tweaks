@@ -33,6 +33,10 @@ A configuração que a DLL distribui.
 | `squad_limit` | 48 | os elencos grandes continuam na disputa; quem freia é o teto de 2 por ano (o Saturn usa 45) |
 | `surprise` | 15% | o jovem de PA alto que nasce no clube pequeno (Ronaldo no São Cristóvão), só entre clubes de competição; o mercado o leva depois |
 | idades | a tabela original + regens mais novos | a ideia de petermf23 |
+| `retire_idle_players` | ligado | aposentar quem ninguém quer libera fichas, e mais fichas viram mais regens por ano (implementado: a 0x7a8050 trocada) |
+| `idle_days`, `idle_min_age` | 180 dias, 28 anos | meia temporada sem clube, a partir dos 28 |
+| `idle_rep`, `idle_rep_per_year` | 1500, +250 por ano | a chance sobe com a idade (reputação 3000: 50% aos 28, 100% aos 34) |
+| `protect_young_unemployed` | 23 | abaixo de 23 anos a regra do desempregado não aposenta (a original podia aposentar um regen que ninguém contratou) |
 
 **Aberto:**
 - ⏳ **A aleatoriedade** (`temperature`, proposta 1, o sorteio proporcional puro): com a surpresa, ela deixa de ser o botão da aleatoriedade.
@@ -46,6 +50,7 @@ A configuração que a DLL distribui.
   - que a carreira passa de uma ou duas temporadas sem travar;
   - os regens com `log = 1`: idade, clube e chance de cada um.
 - ⏳ Comparar a distribuição por faixa com e sem a DLL (`regens_por_clube.py`) contra o que o simulador previu.
+- ⏳ Medir **quantos regens a mais por ano** com `retire_idle_players` e a idade dos que se aposentam por ela.
 - ⏳ Medir **quem contrata os jovens que nascem sem clube** (uns 44%). Isso decide a ideia da fase 4.
 - ⏳ Save: gravar e carregar com e sem a DLL, e um save acima de 2 GB.
 - ⏳ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
@@ -64,10 +69,6 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher):
   - técnicos, auxiliares, treinadores, olheiros e fisioterapeutas continuam evoluindo até uns 55 anos, em vez de uns 40;
   - melhora a qualidade e a variedade da comissão em carreiras longas;
   - a fazer: localizar o limite no código (a evolução dos atributos de não jogador), conferir a rotina e expor a idade no `.cfg` (`staff_development_age`), com o crédito a ele.
-- ⏳ **Aposentar os inativos** (`retire_idle_players`, aprovado em 01/11; os números estão em discussão): antecipar a aposentadoria de quem está sem clube há muito tempo, com 30 anos ou mais e CA baixo.
-  - Libera fichas de jogador, e mais fichas viram mais regens por ano.
-  - A população total não muda, nem o formato do save.
-  - A regra da aposentadoria (0x7a7310) já está decifrada no projeto CM0102.
 - 💡 **Os que nascem sem clube** passarem pelo sorteio, só entre clubes de divisões inferiores. Depende da medição da fase 2.
 - 💡 **As instalações no PA**: na assinatura, PA + (Training − 10) × 0,5 ± 2. Desligado por padrão.
 - 🔬 **Criar fichas novas** para ter mais regens do que aposentadorias: aumentar `player.dat` e as tabelas por pessoa. É um projeto de pesquisa, com risco para o save; fora da primeira versão.
