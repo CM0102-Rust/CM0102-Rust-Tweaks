@@ -87,3 +87,22 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
 - ⏳ O `cm0102-save2gb` passa a apontar para cá.
 - ⏳ Postagem no fórum, com o rascunho aprovado pelo Lucas antes.
 - ⏳ Créditos: xeno e Saturn (o Regen Tweak), petermf23 (regens mais novos e a evolução da comissão), Nick (NickPatcher, as referências), e a comunidade do champman0102.
+
+## Fase 6: a fornada de jovens 🔬
+
+A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em vez de um regen por aposentadoria. É o objetivo grande deste repositório, e é só nosso: exige criar gente, controlar o save e equilibrar a população. Decidido com o Lucas em 01/11/2026.
+
+**O que não se faz:** aumentar o limite de 50 jogadores. As 50 vagas ficam dentro do registro do clube (+0xd7), e o resto do registro (treinadores +0x19f em diante) é lido por posição fixa em todo o jogo, no save e nos editores. A fornada trabalha dentro dos 50: hoje um clube típico tem de 30 a 40 jogadores, e a IA abre espaço.
+
+**As peças que o jogo já tem:** `regenerate_as_youth_player` (0x7abac0) transforma uma ficha num jovem; `player_regen_sign_for_club` (0x7a6f10) o põe numa vaga do elenco, com contrato. O que falta é a matéria-prima, fichas livres: as tabelas de pessoas têm tamanho fixo, alocado na carga.
+
+1. 🔬 **Prova de conceito**
+   - **A reserva de fichas na criação da carreira.** O jogo já fabrica pessoas a mais ao criar uma carreira: 1% (2% numa opção), por uma constante em 0x524dcf/0x524de1 (`database_trim_staff_tables` 0x524d70). A DLL sobe esse número e marca essas fichas como reserva da fornada; as tabelas nascem com folga, e o save grava as contagens. A prova: uma carreira com 10% de pessoas a mais nasce e roda estável na bancada (tempo por dia, memória, save).
+   - **Um item próprio dentro do save.** A DLL controla o contêiner (as rotinas do save2gb); o jogo só lê os itens que conhece. A prova: gravar e ler um item da DLL (a reserva, as datas da fornada) e o jogo carregar o save normalmente, com e sem a DLL.
+2. ⏳ **A fornada:** numa data por nação, cada clube recebe N jovens da reserva, com N pelas instalações, pelo treinador de juniores e por um sorteio. O PA vem de uma distribuição própria (instalações 20 passam a gerar mais talento de verdade). Tudo no `.cfg`.
+3. ⏳ **O espaço no elenco:** a IA dispensa, empresta ou aposenta os excedentes; quem fica sem clube volta à reserva pela regra dos inativos. O humano recebe a fornada como notícia, e os jovens aparecem no elenco.
+4. ⏳ **O equilíbrio da população:** fornada, aposentadoria e reciclagem na reserva, para a carreira não inchar década após década; medido no simulador e em carreiras longas na bancada.
+
+**Os impactos a medir:** mais pessoas (o processamento dos dias); save maior (já resolvido acima de 2 GB); talento demais no mundo (inflação de PA, seleções); mercado inundado de jovens (salários e preços); editores e ferramentas (contagens maiores, formato igual).
+
+**Limite:** vale para carreiras novas, porque a reserva nasce na criação. Num save antigo, a fornada só usaria fichas recicladas.

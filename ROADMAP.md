@@ -87,3 +87,22 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 - ⏳ `cm0102-save2gb` points here.
 - ⏳ Forum post, with the draft approved by Lucas first.
 - ⏳ Credits: xeno and Saturn (the Regen Tweak), petermf23 (younger regens and staff development), Nick (NickPatcher, the references), and the champman0102 community.
+
+## Phase 6: the youth intake 🔬
+
+FM's "youth intake": a batch of youngsters joins every club's academy each year, instead of one regen per retirement. It's the big goal of this repository, and it's ours alone: it means creating people, controlling the save and balancing the population. Decided with Lucas on 11/01/2026.
+
+**What we don't do:** raise the 50-player limit. The 50 slots are inside the club record (+0xd7), and the rest of the record (coaches from +0x19f on) is read by fixed position across the whole game, the save and the editors. The intake works within the 50: a typical club has 30 to 40 players today, and the AI makes room.
+
+**The pieces the game already has:** `regenerate_as_youth_player` (0x7abac0) turns a record into a youngster; `player_regen_sign_for_club` (0x7a6f10) puts him in a squad slot, with a contract. What's missing is the raw material, free records: the people tables have a fixed size, allocated on load.
+
+1. 🔬 **Proof of concept**
+   - **A pool of records at career creation.** The game already makes extra people when it creates a career: 1% (2% with an option), through a constant at 0x524dcf/0x524de1 (`database_trim_staff_tables` 0x524d70). The DLL raises that number and marks those records as the intake pool; the tables are born with room, and the save stores the counts. The proof: a career with 10% more people is created and runs stably on the test bench (time per day, memory, save).
+   - **Our own item inside the save.** The DLL controls the container (the save2gb routines); the game only reads the items it knows. The proof: write and read a DLL item (the pool, the intake dates) and have the game load the save normally, with and without the DLL.
+2. ⏳ **The intake:** on a date per nation, each club gets N youngsters from the pool, with N from facilities, the youth coach and a draw. PA comes from its own distribution (facilities 20 really produce more talent). All in the `.cfg`.
+3. ⏳ **Squad room:** the AI releases, loans or retires the surplus; whoever ends up clubless returns to the pool through the idle rule. The human club gets the intake as a news item, and the youngsters appear in the squad.
+4. ⏳ **Population balance:** intake, retirement and recycling into the pool, so the career doesn't swell decade after decade; measured in the simulator and in long careers on the test bench.
+
+**Impacts to measure:** more people (day processing); bigger saves (already solved above 2 GB); too much talent in the world (PA inflation, national teams); a market flooded with youngsters (wages and fees); editors and tools (bigger counts, same format).
+
+**Limit:** it applies to new careers, since the pool is born at creation. In an old save, the intake could only use recycled records.
