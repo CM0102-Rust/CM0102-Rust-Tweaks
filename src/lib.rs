@@ -45,6 +45,7 @@ extern "system" {
     fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;
     fn GetCurrentProcess() -> *mut c_void;
     fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
+    fn AddVectoredExceptionHandler(primeiro: u32, tratador: unsafe extern "system" fn(*mut usize) -> i32) -> *mut c_void;
 }
 
 /// Uma parte da DLL e o que ela confere no exe antes de ligar (FNV-1a de 64 bits dos trechos no cm0102.exe 3.9.68):
@@ -152,6 +153,7 @@ unsafe fn assinatura(trechos: &[(usize, usize)]) -> u64 {
 
 /// Salto (E9) da entrada da rotina original para a versão em Rust.
 unsafe fn desviar(de: usize, para: usize) {
+    (*core::ptr::addr_of_mut!(DESVIOS)).push((de, para));
     let mut antiga = 0u32;
     VirtualProtect(de as *mut c_void, 5, 0x40, &mut antiga);
     *(de as *mut u8) = 0xe9;
@@ -160,6 +162,43 @@ unsafe fn desviar(de: usize, para: usize) {
     FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
 }
 
+// ---------- diagnóstico (só com log = 1) ----------
+
+static mut FALHAS: u32 = 0;
+/// Os desvios instalados: (endereço no exe, destino), para conferir depois que as outras DLLs do exe carregaram.
+static mut DESVIOS: Vec<(usize, usize)> = Vec::new();
+
+/// A primeira violação de acesso (até 3) vai para o log com o endereço, os registradores e o topo da pilha, antes de o
+/// jogo cair: sem isso, uma queda num exe com outra DLL (a NickDLL do CLZ) não deixa rastro.
+unsafe extern "system" fn ao_falhar(ponteiros: *mut usize) -> i32 {
+    let registro_da_excecao = *ponteiros;
+    let contexto = *ponteiros.add(1);
+    let codigo = *(registro_da_excecao as *const u32);
+    if codigo == 0xc000_0005 && FALHAS < 3 {
+        FALHAS += 1;
+        let r = |o: usize| *((contexto + o) as *const u32);
+        let alvo = *((registro_da_excecao + 0x18) as *const u32);
+        let modo = *((registro_da_excecao + 0x14) as *const u32);
+        let esp = r(0xc4) as usize;
+        let pilha: Vec<String> = (0..16).map(|k| format!("{:08x}", core::ptr::read_volatile((esp + 4 * k) as *const u32))).collect();
+        registro::linha(&format!("crash\t{}\teip {:08x} {} {:08x}\teax {:08x} ebx {:08x} ecx {:08x} edx {:08x} esi {:08x} edi {:08x} ebp {:08x} esp {:08x}\tdll {:08x}\tstack {}",
+            data_do_jogo(), r(0xb8), if modo == 1 { "writing" } else { "reading" }, alvo, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), r(0xc4),
+            ao_falhar as *const () as usize, pilha.join(" ")));
+    }
+    0 // EXCEPTION_CONTINUE_SEARCH: o jogo segue como seguiria
+}
+
+/// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
+unsafe fn conferir_desvios() {
+    for &(de, para) in (*core::ptr::addr_of!(DESVIOS)).iter() {
+        let ok = *(de as *const u8) == 0xe9 && (core::ptr::read_unaligned((de + 1) as *const i32) as usize).wrapping_add(de + 5) == para;
+        if !ok {
+            let b: Vec<String> = (0..8).map(|k| format!("{:02x}", *((de + k) as *const u8))).collect();
+            registro::linha(&format!("check: the hook at {:08x} was overwritten after loading ({}); another DLL changed it", de, b.join(" ")));
+        }
+    }
+    registro::linha(&format!("check: {} hooks checked after the exe's DLLs loaded", (*core::ptr::addr_of!(DESVIOS)).len()));
+}
 // ---------- as regras (tweaks.cfg) ----------
 
 #[derive(Clone, Copy)]
@@ -695,6 +734,9 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
     if motivo == 1 {
         let r = ler_regras();
         REGRAS = r;
+        if r.registrar {
+            AddVectoredExceptionHandler(1, ao_falhar);
+        }
         let s = r.sobrescrever;
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
@@ -766,6 +808,11 @@ unsafe fn proxima_ddraw() -> Option<FnDirectDrawCreate> {
 
 #[no_mangle]
 pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *mut c_void, externo: *mut c_void) -> i32 {
+    static mut CONFERIDO: bool = false;
+    if REGRAS.registrar && !CONFERIDO {
+        CONFERIDO = true;
+        conferir_desvios();
+    }
     match proxima_ddraw() {
         Some(f) => f(guid, saida, externo),
         None => {

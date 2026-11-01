@@ -4,6 +4,8 @@
 
 Uma `ddraw.dll` de ajustes para o CM 01/02 3.9.68, com um seletor de opções. Na abertura, este repositório substitui o `cm0102-save2gb`. Atualizado em 01/11/2026.
 
+O que a comunidade pede e o que está em aberto: [docs/OPORTUNIDADES.md](docs/OPORTUNIDADES.md).
+
 Legenda: ✅ feito · 🔨 em andamento · ⏳ a fazer · 🔬 a pesquisar · 💡 ideia, sem decisão
 
 ## Fase 0: a base ✅

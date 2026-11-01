@@ -4,6 +4,8 @@
 
 A tweaks `ddraw.dll` for CM 01/02 3.9.68, with an options picker. When it goes public, this repository replaces `cm0102-save2gb`. Updated on 11/01/2026.
 
+What the community asks for and what's still open: [docs/OPORTUNIDADES.en.md](docs/OPORTUNIDADES.en.md).
+
 Key: ✅ done · 🔨 in progress · ⏳ to do · 🔬 to research · 💡 idea, not decided
 
 ## Phase 0: the base ✅
