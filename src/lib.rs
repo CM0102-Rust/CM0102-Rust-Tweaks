@@ -182,6 +182,8 @@ struct Regras {
     alvo_k: f64,
     alvo_ca: f64,
     sigma: f64,
+    /// sigma_below: a largura da curva para o clube menor que o alvo (0: a mesma de cima).
+    sigma_abaixo: f64,
     piso_nivel: f64,
     inst_base: f64,
     inst_k: f64,
@@ -224,6 +226,7 @@ const PADRAO: Regras = Regras {
     alvo_k: 50.0,
     alvo_ca: 0.0,
     sigma: 2500.0,
+    sigma_abaixo: 1200.0,
     piso_nivel: 0.002,
     inst_base: 0.4,
     inst_k: 0.06,
@@ -293,6 +296,7 @@ fn ler_regras() -> Regras {
             "target_k" => r.alvo_k = x,
             "target_ca" => r.alvo_ca = x,
             "sigma" => r.sigma = x.max(1.0),
+            "sigma_below" => r.sigma_abaixo = x.max(0.0),
             "level_floor" => r.piso_nivel = x,
             "facilities_base" => r.inst_base = x,
             "facilities_k" => r.inst_k = x,
@@ -404,7 +408,11 @@ unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa
         return 0.0;
     }
     let alvo = r.alvo_k * ((1.0 - r.alvo_ca) * pa + r.alvo_ca * ca);
-    let z = (w(clube + 0x80) as f64 - alvo) / r.sigma;
+    let rep = w(clube + 0x80) as f64;
+    // a curva é assimétrica: o clube menor que o alvo cai mais depressa (sigma_below), senão as centenas de clubes
+    // pequenos de um país, somados, levam os jovens bons
+    let largura = if rep < alvo && r.sigma_abaixo > 0.0 { r.sigma_abaixo } else { r.sigma };
+    let z = (rep - alvo) / largura;
     let nivel = if surpresa { 1.0 } else { r.piso_nivel + (1.0 - r.piso_nivel) * (-0.5 * z * z).exp() };
     let inst = r.inst_base + r.inst_k * b(clube + 0x7f) as f64;
     let comissao = r.com_min + (r.com_max - r.com_min) * (melhor_com_jovens(clube) - 1) as f64 / 19.0;

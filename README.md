@@ -113,7 +113,8 @@ Each club gets a **weight**, and the club is drawn **in proportion to its weight
 
 | Factor | Formula | Settings |
 |---|---|---|
-| Level | bell curve of the club's reputation around the target = target_k × PA (or the mix with CA) | `target_k`, `target_ca`, `sigma`, `level_floor` |
+| Level | bell curve of the club's reputation around the target = target_k × PA (or the mix with CA); **asymmetric**: above the target the width is `sigma`, below it's `sigma_below`, narrower, because a country's hundreds of small clubs, added up, would take the good youngsters | `target_k`, `target_ca`, `sigma`, `sigma_below`, `level_floor` |
+| Surprise | for `surprise`% of the youngsters the level doesn't count, and only clubs in a competition running in the game take part: the good youngster born at a small club; the market moves him later | `surprise` |
 | Facilities | facilities_base + facilities_k × Training | `facilities_base`, `facilities_k` |
 | Staff | from staff_min to staff_max by the best "Working with Youngsters" among the manager and the 5 coaches. Same for AI and human | `staff_min`, `staff_max` |
 | Room | ((squad_limit − squad) / squad_limit) ^ squad_exp; with the squad at the limit, weight 0 | `squad_limit`, `squad_exp` |
@@ -122,52 +123,42 @@ Each club gets a **weight**, and the club is drawn **in proportion to its weight
 
 With `log = 1`, each pick goes to `tweaks.log`: PA, club, reputation, Training, chance and how many clubs took part.
 
-## Calibration (England, `TesteTelas.sav`, 200 simulated seasons)
+## Calibration (simulator, `TesteTelas.sav`, 200 seasons)
 
-Parameters:
-- 687 clubs;
-- 52 youngsters per season in the contest (in `Valencia.sav`, England got ~88 regens per season, and ~56% go into the contest);
-- PA drawn from English players aged 31 or over;
-- squads reset to the save's each season [simplification].
+The configuration shipped in `tweaks.cfg` (settled with Lucas on 11/01/2026):
 
-| Reputation | Clubs | Original: youngsters per club per season | New (default) | Original: PA ≥ 140 | New: PA ≥ 140 |
-|---|---|---|---|---|---|
-| 0–999 | 499 | 0.00 | 0.03 | 0.000 | 0.000 |
-| 1000–1999 | 83 | 0.09 | 0.05 | 0.000 | 0.000 |
-| 2000–2999 | 24 | 0.40 | 0.14 | 0.000 | 0.001 |
-| 3000–3999 | 21 | 0.28 | 0.28 | 0.002 | 0.004 |
-| 4000–4999 | 27 | 0.22 | 0.42 | 0.020 | 0.019 |
-| 5000–5999 | 13 | 0.27 | 0.40 | 0.038 | 0.039 |
-| 6000–6999 | 13 | 0.54 | 0.37 | 0.083 | 0.068 |
-| 7000–7999 | 3 | 1.26 | 0.31 | 0.110 | 0.140 |
-| 8000–8999 | 2 | 1.45 | 0.21 | 0.083 | 0.102 |
-| 9000+ | 2 | 1.96 | 0.09 | 0.138 | 0.062 |
+| Switch | Value |
+|---|---|
+| `target_k` | 50 (a PA 150 youngster's target is reputation 7500) |
+| `sigma`, `sigma_below` | 2500 above the target, 1200 below |
+| `facilities_base`, `facilities_k` | 0.4 and 0.06 (Training 20 is worth 3.5 times Training 1) |
+| `staff_min`, `staff_max` | 0.8 and 1.2 |
+| `squad_limit`, `season_cap` | 48 and 2 per club every 365 days |
+| `surprise` | 15% |
+| `temperature` | 1 |
 
-Under the original, Liverpool, Arsenal and Manchester United get ~2 per season each, mostly ordinary youngsters. Under the new rule, the big clubs get fewer youngsters overall, but their share of the PA ≥ 140 ones is similar (less at 9000+, because those have 47 to 48 in the squad). Mid clubs, 4000 to 6999, get more.
+The simulator draws PA from each country's players aged 31 or over and uses the save's real clubs. Squads reset to the save's every season [simplification: in a real career squads vary, and the big clubs that have 46 to 48 players in the save get almost no room here]. In the table, youngsters per club per season; in brackets, those with PA ≥ 140.
 
-Two attempts dropped [observed in the simulator]:
-- **5% level floor and squad limit 45:** the big clubs dropped to zero (they were above 45) and about 30 of the 52 youngsters went to the 499 amateur clubs. With hundreds of small clubs, a small floor added up becomes the biggest slice of the draw.
-- **Temperature 2:** concentrates more on clubs of the right size; the 7000+ clubs get twice the PA ≥ 140 youngsters.
+| Reputation | England: original | England: new | Brazil: original | Brazil: new | Italy: original | Italy: new |
+|---|---|---|---|---|---|---|
+| under 2000 | 0.01 (0.000) | 0.03 (0.001) | 0.01 (0.000) | 0.02 (0.001) | 0.07 (0.000) | 0.14 (0.007) |
+| 2000–3999 | 0.32 (0.001) | 0.18 (0.002) | 0.18 (0.002) | 0.18 (0.003) | 0.53 (0.015) | 0.43 (0.006) |
+| 4000–5999 | 0.22 (0.025) | 0.39 (0.017) | 0.33 (0.032) | 0.53 (0.022) | 0.36 (0.069) | 0.35 (0.018) |
+| 6000–7999 | 0.61 (0.082) | 0.39 (0.072) | 0.87 (0.118) | 0.60 (0.106) | 1.39 (0.24) | 0.51 (0.16) |
+| 8000 or more | 1.58 (0.10) | 0.26 (0.10) | 0.47 (0.034) | 0.12 (0.048) | 1.35 (0.10) | 0.31 (0.16) |
+
+- **Big clubs stop collecting the ordinary youngsters** (England 8000+: from 1.58 to 0.26 a season), but **keep their share of the stars** (PA ≥ 140: 0.10 in both).
+- **Well-run mid clubs become the natural destination** (England 4000–5999: from 0.22 to 0.39; Brazil: from 0.33 to 0.53).
+- **Italy** still sends a large share of its youngsters to small clubs. Without the cap and without surprise the picture barely changes: what holds the big Italian clubs back is the save's squads (Milan, Sampdoria, Udinese and Torino at 48, out of the contest; Inter and Parma at 46). The in-game proof measures this with real squads.
+
+Attempts dropped [observed in the simulator]:
+- **A single width of 2500:** in Italy, almost half the PA ≥ 140 youngsters went to clubs with reputation under 2000. Hence the width below the target.
+- **5% level floor and squad limit 45:** the big clubs dropped to zero, and about 30 of the 52 English youngsters went to the 499 amateur clubs.
+- **Temperature 0.7 for more randomness:** it leaked into the amateur clubs; surprise does that in a controlled way.
+- **Temperature 2:** concentrated too much on clubs of the right size.
 
 Run: `python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg other.cfg]`.
 
-## To discuss
-
-1. **The target.** Where the youngster "should" go: by the level he'll reach (PA, the default) or the one he has now (CA, `target_ca`)? A target of 50 × PA puts a PA 180 youngster at a 9000 club.
-2. **The width (`sigma`).** At 1500, a club 3000 away from the target gets ~14% of the top weight. Narrower: fewer surprises.
-3. **Big clubs and stars.** How many of the high-PA youngsters should the big clubs take? Right now the new rule keeps their share close to the original.
-4. **The weight of facilities.** Right now Training 20 is worth 2.7 times Training 1 (1.5 against 0.55). Stronger?
-5. **Staff.** Right now it ranges from 0.8 to 1.2. The human club counts the same as the AI, through its coaches. Stronger?
-6. **The per-club cap** (3 per 365 days) and the squad limit (50).
-7. **Randomness (`temperature`).**
-8. **Outside the prototype:**
-   - the ~44% of youngsters born without a club could go through the same draw with a lower weight (an adjustment after the daily queue, 0x7a65d0);
-   - the youngster's PA could shift a few points with the Training of the club that gets him (on signing, 0x7a6f10).
-
 ## Next steps
 
-- Settle the curve in the discussion.
-- The configurator: an `.exe` that reads and writes `tweaks.cfg` (keeping the comments), checks the ranges, offers presets and shows, for the chosen exe, what each tweak will do (on, keeps the exe's, or doesn't fit).
-- At release: `cm0102-save2gb` will point here.
-- In-game proof: an automatic holiday career on the test bench, with the original exe and this DLL, comparing the distribution by band (`tools/regens_por_clube.py`) with the original.
-- Test with NickPatcher and CLZ.
+See [ROADMAP.md](ROADMAP.md). Next is the in-game proof (phase 2).

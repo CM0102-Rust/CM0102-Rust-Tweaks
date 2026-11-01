@@ -19,7 +19,7 @@ Key: ✅ done · 🔨 in progress · ⏳ to do · 🔬 to research · 💡 idea,
 - ✅ **The contest by proportional draw** (`rule = new`): level × facilities × staff × room.
 - ✅ The tools: `calibrar.py` (both rules with a save's real clubs), `regens_por_clube.py`, `simula_nota.py`.
 
-## Phase 1: regen balance 🔨
+## Phase 1: regen balance ✅
 
 The configuration the DLL ships with.
 
@@ -27,7 +27,10 @@ The configuration the DLL ships with.
 
 | Switch | Value | Why |
 |---|---|---|
-| `sigma` | 2500 | a wider level curve |
+| `sigma` | 2500 | a wider level curve, above the target |
+| `sigma_below` | 1200 | below the target the curve drops faster: with a single width, in Italy almost half the PA ≥ 140 youngsters went to clubs with reputation under 2000 |
+| `staff_min`, `staff_max` | 0.8 and 1.2 | the best youth coach is worth 50% more than the worst; the human club counts the same as the AI |
+| `temperature` | 1 | the plain proportional draw; randomness comes from surprise |
 | `facilities_base`, `facilities_k` | 0.4 and 0.06 | Training 20 is worth 3.5 times Training 1, with no jump |
 | `season_cap` | 2 | at most 2 contest youngsters per club every 365 days |
 | `squad_limit` | 48 | big squads stay in the contest; the 2-a-year cap does the braking (Saturn uses 45) |
@@ -38,10 +41,7 @@ The configuration the DLL ships with.
 | `idle_rep`, `idle_rep_per_year` | 1500, +250 a year | the chance rises with age (reputation 3000: 50% at 28, 100% at 34) |
 | `protect_young_unemployed` | 23 | under 23 the unemployed rule never retires him (the original could retire a regen nobody signed) |
 
-**Open:**
-- ⏳ **Randomness** (`temperature`, proposed 1, the plain proportional draw): with surprise, it stops being the randomness knob.
-- ⏳ **Staff** (`staff_min` and `staff_max`, now 0.8 to 1.2): confirm the weight.
-- ⏳ **Calibrate** the full configuration on England, Brazil and a mid-size league (Italy or Portugal), and settle the numbers.
+✅ **Calibrated** on 11/01/2026 on England, Brazil and Italy (the numbers are in the README, § Calibration). What the simulator can't measure, real squads over a career, goes to the in-game proof.
 
 ## Phase 2: the in-game proof ⏳
 

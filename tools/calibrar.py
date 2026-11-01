@@ -104,7 +104,7 @@ def escolher_original(j, clubes):
 # ---------- a regra nova (sorteio proporcional) ----------
 
 PADRAO = dict(target_k=50.0, target_ca=0.0, sigma=2500.0, level_floor=0.002, facilities_base=0.4, facilities_k=0.06, staff_min=0.8, staff_max=1.2,
-              squad_limit=48, squad_exp=0.5, season_cap=2, temperature=1.0, surprise=15.0)
+              squad_limit=48, squad_exp=0.5, season_cap=2, temperature=1.0, surprise=15.0, sigma_below=1200.0)
 
 
 # A distribuição original das idades (0x7ac58e), que é também o padrão do .cfg: idade: (peso %, teto do CA ou None).
@@ -141,7 +141,8 @@ def peso_novo(j, c, cfg, recebidos, surpresa=False):
     if surpresa and c['divisao'] < 0:  # na surpresa, só clubes de competição
         return 0.0
     alvo = cfg['target_k'] * ((1 - cfg['target_ca']) * j['pa'] + cfg['target_ca'] * j['ca'])
-    nivel = 1.0 if surpresa else cfg['level_floor'] + (1 - cfg['level_floor']) * math.exp(-0.5 * ((c['rep'] - alvo) / cfg['sigma']) ** 2)
+    largura = cfg['sigma_below'] if c['rep'] < alvo and cfg['sigma_below'] > 0 else cfg['sigma']  # abaixo do alvo, a largura própria
+    nivel = 1.0 if surpresa else cfg['level_floor'] + (1 - cfg['level_floor']) * math.exp(-0.5 * ((c['rep'] - alvo) / largura) ** 2)
     inst = cfg['facilities_base'] + cfg['facilities_k'] * c['tr']
     jovens = max((t['jovens'] for t in c['comissao'] if t), default=1)
     comissao = cfg['staff_min'] + (cfg['staff_max'] - cfg['staff_min']) * (jovens - 1) / 19

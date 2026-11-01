@@ -19,7 +19,7 @@ Legenda: ✅ feito · 🔨 em andamento · ⏳ a fazer · 🔬 a pesquisar · �
 - ✅ **A disputa por sorteio proporcional** (`rule = new`): nível × instalações × comissão × vaga.
 - ✅ As ferramentas: `calibrar.py` (as duas regras com os clubes reais de um save), `regens_por_clube.py`, `simula_nota.py`.
 
-## Fase 1: o equilíbrio dos regens 🔨
+## Fase 1: o equilíbrio dos regens ✅
 
 A configuração que a DLL distribui.
 
@@ -27,7 +27,10 @@ A configuração que a DLL distribui.
 
 | Chave | Valor | Por quê |
 |---|---|---|
-| `sigma` | 2500 | curva do nível mais larga |
+| `sigma` | 2500 | curva do nível mais larga, acima do alvo |
+| `sigma_below` | 1200 | abaixo do alvo a curva cai mais depressa: com uma largura só, na Itália quase metade dos jovens de PA ≥ 140 ia para clubes de reputação abaixo de 2000 |
+| `staff_min`, `staff_max` | 0,8 e 1,2 | o melhor treinador com jovens vale 50% a mais que o pior; o humano conta igual à IA |
+| `temperature` | 1 | o sorteio proporcional puro; a aleatoriedade fica com a surpresa |
 | `facilities_base`, `facilities_k` | 0,4 e 0,06 | Training 20 vale 3,5 vezes o Training 1, sem degrau |
 | `season_cap` | 2 | no máximo 2 jovens da disputa por clube a cada 365 dias |
 | `squad_limit` | 48 | os elencos grandes continuam na disputa; quem freia é o teto de 2 por ano (o Saturn usa 45) |
@@ -38,10 +41,7 @@ A configuração que a DLL distribui.
 | `idle_rep`, `idle_rep_per_year` | 1500, +250 por ano | a chance sobe com a idade (reputação 3000: 50% aos 28, 100% aos 34) |
 | `protect_young_unemployed` | 23 | abaixo de 23 anos a regra do desempregado não aposenta (a original podia aposentar um regen que ninguém contratou) |
 
-**Aberto:**
-- ⏳ **A aleatoriedade** (`temperature`, proposta 1, o sorteio proporcional puro): com a surpresa, ela deixa de ser o botão da aleatoriedade.
-- ⏳ **A comissão** (`staff_min` e `staff_max`, hoje de 0,8 a 1,2): confirmar o peso.
-- ⏳ **Calibrar** a configuração completa na Inglaterra, no Brasil e numa liga média (Itália ou Portugal), e fechar os números.
+✅ **Calibrado** em 01/11/2026 na Inglaterra, no Brasil e na Itália (os números estão no README, § A calibração). O que o simulador não mede, os elencos reais ao longo da carreira, fica para a prova no jogo.
 
 ## Fase 2: a prova no jogo ⏳
 
