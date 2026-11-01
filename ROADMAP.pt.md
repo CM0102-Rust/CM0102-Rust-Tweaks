@@ -57,14 +57,21 @@ A configuração que a DLL distribui.
 
 ## Fase 3: o configurador (seletor de opções) ⏳
 
-Um `.exe` só, com interface própria (sem copiar a do NickPatcher):
+Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precisa ser Tauri, mas deve ser bonito e visual:
+- cada opção com uma **barra de arrastar junto do campo de digitação**: arrastar ou digitar, os dois andam juntos, dentro da faixa válida;
+- as opções agrupadas por ajuste (save, idade, inativos, disputa, nacionalidade), com a ajuda de cada uma (o mesmo texto do `.cfg`) ao passar o mouse ou num painel ao lado;
+- recursos visuais onde ajudam a entender: a tabela de idades como gráfico de barras arrastáveis, a curva do nível desenhada, um exemplo de chances por clube que muda enquanto o usuário arrasta;
 - lê e grava o `tweaks.cfg` sem apagar os comentários; o arquivo continua sendo a única fonte;
-- confere as faixas de cada valor e oferece predefinições ("Original", "Equilibrado"...);
+- predefinições ("Original", "Equilibrado"...);
 - mostra, para o exe escolhido, o que cada ajuste vai fazer: liga, fica a do exe (com o nome da modificação achada, como o Regen Tweak) ou não serve;
-- opcional: para a curva dos regens, a tabela do simulador com os clubes de um save.
+- tecnologia a decidir: um exe só, sem instalador e sem depender de nada instalado (por exemplo, Rust com uma biblioteca de interface que desenha sozinha).
 
 ## Fase 4: mais ajustes 💡🔬
 
+- 🔬 **A nacionalidade dos regens, com regras definidas** (a decidir com o Lucas). Hoje há duas regras em uso [observado no código]:
+  - **a original** (0x7abcd7..0x7abd1d): se a nação do jovem tem menos de 100 pessoas cadastradas (+0x88), em 1 de 4 vezes ele ganha a nacionalidade de outra nação sorteada, também pequena;
+  - **a dos exes do CLZ** (autor a confirmar): todo jovem de PA 120 ou mais ganha a nacionalidade de uma nação sorteada entre as de reputação 5632 ou mais (+0x8e); os outros ficam com a de sempre. Concentra os craques nas nações grandes.
+  - A ideia é um ajuste `nationality` com modos e chaves: o original; "nações fortes" como o CLZ, com o PA e a reputação mínimos ajustáveis; e um sorteio proporcional à reputação da nação, com a chance de manter a nação de origem. O trecho fica dentro da 0x7abac0 e seria trocado como o da idade, respeitando o exe que já o altera (o CLZ).
 - 🔬 **Comissão evolui por mais tempo**, a ideia de petermf23 (item 18 do mod dele das divisões polonesas para o 3.9.60):
   - técnicos, auxiliares, treinadores, olheiros e fisioterapeutas continuam evoluindo até uns 55 anos, em vez de uns 40;
   - melhora a qualidade e a variedade da comissão em carreiras longas;

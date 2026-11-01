@@ -74,7 +74,7 @@ const SAVE: Parte = Parte {
 };
 
 /// A idade: as bordas do bloco do sorteio da idade e do teto do CA na 0x7abac0 (a entrada 0x7ac58e..0x7ac59f, com o
-/// `call sorteio(10000)` e o `add esp, 8`, e a volta em 0x7ac6f6; ramo das nações no jogo ou de reputação ≥ 350) e o corte
+/// `call sorteio(10000)` e o `add esp, 8`, e a volta em 0x7ac6f6; ramo das nações no jogo ou de 350 pessoas ou mais) e o corte
 /// da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`); o corpo é o bloco. Os exes do CLZ mudam o corpo
 /// (14 a 17 e 20 a 25 nas faixas raras, 0x7ac5b1 e 0x7ac699).
 const IDADE: Parte = Parte {
@@ -85,7 +85,7 @@ const IDADE: Parte = Parte {
     assinatura_do_corpo: 0x117c76f665c5e095,
 };
 
-/// A idade nas nações fora do jogo de reputação < 350 (0x7abea0..0x7abef1): sorteio(rep) < sorteio(1000) dá 23 a 27,
+/// A idade nas nações fora do jogo com menos de 350 pessoas (+0x88, NumberStaff; 0x7abea0..0x7abef1): sorteio(pessoas) < sorteio(1000) dá 23 a 27,
 /// senão 17 a 23; depois a fórmula do CA pela idade (que fica como está). Os exes do CLZ pulam esse ramo (`jmp` em
 /// 0x7abeab, no corpo); sobrescrito, o desvio fica lá, mas o ramo continua sem rodar.
 const IDADE_FORA: Parte = Parte {
@@ -438,19 +438,31 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
     let (pa, ca) = (w(ficha + 7) as f64, w(ficha + 5) as f64);
     let total_de_clubes = (d(0xae235c) as i32).wrapping_sub((d(0xae2350) as i32).wrapping_mul(2));
     let base = d(0xae23b4);
-    let surpresa = r.surpresa > 0.0 && (sorteio(10000) as f64) < r.surpresa * 100.0;
+    let mut surpresa = r.surpresa > 0.0 && (sorteio(10000) as f64) < r.surpresa * 100.0;
     let mut pesos: Vec<(usize, f64)> = Vec::new();
-    for i in 0..total_de_clubes.max(0) as usize {
-        let clube = base + 0x245 * i;
-        if let Some(elenco) = elegivel(jogador, clube) {
-            let p = peso(&r, pa, ca, clube, elenco, surpresa);
-            if p > 0.0 {
-                pesos.push((clube, p));
+    // a surpresa sem nenhum clube de competição no país (as ligas dele não estão no jogo) volta ao sorteio normal, senão
+    // o jovem ficaria sem clube só por causa dela
+    for _ in 0..2 {
+        pesos.clear();
+        for i in 0..total_de_clubes.max(0) as usize {
+            let clube = base + 0x245 * i;
+            if let Some(elenco) = elegivel(jogador, clube) {
+                let p = peso(&r, pa, ca, clube, elenco, surpresa);
+                if p > 0.0 {
+                    pesos.push((clube, p));
+                }
             }
         }
+        if !pesos.is_empty() || !surpresa {
+            break;
+        }
+        surpresa = false;
     }
     let soma: f64 = pesos.iter().map(|x| x.1).sum();
     if soma <= 0.0 {
+        if r.registrar {
+            registrar_escolha("new", jogador, 0, "-\t0\t-");
+        }
         return 0;
     }
     let mut x = uniforme() * soma;
@@ -463,10 +475,49 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
         }
     }
     if r.registrar {
-        registro::linha(&format!("PA {} CA {} -> {} (reputation {}, Training {}) chance {:.1}% among {} clubs{}", pa, ca, nome(escolhido.0),
-            w(escolhido.0 + 0x80), b(escolhido.0 + 0x7f), 100.0 * escolhido.1 / soma, pesos.len(), if surpresa { " (surprise)" } else { "" }));
+        registrar_escolha("new", jogador, escolhido.0, &format!("{:.1}%\t{}\t{}", 100.0 * escolhido.1 / soma, pesos.len(), if surpresa { "surprise" } else { "-" }));
     }
     escolhido.0
+}
+
+/// A data do jogo como AAAA-ddd (o dia do ano em [0xae2c90], o ano em [0xae2c92]).
+unsafe fn data_do_jogo() -> String {
+    format!("{}-{:03}", w(0xae2c92) as u16, w(0xae2c90) as u16)
+}
+
+/// Uma linha do log por jovem da disputa, separada por tabulação (para contar depois):
+/// `regen  regra  data  idade  PA  CA  reputação  Training  elenco  clube  [chance  disputaram  surpresa]`.
+unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &str) {
+    let ficha = d(jogador + 0x61);
+    let (rep, tr, nome_clube) = if clube != 0 { (w(clube + 0x80) as i32, b(clube + 0x7f) as i32, nome(clube)) } else { (-1, -1, "(no club)".into()) };
+    let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
+    let elenco = if clube != 0 { elenco_de(clube, 0, 0) as i32 } else { -1 };
+    registro::linha(&format!("regen\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", regra, data_do_jogo(), b(jogador + 0x18), w(ficha + 7), w(ficha + 5), rep, tr, elenco, nome_clube, extra));
+}
+
+/// A entrada original da 0x7ad0e0, para o modo de observação (`rule = original` com `log = 1`): os 7 bytes do prólogo
+/// (`sub esp, 0x14; mov [esp+0x10], ecx`, sem salto relativo) copiados para um trecho que volta em 0x7ad0e7.
+static mut DISPUTA_ORIGINAL: usize = 0;
+
+/// { 0x7ad0e0 } no modo de observação: a disputa da original escolhe, e a escolha vai para o log.
+unsafe extern "thiscall" fn observar_clube(this: usize, jogador: usize) -> usize {
+    let original: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(DISPUTA_ORIGINAL);
+    let clube = original(this, jogador);
+    registrar_escolha("original", jogador, clube, "-\t-\t-");
+    clube
+}
+
+unsafe fn instalar_observacao() -> bool {
+    let t = VirtualAlloc(core::ptr::null_mut(), 16, 0x3000, 0x40) as *mut u8;
+    if t.is_null() {
+        return false;
+    }
+    core::ptr::copy_nonoverlapping(0x7ad0e0 as *const u8, t, 7);
+    *t.add(7) = 0xe9;
+    core::ptr::write_unaligned(t.add(8) as *mut i32, 0x7ad0e7usize.wrapping_sub(t as usize + 12) as i32);
+    DISPUTA_ORIGINAL = t as usize;
+    desviar(0x7ad0e0, observar_clube as *const () as usize);
+    true
 }
 
 /// Uma idade da tabela do `.cfg` (`age_NN`), pelo sorteio do jogo.
@@ -491,7 +542,7 @@ unsafe fn idade_da_tabela(r: &Regras) -> usize {
     idade
 }
 
-/// No ramo das nações fora do jogo de reputação < 350 (pelo trecho de `instalar_idade_fora`): só a idade, da mesma
+/// No ramo das nações fora do jogo com menos de 350 pessoas (pelo trecho de `instalar_idade_fora`): só a idade, da mesma
 /// tabela; o CA sai depois da fórmula da original pela idade.
 /// A regra de petermf23: com `mais_novo_a_partir` anos ou mais, `mais_novo_em` anos a menos (nunca abaixo de IDADE_MIN).
 fn rejuvenescer(r: &Regras, idade: usize) -> usize {
@@ -507,11 +558,15 @@ unsafe extern "C" fn sortear_idade_fora(pessoa: usize) -> u32 {
     let idade = if r.idades_fora {
         idade_da_tabela(&r)
     } else {
-        // o sorteio da original (0x7abeb1..0x7abee7): sorteio(rep da nação) < sorteio(1000) dá 23 a 27, senão 17 a 23
-        let rep = core::ptr::read_unaligned((d(pessoa + 0x1a) + 0x88) as *const i32);
-        if sorteio(rep) < sorteio(1000) { 23 + sorteio(5) as usize } else { 17 + sorteio(7) as usize }
+        // o sorteio da original (0x7abeb1..0x7abee7): sorteio(pessoas da nação, +0x88) < sorteio(1000) dá 23 a 27, senão 17 a 23
+        let pessoas = core::ptr::read_unaligned((d(pessoa + 0x1a) + 0x88) as *const i32);
+        if sorteio(pessoas) < sorteio(1000) { 23 + sorteio(5) as usize } else { 17 + sorteio(7) as usize }
     };
-    rejuvenescer(&r, idade) as u32
+    let idade = rejuvenescer(&r, idade);
+    if r.registrar {
+        registro::linha(&format!("birth\t{}\t{}\t{}\tout of game", data_do_jogo(), idade, w(d(pessoa + 0x61) + 7)));
+    }
+    idade as u32
 }
 
 /// No lugar do bloco 0x7ac597..0x7ac6f6 da 0x7abac0 (pelo trecho de `instalar_idade`): a idade do jovem, sorteada
@@ -520,6 +575,9 @@ unsafe extern "C" fn sortear_idade_fora(pessoa: usize) -> u32 {
 unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
     let r = REGRAS;
     let idade = rejuvenescer(&r, idade_da_tabela(&r));
+    if r.registrar {
+        registro::linha(&format!("birth\t{}\t{}\t{}", data_do_jogo(), idade, w(d(pessoa + 0x61) + 7)));
+    }
     let teto = r.teto_da_idade[idade - IDADE_MIN];
     let ficha = d(pessoa + 0x61);
     if teto >= 0 && w(ficha + 5) > teto && (sorteio(10000) as f64) >= r.pular_teto * 100.0 {
@@ -551,7 +609,7 @@ unsafe fn instalar_idade(r: &Regras) -> bool {
     FlushInstructionCache(GetCurrentProcess(), 0x7ace69 as *const c_void, 1);
     true
 }
-/// Troca o sorteio da idade das nações fora do jogo (0x7abeb1: `push eax; call sorteio(rep)`, nada pendente na pilha)
+/// Troca o sorteio da idade das nações fora do jogo (0x7abeb1: `push eax; call sorteio(pessoas)`, nada pendente na pilha)
 /// por um trecho que chama `sortear_idade_fora(esi)`, põe a idade no `ebx` e volta em 0x7abeea, onde a original guarda
 /// a idade na local e segue para a fórmula do CA.
 unsafe fn instalar_idade_fora() -> bool {
@@ -609,7 +667,11 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
             false
         } else if idade >= r.inativo_idade && dias > r.inativo_dias {
             let limiar = r.inativo_rep + r.inativo_rep_por_ano * (idade - r.inativo_idade) as f64;
-            rep <= 0 || (sorteio(rep) as f64) < limiar
+            let sai = rep <= 0 || (sorteio(rep) as f64) < limiar;
+            if sai && r.registrar {
+                registro::linha(&format!("idle\t{}\t{}\t{}\t{}", data_do_jogo(), idade, rep, dias));
+            }
+            sai
         } else {
             dias > 365 && sorteio(rep) < 750 // a regra original
         }
@@ -662,7 +724,13 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             desviar(0x7a8050, aposentadoria_do_desempregado as *const () as usize);
             registro::linha(&format!("retire idle players: on ({}+ years and {}+ days without a club; young players under {} protected)", r.inativo_idade, r.inativo_dias, r.proteger_jovens));
         }
-        if !r.novo {
+        if !r.novo && r.registrar {
+            if assinatura(DISPUTA.bordas) == DISPUTA.assinatura_das_bordas && instalar_observacao() {
+                registro::linha("regens 0.1: off (rule = original), logging the exe's own picks (log = 1)");
+            } else {
+                registro::linha("regens 0.1: off (rule = original); could not log the exe's picks");
+            }
+        } else if !r.novo {
             registro::linha("regens 0.1: off (rule = original)");
         } else if pode_ligar(&DISPUTA, s) {
             desviar(0x7ad0e0, escolher_clube as *const () as usize);

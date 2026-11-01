@@ -57,14 +57,21 @@ The configuration the DLL ships with.
 
 ## Phase 3: the configurator (options picker) ⏳
 
-A single `.exe`, with its own interface (not copying NickPatcher's):
+A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't need to be Tauri, but it should look good and be visual:
+- each option with a **slider next to its input field**: drag or type, both move together, within the valid range;
+- options grouped by tweak (save, ages, idle players, contest, nationality), with each one's help (the same text as the `.cfg`) on hover or in a side panel;
+- visuals where they help: the age table as draggable bars, the level curve drawn, an example of each club's chance that changes as the user drags;
 - reads and writes `tweaks.cfg` keeping the comments; the file stays the single source;
-- checks each value's range and offers presets ("Original", "Balanced"...);
+- presets ("Original", "Balanced"...);
 - shows, for the chosen exe, what each tweak will do: on, keeps the exe's (naming the change found, like the Regen Tweak) or doesn't fit;
-- optional: for the regen curve, the simulator table with a save's clubs.
+- technology to be decided: a single exe, no installer and no dependency on anything installed (for example, Rust with an interface library that draws by itself).
 
 ## Phase 4: more tweaks 💡🔬
 
+- 🔬 **Regen nationality, with defined rules** (to be decided with Lucas). There are two rules in use today [observed in the code]:
+  - **the original** (0x7abcd7..0x7abd1d): if the youngster's nation has fewer than 100 people in the database (+0x88), 1 time in 4 he gets the nationality of another random nation, also a small one;
+  - **the CLZ exes'** (author to be confirmed): every youngster with PA 120 or more gets the nationality of a random nation among those with reputation 5632 or more (+0x8e); the others keep their own. It concentrates the stars in the big nations.
+  - The idea is a `nationality` tweak with modes and switches: the original; "strong nations" like CLZ, with adjustable minimum PA and reputation; and a draw proportional to the nation's reputation, with a chance of keeping the original nation. The code sits inside 0x7abac0 and would be replaced like the age block, respecting exes that already change it (CLZ).
 - 🔬 **Staff develop for longer**, petermf23's idea (item 18 of his Polish divisions mod for 3.9.60):
   - managers, assistants, coaches, scouts and physios keep developing until about 55, instead of about 40;
   - improves the quality and variety of staff in long-term saves;

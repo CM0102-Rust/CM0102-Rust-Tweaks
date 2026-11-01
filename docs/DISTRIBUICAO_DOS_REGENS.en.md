@@ -52,14 +52,14 @@ In the all-leagues save, that's at least ~2,060 regens per season still alive at
 From `regenerate_as_youth_player` 0x7abac0 [observed]:
 
 - **PA (+7 of the record):** unchanged. It's the retired player's (B, the record owner). Positions, feet and much of the attributes also come from him.
-- **Nation:** B's. If the nation's reputation (+0x88) is below 100, there's a 1 in 4 chance of switching to another random nation, also with reputation below 100 (0x7abcd7).
-- **Age** (nation in the game or reputation ≥ 350; 0x7ac58e): random(10000):
+- **Nation:** B's. If the nation has fewer than 100 people in the database (+0x88, `NumberStaff`), there's a 1 in 4 chance of switching to another random nation, with a continent set and also with fewer than 100 people (0x7abcd7).
+- **Age** (nation in the game, or with 350 people in the database or more; 0x7ac58e): random(10000):
   - = 0: 15 to 18;
   - < 5000: 16 to 18;
   - < 9976: 17 to 20;
   - otherwise: 21 to 26.
   - Result: **~75% of regens are under 19**.
-  - In a nation not in the game with reputation < 350, age ranges from 17 to 27.
+  - In a nation not in the game with fewer than 350 people in the database (+0x88), age ranges from 17 to 27.
 - **CA (+5)**, by position (0x7ac3dd):
 
 | Position | CA |

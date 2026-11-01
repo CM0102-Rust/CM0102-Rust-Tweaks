@@ -52,14 +52,14 @@ No save de todas as ligas, isso dá pelo menos ~2.060 regens por temporada que c
 Pela `regenerate_as_youth_player` 0x7abac0 [observado]:
 
 - **PA (+7 da ficha):** não muda. É o do jogador aposentado (B, o dono da ficha). As posições, os pés e boa parte dos atributos também vêm dele.
-- **Nação:** a de B. Se a reputação da nação (+0x88) for menor que 100, há 1 chance em 4 de trocar por outra nação sorteada, também de reputação menor que 100 (0x7abcd7).
-- **Idade** (nação no jogo ou reputação ≥ 350; 0x7ac58e): sorteio(10000):
+- **Nação:** a de B. Se a nação tem menos de 100 pessoas cadastradas (+0x88, `NumberStaff`), há 1 chance em 4 de trocar por outra nação sorteada, com continente definido e também com menos de 100 pessoas (0x7abcd7).
+- **Idade** (nação no jogo, ou com 350 pessoas cadastradas ou mais; 0x7ac58e): sorteio(10000):
   - = 0: 15 a 18 anos;
   - < 5000: 16 a 18;
   - < 9976: 17 a 20;
   - senão: 21 a 26.
   - Resultado: **~75% dos regens têm menos de 19 anos**.
-  - Numa nação fora do jogo de reputação < 350, a idade vai de 17 a 27.
+  - Numa nação fora do jogo com menos de 350 pessoas cadastradas (+0x88), a idade vai de 17 a 27.
 - **CA (+5)**, pela posição (0x7ac3dd):
 
 | Posição | CA |
