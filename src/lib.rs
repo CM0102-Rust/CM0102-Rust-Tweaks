@@ -1,12 +1,13 @@
-//! DLL de ajustes do CM 01/02 3.9.68, sem alterar o exe: a distribuição dos regens e o save acima de 2 GB.
+//! CM0102-Rust-Tweaks: a `ddraw.dll` de ajustes do CM 01/02 3.9.68, sem alterar o exe (hoje: o save acima de 2 GB, a idade
+//! e a distribuição dos regens).
 //!
-//! Entra no jogo como `ddraw.dll`, como a do save2gb, e lê `regens.cfg` ao lado do exe. Cada parte só liga se a
+//! Entra no jogo como `ddraw.dll`, como a do save2gb, e lê `tweaks.cfg` ao lado do exe. Cada parte só liga se a
 //! assinatura do código de que depende bater com o 3.9.68:
 //! - `save_over_2gb = 1` (padrão): as três rotinas do contêiner do save (`zopen` 0x9326e0, `zseek` 0x933080, `ztell`
 //!   0x933170) vão para as de `src/conteiner.rs`, como na DLL do save2gb (`TRECHOS_DO_SAVE`);
 //! - `rule = new`: `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0) vai para `escolher_clube` (`TRECHOS`).
 //! O `DirectDrawCreate` é repassado a
-//! `ddraw_chain.dll` na pasta do jogo, se existir, senão à `ddraw.dll` do Windows. O registro vai para `regens.log`.
+//! `ddraw_chain.dll` na pasta do jogo, se existir, senão à `ddraw.dll` do Windows. O registro vai para `tweaks.log`.
 //!
 //! A regra original (docs/DISTRIBUICAO_DOS_REGENS.md): cada clube do país com elenco abaixo de 50 recebe uma nota
 //! (0x7ad220) e ganha o maior sorteio(nota). A nova: os mesmos clubes elegíveis, mas o clube é sorteado na proporção
@@ -28,7 +29,7 @@ mod comparacao {
 mod registro {
     use std::io::Write;
     pub fn linha(texto: &str) {
-        let caminho = std::env::current_exe().map(|p| p.with_file_name("regens.log")).unwrap_or_else(|_| "regens.log".into());
+        let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.log")).unwrap_or_else(|_| "tweaks.log".into());
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(caminho) {
             let _ = writeln!(f, "{}", texto);
         }
@@ -150,7 +151,7 @@ unsafe fn desviar(de: usize, para: usize) {
     FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
 }
 
-// ---------- as regras (regens.cfg) ----------
+// ---------- as regras (tweaks.cfg) ----------
 
 #[derive(Clone, Copy)]
 struct Regras {
@@ -180,7 +181,7 @@ struct Regras {
     registrar: bool,
 }
 
-// As três chaves de ligar começam desligadas: sem o regens.cfg (ou sem a linha), a DLL não muda nada no jogo.
+// As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
 const PADRAO: Regras = Regras {
     sobrescrever: false,
     save: false,
@@ -212,7 +213,7 @@ static mut REGRAS: Regras = PADRAO;
 
 fn ler_regras() -> Regras {
     let mut r = PADRAO;
-    let caminho = std::env::current_exe().map(|p| p.with_file_name("regens.cfg")).unwrap_or_else(|_| "regens.cfg".into());
+    let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return r };
     for linha in texto.lines() {
         let linha = linha.split('#').next().unwrap_or("");

@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "cm0102-regens"
+name = "cm0102-rust-tweaks"
 version = "0.1.0"

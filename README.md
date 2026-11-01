@@ -1,40 +1,38 @@
-# regens: a different rule for how regens are distributed (prototype)
+# CM0102-Rust-Tweaks
 
 *Versão em português: [README.pt.md](README.pt.md)*
 
-A **one-off** `ddraw.dll` for the community, built like the save2gb one (`save/`). It isn't the project's working `ddraw.dll` (`rust/`): it runs with the original exe or the NickPatcher ones, without the rest of the rewrite. The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md).
+Tweaks for **Championship Manager 01/02 (3.9.68)** in a `ddraw.dll`, without changing the exe. Made with AI, from the Rust rewrite of the game (the CM0102 project). It runs with the original exe or the NickPatcher ones; each tweak checks the exe's code before turning on.
 
-It has three parts, each with its own switch in `regens.cfg` and its own signature. **They all start off:** without the `.cfg`, or without the line, the DLL changes nothing in the game.
+Each tweak has its own switch in `tweaks.cfg`, next to the exe. **They all start off:** without the `.cfg`, or without the line, the DLL changes nothing in the game. A configurator (the options picker) will read and write that same file.
 
 | Switch | What it does |
 |---|---|
-| `save_over_2gb = 1` | The save2gb **saves above 2 GB** fix: the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs`, with the same signature as `save/` |
+| `save_over_2gb = 1` | **Saves above 2 GB** (up to 4 GB), the same fix as save2gb: the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs` |
 | `ages = custom` | **Regen ages** from a table (§ Ages) |
-| `rule = new` | The **clubs' contest** for a youngster (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) becomes a proportional draw (§ The new rule) |
+| `rule = new` | The **clubs' contest** for a youth regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) becomes a proportional draw (§ The new rule). The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md) |
 
-**Having the save fix in this DLL is a deliberate choice** (Lucas's, 11/01/2026): two `ddraw.dll` files can't share a folder without chaining one into the other, so anyone who wants both the regens and the save uses a single DLL. The public save2gb (`CM0102-Rust/cm0102-save2gb`) stays as it is: its source only changes at releases.
+When this repository goes public, it replaces `CM0102-Rust/cm0102-save2gb`, which will point here: every future change lives here. That's why the save fix is in this DLL; with a single DLL, nobody needs to chain two `ddraw.dll` files.
 
-**It only builds on its own inside this repository:** `src/lib.rs` includes `src/conteiner.rs` through `#[path]`. The copy in the separate repository (`CM0102-Rust/cm0102-regens`, through `tools/espelhar.py`) moves `conteiner.rs` into `src/` and drops the `#[path]`, as in save2gb.
-
-**Status: prototype for discussion.** It builds and checks the signatures, but it hasn't run in the game yet. The curve in `regens.cfg` is a starting point, not a final proposal.
+**Status: prototype for discussion.** It builds and checks the signatures, but it hasn't run in the game yet. The regen curve is a starting point, not a final proposal.
 
 ## Files
 
 | File | What |
 |---|---|
-| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `regens.cfg`, checks the signatures and turns each part on |
-| `regens.cfg` | The rules, in English and commented (it's the community's file); goes next to the exe |
+| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `tweaks.cfg`, checks the signatures and turns each tweak on |
+| `src/conteiner.rs` | The saves above 2 GB container (a copy of `rust/src/conteiner.rs` from the CM0102 project; stable since save2gb) |
+| `tweaks.cfg` | The options, in English and commented (it's the community's file); goes next to the exe |
 | `tools/calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one (with the `.cfg` age table) |
 | `tools/simula_nota.py` | The document's made-up clubs example (§7) |
 | `tools/regens_por_clube.py` | Regens per club in a save, by reputation and Training band |
 | `tools/sav.py` | Reads the items of a `.sav` |
-| `tools/espelhar.py` | The copy to the separate repository (no commit or push) |
 
 Build: `cargo build --release` (output in `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
-Each part checks two signatures (FNV-1a) before turning on:
-- **the edges**, what the hook uses (the entry, the return point, the routines it calls). If they don't match, the part never turns on;
-- **the body**, the original routine the part replaces. If only the body differs, the exe already has another change there and, **as in the rest of the project, the exe's routine stays**, with a note in `regens.log`. `override_exe_changes = 1` overrides it.
+Each tweak checks two signatures (FNV-1a) before turning on:
+- **the edges**, what the hook uses (the entry, the return point, the routines it calls). If they don't match, the tweak never turns on;
+- **the body**, the original routine the tweak replaces. If only the body differs, the exe already has another change there and, **as in the rest of the project, the exe's routine stays**, with a note in `tweaks.log`. `override_exe_changes = 1` overrides it.
 
 On the exes we have [observed]:
 
@@ -79,7 +77,7 @@ Each club gets a **weight**, and the club is drawn **in proportion to its weight
 | Per-club cap | weight 0 if the club already got `season_cap` regens in the last 365 days (counted in the save itself: the regen bit and the date he joined the club; no new data in the save) | `season_cap` |
 | Temperature | exponent: 1 proportional, higher more predictable, lower more random | `temperature` |
 
-With `log = 1`, each pick goes to `regens.log`: PA, club, reputation, Training, chance and how many clubs took part.
+With `log = 1`, each pick goes to `tweaks.log`: PA, club, reputation, Training, chance and how many clubs took part.
 
 ## Calibration (England, `TesteTelas.sav`, 200 simulated seasons)
 
@@ -126,5 +124,7 @@ Run: `python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham --tempo
 ## Next steps
 
 - Settle the curve in the discussion.
+- The configurator: an `.exe` that reads and writes `tweaks.cfg` (keeping the comments), checks the ranges, offers presets and shows, for the chosen exe, what each tweak will do (on, keeps the exe's, or doesn't fit).
+- At release: `cm0102-save2gb` will point here.
 - In-game proof: an automatic holiday career on the test bench, with the original exe and this DLL, comparing the distribution by band (`tools/regens_por_clube.py`) with the original.
 - Test with NickPatcher and CLZ.

@@ -1,8 +1,8 @@
 """Calibração da regra dos regens: os clubes reais de um país (lidos de um save) disputam uma temporada de jovens pela
 regra original (a nota da 0x7ad220 e o maior sorteio da 0x7ad0e0) e pela regra nova (sorteio proporcional, os pesos de
-`regens.cfg`). Só leitura do save; nada roda no jogo.
+`tweaks.cfg`). Só leitura do save; nada roda no jogo.
 
-Uso: python tools/calibrar.py SAVE PAIS [--cfg regens.cfg] [--temporadas 20] [--humano "Nome do clube"]
+Uso: python tools/calibrar.py SAVE PAIS [--cfg tweaks.cfg] [--temporadas 20] [--humano "Nome do clube"]
 Ex.: python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham
 
 Simplificações (ponytail: bastam para comparar as duas regras; o jogo real é a prova):
@@ -192,7 +192,7 @@ def temporada(regra, clubes, pas, n, cfg):
 def main():
     a = argparse.ArgumentParser()
     a.add_argument('save'); a.add_argument('pais')
-    a.add_argument('--cfg', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'regens.cfg'))
+    a.add_argument('--cfg', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tweaks.cfg'))
     a.add_argument('--temporadas', type=int, default=20); a.add_argument('--jovens', type=int)
     a.add_argument('--humano', default=''); a.add_argument('--semente', type=int, default=1)
     o = a.parse_args()
