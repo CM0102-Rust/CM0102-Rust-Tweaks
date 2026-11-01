@@ -165,6 +165,10 @@ unsafe fn desviar(de: usize, para: usize) {
 // ---------- diagnóstico (só com log = 1) ----------
 
 static mut FALHAS: u32 = 0;
+/// Para o resumo da batida de relógio: jovens da disputa, regens nascidos (pela tabela de idades), aposentados pelos inativos.
+static JOVENS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static NASCIDOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static APOSENTADOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 /// Os desvios instalados: (endereço no exe, destino), para conferir depois que as outras DLLs do exe carregaram.
 static mut DESVIOS: Vec<(usize, usize)> = Vec::new();
 
@@ -188,6 +192,26 @@ unsafe extern "system" fn ao_falhar(ponteiros: *mut usize) -> i32 {
     0 // EXCEPTION_CONTINUE_SEARCH: o jogo segue como seguiria
 }
 
+/// A batida de relógio (log = 1): uma linha `tick` a cada mês de jogo, com a data, os segundos desde o começo e o que a DLL
+/// já registrou. Só lê a data do jogo ([0xae2c90] dia, [0xae2c92] ano), numa linha de execução à parte, sem desviar nada:
+/// mostra se a carreira anda (e em que ritmo) mesmo quando nenhum ajuste escreve no log (override 0 num exe modificado).
+fn iniciar_batida() {
+    use core::sync::atomic::Ordering::Relaxed;
+    std::thread::spawn(|| {
+        let inicio = std::time::Instant::now();
+        let mut ultimo = (0u16, 255u8);
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            let (dia, ano) = unsafe { (w(0xae2c90) as u16, w(0xae2c92) as u16) };
+            let mes = ((dia as u32 * 12) / 366) as u8;
+            if ano > 1900 && (ano, mes) != ultimo {
+                ultimo = (ano, mes);
+                registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}", ano, dia, inicio.elapsed().as_secs(),
+                    JOVENS.load(Relaxed), NASCIDOS.load(Relaxed), APOSENTADOS.load(Relaxed)));
+            }
+        }
+    });
+}
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
 unsafe fn conferir_desvios() {
     for &(de, para) in (*core::ptr::addr_of!(DESVIOS)).iter() {
@@ -279,7 +303,7 @@ const PADRAO: Regras = Regras {
     inativo_idade: 28,
     inativo_rep: 1500.0,
     inativo_rep_por_ano: 250.0,
-    proteger_jovens: 23,
+    proteger_jovens: 0,
     surpresa: 15.0,
     temperatura: 1.0,
     registrar: false,
@@ -527,6 +551,7 @@ unsafe fn data_do_jogo() -> String {
 /// Uma linha do log por jovem da disputa, separada por tabulação (para contar depois):
 /// `regen  regra  data  idade  PA  CA  reputação  Training  elenco  clube  [chance  disputaram  surpresa]`.
 unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &str) {
+    JOVENS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
     let ficha = d(jogador + 0x61);
     let (rep, tr, nome_clube) = if clube != 0 { (w(clube + 0x80) as i32, b(clube + 0x7f) as i32, nome(clube)) } else { (-1, -1, "(no club)".into()) };
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
@@ -537,12 +562,14 @@ unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &s
 /// A entrada original da 0x7ad0e0, para o modo de observação (`rule = original` com `log = 1`): os 7 bytes do prólogo
 /// (`sub esp, 0x14; mov [esp+0x10], ecx`, sem salto relativo) copiados para um trecho que volta em 0x7ad0e7.
 static mut DISPUTA_ORIGINAL: usize = 0;
+/// "original" (rule = original) ou "exe" (a disputa ficou com o exe modificado, override 0).
+static mut DISPUTA_ROTULO: &str = "original";
 
 /// { 0x7ad0e0 } no modo de observação: a disputa da original escolhe, e a escolha vai para o log.
 unsafe extern "thiscall" fn observar_clube(this: usize, jogador: usize) -> usize {
     let original: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(DISPUTA_ORIGINAL);
     let clube = original(this, jogador);
-    registrar_escolha("original", jogador, clube, "-\t-\t-");
+    registrar_escolha(DISPUTA_ROTULO, jogador, clube, "-\t-\t-");
     clube
 }
 
@@ -603,6 +630,7 @@ unsafe extern "C" fn sortear_idade_fora(pessoa: usize) -> u32 {
     };
     let idade = rejuvenescer(&r, idade);
     if r.registrar {
+        NASCIDOS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
         registro::linha(&format!("birth\t{}\t{}\t{}\tout of game", data_do_jogo(), idade, w(d(pessoa + 0x61) + 7)));
     }
     idade as u32
@@ -615,6 +643,7 @@ unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
     let r = REGRAS;
     let idade = rejuvenescer(&r, idade_da_tabela(&r));
     if r.registrar {
+        NASCIDOS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
         registro::linha(&format!("birth\t{}\t{}\t{}", data_do_jogo(), idade, w(d(pessoa + 0x61) + 7)));
     }
     let teto = r.teto_da_idade[idade - IDADE_MIN];
@@ -708,6 +737,7 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
             let limiar = r.inativo_rep + r.inativo_rep_por_ano * (idade - r.inativo_idade) as f64;
             let sai = rep <= 0 || (sorteio(rep) as f64) < limiar;
             if sai && r.registrar {
+                APOSENTADOS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
                 registro::linha(&format!("idle\t{}\t{}\t{}\t{}", data_do_jogo(), idade, rep, dias));
             }
             sai
@@ -764,7 +794,8 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha("retire idle players: off (retire_idle_players = 0)");
         } else if pode_ligar(&INATIVOS, s) {
             desviar(0x7a8050, aposentadoria_do_desempregado as *const () as usize);
-            registro::linha(&format!("retire idle players: on ({}+ years and {}+ days without a club; young players under {} protected)", r.inativo_idade, r.inativo_dias, r.proteger_jovens));
+            let protecao = if r.proteger_jovens > 0 { format!("players under {} protected", r.proteger_jovens) } else { "no protection for young players".to_string() };
+            registro::linha(&format!("retire idle players: on ({}+ years and {}+ days without a club; {})", r.inativo_idade, r.inativo_dias, protecao));
         }
         if !r.novo && r.registrar {
             if assinatura(DISPUTA.bordas) == DISPUTA.assinatura_das_bordas && instalar_observacao() {
@@ -777,6 +808,12 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         } else if pode_ligar(&DISPUTA, s) {
             desviar(0x7ad0e0, escolher_clube as *const () as usize);
             registro::linha("regens 0.1: on (proportional draw)");
+        } else if r.registrar && assinatura(DISPUTA.bordas) == DISPUTA.assinatura_das_bordas {
+            // a disputa ficou com o exe (override 0): observar a escolha dele, no mesmo formato
+            DISPUTA_ROTULO = "exe";
+            if instalar_observacao() {
+                registro::linha("regens 0.1: logging the exe's own picks (log = 1)");
+            }
         }
     }
     1
@@ -812,6 +849,7 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
     if REGRAS.registrar && !CONFERIDO {
         CONFERIDO = true;
         conferir_desvios();
+        iniciar_batida();
     }
     match proxima_ddraw() {
         Some(f) => f(guid, saida, externo),

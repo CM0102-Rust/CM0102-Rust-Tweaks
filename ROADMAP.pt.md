@@ -41,7 +41,7 @@ A configuração que a DLL distribui.
 | `retire_idle_players` | ligado | aposentar quem ninguém quer libera fichas, e mais fichas viram mais regens por ano (implementado: a 0x7a8050 trocada) |
 | `idle_days`, `idle_min_age` | 180 dias, 28 anos | meia temporada sem clube, a partir dos 28 |
 | `idle_rep`, `idle_rep_per_year` | 1500, +250 por ano | a chance sobe com a idade (reputação 3000: 50% aos 28, 100% aos 34) |
-| `protect_young_unemployed` | 23 | abaixo de 23 anos a regra do desempregado não aposenta (a original podia aposentar um regen que ninguém contratou) |
+| `protect_young_unemployed` | 0 | sem proteção: numa carreira de teste, proteger os menores de 23 cortou a maior parte da reciclagem em regens (a original aposenta em março centenas de jovens sem clube há mais de um ano) |
 
 ✅ **Calibrado** em 01/11/2026 na Inglaterra, no Brasil e na Itália (os números estão no README, § A calibração). O que o simulador não mede, os elencos reais ao longo da carreira, fica para a prova no jogo.
 

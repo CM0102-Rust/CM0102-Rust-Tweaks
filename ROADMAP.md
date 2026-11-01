@@ -41,7 +41,7 @@ The configuration the DLL ships with.
 | `retire_idle_players` | on | retiring players nobody wants frees records, and more records mean more regens a year (implemented: 0x7a8050 replaced) |
 | `idle_days`, `idle_min_age` | 180 days, age 28 | half a season without a club, from 28 |
 | `idle_rep`, `idle_rep_per_year` | 1500, +250 a year | the chance rises with age (reputation 3000: 50% at 28, 100% at 34) |
-| `protect_young_unemployed` | 23 | under 23 the unemployed rule never retires him (the original could retire a regen nobody signed) |
+| `protect_young_unemployed` | 0 | no protection: in a test career, protecting under-23s cut most of the recycling into regens (the original retires hundreds of youngsters clubless for over a year in March) |
 
 ✅ **Calibrated** on 11/01/2026 on England, Brazil and Italy (the numbers are in the README, § Calibration). What the simulator can't measure, real squads over a career, goes to the in-game proof.
 

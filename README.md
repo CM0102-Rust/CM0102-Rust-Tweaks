@@ -87,7 +87,7 @@ Every regen is born from a retired player's record. So retiring players nobody w
 | `idle_min_age` | 28 | from this age the new rule applies; below it, the original one |
 | `idle_rep` | 1500 | the draw threshold at `idle_min_age` (the original: 750) |
 | `idle_rep_per_year` | 250 | how much the threshold rises per year of age |
-| `protect_young_unemployed` | 23 | below this age, the unemployed rule never retires him (0: no protection) |
+| `protect_young_unemployed` | 0 | below this age, the unemployed rule never retires him; 0 = no protection (the default: in a test career, protecting under-23s cut most of the recycling into regens, and the original already gives a clubless youngster 365 days) |
 
 He retires when random(current reputation) < `idle_rep` + `idle_rep_per_year` × (age − `idle_min_age`). Example, with reputation 3000:
 - at 28, 50% per check;
@@ -121,7 +121,7 @@ Each club gets a **weight**, and the club is drawn **in proportion to its weight
 | Per-club cap | weight 0 if the club already got `season_cap` regens in the last 365 days (counted in the save itself: the regen bit and the date he joined the club; no new data in the save) | `season_cap` |
 | Temperature | exponent: 1 proportional, higher more predictable, lower more random | `temperature` |
 
-With `log = 1`, each pick goes to `tweaks.log`: PA, club, reputation, Training, chance and how many clubs took part.
+With `log = 1`, `tweaks.log` records what happens, one line per event: `tick` (the game date every month, with a summary, to know the career is moving even when no tweak writes anything), `regen` (each contest youngster, by the new rule, the original or the exe's), `birth` (each birth through the age table), `idle` (each retirement by the idle rule), `check` (the hooks checked after the exe's DLLs load) and `crash` (the first access violation, with address and registers). `tools/comparar_logs.py` compares two logs.
 
 ## Calibration (simulator, `TesteTelas.sav`, 200 seasons)
 

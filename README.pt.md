@@ -87,7 +87,7 @@ Cada regen nasce da ficha de um jogador que se aposentou. Então, aposentar mais
 | `idle_min_age` | 28 | a partir dessa idade vale a regra nova; abaixo, a original |
 | `idle_rep` | 1500 | o limiar do sorteio aos `idle_min_age` anos (a original: 750) |
 | `idle_rep_per_year` | 250 | quanto o limiar sobe por ano de idade |
-| `protect_young_unemployed` | 23 | abaixo dessa idade, a regra do desempregado não aposenta (0: sem proteção) |
+| `protect_young_unemployed` | 0 | abaixo dessa idade, a regra do desempregado não aposenta; 0 = sem proteção (o padrão: numa carreira de teste, proteger os menores de 23 cortou a maior parte da reciclagem em regens, e a original já dá 365 dias ao jovem sem clube) |
 
 Aposenta quando sorteio(reputação atual) < `idle_rep` + `idle_rep_per_year` × (idade − `idle_min_age`). Exemplo, com reputação 3000:
 - aos 28 anos, 50% por busca;
@@ -121,7 +121,7 @@ Cada clube recebe um **peso**, e o clube é sorteado **na proporção do peso**,
 | Teto por clube | peso 0 se o clube já recebeu `season_cap` regens nos últimos 365 dias (contados no próprio save: o bit do regen e a data de entrada no clube; sem dado novo no save) | `season_cap` |
 | Temperatura | expoente: 1 proporcional, maior mais previsível, menor mais aleatório | `temperature` |
 
-Com `log = 1`, cada escolha vai para `tweaks.log`: PA, clube, reputação, Training, chance e quantos disputaram.
+Com `log = 1`, o `tweaks.log` registra o que acontece, uma linha por evento: `tick` (a data do jogo a cada mês, com o resumo, para saber se a carreira anda mesmo quando nenhum ajuste escreve), `regen` (cada jovem da disputa, pela regra nova, pela original ou pela do exe), `birth` (cada nascimento pela tabela de idades), `idle` (cada aposentadoria pelos inativos), `check` (os desvios conferidos depois das DLLs do exe) e `crash` (a primeira violação de acesso, com endereço e registradores). O `tools/comparar_logs.py` compara dois logs.
 
 ## A calibração (simulador, `TesteTelas.sav`, 200 temporadas)
 
