@@ -94,7 +94,9 @@ He retires when random(current reputation) < `idle_rep` + `idle_rep_per_year` ×
 - at 31, 75%;
 - at 34, 100%.
 
-A good unemployed 28-year-old (reputation 6000) gets 25% per check and has time to find a club. Managers without a club keep the original rule, and anyone on a shortlist still doesn't retire.
+A good unemployed 28-year-old (reputation 6000) gets 25% per check and has time to find a club.
+
+**On the CLZ exes, the rule barely acts:** NickPatcher skips, in the retirement search (0x7a5790), everyone under 34 (a `jmp` at 0x7a5806 into the `.nick` section), and from 34 on the game's age rule already retires anyone clubless for more than 65 days. In a two-season CLZ career it retired no one [observed]. `tweaks.log` says so at start-up. Managers without a club keep the original rule, and anyone on a shortlist still doesn't retire.
 
 ## The new rule
 

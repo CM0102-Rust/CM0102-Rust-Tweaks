@@ -94,7 +94,9 @@ Aposenta quando sorteio(reputação atual) < `idle_rep` + `idle_rep_per_year` ×
 - aos 31, 75%;
 - aos 34, 100%.
 
-Um bom desempregado de 28 anos (reputação 6000) fica com 25% por busca e tem tempo de achar clube. Os técnicos sem clube seguem a regra original, e quem está numa lista de observados continua sem se aposentar.
+Um bom desempregado de 28 anos (reputação 6000) fica com 25% por busca e tem tempo de achar clube.
+
+**Nos exes do CLZ, a regra quase não age:** o NickPatcher pula, na busca de aposentadorias (0x7a5790), quem tem menos de 34 anos (um `jmp` em 0x7a5806 para a seção `.nick`), e de 34 em diante a regra da idade do jogo já aposenta quem está sem clube há mais de 65 dias. Numa carreira de duas temporadas no CLZ, ela não aposentou ninguém [observado]. O `tweaks.log` avisa disso na partida. Os técnicos sem clube seguem a regra original, e quem está numa lista de observados continua sem se aposentar.
 
 ## A regra nova
 

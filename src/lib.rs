@@ -46,6 +46,11 @@ extern "system" {
     fn GetCurrentProcess() -> *mut c_void;
     fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
     fn AddVectoredExceptionHandler(primeiro: u32, tratador: unsafe extern "system" fn(*mut usize) -> i32) -> *mut c_void;
+    fn GetCurrentThreadId() -> u32;
+    fn OpenThread(acesso: u32, herdar: i32, id: u32) -> *mut c_void;
+    fn SuspendThread(linha: *mut c_void) -> u32;
+    fn ResumeThread(linha: *mut c_void) -> u32;
+    fn GetThreadContext(linha: *mut c_void, contexto: *mut u8) -> i32;
 }
 
 /// Uma parte da DLL e o que ela confere no exe antes de ligar (FNV-1a de 64 bits dos trechos no cm0102.exe 3.9.68):
@@ -165,6 +170,8 @@ unsafe fn desviar(de: usize, para: usize) {
 // ---------- diagnóstico (só com log = 1) ----------
 
 static mut FALHAS: u32 = 0;
+/// A linha de execução principal do jogo (a que carrega a DLL), para o vigia de travamento.
+static mut LINHA_PRINCIPAL: u32 = 0;
 /// Para o resumo da batida de relógio: jovens da disputa, regens nascidos (pela tabela de idades), aposentados pelos inativos.
 static JOVENS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 static NASCIDOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
@@ -172,26 +179,52 @@ static APOSENTADOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU3
 /// Os desvios instalados: (endereço no exe, destino), para conferir depois que as outras DLLs do exe carregaram.
 static mut DESVIOS: Vec<(usize, usize)> = Vec::new();
 
-/// A primeira violação de acesso (até 3) vai para o log com o endereço, os registradores e o topo da pilha, antes de o
+/// As primeiras exceções graves (até 3: violação de acesso, divisão por zero, estouro de pilha, instrução inválida) vão para o log com o endereço, os registradores e o topo da pilha, antes de o
 /// jogo cair: sem isso, uma queda num exe com outra DLL (a NickDLL do CLZ) não deixa rastro.
 unsafe extern "system" fn ao_falhar(ponteiros: *mut usize) -> i32 {
     let registro_da_excecao = *ponteiros;
     let contexto = *ponteiros.add(1);
     let codigo = *(registro_da_excecao as *const u32);
-    if codigo == 0xc000_0005 && FALHAS < 3 {
+    // violação de acesso, divisão inteira por zero, estouro de pilha, instrução inválida ou privilegiada
+    let grave = matches!(codigo, 0xc000_0005 | 0xc000_0094 | 0xc000_00fd | 0xc000_001d | 0xc000_0096);
+    if grave && FALHAS < 3 {
         FALHAS += 1;
         let r = |o: usize| *((contexto + o) as *const u32);
         let alvo = *((registro_da_excecao + 0x18) as *const u32);
         let modo = *((registro_da_excecao + 0x14) as *const u32);
         let esp = r(0xc4) as usize;
         let pilha: Vec<String> = (0..16).map(|k| format!("{:08x}", core::ptr::read_volatile((esp + 4 * k) as *const u32))).collect();
-        registro::linha(&format!("crash\t{}\teip {:08x} {} {:08x}\teax {:08x} ebx {:08x} ecx {:08x} edx {:08x} esi {:08x} edi {:08x} ebp {:08x} esp {:08x}\tdll {:08x}\tstack {}",
-            data_do_jogo(), r(0xb8), if modo == 1 { "writing" } else { "reading" }, alvo, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), r(0xc4),
+        registro::linha(&format!("crash\t{}\tcode {:08x}\teip {:08x} {} {:08x}\teax {:08x} ebx {:08x} ecx {:08x} edx {:08x} esi {:08x} edi {:08x} ebp {:08x} esp {:08x}\tdll {:08x}\tstack {}",
+            data_do_jogo(), codigo, r(0xb8), if modo == 1 { "writing" } else { "reading" }, alvo, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), r(0xc4),
             ao_falhar as *const () as usize, pilha.join(" ")));
     }
     0 // EXCEPTION_CONTINUE_SEARCH: o jogo segue como seguiria
 }
 
+/// O vigia de travamento: com a data parada, pausa a linha principal 5 vezes, meio segundo entre elas, e registra onde
+/// ela está (eip, esp e o topo da pilha). Um laço infinito aparece como o mesmo trecho de código nas 5 amostras.
+unsafe fn registrar_travamento(data: String) {
+    let linha = OpenThread(0x0002 | 0x0008, 0, LINHA_PRINCIPAL); // THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT
+    if linha.is_null() {
+        registro::linha("hang\tcould not open the main thread");
+        return;
+    }
+    let mut amostras = Vec::new();
+    for _ in 0..5 {
+        let mut ctx = [0u8; 0x2cc]; // CONTEXT do x86
+        core::ptr::write_unaligned(ctx.as_mut_ptr() as *mut u32, 0x0001_0003); // CONTEXT_CONTROL | CONTEXT_INTEGER
+        SuspendThread(linha);
+        let ok = GetThreadContext(linha, ctx.as_mut_ptr()) != 0;
+        let (eip, esp) = (core::ptr::read_unaligned(ctx.as_ptr().add(0xb8) as *const u32), core::ptr::read_unaligned(ctx.as_ptr().add(0xc4) as *const u32));
+        let pilha: Vec<String> = if ok { (0..12).map(|k| format!("{:08x}", core::ptr::read_volatile((esp as usize + 4 * k) as *const u32))).collect() } else { Vec::new() };
+        ResumeThread(linha);
+        amostras.push(format!("eip {:08x} esp {:08x} stack {}", eip, esp, pilha.join(" ")));
+        std::thread::sleep(std::time::Duration::from_millis(500));
+    }
+    for a in amostras {
+        registro::linha(&format!("hang\t{}\t{}", data, a));
+    }
+}
 /// A batida de relógio (log = 1): uma linha `tick` a cada mês de jogo, com a data, os segundos desde o começo e o que a DLL
 /// já registrou. Só lê a data do jogo ([0xae2c90] dia, [0xae2c92] ano), numa linha de execução à parte, sem desviar nada:
 /// mostra se a carreira anda (e em que ritmo) mesmo quando nenhum ajuste escreve no log (override 0 num exe modificado).
@@ -200,9 +233,19 @@ fn iniciar_batida() {
     std::thread::spawn(|| {
         let inicio = std::time::Instant::now();
         let mut ultimo = (0u16, 255u8);
+        let (mut data_vista, mut desde, mut avisado) = ((0u16, 0u16), std::time::Instant::now(), false);
         loop {
             std::thread::sleep(std::time::Duration::from_secs(3));
             let (dia, ano) = unsafe { (w(0xae2c90) as u16, w(0xae2c92) as u16) };
+            // o vigia: a data parada por 60 s (com o jogo já numa carreira) é um travamento, ou o jogo esperando um clique
+            if (dia, ano) != data_vista {
+                data_vista = (dia, ano);
+                desde = std::time::Instant::now();
+                avisado = false;
+            } else if ano > 1900 && !avisado && desde.elapsed().as_secs() >= 60 {
+                avisado = true;
+                unsafe { registrar_travamento(format!("{}-{:03}", ano, dia)) };
+            }
             let mes = ((dia as u32 * 12) / 366) as u8;
             if ano > 1900 && (ano, mes) != ultimo {
                 ultimo = (ano, mes);
@@ -764,6 +807,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
     if motivo == 1 {
         let r = ler_regras();
         REGRAS = r;
+        LINHA_PRINCIPAL = GetCurrentThreadId();
         if r.registrar {
             AddVectoredExceptionHandler(1, ao_falhar);
         }
@@ -796,6 +840,11 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             desviar(0x7a8050, aposentadoria_do_desempregado as *const () as usize);
             let protecao = if r.proteger_jovens > 0 { format!("players under {} protected", r.proteger_jovens) } else { "no protection for young players".to_string() };
             registro::linha(&format!("retire idle players: on ({}+ years and {}+ days without a club; {})", r.inativo_idade, r.inativo_dias, protecao));
+            // o NickPatcher (exes do CLZ) pula, na busca de aposentadorias (0x7a5790), quem tem menos de 34 anos: um `jmp` em
+            // 0x7a5806 para a seção dele. A regra dos inativos continua ligada, mas quase não acha ninguém para avaliar
+            if *(0x7a5806 as *const u8) == 0xe9 {
+                registro::linha("retire idle players: note: this exe skips retirements under 34 (a NickPatcher option), so this rule will rarely find anyone");
+            }
         }
         if !r.novo && r.registrar {
             if assinatura(DISPUTA.bordas) == DISPUTA.assinatura_das_bordas && instalar_observacao() {
