@@ -1,0 +1,15 @@
+[package]
+name = "cm0102-regens"
+version = "0.1.0"
+edition = "2021"
+description = "CM 01/02 3.9.68: outra regra para a distribuicao dos regens, como ddraw.dll repassadora (prototipo)"
+publish = false
+
+[lib]
+name = "ddraw"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[profile.release]
+panic = "abort"
+opt-level = 2
