@@ -61,10 +61,17 @@ const TRECHOS_DO_SAVE: [(usize, usize); 15] = [
 ];
 const ASSINATURA_DO_SAVE: u64 = 0x232589cfe29f6240;
 
-/// A idade: o bloco do sorteio da idade e do teto do CA na 0x7abac0 (0x7ac58e..0x7ac6f9, ramo das nações no jogo ou de
-/// reputação ≥ 350) e o corte da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`).
-const TRECHOS_DA_IDADE: [(usize, usize); 2] = [(0x7ac58e, 0x7ac6f6 - 0x7ac58e + 4), (0x7ace65, 6)];
-const ASSINATURA_DA_IDADE: u64 = 0xcf951981d76c8ad6;
+/// A idade: as bordas do bloco do sorteio da idade e do teto do CA na 0x7abac0 (a entrada 0x7ac58e..0x7ac59f, com o
+/// `call sorteio(10000)` e o `add esp, 8`, e a volta em 0x7ac6f6; ramo das nações no jogo ou de reputação ≥ 350) e o corte
+/// da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`). O corpo fica de fora porque é trocado inteiro: o
+/// NickPatcher (exes do CLZ) muda nele as faixas de 15 a 18 e de 21 a 26 para 14 a 17 e 20 a 25 (0x7ac5b1, 0x7ac699).
+const TRECHOS_DA_IDADE: [(usize, usize); 3] = [(0x7ac58e, 0x11), (0x7ac6f6, 4), (0x7ace65, 6)];
+const ASSINATURA_DA_IDADE: u64 = 0x8cf4d2529f52726b;
+/// A idade nas nações fora do jogo de reputação < 350 (0x7abeb1..0x7abeea): sorteio(rep) < sorteio(1000) dá 23 a 27,
+/// senão 17 a 23; depois a fórmula do CA pela idade (que fica como está). Só as bordas: a entrada e a volta (0x7abeea,
+/// onde a idade vai para a local). O NickPatcher pula esse ramo (`jmp` em 0x7abeab), e então o desvio nunca roda.
+const TRECHOS_DA_IDADE_FORA: [(usize, usize); 2] = [(0x7abeb1, 6), (0x7abeea, 7)];
+const ASSINATURA_DA_IDADE_FORA: u64 = 0x3850462e62889e48;
 /// As idades que o `.cfg` aceita (`age_14` a `age_35`).
 const IDADE_MIN: usize = 14;
 const IDADES: usize = 22;
@@ -95,6 +102,7 @@ unsafe fn desviar(de: usize, para: usize) {
 struct Regras {
     save: bool,
     idades: bool,
+    idades_fora: bool,
     /// O peso (%) e o teto do CA (−1: sem teto) de cada idade, de IDADE_MIN em diante.
     peso_da_idade: [f64; IDADES],
     teto_da_idade: [i16; IDADES],
@@ -120,6 +128,7 @@ struct Regras {
 const PADRAO: Regras = Regras {
     save: false,
     idades: false,
+    idades_fora: false,
     // a distribuição original (0x7ac58e): 15 a 18 com sorteio(10000) = 0, 16 a 18 abaixo de 5000, 17 a 20 abaixo de 9976, 21
     // a 26 no resto; o teto do CA por idade é um valor só (a original muda o de 17 e 18 conforme a faixa sorteada)
     peso_da_idade: [0.0, 0.0025, 16.67, 29.11, 29.11, 12.44, 12.44, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -158,6 +167,10 @@ fn ler_regras() -> Regras {
         }
         if k == "ages" {
             r.idades = v == "custom"; // ages = custom | original
+            continue;
+        }
+        if k == "ages_out_of_game" {
+            r.idades_fora = v == "table"; // ages_out_of_game = table | original
             continue;
         }
         if let Some(n) = k.strip_prefix("age_").and_then(|n| n.parse::<usize>().ok()) {
@@ -329,11 +342,8 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
     escolhido.0
 }
 
-/// No lugar do bloco 0x7ac597..0x7ac6f6 da 0x7abac0 (pelo trecho de `instalar_idade`): a idade do jovem, sorteada
-/// pelos pesos do `.cfg`, e o teto do CA dessa idade (ficha +5), que fica de fora em `pular_teto`% das vezes (a original
-/// pula em 1 de 250 ou de 150). Devolve a idade, que o trecho põe no `bl` e na local da original.
-unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
-    let r = REGRAS;
+/// Uma idade da tabela do `.cfg` (`age_NN`), pelo sorteio do jogo.
+unsafe fn idade_da_tabela(r: &Regras) -> usize {
     let soma: f64 = r.peso_da_idade.iter().sum();
     let mut idade = 17usize; // sem peso nenhum: a idade mais comum da original
     if soma > 0.0 {
@@ -351,6 +361,22 @@ unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
             }
         }
     }
+    idade
+}
+
+/// No ramo das nações fora do jogo de reputação < 350 (pelo trecho de `instalar_idade_fora`): só a idade, da mesma
+/// tabela; o CA sai depois da fórmula da original pela idade.
+unsafe extern "C" fn sortear_idade_fora(_pessoa: usize) -> u32 {
+    let r = REGRAS;
+    idade_da_tabela(&r) as u32
+}
+
+/// No lugar do bloco 0x7ac597..0x7ac6f6 da 0x7abac0 (pelo trecho de `instalar_idade`): a idade do jovem, sorteada
+/// pelos pesos do `.cfg`, e o teto do CA dessa idade (ficha +5), que fica de fora em `pular_teto`% das vezes (a original
+/// pula em 1 de 250 ou de 150). Devolve a idade, que o trecho põe no `bl` e na local da original.
+unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
+    let r = REGRAS;
+    let idade = idade_da_tabela(&r);
     let teto = r.teto_da_idade[idade - IDADE_MIN];
     let ficha = d(pessoa + 0x61);
     if teto >= 0 && w(ficha + 5) > teto && (sorteio(10000) as f64) >= r.pular_teto * 100.0 {
@@ -382,6 +408,24 @@ unsafe fn instalar_idade(r: &Regras) -> bool {
     FlushInstructionCache(GetCurrentProcess(), 0x7ace69 as *const c_void, 1);
     true
 }
+/// Troca o sorteio da idade das nações fora do jogo (0x7abeb1: `push eax; call sorteio(rep)`, nada pendente na pilha)
+/// por um trecho que chama `sortear_idade_fora(esi)`, põe a idade no `ebx` e volta em 0x7abeea, onde a original guarda
+/// a idade na local e segue para a fórmula do CA.
+unsafe fn instalar_idade_fora() -> bool {
+    let t = VirtualAlloc(core::ptr::null_mut(), 32, 0x3000, 0x40) as *mut u8;
+    if t.is_null() {
+        return false;
+    }
+    let f = sortear_idade_fora as *const () as u32;
+    let mut c: Vec<u8> = vec![0x56, 0xb8]; // push esi; mov eax, f
+    c.extend_from_slice(&f.to_le_bytes());
+    c.extend_from_slice(&[0xff, 0xd0, 0x83, 0xc4, 0x04, 0x0f, 0xb6, 0xd8, 0xe9]); // call eax; add esp, 4; movzx ebx, al; jmp
+    let fim = t as usize + c.len() + 4;
+    c.extend_from_slice(&(0x7abeeausize.wrapping_sub(fim) as i32).to_le_bytes());
+    core::ptr::copy_nonoverlapping(c.as_ptr(), t, c.len());
+    desviar(0x7abeb1, t as usize);
+    true
+}
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     if motivo == 1 {
@@ -405,6 +449,13 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha(&format!("regen ages: custom (contest up to age {})", r.idade_max_disputa));
         } else {
             registro::linha("regen ages: could not allocate the code stub; nothing was changed");
+        }
+        if !r.idades || !r.idades_fora {
+            registro::linha("regen ages (nations not in the game): original");
+        } else if assinatura(&TRECHOS_DA_IDADE_FORA) != ASSINATURA_DA_IDADE_FORA {
+            registro::linha(&format!("regen ages (nations not in the game): this exe differs from 3.9.68 there (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DA_IDADE_FORA)));
+        } else if instalar_idade_fora() {
+            registro::linha("regen ages (nations not in the game): from the table");
         }
         let a = assinatura(&TRECHOS);
         if !r.novo {

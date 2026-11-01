@@ -44,7 +44,8 @@ The youngster's age is drawn in a block of `regenerate_as_youth_player` (0x7ac59
 
 - The `.cfg` default table is the original distribution: 16 to 20 almost always (17 and 18 at 29% each), 15 and 21 to 26 very rare.
 - A deliberate difference: the CA cap becomes one value per age. In the original, the cap at 17 and 18 depends on the band that was drawn (80 or 90, 100 or 110).
-- Only the branch for nations in the game (or with reputation ≥ 350) uses the table. Nations not in the game with reputation < 350 keep the original age (17 to 27), because there the age also picks the CA formula.
+- Nations not in the game with reputation < 350 have their own draw in the original: mostly 23 to 27, sometimes 17 to 23, and there the age picks the CA formula (younger, lower CA), with no cap. With `ages_out_of_game = table` they use the table too (0x7abeb1..0x7abeea); the CA formula by age stays the original one, and the table's caps don't apply there. The default is `original`.
+- **NickPatcher already changes the ages** (the three CLZ exes) [observed in the bytes]: the very rare 15-to-18 band becomes 14 to 17 (0x7ac5b1), the rare 21-to-26 band becomes 20 to 25 (0x7ac699), and nations not in the game use the playable nations' draw (`jmp` at 0x7abeab). The age signatures only cover the edges of the blocks, since the body is replaced whole; so the table also works on those exes, and there `ages_out_of_game` has no effect (the branch never runs).
 
 ## The new rule
 

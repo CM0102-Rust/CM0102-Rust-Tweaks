@@ -44,7 +44,8 @@ A idade do jovem é sorteada num bloco da `regenerate_as_youth_player` (0x7ac597
 
 - A tabela padrão do `.cfg` é a distribuição original: 16 a 20 anos quase sempre (17 e 18 com 29% cada), 15 e 21 a 26 raríssimos.
 - Diferença assumida: o teto do CA vira um valor por idade. Na original, o de 17 e o de 18 dependem da faixa sorteada (80 ou 90, 100 ou 110).
-- Só o ramo das nações no jogo (ou de reputação ≥ 350) usa a tabela. As nações fora do jogo de reputação < 350 seguem com a idade original (17 a 27), porque ali a idade decide também a fórmula do CA.
+- As nações fora do jogo de reputação < 350 têm um sorteio próprio na original: quase sempre 23 a 27 anos, às vezes 17 a 23, e ali a idade escolhe a fórmula do CA (mais novo, CA menor), sem teto. Com `ages_out_of_game = table` elas também usam a tabela (0x7abeb1..0x7abeea); a fórmula do CA pela idade continua a da original, e os tetos da tabela não valem ali. O padrão é `original`.
+- **O NickPatcher já mexe na idade** (os três exes do CLZ) [observado nos bytes]: a faixa raríssima de 15 a 18 vira 14 a 17 (0x7ac5b1), a rara de 21 a 26 vira 20 a 25 (0x7ac699), e as nações fora do jogo passam a usar o sorteio das jogáveis (`jmp` em 0x7abeab). As assinaturas da idade cobrem só as bordas dos blocos, porque o corpo é trocado inteiro; então a tabela também funciona nesses exes, e lá o `ages_out_of_game` não faz efeito (o ramo nunca roda).
 
 ## A regra nova
 
