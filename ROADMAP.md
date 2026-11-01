@@ -74,6 +74,7 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 - visuals where they help: the age table as draggable bars, the level curve drawn, an example of each club's chance that changes as the user drags;
 - reads and writes `tweaks.cfg` keeping the comments; the file stays the single source;
 - presets ("Original", "Balanced"...);
+- explains what "nation in the game" means: the league picked when starting the career, **playable or background** (for regens both count the same; the `NationLeagueSelected` byte is 2 for playable and 1 for background, and the regen code only checks it isn't 0); "not in the game" is a nation whose league wasn't picked. It applies to ages, to `unattached` and to the contest;
 - shows, for the chosen exe, what each tweak will do: on, keeps the exe's (naming the change found, like the Regen Tweak) or doesn't fit;
 - technology to be decided: a single exe, no installer and no dependency on anything installed (for example, Rust with an interface library that draws by itself).
 
