@@ -14,6 +14,8 @@ Cada ajuste tem a sua chave no `tweaks.cfg`, ao lado do exe. **Todos começam de
 
 Quando este repositório for aberto, ele substitui o `CM0102-Rust/cm0102-save2gb`, que passa a apontar para cá: as evoluções ficam todas aqui. Por isso o save está nesta DLL; com uma DLL só, ninguém precisa encadear duas `ddraw.dll`.
 
+O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
+
 **Estado: protótipo para discussão.** Compila e confere as assinaturas, mas ainda não rodou no jogo. A curva dos regens é um ponto de partida, não uma proposta fechada.
 
 ## Arquivos

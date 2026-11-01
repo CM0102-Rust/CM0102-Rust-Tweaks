@@ -14,6 +14,8 @@ Each tweak has its own switch in `tweaks.cfg`, next to the exe. **They all start
 
 When this repository goes public, it replaces `CM0102-Rust/cm0102-save2gb`, which will point here: every future change lives here. That's why the save fix is in this DLL; with a single DLL, nobody needs to chain two `ddraw.dll` files.
 
+The plan is in [ROADMAP.md](ROADMAP.md).
+
 **Status: prototype for discussion.** It builds and checks the signatures, but it hasn't run in the game yet. The regen curve is a starting point, not a final proposal.
 
 ## Files
