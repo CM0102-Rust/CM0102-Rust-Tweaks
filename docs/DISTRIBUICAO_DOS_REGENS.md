@@ -139,7 +139,7 @@ O degrau entre 19 e 20 é enorme [cálculo].
 
 ## 7. Por que os grandes da IA levam tantos
 
-Simulação da fórmula acima ([inferência]: clubes inventados, 20.000 sorteios; script em `postagens/2026-11-01_regens/simula_nota.py`):
+Simulação da fórmula acima ([inferência]: clubes inventados, 20.000 sorteios; script em `regens/tools/simula_nota.py`):
 - grande da IA: R 9000, Tr 20, técnico bom;
 - médio da IA: R 6500, Tr 14, técnico médio;
 - humano: R 6500, Tr 20;

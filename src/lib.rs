@@ -43,6 +43,7 @@ extern "system" {
     fn VirtualProtect(end: *mut c_void, tam: usize, nova: u32, antiga: *mut u32) -> i32;
     fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;
     fn GetCurrentProcess() -> *mut c_void;
+    fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
 }
 
 /// A entrada da 0x7ad0e0, a chamada dela na 0x7abac0 e o começo das rotinas do jogo que a nova chama. O corpo da 0x7ad0e0
@@ -59,6 +60,14 @@ const TRECHOS_DO_SAVE: [(usize, usize); 15] = [
     (0x94c552, 32), (0x90d130, 32), (0x5e8290, 32),
 ];
 const ASSINATURA_DO_SAVE: u64 = 0x232589cfe29f6240;
+
+/// A idade: o bloco do sorteio da idade e do teto do CA na 0x7abac0 (0x7ac58e..0x7ac6f9, ramo das nações no jogo ou de
+/// reputação ≥ 350) e o corte da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`).
+const TRECHOS_DA_IDADE: [(usize, usize); 2] = [(0x7ac58e, 0x7ac6f6 - 0x7ac58e + 4), (0x7ace65, 6)];
+const ASSINATURA_DA_IDADE: u64 = 0xcf951981d76c8ad6;
+/// As idades que o `.cfg` aceita (`age_14` a `age_35`).
+const IDADE_MIN: usize = 14;
+const IDADES: usize = 22;
 
 unsafe fn assinatura(trechos: &[(usize, usize)]) -> u64 {
     let mut h = 0xcbf29ce484222325u64;
@@ -85,6 +94,12 @@ unsafe fn desviar(de: usize, para: usize) {
 #[derive(Clone, Copy)]
 struct Regras {
     save: bool,
+    idades: bool,
+    /// O peso (%) e o teto do CA (−1: sem teto) de cada idade, de IDADE_MIN em diante.
+    peso_da_idade: [f64; IDADES],
+    teto_da_idade: [i16; IDADES],
+    idade_max_disputa: i32,
+    pular_teto: f64,
     novo: bool,
     alvo_k: f64,
     alvo_ca: f64,
@@ -101,9 +116,17 @@ struct Regras {
     registrar: bool,
 }
 
+// As três chaves de ligar começam desligadas: sem o regens.cfg (ou sem a linha), a DLL não muda nada no jogo.
 const PADRAO: Regras = Regras {
-    save: true,
-    novo: true,
+    save: false,
+    idades: false,
+    // a distribuição original (0x7ac58e): 15 a 18 com sorteio(10000) = 0, 16 a 18 abaixo de 5000, 17 a 20 abaixo de 9976, 21
+    // a 26 no resto; o teto do CA por idade é um valor só (a original muda o de 17 e 18 conforme a faixa sorteada)
+    peso_da_idade: [0.0, 0.0025, 16.67, 29.11, 29.11, 12.44, 12.44, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    teto_da_idade: [80, 80, 80, 80, 100, 110, 110, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+    idade_max_disputa: 18,
+    pular_teto: 0.5,
+    novo: false,
     alvo_k: 50.0,
     alvo_ca: 0.0,
     sigma: 1500.0,
@@ -130,11 +153,26 @@ fn ler_regras() -> Regras {
         let Some((k, v)) = linha.split_once('=') else { continue };
         let (k, v) = (k.trim(), v.trim());
         if k == "rule" {
-            r.novo = v != "original"; // rule = new | original
+            r.novo = v == "new"; // rule = new | original
+            continue;
+        }
+        if k == "ages" {
+            r.idades = v == "custom"; // ages = custom | original
+            continue;
+        }
+        if let Some(n) = k.strip_prefix("age_").and_then(|n| n.parse::<usize>().ok()) {
+            // age_NN = peso[, teto do CA]
+            if (IDADE_MIN..IDADE_MIN + IDADES).contains(&n) {
+                let mut partes = v.split(',').map(str::trim);
+                if let Some(p) = partes.next().and_then(|p| p.parse::<f64>().ok()) {
+                    r.peso_da_idade[n - IDADE_MIN] = p.max(0.0);
+                    r.teto_da_idade[n - IDADE_MIN] = partes.next().and_then(|t| t.parse::<i16>().ok()).unwrap_or(-1);
+                }
+            }
             continue;
         }
         if k == "save_over_2gb" {
-            r.save = v != "0";
+            r.save = v == "1";
             continue;
         }
         let Ok(x) = v.parse::<f64>() else { continue };
@@ -152,6 +190,8 @@ fn ler_regras() -> Regras {
             "season_cap" => r.teto_temporada = x,
             "temperature" => r.temperatura = x,
             "log" => r.registrar = x != 0.0,
+            "contest_max_age" => r.idade_max_disputa = (x as i32).clamp(0, 126),
+            "ca_cap_skip" => r.pular_teto = x,
             _ => {}
         }
     }
@@ -289,6 +329,59 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
     escolhido.0
 }
 
+/// No lugar do bloco 0x7ac597..0x7ac6f6 da 0x7abac0 (pelo trecho de `instalar_idade`): a idade do jovem, sorteada
+/// pelos pesos do `.cfg`, e o teto do CA dessa idade (ficha +5), que fica de fora em `pular_teto`% das vezes (a original
+/// pula em 1 de 250 ou de 150). Devolve a idade, que o trecho põe no `bl` e na local da original.
+unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
+    let r = REGRAS;
+    let soma: f64 = r.peso_da_idade.iter().sum();
+    let mut idade = 17usize; // sem peso nenhum: a idade mais comum da original
+    if soma > 0.0 {
+        // os pesos em inteiros de até 60000 no total, para o sorteio do jogo ficar no ramo de 16 bits
+        let inteiros: Vec<i32> = r.peso_da_idade.iter().map(|p| (p / soma * 60000.0).round() as i32).collect();
+        let total: i32 = inteiros.iter().sum();
+        if total > 0 {
+            let mut x = sorteio(total);
+            for (k, &p) in inteiros.iter().enumerate() {
+                if x < p {
+                    idade = IDADE_MIN + k;
+                    break;
+                }
+                x -= p;
+            }
+        }
+    }
+    let teto = r.teto_da_idade[idade - IDADE_MIN];
+    let ficha = d(pessoa + 0x61);
+    if teto >= 0 && w(ficha + 5) > teto && (sorteio(10000) as f64) >= r.pular_teto * 100.0 {
+        core::ptr::write_unaligned((ficha + 5) as *mut i16, teto);
+    }
+    idade as u32
+}
+
+/// Troca o bloco da idade (0x7ac597: `call sorteio(10000)`, com a pilha ainda com os dois argumentos que o `add esp, 8`
+/// seguinte tiraria) por um trecho que chama `sortear_idade(esi)`, põe a idade no `ebx` e em [esp+0x1c] e volta em
+/// 0x7ac6f6, onde a original segue. E o corte da disputa: "menos de 19" vira `idade_max_disputa` + 1 (0x7ace69).
+unsafe fn instalar_idade(r: &Regras) -> bool {
+    let t = VirtualAlloc(core::ptr::null_mut(), 64, 0x3000, 0x40) as *mut u8;
+    if t.is_null() {
+        return false;
+    }
+    let f = sortear_idade as *const () as u32;
+    let mut c: Vec<u8> = vec![0x83, 0xc4, 0x08, 0x56, 0xb8]; // add esp, 8; push esi; mov eax, f
+    c.extend_from_slice(&f.to_le_bytes());
+    c.extend_from_slice(&[0xff, 0xd0, 0x83, 0xc4, 0x04, 0x0f, 0xb6, 0xd8, 0x88, 0x5c, 0x24, 0x1c, 0xe9]); // call eax; add esp, 4; movzx ebx, al; mov [esp+0x1c], bl; jmp
+    let fim = t as usize + c.len() + 4;
+    c.extend_from_slice(&(0x7ac6f6usize.wrapping_sub(fim) as i32).to_le_bytes());
+    core::ptr::copy_nonoverlapping(c.as_ptr(), t, c.len());
+    desviar(0x7ac597, t as usize);
+    let mut antiga = 0u32;
+    VirtualProtect(0x7ace69 as *mut c_void, 1, 0x40, &mut antiga);
+    *(0x7ace69 as *mut u8) = (r.idade_max_disputa + 1) as u8;
+    VirtualProtect(0x7ace69 as *mut c_void, 1, antiga, &mut antiga);
+    FlushInstructionCache(GetCurrentProcess(), 0x7ace69 as *const c_void, 1);
+    true
+}
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     if motivo == 1 {
@@ -303,6 +396,15 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha("save over 2 GB: on (saves up to 4 GB)");
         } else {
             registro::linha(&format!("save over 2 GB: this exe differs from 3.9.68 where the save code is (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DO_SAVE)));
+        }
+        if !r.idades {
+            registro::linha("regen ages: ages = original; nothing was changed");
+        } else if assinatura(&TRECHOS_DA_IDADE) != ASSINATURA_DA_IDADE {
+            registro::linha(&format!("regen ages: this exe differs from 3.9.68 where the age code is (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DA_IDADE)));
+        } else if instalar_idade(&r) {
+            registro::linha(&format!("regen ages: custom (contest up to age {})", r.idade_max_disputa));
+        } else {
+            registro::linha("regen ages: could not allocate the code stub; nothing was changed");
         }
         let a = assinatura(&TRECHOS);
         if !r.novo {

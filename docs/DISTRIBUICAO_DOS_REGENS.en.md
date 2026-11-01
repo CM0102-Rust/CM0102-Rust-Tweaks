@@ -139,7 +139,7 @@ The step from 19 to 20 is huge [calculation].
 
 ## 7. Why big AI clubs get so many
 
-A simulation of the formula above ([inference]: made-up clubs, 20,000 draws; script in `postagens/2026-11-01_regens/simula_nota.py`):
+A simulation of the formula above ([inference]: made-up clubs, 20,000 draws; script in `regens/tools/simula_nota.py`):
 - big AI club: R 9000, Tr 20, good manager;
 - mid AI club: R 6500, Tr 14, average manager;
 - human: R 6500, Tr 20;

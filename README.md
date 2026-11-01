@@ -2,27 +2,49 @@
 
 *Versão em português: [README.pt.md](README.pt.md)*
 
-A regens-only `ddraw.dll`, built like the save2gb one (`save/`). It replaces the clubs' contest for a youth regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) with a proportional draw configured in `regens.cfg`. The rest of the game, including how the youngster is created, stays the same. The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md).
+A **one-off** `ddraw.dll` for the community, built like the save2gb one (`save/`). It isn't the project's working `ddraw.dll` (`rust/`): it runs with the original exe or the NickPatcher ones, without the rest of the rewrite. The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md).
 
-The same DLL carries the save2gb **saves above 2 GB** fix (`save_over_2gb = 1` in the `.cfg`, on by default): the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs`, with the same signature as `save/`. So save2gb users swap one DLL for the other, with no need to chain two `ddraw.dll` files. Each part checks its own signature and turns on by itself. In the separate repository's copy, `conteiner.rs` goes in `src/` and the `#[path]` is removed, as in save2gb.
+It has three parts, each with its own switch in `regens.cfg` and its own signature. **They all start off:** without the `.cfg`, or without the line, the DLL changes nothing in the game.
 
-**Status: prototype for discussion.** It builds and checks the signature, but it hasn't run in the game yet. The curve in `regens.cfg` is a starting point, not a final proposal.
+| Switch | What it does |
+|---|---|
+| `save_over_2gb = 1` | The save2gb **saves above 2 GB** fix: the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs`, with the same signature as `save/` |
+| `ages = custom` | **Regen ages** from a table (§ Ages) |
+| `rule = new` | The **clubs' contest** for a youngster (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) becomes a proportional draw (§ The new rule) |
+
+**Having the save fix in this DLL is a deliberate choice** (Lucas's, 11/01/2026): two `ddraw.dll` files can't share a folder without chaining one into the other, so anyone who wants both the regens and the save uses a single DLL. The public save2gb (`CM0102-Rust/cm0102-save2gb`) stays as it is: its source only changes at releases.
+
+**It only builds on its own inside this repository:** `src/lib.rs` includes `src/conteiner.rs` through `#[path]`. The copy in the separate repository (`CM0102-Rust/cm0102-regens`, through `tools/espelhar.py`) moves `conteiner.rs` into `src/` and drops the `#[path]`, as in save2gb.
+
+**Status: prototype for discussion.** It builds and checks the signatures, but it hasn't run in the game yet. The curve in `regens.cfg` is a starting point, not a final proposal.
 
 ## Files
 
 | File | What |
 |---|---|
-| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `regens.cfg`, checks the signatures and redirects the save container and 0x7ad0e0 |
-| `regens.cfg` | The rules; goes next to the exe. `rule = original` turns everything off |
-| `tools/calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one |
+| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `regens.cfg`, checks the signatures and turns each part on |
+| `regens.cfg` | The rules, in English and commented (it's the community's file); goes next to the exe |
+| `tools/calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one (with the `.cfg` age table) |
+| `tools/simula_nota.py` | The document's made-up clubs example (§7) |
+| `tools/regens_por_clube.py` | Regens per club in a save, by reputation and Training band |
+| `tools/sav.py` | Reads the items of a `.sav` |
+| `tools/espelhar.py` | The copy to the separate repository (no commit or push) |
 
 Build: `cargo build --release` (output in `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
-Signature (FNV-1a of the pieces it depends on: the entry of 0x7ad0e0, its call site and the start of the routines the new one calls) [observed]:
-- **matches** `cm0102.exe`, `cm0102-1080.exe`, the portable one and the three CLZ exes;
-- **doesn't match** `cm0102_GDI.exe`, which has a different layout.
+Signatures (FNV-1a of the pieces each part depends on) [observed]:
+- **match** `cm0102.exe`, `cm0102-1080.exe`, the portable one and the three CLZ exes;
+- **don't match** `cm0102_GDI.exe`, which has a different layout.
 
-The body of 0x7ad0e0 is left out of the signature, so an exe with the Regen Tweak (0x7ad1bd) also works.
+For the regens part, the body of 0x7ad0e0 is left out, so an exe with the Regen Tweak (0x7ad1bd) also works.
+
+## Ages
+
+The youngster's age is drawn in a block of `regenerate_as_youth_player` (0x7ac597..0x7ac6f6), which also caps CA by age. With `ages = custom`, the DLL replaces that block with a small machine-code stub that calls `sortear_idade`: the age comes from the `.cfg` table `age_NN = chance, CA cap` (ages 14 to 35), and that age's CA cap is applied, except `ca_cap_skip`% of the time. The age then goes through the rest of the routine as in the original (birth year, attribute adjustments by age). And `contest_max_age` (default 18) replaces the "under 19 enters the contest" cut (the byte at 0x7ace69).
+
+- The `.cfg` default table is the original distribution: 16 to 20 almost always (17 and 18 at 29% each), 15 and 21 to 26 very rare.
+- A deliberate difference: the CA cap becomes one value per age. In the original, the cap at 17 and 18 depends on the band that was drawn (80 or 90, 100 or 110).
+- Only the branch for nations in the game (or with reputation ≥ 350) uses the table. Nations not in the game with reputation < 350 keep the original age (17 to 27), because there the age also picks the CA formula.
 
 ## The new rule
 
@@ -34,6 +56,8 @@ The eligible clubs are the same as in the original:
 - squad below the limit.
 
 Each club gets a **weight**, and the club is drawn **in proportion to its weight**, using the game's own random generator. No weight at all: the youngster stays clubless, as in the original.
+
+**The random sequence changes:** the new rule uses 2 draws from the generator per youngster; the original uses 1 per eligible club (and sometimes more, in the score bonuses). The age table also uses other draws. For a mod that's expected, but a career with the same seed (`-seed`) won't come out the same as the game without the DLL.
 
     weight = (level × facilities × staff × room) ^ temperature
 

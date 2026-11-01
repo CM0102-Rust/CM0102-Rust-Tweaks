@@ -6,10 +6,12 @@ Uso: python tools/calibrar.py SAVE PAIS [--cfg regens.cfg] [--temporadas 20] [--
 Ex.: python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham
 
 Simplificações (ponytail: bastam para comparar as duas regras; o jogo real é a prova):
-- os jovens são só os da disputa (menos de 19 anos); o PA vem dos jogadores de 31 anos ou mais do país (os próximos a se
-  aposentar), sorteado com reposição; quantos por temporada: --jovens, ou 1 para cada 150 jogadores do país (no Valencia.sav,
-  a Inglaterra teve ~88 regens por temporada e ~56% entram na disputa: ~50 para 7.900 jogadores);
-- CA = 0,25·PA + sorteio(0,6·PA) com o teto de 80 a 110 pela idade, sem a posição;
+- os jovens são os do ramo da disputa (3 em 4 dos regens de nação no jogo), com a idade pela tabela original (regra
+  original) ou pela do .cfg (regra nova, age_NN); os que passam de contest_max_age ficam de fora; o PA vem dos jogadores
+  de 31 anos ou mais do país (os próximos a se aposentar), sorteado com reposição; quantos por temporada (antes do corte
+  da idade): --jovens, ou 1 para cada 120 jogadores do país (no Valencia.sav, a Inglaterra teve ~88 regens por temporada,
+  e 3 em 4 vão para o ramo da disputa: ~66 para 7.900 jogadores);
+- CA = 0,25·PA + sorteio(0,6·PA) com o teto da idade, sem a posição;
 - competição ativa = clube com divisão; time B = nome terminado em " B" ou " II";
 - o bônus de +250/+500 do humano pelo estado do clube (ainda não decifrado) fica de fora."""
 import argparse, collections, math, os, random, struct, sys
@@ -105,15 +107,30 @@ PADRAO = dict(target_k=50.0, target_ca=0.0, sigma=1500.0, level_floor=0.002, fac
               squad_limit=50, squad_exp=0.5, season_cap=3, temperature=1.0)
 
 
+# A distribuição original das idades (0x7ac58e), que é também o padrão do .cfg: idade: (peso %, teto do CA ou None).
+IDADES = {15: (0.0025, 80), 16: (16.67, 80), 17: (29.11, 80), 18: (29.11, 100), 19: (12.44, 110), 20: (12.44, 110),
+          21: (0.04, None), 22: (0.04, None), 23: (0.04, None), 24: (0.04, None), 25: (0.04, None), 26: (0.04, None)}
+ORIGINAL = dict(idades=IDADES, contest_max_age=18, ca_cap_skip=0.5)
+
+
 def ler_cfg(caminho):
-    cfg = dict(PADRAO)
+    cfg = dict(PADRAO, **ORIGINAL)
+    cfg['idades'] = dict(IDADES)
     if caminho and os.path.exists(caminho):
         for linha in open(caminho, encoding='utf-8'):
             linha = linha.split('#')[0].strip()
-            if '=' in linha:
-                k, v = (x.strip() for x in linha.split('=', 1))
-                if k in cfg:
-                    cfg[k] = float(v)
+            if '=' not in linha:
+                continue
+            k, v = (x.strip() for x in linha.split('=', 1))
+            if k.startswith('age_') and k[4:].isdigit():
+                partes = [p.strip() for p in v.split(',')]
+                cfg['idades'][int(k[4:])] = (float(partes[0]), int(partes[1]) if len(partes) > 1 and partes[1] else None)
+            elif k == 'ages' and v == 'original':
+                cfg['idades_originais'] = True
+            elif k in cfg and k != 'idades':
+                cfg[k] = float(v)
+    if cfg.pop('idades_originais', False):
+        cfg.update(ORIGINAL)
     return cfg
 
 
@@ -145,12 +162,14 @@ def escolher_novo(j, clubes, cfg, recebidos):
 
 # ---------- a temporada ----------
 
-def jovem(pa):
-    r = random.randrange(10000)
-    idade = 15 + random.randrange(4) if r == 0 else 16 + random.randrange(3) if r < 5000 else 17 + random.randrange(2)
+def jovem(pa, idades):
+    """Um jovem pela tabela de idades (a original ou a do .cfg); None se a idade passa do corte da disputa."""
+    tabela = list(idades['idades'].items())
+    idade, (_, teto) = random.choices(tabela, weights=[p for _, (p, _) in tabela])[0]
+    if idade > idades['contest_max_age']:
+        return None
     ca = int(0.25 * pa) + random.randrange(max(1, int(0.6 * pa)))
-    teto = 80 if idade < 18 else 100 if r < 5000 else 110
-    if ca > teto and random.randrange(250):
+    if teto is not None and ca > teto and random.random() * 100 >= idades['ca_cap_skip']:
         ca = teto
     return dict(pa=pa, ca=ca, rep=250 + random.randrange(750) + 20 * ca + random.randrange(50))
 
@@ -160,7 +179,9 @@ def temporada(regra, clubes, pas, n, cfg):
         c['elenco'] = c['elenco0']
     recebidos = collections.Counter()
     for _ in range(n):
-        j = jovem(random.choice(pas))
+        j = jovem(random.choice(pas), ORIGINAL if regra == 'original' else cfg)
+        if j is None:
+            continue
         c = escolher_original(j, clubes) if regra == 'original' else escolher_novo(j, clubes, cfg, recebidos)
         if c:
             c['elenco'] += 1
@@ -187,9 +208,9 @@ def main():
         c['humano'] = bool(o.humano) and o.humano.lower() in c['nome'].lower()
     jogadores = [p for p in pessoas.values() if p['nacao'] == nid and p['ficha'] in fichas]
     pas = [fichas[p['ficha']] for p in jogadores if p['idade'] >= 31 and fichas[p['ficha']] > 0]
-    n = o.jovens or max(1, len(jogadores) // 150)
+    n = o.jovens or max(1, len(jogadores) // 120)
     cfg = ler_cfg(o.cfg)
-    print('%s: %d clubes, %d jogadores, %d jovens por temporada na disputa, %d temporadas' % (nacoes[nid], len(cl), len(jogadores), n, o.temporadas))
+    print('%s: %d clubes, %d jogadores, %d jovens por temporada no ramo da disputa (antes do corte da idade), %d temporadas' % (nacoes[nid], len(cl), len(jogadores), n, o.temporadas))
     faixa = lambda r: min(r // 1000, 9)
     nfx = collections.Counter(faixa(c['rep']) for c in cl)
     res = {}

@@ -2,27 +2,49 @@
 
 *English version: [README.md](README.md)*
 
-Uma `ddraw.dll` só dos regens, no molde da do save2gb (`save/`). Ela troca a disputa dos clubes pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) por um sorteio proporcional configurável em `regens.cfg`. O resto do jogo, inclusive a criação do jovem, segue igual. A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md).
+Uma `ddraw.dll` **pontual**, para a comunidade, no molde da do save2gb (`save/`). Não é a `ddraw.dll` de trabalho do projeto (`rust/`): roda com o exe original ou com os do NickPatcher, sem o resto da reescrita. A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md).
 
-A mesma DLL traz o **save acima de 2 GB** do save2gb (`save_over_2gb = 1` no `.cfg`, ligado por padrão): as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `src/conteiner.rs`, com a mesma assinatura da `save/`. Assim quem usa o save2gb troca uma DLL pela outra, sem precisar encadear duas `ddraw.dll`. Cada parte confere a sua assinatura e liga sozinha. Na cópia do repositório separado, o `conteiner.rs` vai em `src/` e o `#[path]` sai, como no save2gb.
+Ela tem três partes, cada uma com a sua chave no `regens.cfg` e a sua assinatura. **Todas começam desligadas:** sem o `.cfg`, ou sem a linha, a DLL não muda nada no jogo.
 
-**Estado: protótipo para discussão.** Compila e confere a assinatura, mas ainda não rodou no jogo. A curva do `regens.cfg` é um ponto de partida, não uma proposta fechada.
+| Chave | O que faz |
+|---|---|
+| `save_over_2gb = 1` | O **save acima de 2 GB** do save2gb: as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `src/conteiner.rs`, com a mesma assinatura da `save/` |
+| `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
+| `rule = new` | A **disputa dos clubes** pelo jovem (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova) |
+
+**O save dentro desta DLL é uma escolha consciente** (do Lucas, 01/11/2026): duas `ddraw.dll` não ficam na mesma pasta sem encadear uma na outra, então quem quiser os regens e o save usa uma DLL só. O save2gb público (`CM0102-Rust/cm0102-save2gb`) continua como está: o fonte dele só muda nas releases.
+
+**Compila sozinha só aqui dentro:** o `src/lib.rs` inclui `src/conteiner.rs` por `#[path]`. A cópia do repositório separado (`CM0102-Rust/cm0102-regens`, por `tools/espelhar.py`) leva o `conteiner.rs` para `src/` e tira o `#[path]`, como no save2gb.
+
+**Estado: protótipo para discussão.** Compila e confere as assinaturas, mas ainda não rodou no jogo. A curva do `regens.cfg` é um ponto de partida, não uma proposta fechada.
 
 ## Arquivos
 
 | Arquivo | O quê |
 |---|---|
-| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `regens.cfg`, confere as assinaturas e desvia o contêiner do save e a 0x7ad0e0 |
-| `regens.cfg` | As regras; vai ao lado do exe. `rule = original` desliga tudo |
-| `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova |
+| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `regens.cfg`, confere as assinaturas e liga cada parte |
+| `regens.cfg` | As regras, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
+| `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |
+| `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
+| `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
+| `tools/sav.py` | Leitura dos itens de um `.sav` |
+| `tools/espelhar.py` | A cópia para o repositório separado (sem commit nem push) |
 
 Compilar: `cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
-Assinatura (FNV-1a dos trechos de que depende: a entrada da 0x7ad0e0, a chamada dela e o começo das rotinas que a nova chama) [observado]:
-- **bate** no `cm0102.exe`, no `cm0102-1080.exe`, no portátil e nos três exes do CLZ;
-- **não bate** no `cm0102_GDI.exe`, que tem outro leiaute.
+Assinaturas (FNV-1a dos trechos de que cada parte depende) [observado]:
+- **batem** no `cm0102.exe`, no `cm0102-1080.exe`, no portátil e nos três exes do CLZ;
+- **não batem** no `cm0102_GDI.exe`, que tem outro leiaute.
 
-O corpo da 0x7ad0e0 fica fora da assinatura, então o exe com o Regen Tweak (0x7ad1bd) também serve.
+Na dos regens, o corpo da 0x7ad0e0 fica fora, então o exe com o Regen Tweak (0x7ad1bd) também serve.
+
+## As idades
+
+A idade do jovem é sorteada num bloco da `regenerate_as_youth_player` (0x7ac597..0x7ac6f6), que também limita o CA pela idade. Com `ages = custom`, a DLL troca esse bloco por um pequeno trecho de máquina que chama `sortear_idade`: a idade sai da tabela `age_NN = chance, teto do CA` do `.cfg` (14 a 35 anos), e o teto do CA dessa idade é aplicado, menos em `ca_cap_skip`% das vezes. A idade segue para o resto da rotina como na original (o ano de nascimento, os ajustes de atributos pela idade). E `contest_max_age` (padrão 18) troca o corte "menos de 19 anos entra na disputa" (o byte de 0x7ace69).
+
+- A tabela padrão do `.cfg` é a distribuição original: 16 a 20 anos quase sempre (17 e 18 com 29% cada), 15 e 21 a 26 raríssimos.
+- Diferença assumida: o teto do CA vira um valor por idade. Na original, o de 17 e o de 18 dependem da faixa sorteada (80 ou 90, 100 ou 110).
+- Só o ramo das nações no jogo (ou de reputação ≥ 350) usa a tabela. As nações fora do jogo de reputação < 350 seguem com a idade original (17 a 27), porque ali a idade decide também a fórmula do CA.
 
 ## A regra nova
 
@@ -34,6 +56,8 @@ Os clubes elegíveis são os mesmos da original:
 - elenco abaixo do teto.
 
 Cada clube recebe um **peso**, e o clube é sorteado **na proporção do peso**, pelo gerador do próprio jogo. Peso nenhum: o jovem fica sem clube, como na original.
+
+**A sequência aleatória muda:** a regra nova gasta 2 sorteios do gerador por jovem; a original gasta 1 por clube elegível (e às vezes mais, nos bônus da nota). A tabela de idades também gasta outros sorteios. Para um mod é o esperado, mas uma carreira com a mesma semente (`-seed`) não sai igual à do jogo sem a DLL.
 
     peso = (nível × instalações × comissão × vaga) ^ temperatura
 
