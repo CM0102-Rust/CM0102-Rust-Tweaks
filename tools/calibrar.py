@@ -103,8 +103,8 @@ def escolher_original(j, clubes):
 
 # ---------- a regra nova (sorteio proporcional) ----------
 
-PADRAO = dict(target_k=50.0, target_ca=0.0, sigma=1500.0, level_floor=0.002, facilities_base=0.5, facilities_k=0.05, staff_min=0.8, staff_max=1.2,
-              squad_limit=50, squad_exp=0.5, season_cap=3, temperature=1.0)
+PADRAO = dict(target_k=50.0, target_ca=0.0, sigma=2500.0, level_floor=0.002, facilities_base=0.4, facilities_k=0.06, staff_min=0.8, staff_max=1.2,
+              squad_limit=46, squad_exp=0.5, season_cap=2, temperature=1.0, surprise=15.0)
 
 
 # A distribuição original das idades (0x7ac58e), que é também o padrão do .cfg: idade: (peso %, teto do CA ou None).
@@ -134,12 +134,14 @@ def ler_cfg(caminho):
     return cfg
 
 
-def peso_novo(j, c, cfg, recebidos):
+def peso_novo(j, c, cfg, recebidos, surpresa=False):
     """O peso do clube: nível × instalações × comissão × elenco, à potência da temperatura (o mesmo que src/lib.rs)."""
     if c['elenco'] >= cfg['squad_limit'] or recebidos >= cfg['season_cap'] > 0:
         return 0.0
+    if surpresa and c['divisao'] < 0:  # na surpresa, só clubes de competição
+        return 0.0
     alvo = cfg['target_k'] * ((1 - cfg['target_ca']) * j['pa'] + cfg['target_ca'] * j['ca'])
-    nivel = cfg['level_floor'] + (1 - cfg['level_floor']) * math.exp(-0.5 * ((c['rep'] - alvo) / cfg['sigma']) ** 2)
+    nivel = 1.0 if surpresa else cfg['level_floor'] + (1 - cfg['level_floor']) * math.exp(-0.5 * ((c['rep'] - alvo) / cfg['sigma']) ** 2)
     inst = cfg['facilities_base'] + cfg['facilities_k'] * c['tr']
     jovens = max((t['jovens'] for t in c['comissao'] if t), default=1)
     comissao = cfg['staff_min'] + (cfg['staff_max'] - cfg['staff_min']) * (jovens - 1) / 19
@@ -148,7 +150,8 @@ def peso_novo(j, c, cfg, recebidos):
 
 
 def escolher_novo(j, clubes, cfg, recebidos):
-    pesos = [peso_novo(j, c, cfg, recebidos[c['nome']]) for c in clubes]
+    surpresa = random.random() * 100 < cfg['surprise']
+    pesos = [peso_novo(j, c, cfg, recebidos[c['nome']], surpresa) for c in clubes]
     total = sum(pesos)
     if total <= 0:
         return None

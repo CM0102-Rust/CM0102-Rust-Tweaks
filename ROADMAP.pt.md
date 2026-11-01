@@ -31,11 +31,12 @@ A configuração que a DLL distribui.
 | `facilities_base`, `facilities_k` | 0,4 e 0,06 | Training 20 vale 3,5 vezes o Training 1, sem degrau |
 | `season_cap` | 2 | no máximo 2 jovens da disputa por clube a cada 365 dias |
 | `squad_limit` | 46 | como o Saturn (45), com um a mais |
-| `temperature` | 1 | o sorteio proporcional puro |
+| `surprise` | 15% | o jovem de PA alto que nasce no clube pequeno (Ronaldo no São Cristóvão), só entre clubes de competição; o mercado o leva depois |
 | idades | a tabela original + regens mais novos | a ideia de petermf23 |
 
 **Aberto:**
 - ⏳ **Surpresa** (`surprise`, proposta 15%): uma parte dos jovens sorteada ignorando o nível, só entre clubes que disputam uma competição. É o jovem de PA alto que nasce no clube pequeno (Ronaldo no São Cristóvão); o mercado o leva depois.
+- ⏳ **A aleatoriedade** (`temperature`, proposta 1, o sorteio proporcional puro): com a surpresa, ela deixa de ser o botão da aleatoriedade.
 - ⏳ **A comissão** (`staff_min` e `staff_max`, hoje de 0,8 a 1,2): confirmar o peso.
 - ⏳ **Calibrar** a configuração completa na Inglaterra, no Brasil e numa liga média (Itália ou Portugal), e fechar os números.
 
@@ -64,7 +65,7 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher):
   - técnicos, auxiliares, treinadores, olheiros e fisioterapeutas continuam evoluindo até uns 55 anos, em vez de uns 40;
   - melhora a qualidade e a variedade da comissão em carreiras longas;
   - a fazer: localizar o limite no código (a evolução dos atributos de não jogador), conferir a rotina e expor a idade no `.cfg` (`staff_development_age`), com o crédito a ele.
-- 💡 **Aposentar os inativos** (`retire_idle_players`): antecipar a aposentadoria de quem está sem clube há muito tempo, com 30 anos ou mais e CA baixo.
+- ⏳ **Aposentar os inativos** (`retire_idle_players`, aprovado em 01/11; os números estão em discussão): antecipar a aposentadoria de quem está sem clube há muito tempo, com 30 anos ou mais e CA baixo.
   - Libera fichas de jogador, e mais fichas viram mais regens por ano.
   - A população total não muda, nem o formato do save.
   - A regra da aposentadoria (0x7a7310) já está decifrada no projeto CM0102.

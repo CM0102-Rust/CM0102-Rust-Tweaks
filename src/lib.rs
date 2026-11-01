@@ -181,6 +181,8 @@ struct Regras {
     elenco_teto: f64,
     elenco_exp: f64,
     teto_temporada: f64,
+    /// surprise: % dos jovens sorteados sem o fator do nível, só entre clubes de competição que roda no jogo.
+    surpresa: f64,
     temperatura: f64,
     registrar: bool,
 }
@@ -202,15 +204,16 @@ const PADRAO: Regras = Regras {
     novo: false,
     alvo_k: 50.0,
     alvo_ca: 0.0,
-    sigma: 1500.0,
+    sigma: 2500.0,
     piso_nivel: 0.002,
-    inst_base: 0.5,
-    inst_k: 0.05,
+    inst_base: 0.4,
+    inst_k: 0.06,
     com_min: 0.8,
     com_max: 1.2,
-    elenco_teto: 50.0,
+    elenco_teto: 46.0,
     elenco_exp: 0.5,
-    teto_temporada: 3.0,
+    teto_temporada: 2.0,
+    surpresa: 15.0,
     temperatura: 1.0,
     registrar: false,
 };
@@ -269,6 +272,7 @@ fn ler_regras() -> Regras {
             "squad_limit" => r.elenco_teto = x.clamp(1.0, 50.0),
             "squad_exp" => r.elenco_exp = x,
             "season_cap" => r.teto_temporada = x,
+            "surprise" => r.surpresa = x.clamp(0.0, 100.0),
             "temperature" => r.temperatura = x,
             "log" => r.registrar = x != 0.0,
             "contest_max_age" => r.idade_max_disputa = (x as i32).clamp(0, 126),
@@ -350,14 +354,24 @@ unsafe fn recebidos_no_ano(clube: usize) -> i32 {
         .count() as i32
 }
 
-/// O peso do clube para o jovem (o mesmo de `peso_novo` em calibrar.py).
-unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32) -> f64 {
+/// O clube joga uma competição que roda no jogo (a divisão +0x57 com `[[0xadadfc] + 4 × id]`, como na 0x7ad220)?
+unsafe fn em_competicao(clube: usize) -> bool {
+    let comp = d(clube + 0x57);
+    comp != 0 && d(d(0xadadfc) + 4 * d(comp)) != 0
+}
+
+/// O peso do clube para o jovem (o mesmo de `peso_novo` em calibrar.py). Na surpresa, o nível não conta e só entram os
+/// clubes de competição que roda no jogo.
+unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa: bool) -> f64 {
     if elenco as f64 >= r.elenco_teto || (r.teto_temporada > 0.0 && recebidos_no_ano(clube) as f64 >= r.teto_temporada) {
+        return 0.0;
+    }
+    if surpresa && !em_competicao(clube) {
         return 0.0;
     }
     let alvo = r.alvo_k * ((1.0 - r.alvo_ca) * pa + r.alvo_ca * ca);
     let z = (w(clube + 0x80) as f64 - alvo) / r.sigma;
-    let nivel = r.piso_nivel + (1.0 - r.piso_nivel) * (-0.5 * z * z).exp();
+    let nivel = if surpresa { 1.0 } else { r.piso_nivel + (1.0 - r.piso_nivel) * (-0.5 * z * z).exp() };
     let inst = r.inst_base + r.inst_k * b(clube + 0x7f) as f64;
     let comissao = r.com_min + (r.com_max - r.com_min) * (melhor_com_jovens(clube) - 1) as f64 / 19.0;
     let vaga = ((r.elenco_teto - elenco as f64) / r.elenco_teto).powf(r.elenco_exp);
@@ -382,11 +396,12 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
     let (pa, ca) = (w(ficha + 7) as f64, w(ficha + 5) as f64);
     let total_de_clubes = (d(0xae235c) as i32).wrapping_sub((d(0xae2350) as i32).wrapping_mul(2));
     let base = d(0xae23b4);
+    let surpresa = r.surpresa > 0.0 && (sorteio(10000) as f64) < r.surpresa * 100.0;
     let mut pesos: Vec<(usize, f64)> = Vec::new();
     for i in 0..total_de_clubes.max(0) as usize {
         let clube = base + 0x245 * i;
         if let Some(elenco) = elegivel(jogador, clube) {
-            let p = peso(&r, pa, ca, clube, elenco);
+            let p = peso(&r, pa, ca, clube, elenco, surpresa);
             if p > 0.0 {
                 pesos.push((clube, p));
             }
@@ -406,8 +421,8 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
         }
     }
     if r.registrar {
-        registro::linha(&format!("PA {} CA {} -> {} (reputation {}, Training {}) chance {:.1}% among {} clubs", pa, ca, nome(escolhido.0),
-            w(escolhido.0 + 0x80), b(escolhido.0 + 0x7f), 100.0 * escolhido.1 / soma, pesos.len()));
+        registro::linha(&format!("PA {} CA {} -> {} (reputation {}, Training {}) chance {:.1}% among {} clubs{}", pa, ca, nome(escolhido.0),
+            w(escolhido.0 + 0x80), b(escolhido.0 + 0x7f), 100.0 * escolhido.1 / soma, pesos.len(), if surpresa { " (surprise)" } else { "" }));
     }
     escolhido.0
 }

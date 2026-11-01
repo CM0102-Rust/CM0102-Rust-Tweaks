@@ -31,11 +31,12 @@ The configuration the DLL ships with.
 | `facilities_base`, `facilities_k` | 0.4 and 0.06 | Training 20 is worth 3.5 times Training 1, with no jump |
 | `season_cap` | 2 | at most 2 contest youngsters per club every 365 days |
 | `squad_limit` | 46 | like Saturn (45), one more |
-| `temperature` | 1 | the plain proportional draw |
+| `surprise` | 15% | the high-PA youngster born at a small club (Ronaldo at São Cristóvão), only among clubs in a competition; the market moves him later |
 | ages | the original table + younger regens | petermf23's idea |
 
 **Open:**
 - ⏳ **Surprise** (`surprise`, proposed 15%): a share of the youngsters drawn ignoring the level, only among clubs that play in a competition. It's the high-PA youngster born at a small club (Ronaldo at São Cristóvão); the market moves him later.
+- ⏳ **Randomness** (`temperature`, proposed 1, the plain proportional draw): with surprise, it stops being the randomness knob.
 - ⏳ **Staff** (`staff_min` and `staff_max`, now 0.8 to 1.2): confirm the weight.
 - ⏳ **Calibrate** the full configuration on England, Brazil and a mid-size league (Italy or Portugal), and settle the numbers.
 
@@ -64,7 +65,7 @@ A single `.exe`, with its own interface (not copying NickPatcher's):
   - managers, assistants, coaches, scouts and physios keep developing until about 55, instead of about 40;
   - improves the quality and variety of staff in long-term saves;
   - to do: find the threshold in the code (the development of non-player attributes), check the routine and expose the age in the `.cfg` (`staff_development_age`), crediting him.
-- 💡 **Retire idle players** (`retire_idle_players`): bring forward the retirement of players who have been without a club for a long time, aged 30 or more and with low CA.
+- ⏳ **Retire idle players** (`retire_idle_players`, approved on 11/01; the numbers are under discussion): bring forward the retirement of players who have been without a club for a long time, aged 30 or more and with low CA.
   - It frees player records, and more records mean more regens per year.
   - The total population doesn't change, nor does the save format.
   - The retirement rule (0x7a7310) is already decoded in the CM0102 project.
