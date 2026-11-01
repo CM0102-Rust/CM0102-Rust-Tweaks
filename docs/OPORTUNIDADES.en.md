@@ -4,6 +4,8 @@
 
 A reading of the champman0102.co.uk forum on 11/01/2026, by script, public pages only and without logging in. The idea is not to repeat what NickPatcher and the other authors already do, and to go after what's still open and only our Rust base makes possible.
 
+**Scope (Lucas's decision, 11/01/2026):** this repository is the DLL front. The fixes and what we learn here will be consolidated into the CM0102 project once it's 100% Rust. **Competition structures are out:** davdav already does that, and does it well (the restructure patch). In the "Where we have an edge" table, the chosen fronts are the December crash (study), loans and the economy.
+
 ## Method
 
 - **10 sections:** Technical Support, Patches, The Workshop, Dressing Room, Databases, Tactics, Talents/Tips/Training, Research and Archives. 1,330 topics in total.
@@ -83,7 +85,10 @@ Resolution and bigger screens also have patches (Nick, Tapani, melanzalko). Save
 - More holiday options: sell only transfer-listed players, return at the end of the season (18.1).
 
 ### 7. Stability and performance
-- **The 25–28 December crash:** 205 replies (t=3077). A known crash with no root fix; the workaround is to "go on holiday" past it.
+- **The 25–28 December crash:** 205 replies (t=3077). It's actually a hang (an infinite loop), not a crash.
+  - **A workaround exists:** Alan_v2 found the spot in October 2025 and published a one-byte patch (0x92EA55 `JNZ` → `JMP`, skipping the loop). He wrote himself that he doesn't know why it happens, and the topic keeps getting new cases up to October 2026.
+  - **The spot:** `world_cup.cpp` (the routine at 0x92e940). A loop draws a slot among positions 2 to 7 of a list of 8 five-byte records (byte 0xFF marks a slot as taken) and repeats while the drawn slot is taken. If all six are taken, it never ends. Alan's skip puts the national team in a slot that's already taken.
+  - **Hypothesis (to prove):** database updates changed nations and confederations, and in some careers, through the 2002 World Cup qualifying results, there are more national teams than slots. Hence only some careers, and only with new databases.
 - "Game Crashing" (829 replies), errors like "virtual staff cpp 195" (t=3423), slow career creation (t=1582).
 
 ### 8. Platforms
@@ -99,8 +104,8 @@ Resolution and bigger screens also have patches (Nick, Tapani, melanzalko). Save
 
 | Front | Why it's ours | Size |
 |---|---|---|
-| **Competition structures** | we know the league and cup routines in Rust; the structure could be read from a file instead of swapping pointers in the exe | large; the biggest demand |
-| **The December crash and other crashes** | we have the engine and much of the simulation rewritten: we can find the cause and fix it at the root, not work around it | small to medium; much requested |
+| ~~Competition structures~~ | **out of scope:** davdav already does it, and does it well | (the biggest demand, but already served) |
+| **The December crash and other crashes** | Alan_v2's workaround skips the loop; with the routine understood, we can fix the cause (the missing slot) and log what triggers it | small to medium; much requested |
 | **Regens: intake, names, nationality, attributes** | we're already inside these routines | medium to large (the intake is phase 6) |
 | **Loans and market AI** | the transfer and contract routines are in Rust | medium |
 | **Player development** | the rule that redistributes CA can be replaced | medium; touches game balance |

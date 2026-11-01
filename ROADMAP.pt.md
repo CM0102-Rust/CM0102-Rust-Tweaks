@@ -70,6 +70,12 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
 
 ## Fase 4: mais ajustes 💡🔬
 
+- 🔬 **A queda de 27 de dezembro** (o laço da Copa do Mundo em `world_cup.cpp`, 0x92ea3b..0x92ea71; o contorno de um byte é do Alan_v2):
+  - entender a rotina 0x92e940: o que são os 8 registros de 5 bytes, quem os preenche e por que sobram seleções;
+  - reproduzir: um modo de diagnóstico na DLL registra a lista inteira quando o laço passa de algumas voltas; carreiras automáticas com um banco atualizado (o 25/26 da comunidade, a obter com o Lucas) até 28/12/2001, com várias sementes;
+  - corrigir na causa, com o crédito ao Alan_v2 pela descoberta do ponto.
+- 🔬 **Empréstimos** (a reclamação mais repetida do mercado): mapear nas rotinas já reescritas em Rust quem decide (o clube que recusa, o jogador "sem intenção de ir", o modo férias que trava), registrar numa carreira automática cada oferta e o seu desfecho, e só então propor regras configuráveis.
+- 🔬 **Economia do clube:** o público e o estádio que não crescem com o sucesso, o patrocínio raro, o público menor nas copas, a IA que não investe em instalações. O mesmo método: mapear nas rotinas (a renda da partida, os eventos das finanças e as obras do estádio já estão em Rust no projeto; ver `OBRAS_DO_ESTADIO.md` lá), medir e propor.
 - 🔬 **A nacionalidade dos regens, com regras definidas** (a decidir com o Lucas). Hoje há duas regras em uso [observado no código]:
   - **a original** (0x7abcd7..0x7abd1d): se a nação do jovem tem menos de 100 pessoas cadastradas (+0x88), em 1 de 4 vezes ele ganha a nacionalidade de outra nação sorteada, também pequena;
   - **a dos exes do CLZ** (autor a confirmar): todo jovem de PA 120 ou mais ganha a nacionalidade de uma nação sorteada entre as de reputação 5632 ou mais (+0x8e); os outros ficam com a de sempre. Concentra os craques nas nações grandes.

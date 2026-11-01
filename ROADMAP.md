@@ -70,6 +70,12 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 
 ## Phase 4: more tweaks 💡🔬
 
+- 🔬 **The 27 December hang** (the World Cup loop in `world_cup.cpp`, 0x92ea3b..0x92ea71; the one-byte workaround is Alan_v2's):
+  - understand routine 0x92e940: what the 8 five-byte records are, who fills them and why there are national teams left over;
+  - reproduce: a diagnostic mode in the DLL logs the whole list when the loop goes past a few rounds; automatic careers with an updated database (the community's 25/26, to be obtained with Lucas) up to 28/12/2001, with several seeds;
+  - fix the cause, crediting Alan_v2 for finding the spot.
+- 🔬 **Loans** (the market's most repeated complaint): map, in the routines already rewritten in Rust, who decides (the club that refuses, the player with "no intention of going", holiday mode getting stuck), log every offer and its outcome in an automatic career, and only then propose configurable rules.
+- 🔬 **Club economy:** attendance and stadiums that don't grow with success, rare sponsorship, lower attendance in cups, AI not investing in facilities. Same method: map the routines (match income, finance events and stadium works are already in Rust in the project; see `OBRAS_DO_ESTADIO.md` there), measure and propose.
 - 🔬 **Regen nationality, with defined rules** (to be decided with Lucas). There are two rules in use today [observed in the code]:
   - **the original** (0x7abcd7..0x7abd1d): if the youngster's nation has fewer than 100 people in the database (+0x88), 1 time in 4 he gets the nationality of another random nation, also a small one;
   - **the CLZ exes'** (author to be confirmed): every youngster with PA 120 or more gets the nationality of a random nation among those with reputation 5632 or more (+0x8e); the others keep their own. It concentrates the stars in the big nations.

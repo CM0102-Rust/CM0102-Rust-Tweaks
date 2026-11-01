@@ -4,6 +4,8 @@
 
 Leitura do fórum champman0102.co.uk em 01/11/2026, por script, só páginas públicas e sem login. A ideia é não repetir o que o NickPatcher e os outros autores já fazem, e atacar o que está em aberto e que só a nossa base em Rust permite.
 
+**Escopo (decisão do Lucas, 01/11/2026):** este repositório é a frente da DLL. As correções e o que se aprende aqui vão ser consolidados no projeto CM0102 quando ele estiver 100% em Rust. **Estruturas de competições ficam de fora:** o davdav já faz isso, e bem (o patch de reestruturação). Na tabela "Onde temos vantagem", as frentes escolhidas são a queda de dezembro (estudo), os empréstimos e a economia.
+
 ## Método
 
 - **10 seções:** Technical Support, Patches, The Workshop, Dressing Room, Databases, Tactics, Talents/Tips/Training, Research e Archives. Ao todo, 1.330 tópicos.
@@ -83,7 +85,10 @@ A resolução e as telas maiores também já têm patch (Nick, Tapani, melanzalk
 - Mais opções no modo férias: vender só os da lista de transferências, voltar no fim da temporada (18.1).
 
 ### 7. Estabilidade e desempenho
-- **A queda de 25 a 28 de dezembro:** 205 respostas (t=3077). É uma queda conhecida, sem correção na raiz; a saída é "tirar férias" para passar dela.
+- **A queda de 25 a 28 de dezembro:** 205 respostas (t=3077). Na verdade é um travamento (um laço infinito), e não uma queda.
+  - **O contorno existe:** o Alan_v2 achou o ponto em outubro de 2025 e publicou um patch de um byte (0x92EA55 `JNZ` → `JMP`, que pula o laço). Ele mesmo escreveu que não sabe por que acontece, e o tópico continua recebendo casos novos até outubro de 2026.
+  - **O ponto:** `world_cup.cpp` (a rotina em 0x92e940). Um laço sorteia uma vaga entre as posições 2 a 7 de uma lista de 8 registros de 5 bytes (o byte 0xFF marca a vaga como ocupada) e repete enquanto a vaga sorteada estiver ocupada. Se as seis estão ocupadas, não termina nunca. O pulo do Alan põe a seleção numa vaga já ocupada.
+  - **Hipótese (a provar):** as atualizações de banco mudaram nações e confederações, e em algumas carreiras, pelos resultados das eliminatórias da Copa de 2002, sobram mais seleções do que vagas. Por isso só algumas carreiras, e só com bancos novos.
 - "Game Crashing" (829 respostas), erros como "virtual staff cpp 195" (t=3423), a criação lenta da carreira (t=1582).
 
 ### 8. Plataformas
@@ -99,8 +104,8 @@ A resolução e as telas maiores também já têm patch (Nick, Tapani, melanzalk
 
 | Frente | Por que é nossa | Tamanho |
 |---|---|---|
-| **Estruturas de competições** | conhecemos as rotinas das ligas e copas em Rust; dá para ler a estrutura de um arquivo em vez de trocar ponteiros no exe | grande; a maior demanda |
-| **A queda de dezembro e outras quedas** | temos o motor e boa parte da simulação reescritos: dá para achar a causa e corrigir na raiz, não contornar | pequeno a médio; muito pedido |
+| ~~Estruturas de competições~~ | **fora do escopo:** o davdav já faz isso, e bem | (a maior demanda, mas já atendida) |
+| **A queda de dezembro e outras quedas** | o contorno do Alan_v2 pula o laço; com a rotina entendida, dá para corrigir a causa (a vaga que falta) e registrar o que a provoca | pequeno a médio; muito pedido |
 | **Regens: fornada, nomes, nacionalidade, atributos** | já estamos dentro dessas rotinas | médio a grande (a fornada é a fase 6) |
 | **Empréstimos e IA do mercado** | as rotinas de transferência e contrato estão em Rust | médio |
 | **O desenvolvimento dos jogadores** | dá para trocar a regra que redistribui o CA | médio; mexe no equilíbrio do jogo |
