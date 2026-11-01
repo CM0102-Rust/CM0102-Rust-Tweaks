@@ -46,32 +46,86 @@ extern "system" {
     fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
 }
 
-/// A entrada da 0x7ad0e0, a chamada dela na 0x7abac0 e o começo das rotinas do jogo que a nova chama. O corpo da 0x7ad0e0
-/// fica de fora: ele não roda mais, e assim o exe com o Regen Tweak (0x7ad1bd) também serve.
-const TRECHOS: [(usize, usize); 7] = [(0x7ad0e0, 7), (0x7ace9b, 0x1a), (0x53d980, 32), (0x540a50, 32), (0x53c590, 32), (0x8ce990, 32), (0x90cfc0, 32)];
-/// FNV-1a de 64 bits dos trechos no cm0102.exe 3.9.68.
-const ASSINATURA: u64 = 0xb9c6540ed49c8bff;
+/// Uma parte da DLL e o que ela confere no exe antes de ligar (FNV-1a de 64 bits dos trechos no cm0102.exe 3.9.68):
+/// - as **bordas**: o que o desvio usa (a entrada, a volta, as rotinas chamadas). Se não batem, a parte nunca liga;
+/// - o **corpo**: a rotina original que a parte troca. Se só ele difere, o exe já tem outra modificação ali: como no resto
+///   do projeto, fica a do exe (e o log diz), a menos que `override_exe_changes = 1` mande sobrescrever.
+struct Parte {
+    nome: &'static str,
+    bordas: &'static [(usize, usize)],
+    assinatura_das_bordas: u64,
+    corpo: &'static [(usize, usize)],
+    assinatura_do_corpo: u64,
+}
 
-/// O save: o contêiner inteiro (zipdir.cpp) e o começo das funções da CRT e do jogo que as rotinas chamam (os mesmos
-/// trechos e a mesma assinatura de save/src/lib.rs).
-const TRECHOS_DO_SAVE: [(usize, usize); 15] = [
-    (0x9326e0, 0x1180), (0x944c94, 32), (0x944c9f, 32), (0x944cf1, 32), (0x944cff, 32), (0x945a09, 32),
-    (0x945b00, 32), (0x945bfe, 32), (0x945ce6, 32), (0x946a22, 32), (0x94af9e, 32), (0x94fded, 32),
-    (0x94c552, 32), (0x90d130, 32), (0x5e8290, 32),
-];
-const ASSINATURA_DO_SAVE: u64 = 0x232589cfe29f6240;
+/// O save: as entradas das três rotinas do contêiner e o começo das funções da CRT e do jogo que elas chamam; o corpo é
+/// o contêiner inteiro (zipdir.cpp), como em save/src/lib.rs.
+const SAVE: Parte = Parte {
+    nome: "save over 2 GB",
+    bordas: &[
+        (0x9326e0, 5), (0x933080, 5), (0x933170, 5), (0x944c94, 32), (0x944c9f, 32), (0x944cf1, 32), (0x944cff, 32),
+        (0x945a09, 32), (0x945b00, 32), (0x945bfe, 32), (0x945ce6, 32), (0x946a22, 32), (0x94af9e, 32), (0x94fded, 32),
+        (0x94c552, 32), (0x90d130, 32), (0x5e8290, 32),
+    ],
+    assinatura_das_bordas: 0x1d251608b137c13d,
+    corpo: &[(0x9326e0, 0x1180)],
+    assinatura_do_corpo: 0x20103c4e062d80ac,
+};
 
 /// A idade: as bordas do bloco do sorteio da idade e do teto do CA na 0x7abac0 (a entrada 0x7ac58e..0x7ac59f, com o
 /// `call sorteio(10000)` e o `add esp, 8`, e a volta em 0x7ac6f6; ramo das nações no jogo ou de reputação ≥ 350) e o corte
-/// da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`). O corpo fica de fora porque é trocado inteiro: o
-/// NickPatcher (exes do CLZ) muda nele as faixas de 15 a 18 e de 21 a 26 para 14 a 17 e 20 a 25 (0x7ac5b1, 0x7ac699).
-const TRECHOS_DA_IDADE: [(usize, usize); 3] = [(0x7ac58e, 0x11), (0x7ac6f6, 4), (0x7ace65, 6)];
-const ASSINATURA_DA_IDADE: u64 = 0x8cf4d2529f52726b;
-/// A idade nas nações fora do jogo de reputação < 350 (0x7abeb1..0x7abeea): sorteio(rep) < sorteio(1000) dá 23 a 27,
-/// senão 17 a 23; depois a fórmula do CA pela idade (que fica como está). Só as bordas: a entrada e a volta (0x7abeea,
-/// onde a idade vai para a local). O NickPatcher pula esse ramo (`jmp` em 0x7abeab), e então o desvio nunca roda.
-const TRECHOS_DA_IDADE_FORA: [(usize, usize); 2] = [(0x7abeb1, 6), (0x7abeea, 7)];
-const ASSINATURA_DA_IDADE_FORA: u64 = 0x3850462e62889e48;
+/// da idade para a disputa (0x7ace65, `cmp byte [esp+0x1c], 0x13`); o corpo é o bloco. Os exes do CLZ mudam o corpo
+/// (14 a 17 e 20 a 25 nas faixas raras, 0x7ac5b1 e 0x7ac699).
+const IDADE: Parte = Parte {
+    nome: "regen ages",
+    bordas: &[(0x7ac58e, 0x11), (0x7ac6f6, 4), (0x7ace65, 6)],
+    assinatura_das_bordas: 0x8cf4d2529f52726b,
+    corpo: &[(0x7ac58e, 0x7ac6f6 - 0x7ac58e)],
+    assinatura_do_corpo: 0x117c76f665c5e095,
+};
+
+/// A idade nas nações fora do jogo de reputação < 350 (0x7abea0..0x7abef1): sorteio(rep) < sorteio(1000) dá 23 a 27,
+/// senão 17 a 23; depois a fórmula do CA pela idade (que fica como está). Os exes do CLZ pulam esse ramo (`jmp` em
+/// 0x7abeab, no corpo); sobrescrito, o desvio fica lá, mas o ramo continua sem rodar.
+const IDADE_FORA: Parte = Parte {
+    nome: "regen ages (nations not in the game)",
+    bordas: &[(0x7abeb1, 6), (0x7abeea, 7)],
+    assinatura_das_bordas: 0x3850462e62889e48,
+    corpo: &[(0x7abea0, 0x51)],
+    assinatura_do_corpo: 0x3c0e1bab273bfa24,
+};
+
+/// A disputa: a entrada da 0x7ad0e0, a chamada dela na 0x7abac0 e o começo das rotinas que a nova chama; o corpo é a
+/// 0x7ad0e0 inteira. Os exes do CLZ mudam o corpo com o Regen Tweak de xeno/Saturn (elenco 45, 0x7ad1bd).
+const DISPUTA: Parte = Parte {
+    nome: "regens 0.1",
+    bordas: &[(0x7ad0e0, 7), (0x7ace9b, 0x1a), (0x53d980, 32), (0x540a50, 32), (0x53c590, 32), (0x8ce990, 32), (0x90cfc0, 32)],
+    assinatura_das_bordas: 0xb9c6540ed49c8bff,
+    corpo: &[(0x7ad0e0, 0x140)],
+    assinatura_do_corpo: 0xa59f8acea76c7152,
+};
+
+/// Pode ligar a parte? Escreve no log o motivo quando não liga, ou quando sobrescreve uma modificação do exe.
+unsafe fn pode_ligar(p: &Parte, sobrescrever: bool) -> bool {
+    let b = assinatura(p.bordas);
+    if b != p.assinatura_das_bordas {
+        registro::linha(&format!("{}: this exe differs from 3.9.68 where this part hooks in (signature {:016x}); nothing was changed", p.nome, b));
+        return false;
+    }
+    let c = assinatura(p.corpo);
+    if c == p.assinatura_do_corpo {
+        return true;
+    }
+    // o Regen Tweak de xeno/Saturn (elenco 45 em 0x7ad1bd) é o caso conhecido; nomeá-lo ajuda quem lê o log
+    let conhecido = if p.nome == DISPUTA.nome && *(0x7ad1bf as *const u8) == 0x2d { " (the Regen Tweak by xeno/Saturn: squad limit 45)" } else { "" };
+    if sobrescrever {
+        registro::linha(&format!("{}: this exe already changes this routine{} (signature {:016x}); overriding it (override_exe_changes = 1)", p.nome, conhecido, c));
+        true
+    } else {
+        registro::linha(&format!("{}: this exe already changes this routine{} (signature {:016x}); keeping the exe's own routine (override_exe_changes = 0)", p.nome, conhecido, c));
+        false
+    }
+}
 /// As idades que o `.cfg` aceita (`age_14` a `age_35`).
 const IDADE_MIN: usize = 14;
 const IDADES: usize = 22;
@@ -100,6 +154,8 @@ unsafe fn desviar(de: usize, para: usize) {
 
 #[derive(Clone, Copy)]
 struct Regras {
+    /// override_exe_changes: sobrescrever a rotina que o exe já alterou (só o corpo; as bordas sempre têm de bater).
+    sobrescrever: bool,
     save: bool,
     idades: bool,
     idades_fora: bool,
@@ -126,6 +182,7 @@ struct Regras {
 
 // As três chaves de ligar começam desligadas: sem o regens.cfg (ou sem a linha), a DLL não muda nada no jogo.
 const PADRAO: Regras = Regras {
+    sobrescrever: false,
     save: false,
     idades: false,
     idades_fora: false,
@@ -182,6 +239,10 @@ fn ler_regras() -> Regras {
                     r.teto_da_idade[n - IDADE_MIN] = partes.next().and_then(|t| t.parse::<i16>().ok()).unwrap_or(-1);
                 }
             }
+            continue;
+        }
+        if k == "override_exe_changes" {
+            r.sobrescrever = v == "1";
             continue;
         }
         if k == "save_over_2gb" {
@@ -431,40 +492,34 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
     if motivo == 1 {
         let r = ler_regras();
         REGRAS = r;
+        let s = r.sobrescrever;
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
-        } else if assinatura(&TRECHOS_DO_SAVE) == ASSINATURA_DO_SAVE {
+        } else if pode_ligar(&SAVE, s) {
             desviar(0x9326e0, conteiner::abrir_no_conteiner as *const () as usize);
             desviar(0x933080, conteiner::buscar_no_conteiner as *const () as usize);
             desviar(0x933170, conteiner::posicao_no_conteiner as *const () as usize);
             registro::linha("save over 2 GB: on (saves up to 4 GB)");
-        } else {
-            registro::linha(&format!("save over 2 GB: this exe differs from 3.9.68 where the save code is (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DO_SAVE)));
         }
         if !r.idades {
-            registro::linha("regen ages: ages = original; nothing was changed");
-        } else if assinatura(&TRECHOS_DA_IDADE) != ASSINATURA_DA_IDADE {
-            registro::linha(&format!("regen ages: this exe differs from 3.9.68 where the age code is (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DA_IDADE)));
-        } else if instalar_idade(&r) {
-            registro::linha(&format!("regen ages: custom (contest up to age {})", r.idade_max_disputa));
-        } else {
-            registro::linha("regen ages: could not allocate the code stub; nothing was changed");
+            registro::linha("regen ages: off (ages = original)");
+        } else if pode_ligar(&IDADE, s) {
+            if instalar_idade(&r) {
+                registro::linha(&format!("regen ages: on (age table; contest up to age {})", r.idade_max_disputa));
+            } else {
+                registro::linha("regen ages: could not allocate the code stub; nothing was changed");
+            }
         }
         if !r.idades || !r.idades_fora {
-            registro::linha("regen ages (nations not in the game): original");
-        } else if assinatura(&TRECHOS_DA_IDADE_FORA) != ASSINATURA_DA_IDADE_FORA {
-            registro::linha(&format!("regen ages (nations not in the game): this exe differs from 3.9.68 there (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DA_IDADE_FORA)));
-        } else if instalar_idade_fora() {
-            registro::linha("regen ages (nations not in the game): from the table");
+            registro::linha("regen ages (nations not in the game): off (ages_out_of_game = original)");
+        } else if pode_ligar(&IDADE_FORA, s) && instalar_idade_fora() {
+            registro::linha("regen ages (nations not in the game): on (age table)");
         }
-        let a = assinatura(&TRECHOS);
         if !r.novo {
-            registro::linha("regens 0.1: rule = original; nothing was changed");
-        } else if a == ASSINATURA {
+            registro::linha("regens 0.1: off (rule = original)");
+        } else if pode_ligar(&DISPUTA, s) {
             desviar(0x7ad0e0, escolher_clube as *const () as usize);
-            registro::linha("regens 0.1: on (proportional draw; regens.cfg)");
-        } else {
-            registro::linha(&format!("regens 0.1: this exe differs from 3.9.68 where the regen code is (signature {:016x}); nothing was changed", a));
+            registro::linha("regens 0.1: on (proportional draw)");
         }
     }
     1

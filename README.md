@@ -32,11 +32,19 @@ It has three parts, each with its own switch in `regens.cfg` and its own signatu
 
 Build: `cargo build --release` (output in `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
-Signatures (FNV-1a of the pieces each part depends on) [observed]:
-- **match** `cm0102.exe`, `cm0102-1080.exe`, the portable one and the three CLZ exes;
-- **don't match** `cm0102_GDI.exe`, which has a different layout.
+Each part checks two signatures (FNV-1a) before turning on:
+- **the edges**, what the hook uses (the entry, the return point, the routines it calls). If they don't match, the part never turns on;
+- **the body**, the original routine the part replaces. If only the body differs, the exe already has another change there and, **as in the rest of the project, the exe's routine stays**, with a note in `regens.log`. `override_exe_changes = 1` overrides it.
 
-For the regens part, the body of 0x7ad0e0 is left out, so an exe with the Regen Tweak (0x7ad1bd) also works.
+On the exes we have [observed]:
+
+| Exe | Save | Ages | Ages (not in the game) | Contest |
+|---|---|---|---|---|
+| `cm0102.exe`, `cm0102-1080.exe`, portable | on | on | on | on |
+| the three CLZ exes | on | exe's | exe's | exe's (Regen Tweak) |
+| `cm0102_GDI.exe` | never | never | never | never |
+
+"Exe's" becomes "on" with `override_exe_changes = 1`. The log names the xeno/Saturn Regen Tweak when it finds it.
 
 ## Ages
 
@@ -45,7 +53,7 @@ The youngster's age is drawn in a block of `regenerate_as_youth_player` (0x7ac59
 - The `.cfg` default table is the original distribution: 16 to 20 almost always (17 and 18 at 29% each), 15 and 21 to 26 very rare.
 - A deliberate difference: the CA cap becomes one value per age. In the original, the cap at 17 and 18 depends on the band that was drawn (80 or 90, 100 or 110).
 - Nations not in the game with reputation < 350 have their own draw in the original: mostly 23 to 27, sometimes 17 to 23, and there the age picks the CA formula (younger, lower CA), with no cap. With `ages_out_of_game = table` they use the table too (0x7abeb1..0x7abeea); the CA formula by age stays the original one, and the table's caps don't apply there. The default is `original`.
-- **NickPatcher already changes the ages** (the three CLZ exes) [observed in the bytes]: the very rare 15-to-18 band becomes 14 to 17 (0x7ac5b1), the rare 21-to-26 band becomes 20 to 25 (0x7ac699), and nations not in the game use the playable nations' draw (`jmp` at 0x7abeab). The age signatures only cover the edges of the blocks, since the body is replaced whole; so the table also works on those exes, and there `ages_out_of_game` has no effect (the branch never runs).
+- **The CLZ exes already change the ages** [observed in the bytes]: the very rare 15-to-18 band becomes 14 to 17 (0x7ac5b1), the rare 21-to-26 band becomes 20 to 25 (0x7ac699), and nations not in the game use the playable nations' draw (`jmp` at 0x7abeab). They also carry the full Regen Tweak (0x7ad1bf `0x2d` and 0x7a6f48 `jl`) and another change to the youngsters' nationality switch (0x7abcd7..0x7abd1c). By default the DLL leaves those routines to the exe.
 
 ## The new rule
 

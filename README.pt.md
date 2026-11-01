@@ -32,11 +32,19 @@ Ela tem três partes, cada uma com a sua chave no `regens.cfg` e a sua assinatur
 
 Compilar: `cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
-Assinaturas (FNV-1a dos trechos de que cada parte depende) [observado]:
-- **batem** no `cm0102.exe`, no `cm0102-1080.exe`, no portátil e nos três exes do CLZ;
-- **não batem** no `cm0102_GDI.exe`, que tem outro leiaute.
+Cada parte confere duas assinaturas (FNV-1a) antes de ligar:
+- **as bordas**, o que o desvio usa (a entrada, a volta, as rotinas chamadas). Se não batem, a parte nunca liga;
+- **o corpo**, a rotina original que a parte troca. Se só ele difere, o exe já tem outra modificação ali e, **como no resto do projeto, fica a rotina do exe**, com aviso no `regens.log`. `override_exe_changes = 1` manda sobrescrever.
 
-Na dos regens, o corpo da 0x7ad0e0 fica fora, então o exe com o Regen Tweak (0x7ad1bd) também serve.
+Nos exes que temos [observado]:
+
+| Exe | Save | Idade | Idade (fora do jogo) | Disputa |
+|---|---|---|---|---|
+| `cm0102.exe`, `cm0102-1080.exe`, portátil | liga | liga | liga | liga |
+| os três do CLZ | liga | do exe | do exe | do exe (Regen Tweak) |
+| `cm0102_GDI.exe` | nunca | nunca | nunca | nunca |
+
+"Do exe" vira "liga" com `override_exe_changes = 1`. O log nomeia o Regen Tweak de xeno/Saturn quando o acha.
 
 ## As idades
 
@@ -45,7 +53,7 @@ A idade do jovem é sorteada num bloco da `regenerate_as_youth_player` (0x7ac597
 - A tabela padrão do `.cfg` é a distribuição original: 16 a 20 anos quase sempre (17 e 18 com 29% cada), 15 e 21 a 26 raríssimos.
 - Diferença assumida: o teto do CA vira um valor por idade. Na original, o de 17 e o de 18 dependem da faixa sorteada (80 ou 90, 100 ou 110).
 - As nações fora do jogo de reputação < 350 têm um sorteio próprio na original: quase sempre 23 a 27 anos, às vezes 17 a 23, e ali a idade escolhe a fórmula do CA (mais novo, CA menor), sem teto. Com `ages_out_of_game = table` elas também usam a tabela (0x7abeb1..0x7abeea); a fórmula do CA pela idade continua a da original, e os tetos da tabela não valem ali. O padrão é `original`.
-- **O NickPatcher já mexe na idade** (os três exes do CLZ) [observado nos bytes]: a faixa raríssima de 15 a 18 vira 14 a 17 (0x7ac5b1), a rara de 21 a 26 vira 20 a 25 (0x7ac699), e as nações fora do jogo passam a usar o sorteio das jogáveis (`jmp` em 0x7abeab). As assinaturas da idade cobrem só as bordas dos blocos, porque o corpo é trocado inteiro; então a tabela também funciona nesses exes, e lá o `ages_out_of_game` não faz efeito (o ramo nunca roda).
+- **Os exes do CLZ já mexem na idade** [observado nos bytes]: a faixa raríssima de 15 a 18 vira 14 a 17 (0x7ac5b1), a rara de 21 a 26 vira 20 a 25 (0x7ac699), e as nações fora do jogo passam a usar o sorteio das jogáveis (`jmp` em 0x7abeab). Também trazem o Regen Tweak completo (0x7ad1bf `0x2d` e 0x7a6f48 `jl`) e outra troca de nacionalidade dos jovens (0x7abcd7..0x7abd1c). Por padrão a DLL deixa essas rotinas com o exe.
 
 ## A regra nova
 
