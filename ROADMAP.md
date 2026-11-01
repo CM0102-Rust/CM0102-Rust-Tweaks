@@ -30,7 +30,7 @@ The configuration the DLL ships with.
 | `sigma` | 2500 | a wider level curve |
 | `facilities_base`, `facilities_k` | 0.4 and 0.06 | Training 20 is worth 3.5 times Training 1, with no jump |
 | `season_cap` | 2 | at most 2 contest youngsters per club every 365 days |
-| `squad_limit` | 46 | like Saturn (45), one more |
+| `squad_limit` | 48 | big squads stay in the contest; the 2-a-year cap does the braking (Saturn uses 45) |
 | `surprise` | 15% | the high-PA youngster born at a small club (Ronaldo at São Cristóvão), only among clubs in a competition; the market moves him later |
 | ages | the original table + younger regens | petermf23's idea |
 

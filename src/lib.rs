@@ -210,7 +210,7 @@ const PADRAO: Regras = Regras {
     inst_k: 0.06,
     com_min: 0.8,
     com_max: 1.2,
-    elenco_teto: 46.0,
+    elenco_teto: 48.0,
     elenco_exp: 0.5,
     teto_temporada: 2.0,
     surpresa: 15.0,

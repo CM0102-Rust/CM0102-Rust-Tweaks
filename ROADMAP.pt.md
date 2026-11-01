@@ -30,7 +30,7 @@ A configuração que a DLL distribui.
 | `sigma` | 2500 | curva do nível mais larga |
 | `facilities_base`, `facilities_k` | 0,4 e 0,06 | Training 20 vale 3,5 vezes o Training 1, sem degrau |
 | `season_cap` | 2 | no máximo 2 jovens da disputa por clube a cada 365 dias |
-| `squad_limit` | 46 | como o Saturn (45), com um a mais |
+| `squad_limit` | 48 | os elencos grandes continuam na disputa; quem freia é o teto de 2 por ano (o Saturn usa 45) |
 | `surprise` | 15% | o jovem de PA alto que nasce no clube pequeno (Ronaldo no São Cristóvão), só entre clubes de competição; o mercado o leva depois |
 | idades | a tabela original + regens mais novos | a ideia de petermf23 |
 
