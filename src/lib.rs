@@ -165,6 +165,10 @@ struct Regras {
     teto_da_idade: [i16; IDADES],
     idade_max_disputa: i32,
     pular_teto: f64,
+    /// O jovem regen sorteado com `mais_novo_a_partir` anos ou mais fica `mais_novo_em` anos mais novo (0: não): a ideia de
+    /// petermf23 (item 14 do mod das divisões polonesas), 22 anos ou mais ficam 6 anos mais novos.
+    mais_novo_a_partir: i32,
+    mais_novo_em: i32,
     novo: bool,
     alvo_k: f64,
     alvo_ca: f64,
@@ -193,6 +197,8 @@ const PADRAO: Regras = Regras {
     teto_da_idade: [80, 80, 80, 80, 100, 110, 110, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
     idade_max_disputa: 18,
     pular_teto: 0.5,
+    mais_novo_a_partir: 22,
+    mais_novo_em: 0,
     novo: false,
     alvo_k: 50.0,
     alvo_ca: 0.0,
@@ -267,6 +273,8 @@ fn ler_regras() -> Regras {
             "log" => r.registrar = x != 0.0,
             "contest_max_age" => r.idade_max_disputa = (x as i32).clamp(0, 126),
             "ca_cap_skip" => r.pular_teto = x,
+            "younger_from_age" => r.mais_novo_a_partir = x as i32,
+            "younger_by" => r.mais_novo_em = (x as i32).max(0),
             _ => {}
         }
     }
@@ -428,9 +436,25 @@ unsafe fn idade_da_tabela(r: &Regras) -> usize {
 
 /// No ramo das nações fora do jogo de reputação < 350 (pelo trecho de `instalar_idade_fora`): só a idade, da mesma
 /// tabela; o CA sai depois da fórmula da original pela idade.
-unsafe extern "C" fn sortear_idade_fora(_pessoa: usize) -> u32 {
+/// A regra de petermf23: com `mais_novo_a_partir` anos ou mais, `mais_novo_em` anos a menos (nunca abaixo de IDADE_MIN).
+fn rejuvenescer(r: &Regras, idade: usize) -> usize {
+    if r.mais_novo_em > 0 && idade as i32 >= r.mais_novo_a_partir {
+        (idade as i32 - r.mais_novo_em).max(IDADE_MIN as i32) as usize
+    } else {
+        idade
+    }
+}
+
+unsafe extern "C" fn sortear_idade_fora(pessoa: usize) -> u32 {
     let r = REGRAS;
-    idade_da_tabela(&r) as u32
+    let idade = if r.idades_fora {
+        idade_da_tabela(&r)
+    } else {
+        // o sorteio da original (0x7abeb1..0x7abee7): sorteio(rep da nação) < sorteio(1000) dá 23 a 27, senão 17 a 23
+        let rep = core::ptr::read_unaligned((d(pessoa + 0x1a) + 0x88) as *const i32);
+        if sorteio(rep) < sorteio(1000) { 23 + sorteio(5) as usize } else { 17 + sorteio(7) as usize }
+    };
+    rejuvenescer(&r, idade) as u32
 }
 
 /// No lugar do bloco 0x7ac597..0x7ac6f6 da 0x7abac0 (pelo trecho de `instalar_idade`): a idade do jovem, sorteada
@@ -438,7 +462,7 @@ unsafe extern "C" fn sortear_idade_fora(_pessoa: usize) -> u32 {
 /// pula em 1 de 250 ou de 150). Devolve a idade, que o trecho põe no `bl` e na local da original.
 unsafe extern "C" fn sortear_idade(pessoa: usize) -> u32 {
     let r = REGRAS;
-    let idade = idade_da_tabela(&r);
+    let idade = rejuvenescer(&r, idade_da_tabela(&r));
     let teto = r.teto_da_idade[idade - IDADE_MIN];
     let ficha = d(pessoa + 0x61);
     if teto >= 0 && w(ficha + 5) > teto && (sorteio(10000) as f64) >= r.pular_teto * 100.0 {
@@ -506,15 +530,15 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha("regen ages: off (ages = original)");
         } else if pode_ligar(&IDADE, s) {
             if instalar_idade(&r) {
-                registro::linha(&format!("regen ages: on (age table; contest up to age {})", r.idade_max_disputa));
+                registro::linha(&format!("regen ages: on (age table; {} or older made {} years younger; contest up to age {})", r.mais_novo_a_partir, r.mais_novo_em, r.idade_max_disputa));
             } else {
                 registro::linha("regen ages: could not allocate the code stub; nothing was changed");
             }
         }
-        if !r.idades || !r.idades_fora {
-            registro::linha("regen ages (nations not in the game): off (ages_out_of_game = original)");
+        if !r.idades || (!r.idades_fora && r.mais_novo_em == 0) {
+            registro::linha("regen ages (nations not in the game): off");
         } else if pode_ligar(&IDADE_FORA, s) && instalar_idade_fora() {
-            registro::linha("regen ages (nations not in the game): on (age table)");
+            registro::linha(&format!("regen ages (nations not in the game): on ({}; {} or older made {} years younger)", if r.idades_fora { "age table" } else { "original draw" }, r.mais_novo_a_partir, r.mais_novo_em));
         }
         if !r.novo {
             registro::linha("regens 0.1: off (rule = original)");

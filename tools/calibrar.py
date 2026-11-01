@@ -110,7 +110,7 @@ PADRAO = dict(target_k=50.0, target_ca=0.0, sigma=1500.0, level_floor=0.002, fac
 # A distribuição original das idades (0x7ac58e), que é também o padrão do .cfg: idade: (peso %, teto do CA ou None).
 IDADES = {15: (0.0025, 80), 16: (16.67, 80), 17: (29.11, 80), 18: (29.11, 100), 19: (12.44, 110), 20: (12.44, 110),
           21: (0.04, None), 22: (0.04, None), 23: (0.04, None), 24: (0.04, None), 25: (0.04, None), 26: (0.04, None)}
-ORIGINAL = dict(idades=IDADES, contest_max_age=18, ca_cap_skip=0.5)
+ORIGINAL = dict(idades=IDADES, contest_max_age=18, ca_cap_skip=0.5, younger_from_age=22, younger_by=0)
 
 
 def ler_cfg(caminho):
@@ -165,7 +165,10 @@ def escolher_novo(j, clubes, cfg, recebidos):
 def jovem(pa, idades):
     """Um jovem pela tabela de idades (a original ou a do .cfg); None se a idade passa do corte da disputa."""
     tabela = list(idades['idades'].items())
-    idade, (_, teto) = random.choices(tabela, weights=[p for _, (p, _) in tabela])[0]
+    idade, _ = random.choices(tabela, weights=[p for _, (p, _) in tabela])[0]
+    if idades['younger_by'] > 0 and idade >= idades['younger_from_age']:  # a regra de petermf23
+        idade = max(14, int(idade - idades['younger_by']))
+    teto = idades['idades'].get(idade, (0, None))[1]
     if idade > idades['contest_max_age']:
         return None
     ca = int(0.25 * pa) + random.randrange(max(1, int(0.6 * pa)))
