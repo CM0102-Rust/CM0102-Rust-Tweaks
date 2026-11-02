@@ -118,6 +118,38 @@ pub unsafe fn do_disco(detalhe: bool) {
     IAT = iat;
 }
 
+#[link(name = "kernel32")]
+extern "system" {
+    fn GetModuleHandleExW(bandeiras: u32, endereco: *const u8, modulo: *mut *mut core::ffi::c_void) -> i32;
+    fn GetModuleFileNameW(modulo: *mut core::ffi::c_void, buf: *mut u16, tam: u32) -> u32;
+}
+
+/// Desvios de outras DLLs já lidos (endereço, módulo, o que muda para os ajustes): viram nota em vez de aviso.
+const DESVIOS_CONHECIDOS: [(u32, &str, &str); 2] = [
+    (0x540a50, "NickDLL.dll", "NickDLL's own club_get_linked_b_team, with its pair list for the loaded database; the contest uses it to leave B teams out, as the exe's own routine would (fine)"),
+    (0x5e8290, "LaMOHatesCD.dll", "a message-box filter (by its name, the no-CD helper); other messages, like the save container's errors, still show (fine)"),
+];
+
+/// Se o trecho começa com um salto (E9 ou E8 rel32, ou FF 25 [endereço]), para onde ele vai e em que módulo.
+unsafe fn destino(va: u32) -> String {
+    let p = va as *const u8;
+    let alvo = match *p {
+        0xe9 | 0xe8 => (va + 5).wrapping_add(core::ptr::read_unaligned(p.add(1) as *const u32)),
+        0xff if *p.add(1) == 0x25 => *(core::ptr::read_unaligned(p.add(2) as *const u32) as *const u32),
+        _ => return format!("; now {:02x} {:02x} {:02x} {:02x} {:02x}", *p, *p.add(1), *p.add(2), *p.add(3), *p.add(4)),
+    };
+    let mut m = core::ptr::null_mut();
+    // GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
+    if GetModuleHandleExW(0x4 | 0x2, alvo as *const u8, &mut m) == 0 {
+        return format!("; it now jumps to {:08x} (outside any module)", alvo);
+    }
+    let mut buf = [0u16; 260];
+    let n = GetModuleFileNameW(m, buf.as_mut_ptr(), 260) as usize;
+    let caminho = String::from_utf16_lossy(&buf[..n]);
+    let nome = caminho.rsplit('\\').next().unwrap_or("");
+    format!("; it now jumps to {} +{:x}", nome, alvo as usize - m as usize)
+}
+
 /// O retrato da memória, depois das DLLs do exe: o .text e o .rdata contra o arquivo, sem as `nossas` escritas.
 /// `partes`: os ajustes ligados e os trechos que cada um conferiu na abertura (as bordas); uma mudança de outra DLL
 /// dentro deles vira aviso, porque a conferência foi antes dela.
@@ -152,7 +184,11 @@ pub unsafe fn da_memoria(nossas: &[(usize, usize)], partes: &[(&str, &[(usize, u
     for &(nome, bordas) in partes {
         for &(va, n) in &trechos {
             if let Some(&(b, _)) = bordas.iter().find(|&&(b, m)| (va as usize) < b + m && b < (va + n) as usize) {
-                linha(&format!("runtime\twarning: {}: another DLL changed {:08x} ({} bytes) after loading, inside code this part checked at start ({:08x}); it may now call that DLL's version", nome, va, n, b));
+                let para = destino(va);
+                match DESVIOS_CONHECIDOS.iter().find(|c| c.0 == va && para.contains(c.1)) {
+                    Some(c) => linha(&format!("runtime\tnote: {}: {:08x}{}: {}", nome, va, para, c.2)),
+                    None => linha(&format!("runtime\twarning: {}: another DLL changed {:08x} ({} bytes) after loading, inside code this part checked at start ({:08x}){}", nome, va, n, b, para)),
+                }
             }
         }
     }
