@@ -23,6 +23,8 @@ mod conteiner;
 // O retrato do exe contra o 3.9.68 (o arquivo na abertura, a memória depois das DLLs do exe).
 mod referencia;
 mod retrato;
+// A pasta do jogo sem o SetupReg e a marca RUNASADMIN da NickDLL.
+mod pasta;
 
 /// Os contadores de ramo do projeto: aqui não contam nada.
 mod comparacao {
@@ -408,6 +410,10 @@ struct Regras {
     /// unattached = only_if_no_room: todo jovem de nação no jogo vai à disputa (qualquer idade, sem o 1 em 4); fica sem
     /// clube só quando nenhum clube do país é elegível.
     so_sem_vaga: bool,
+    /// portable_folder: o Location do registro é a pasta do exe (sem SetupReg).
+    pasta: bool,
+    /// clear_admin_flag: tirar a marca WIN95 RUNASADMIN que a NickDLL grava para o exe.
+    limpar_marca: bool,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -447,6 +453,8 @@ const PADRAO: Regras = Regras {
     temperatura: 1.0,
     registrar: false,
     so_sem_vaga: false,
+    pasta: false,
+    limpar_marca: false,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -496,6 +504,14 @@ fn ler_regras() -> Regras {
         }
         if k == "save_over_2gb" {
             r.save = v == "1";
+            continue;
+        }
+        if k == "portable_folder" {
+            r.pasta = v == "1";
+            continue;
+        }
+        if k == "clear_admin_flag" {
+            r.limpar_marca = v == "1";
             continue;
         }
         let Ok(x) = v.parse::<f64>() else { continue };
@@ -950,6 +966,9 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         retrato::do_disco(r.registrar);
         mutex_dos_testes();
         let s = r.sobrescrever;
+        if r.pasta {
+            pasta::ligar_pasta();
+        }
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
         } else if pode_ligar(&SAVE, s) {
@@ -1099,6 +1118,9 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
     static mut CONFERIDO: bool = false;
     if !CONFERIDO {
         CONFERIDO = true;
+        if REGRAS.limpar_marca {
+            pasta::limpar_marca();
+        }
         retrato::da_memoria(&*core::ptr::addr_of!(MARCAS), &*core::ptr::addr_of!(LIGADAS), REGRAS.registrar);
         if REGRAS.registrar {
             conferir_desvios();

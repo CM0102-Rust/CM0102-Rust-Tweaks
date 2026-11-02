@@ -92,6 +92,13 @@ With `log = 1`, every box goes to the log before it shows. Real cases caught [me
 
 The hook chains to LaMOHatesCD's on CLZ and changes nothing in the game (loads and careers with it on ran normally).
 
+### 3.6 No SetupReg and no administrator (CLZ v6.1)
+
+A copy of CLZ 2026 V6.1 (the V5.3 exe, the group's new NickDLL, untouched), with the registry `Location` pointing to another install (the V5.4 one) [measured, 02/11/2026]:
+- `portable_folder = 1`: the log says `portable folder: on (... Location is this folder: <the copy>)`, and the game opens and writes in the copy;
+- `clear_admin_flag = 1`: NickDLL writes `WIN95 RUNASADMIN` for the copy's exe and the DLL removes `RUNASADMIN` at the first `DirectDrawCreate`; the next start doesn't ask for elevation. `WIN95` stays: without Windows 95 mode, v6.1's NickDLL crashes creating a career (heap fault in `ntdll`, right after `bra_setup Brasileiro Sub-21 B`, four times, with and without this DLL); with `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, not elevated, the career is created and saved (suggested by the CLZ team);
+- windowed, with Windows' `ddraw.dll` CLZ stops at "Unable to initialise the graphics in windowed mode ... 16 bit colour" (box in the log): the test uses the working `ddraw.dll` as `ddraw_chain.dll`, for video only (`CM_SEM_DESVIOS=1`).
+
 ## 4. Regens
 
 ### 4.1 Outside the game: the simulator

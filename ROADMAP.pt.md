@@ -16,6 +16,7 @@ Legenda: ✅ feito · 🔨 em andamento · ⏳ a fazer · 🔬 a pesquisar · �
   - as bordas têm de bater, senão o ajuste nunca liga;
   - o corpo alterado (o Regen Tweak dos exes do CLZ, por exemplo) fica com o exe, salvo `override_exe_changes = 1`.
 - ✅ **Save acima de 2 GB** (`save_over_2gb`), o mesmo do save2gb.
+- ✅ **Sem SetupReg e sem administrador** (`portable_folder`, `clear_admin_flag`, 02/11/2026, pedido do CLZ): a pasta do jogo é a do exe e o `RUNASADMIN` que a NickDLL grava sai (o `WIN95` fica: sem ele o v6.1 cai ao criar a carreira), sem mexer na NickDLL. Provado na cópia do CLZ v6.1; falta a primeira abertura com a marca já gravada (elevada).
 - ✅ **Idade dos regens** por tabela (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Regens mais novos**, a ideia de petermf23: com 22 anos ou mais, 6 a menos (`younger_from_age`, `younger_by`).
 - ✅ **Sem clube só sem vaga** (`unattached = only_if_no_room`): todo jovem de nação no jogo vai à disputa; em cinco temporadas, os regens sem clube caem de 899 para 353 (fábrica) e de 233 para 77 (CLZ).
