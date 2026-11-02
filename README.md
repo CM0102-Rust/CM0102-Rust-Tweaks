@@ -9,6 +9,8 @@ Each tweak has its own switch in `tweaks.cfg`, next to the exe. **They all start
 | Switch | What it does |
 |---|---|
 | `save_over_2gb = 1` | **Saves above 2 GB** (up to 4 GB), the same fix as save2gb: the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `src/conteiner.rs` |
+| `portable_folder = 1` | **No SetupReg**: the game's registry `Location` (the folder it switches to at start) is the exe's own folder, through the exe's `RegOpenKeyExA`/`RegQueryValueExA` imports (`src/pasta.rs`); nothing is written to the registry |
+| `clear_admin_flag = 1` | **No "run as administrator"**: removes the `WIN95 RUNASADMIN` that NickDLL writes for the exe in `HKCU\...\AppCompatFlags\Layers` (only those two words, only for this exe), from the next start on |
 | `ages = custom` | **Regen ages** from a table (§ Ages) |
 | `retire_idle_players = 1` | **Retiring idle players**: a player without a club that nobody wants retires sooner, and his record becomes a regen (§ Retiring idle players) |
 | `rule = new` | The **clubs' contest** for a youth regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) becomes a proportional draw (§ The new rule). The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](docs/DISTRIBUICAO_DOS_REGENS.en.md) |

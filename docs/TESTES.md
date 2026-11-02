@@ -90,6 +90,13 @@ Com `log = 1`, toda caixa vai para o log antes de aparecer. Casos reais apanhado
 
 O desvio encadeia no da LaMOHatesCD no CLZ e não muda nada no jogo (as cargas e carreiras com ele ligado seguiram normais).
 
+### 3.6 Sem SetupReg e sem administrador (CLZ v6.1)
+
+Uma cópia do CLZ 2026 V6.1 (exe do V5.3, NickDLL nova do grupo, intocada), com o `Location` do registro apontando para outra instalação (a do V5.4) [medido, 02/11/2026]:
+- `portable_folder = 1`: o log diz `portable folder: on (... Location is this folder: <a cópia>)`, e o jogo abre e grava na cópia;
+- `clear_admin_flag = 1`: a NickDLL grava `WIN95 RUNASADMIN` para o exe da cópia e a DLL tira na primeira `DirectDrawCreate` (`removed "WIN95 RUNASADMIN"`); a entrada fica vazia e a abertura seguinte não pede elevação;
+- em janela, com a `ddraw.dll` do Windows o CLZ para em "Unable to initialise the graphics in windowed mode ... 16 bit colour" (caixa no log): o teste usa a `ddraw.dll` de trabalho como `ddraw_chain.dll`, só pelo vídeo (`CM_SEM_DESVIOS=1`).
+
 ## 4. Os regens
 
 ### 4.1 Fora do jogo: o simulador

@@ -16,6 +16,7 @@ Key: ✅ done · 🔨 in progress · ⏳ to do · 🔬 to research · 💡 idea,
   - the edges must match, otherwise the tweak never turns on;
   - a changed body (the Regen Tweak in the CLZ exes, for example) stays with the exe, unless `override_exe_changes = 1`.
 - ✅ **Saves above 2 GB** (`save_over_2gb`), the same as save2gb.
+- ✅ **No SetupReg and no administrator** (`portable_folder`, `clear_admin_flag`, 02/11/2026, asked by CLZ): the game folder is the exe's own and NickDLL's `WIN95 RUNASADMIN` flag goes away, without touching NickDLL. Proven on a copy of CLZ v6.1; still to test: the first start with the flag already written (elevated).
 - ✅ **Regen ages** from a table (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Younger regens**, petermf23's idea: 22 or older, 6 years younger (`younger_from_age`, `younger_by`).
 - 🔨 **Clubless only without room** (`unattached = only_if_no_room`): every youngster from a nation in the game goes to the contest; to be measured in a career against `original`.
