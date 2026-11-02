@@ -10,7 +10,7 @@ Cada ajuste tem a sua chave no `tweaks.cfg`, ao lado do exe. **Todos começam de
 |---|---|
 | `save_over_2gb = 1` | O **save acima de 2 GB** (até 4 GB), o mesmo do save2gb: as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `src/conteiner.rs` |
 | `portable_folder = 1` | **Sem SetupReg**: o `Location` do registro (a pasta para onde o jogo vai ao abrir) é a pasta do próprio exe, pelas importações `RegOpenKeyExA`/`RegQueryValueExA` do exe (`src/pasta.rs`); nada é gravado no registro |
-| `clear_admin_flag = 1` | **Sem "executar como administrador"**: tira o `WIN95 RUNASADMIN` que a NickDLL grava para o exe em `HKCU\...\AppCompatFlags\Layers` (só essas duas palavras, só deste exe), da execução seguinte em diante |
+| `clear_admin_flag = 1` | **Sem "executar como administrador"**: tira o `RUNASADMIN` que a NickDLL grava para o exe em `HKCU\...\AppCompatFlags\Layers` (só essa palavra, só deste exe; o `WIN95` fica, porque sem ele o CLZ 2026 V6.1 cai ao criar a carreira), da execução seguinte em diante |
 | `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
 | `retire_idle_players = 1` | **Aposentar os inativos**: o jogador sem clube que ninguém quer se aposenta antes, e a ficha dele vira um regen (§ Aposentar os inativos) |
 | `rule = new` | A **disputa dos clubes** pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova). A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md) |

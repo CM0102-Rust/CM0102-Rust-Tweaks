@@ -6,7 +6,7 @@
 //!   chaves e valores seguem para o Windows. Dispensa o SetupReg e faz duas instalações conviverem.
 //! - `clear_admin_flag = 1`: a NickDLL grava `WIN95 RUNASADMIN` em `HKCU\...\AppCompatFlags\Layers` para o caminho do exe
 //!   a cada execução; com ela o jogo pede elevação e, elevado, ia para o `Location` de outra instalação. Na primeira
-//!   `DirectDrawCreate` (depois da NickDLL) a DLL tira `WIN95` e `RUNASADMIN` da entrada desse exe e mantém o resto (o
+//!   `DirectDrawCreate` (depois da NickDLL) a DLL tira o `RUNASADMIN` da entrada desse exe e mantém o resto (o `WIN95`, o
 //!   `DWM8And16BitMitigation` do Windows); vazia, apaga. Vale da execução seguinte em diante.
 
 use core::ffi::c_void;
@@ -144,9 +144,10 @@ pub unsafe fn ligar_pasta() {
     }
 }
 
-/// A entrada sem `WIN95` e `RUNASADMIN` (as duas que a NickDLL grava); `None` se nada muda.
+/// A entrada sem `RUNASADMIN`; `None` se nada muda. O `WIN95` fica: sem ele a NickDLL do CLZ 2026 V6.1 cai ao criar a
+/// carreira (heap, na montagem do Brasileiro Sub-21 B); com ele a carreira é criada (02/11/2026).
 fn sem_admin(atual: &str) -> Option<String> {
-    let resto: Vec<&str> = atual.split_whitespace().filter(|t| !t.eq_ignore_ascii_case("WIN95") && !t.eq_ignore_ascii_case("RUNASADMIN")).collect();
+    let resto: Vec<&str> = atual.split_whitespace().filter(|t| !t.eq_ignore_ascii_case("RUNASADMIN")).collect();
     (resto.len() != atual.split_whitespace().count()).then(|| resto.join(" "))
 }
 
@@ -185,9 +186,9 @@ pub unsafe fn limpar_marca() {
 mod testes {
     #[test]
     fn tira_so_as_da_nickdll() {
-        assert_eq!(super::sem_admin("WIN95 RUNASADMIN").as_deref(), Some(""));
-        assert_eq!(super::sem_admin("DWM8And16BitMitigation WIN95 RUNASADMIN").as_deref(), Some("DWM8And16BitMitigation"));
+        assert_eq!(super::sem_admin("WIN95 RUNASADMIN").as_deref(), Some("WIN95"));
+        assert_eq!(super::sem_admin("DWM8And16BitMitigation WIN95 RUNASADMIN").as_deref(), Some("DWM8And16BitMitigation WIN95"));
         assert_eq!(super::sem_admin("~ RUNASADMIN").as_deref(), Some("~"));
-        assert_eq!(super::sem_admin("DWM8And16BitMitigation"), None);
+        assert_eq!(super::sem_admin("WIN95"), None);
     }
 }
