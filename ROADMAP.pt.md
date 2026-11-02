@@ -46,17 +46,17 @@ A configuração que a DLL distribui.
 
 ✅ **Calibrado** em 01/11/2026 na Inglaterra, no Brasil e na Itália (os números estão no README, § A calibração). O que o simulador não mede, os elencos reais ao longo da carreira, fica para a prova no jogo.
 
-## Fase 2: a prova no jogo ⏳
+## Fase 2: a prova no jogo 🔨
 
-- ⏳ Carreira automática de férias numa bancada, com o `cm0102.exe` original, a DLL encadeada na `ddraw.dll` do Windows, sempre em janela. Conferir:
-  - que o `tweaks.log` mostra cada ajuste ligado;
-  - que a carreira passa de uma ou duas temporadas sem travar;
-  - os regens com `log = 1`: idade, clube e chance de cada um.
-- ⏳ Comparar a distribuição por faixa com e sem a DLL (`regens_por_clube.py`) contra o que o simulador previu.
-- ⏳ Medir **quantos regens a mais por ano** com `retire_idle_players` e a idade dos que se aposentam por ela.
-- ⏳ Medir **quem contrata os jovens que nascem sem clube** (uns 44%). Isso decide a ideia da fase 4.
-- ⏳ Save: gravar e carregar com e sem a DLL, e um save acima de 2 GB.
-- ⏳ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
+Os testes e os números de cada execução: [docs/TESTES.md](docs/TESTES.md).
+
+- ✅ Carreira automática de férias numa bancada, oculta e em janela, com a DLL encadeada atrás da `ddraw.dll` de trabalho (só o vídeo): cada ajuste aparece no `tweaks.log`, as carreiras passam de uma temporada e meia (até quase duas no CLZ) sem travar, e cada regen vai para o log com idade, clube e chance.
+- ✅ A distribuição no jogo contra a original, no banco de fábrica, no oficial de outubro de 2026 e no CLZ: a concentração some (máximo de 3 por clube, contra 13), como o simulador previu.
+- 🔨 **Quantos regens a mais por ano** com `retire_idle_players`: 35 a 37 aposentadorias por temporada e meia no banco de fábrica; falta a medida em vários anos.
+- ✅ **Os jovens que nasciam sem clube** (uns 44%): `unattached = only_if_no_room` os põe na disputa; no banco de 2026, todos os 266 foram a algum clube.
+- ✅ Save: o acima de 2 GB carrega com a chave e falha sem ela, no exe do projeto e no CLZ. ⏳ Gravar um save acima de 2 GB numa carreira de verdade, com o Lucas.
+- ✅ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
+- ⏳ **A carreira longa** (5 a 10 temporadas, com saves no caminho), **mais ligas** (com ligas de fundo) e `unattached` no CLZ: ver [docs/TESTES.md](docs/TESTES.md) §5.
 
 ## Fase 2b: o retrato do exe 🔨
 

@@ -46,17 +46,17 @@ The configuration the DLL ships with.
 
 ✅ **Calibrated** on 11/01/2026 on England, Brazil and Italy (the numbers are in the README, § Calibration). What the simulator can't measure, real squads over a career, goes to the in-game proof.
 
-## Phase 2: the in-game proof ⏳
+## Phase 2: the in-game proof 🔨
 
-- ⏳ An automatic holiday career on a test bench, with the original `cm0102.exe`, the DLL chained to the Windows `ddraw.dll`, always windowed. Check:
-  - that `tweaks.log` shows each tweak on;
-  - that the career gets through one or two seasons without hanging;
-  - the regens with `log = 1`: each one's age, club and chance.
-- ⏳ Compare the distribution by band with and without the DLL (`regens_por_clube.py`) against what the simulator predicted.
-- ⏳ Measure **how many more regens a year** with `retire_idle_players`, and the age of those it retires.
-- ⏳ Measure **who signs the youngsters born without a club** (about 44%). This decides the phase 4 idea.
-- ⏳ Saves: write and load with and without the DLL, and a save above 2 GB.
-- ⏳ NickPatcher and CLZ exes, with `override_exe_changes` at 0 and at 1.
+The tests and each run's numbers: [docs/TESTES.en.md](docs/TESTES.en.md).
+
+- ✅ An automatic holiday career on a test bench, hidden and windowed, with the DLL chained behind the working `ddraw.dll` (video only): each tweak shows in `tweaks.log`, careers get through a season and a half (almost two on CLZ) without hanging, and each regen goes to the log with age, club and chance.
+- ✅ The in-game distribution against the original, on the factory database, the official October 2026 one and CLZ: the concentration goes away (at most 3 per club, against 13), as the simulator predicted.
+- 🔨 **How many more regens a year** with `retire_idle_players`: 35 to 37 retirements per season and a half on the factory database; the measure over several years is still to do.
+- ✅ **The youngsters who were born without a club** (about 44%): `unattached = only_if_no_room` puts them in the contest; on the 2026 database, all 266 went to a club.
+- ✅ Saves: the one above 2 GB loads with the switch and fails without it, on the project's exe and on CLZ. ⏳ Writing a save above 2 GB in a real career, with Lucas.
+- ✅ NickPatcher and CLZ exes, with `override_exe_changes` at 0 and at 1.
+- ⏳ **The long career** (5 to 10 seasons, with saves along the way), **more leagues** (with background leagues) and `unattached` on CLZ: see [docs/TESTES.en.md](docs/TESTES.en.md) §5.
 
 ## Phase 2b: the exe snapshot 🔨
 

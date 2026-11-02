@@ -25,6 +25,7 @@ The plan is in [ROADMAP.md](ROADMAP.md).
 |---|---|
 | `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `tweaks.cfg`, checks the signatures and turns each tweak on |
 | `src/conteiner.rs` | The saves above 2 GB container (a copy of `rust/src/conteiner.rs` from the CM0102 project; stable since save2gb) |
+| `docs/TESTES.en.md` | The in-game tests and each run's results (stability, saves, snapshot, regens) |
 | `tweaks.cfg` | The options, in English and commented (it's the community's file); goes next to the exe |
 | `tools/calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one (with the `.cfg` age table) |
 | `tools/simula_nota.py` | The document's made-up clubs example (§7) |

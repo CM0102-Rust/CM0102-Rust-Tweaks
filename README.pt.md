@@ -25,6 +25,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 |---|---|
 | `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `tweaks.cfg`, confere as assinaturas e liga cada ajuste |
 | `src/conteiner.rs` | O contêiner do save acima de 2 GB (cópia do `rust/src/conteiner.rs` do projeto CM0102; estável desde o save2gb) |
+| `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
 | `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |
 | `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
