@@ -18,7 +18,7 @@ Key: ✅ done · 🔨 in progress · ⏳ to do · 🔬 to research · 💡 idea,
 - ✅ **Saves above 2 GB** (`save_over_2gb`), the same as save2gb.
 - ✅ **Regen ages** from a table (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Younger regens**, petermf23's idea: 22 or older, 6 years younger (`younger_from_age`, `younger_by`).
-- 🔨 **Clubless only without room** (`unattached = only_if_no_room`): every youngster from a nation in the game goes to the contest; to be measured in a career against `original`.
+- ✅ **Clubless only without room** (`unattached = only_if_no_room`): every youngster from a nation in the game goes to the contest; over five seasons, regens without a club fall from 899 to 353 (factory) and from 233 to 77 (CLZ).
 - ✅ **The contest by proportional draw** (`rule = new`): level × facilities × staff × room.
 - ✅ The tools: `calibrar.py` (both rules with a save's real clubs), `regens_por_clube.py`, `simula_nota.py`.
 
@@ -52,11 +52,14 @@ The tests and each run's numbers: [docs/TESTES.en.md](docs/TESTES.en.md).
 
 - ✅ An automatic holiday career on a test bench, hidden and windowed, with the DLL chained behind the working `ddraw.dll` (video only): each tweak shows in `tweaks.log`, careers get through a season and a half (almost two on CLZ) without hanging, and each regen goes to the log with age, club and chance.
 - ✅ The in-game distribution against the original, on the factory database, the official October 2026 one and CLZ: the concentration goes away (at most 3 per club, against 13), as the simulator predicted.
-- 🔨 **How many more regens a year** with `retire_idle_players`: 35 to 37 retirements per season and a half on the factory database; the measure over several years is still to do.
+- ✅ **How many more regens a year** with `retire_idle_players`: 772 retirements over five seasons on the factory database (about 150 a year); on CLZ, 9, because RetirePatchV4 blocks almost all of them.
 - ✅ **The youngsters who were born without a club** (about 44%): `unattached = only_if_no_room` puts them in the contest; on the 2026 database, all 266 went to a club.
 - ✅ Saves: the one above 2 GB loads with the switch and fails without it, on the project's exe and on CLZ. ⏳ Writing a save above 2 GB in a real career, with Lucas.
 - ✅ NickPatcher and CLZ exes, with `override_exe_changes` at 0 and at 1.
-- ⏳ **The long career** (5 to 10 seasons, with saves along the way), **more leagues** (with background leagues) and `unattached` on CLZ: see [docs/TESTES.en.md](docs/TESTES.en.md) §5.
+- ✅ **The long career**: five seasons with 10 leagues (6 playable and 4 background), on the factory database and on CLZ (Nick's rules and ours, with `unattached`), with no crash; the log's `season` line gives the population every July ([docs/TESTES.en.md](docs/TESTES.en.md) §4.3).
+- ✅ **Cap bug fixed** (11/02): the cap of 2 per 365 days only counted the squad and leaked when the club loaned out or sold the youngster (15 at Real Madrid in four years); now the DLL keeps every youngster it handed out, and the most per season is 2.
+- 🔬 **Piling up through the market:** even with the cap, one club gathers 17 (factory) to 24 (CLZ) regens in five years by signing them. Find out who and whether a tweak is worth it.
+- ⏳ Repeat the careers (the variation between them) and go to 10 seasons.
 
 ## Phase 2b: the exe snapshot 🔨
 
@@ -79,6 +82,12 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 - technology to be decided: a single exe, no installer and no dependency on anything installed (for example, Rust with an interface library that draws by itself).
 
 ## Phase 4: more tweaks 💡🔬
+
+- ⏳ **Video, resolution and CD** (Lucas's request, 11/02), three switches off by default, each checking the code's signature and keeping the exe's when it already changes it (CLZ has its own resolution, dynamic backgrounds and NoCD); nothing else goes into the DLL, so as not to conflict with NickPatcher:
+  - `video = window`: the project's video layer (the game draws to our DirectDraw and the frame goes to an ordinary window): Print Screen, a resizable window with sharp scaling, nothing changes Windows' video mode. Works at 800×600;
+  - `resolution = 1080`: the project's 1920×1080 resolution, applied in memory, together with the 30-row clamp in `Area::init` (without it, an old match's report shows the "Area.cpp 507" box);
+  - `no_cd = 1`: the project's NoCD.
+  - Test on 3.9.68 and on CLZ (the switches must refuse on CLZ); later, with Lucas watching the screen, CLZ's resolutions and dynamic backgrounds.
 
 - 🔬 **The 27 December hang** (the World Cup loop in `world_cup.cpp`, 0x92ea3b..0x92ea71; the one-byte workaround is Alan_v2's):
   - understand routine 0x92e940: what the 8 five-byte records are, who fills them and why there are national teams left over;

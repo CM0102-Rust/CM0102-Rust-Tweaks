@@ -282,9 +282,71 @@ fn iniciar_batida() {
                 ultimo = (ano, mes);
                 registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}", ano, dia, inicio.elapsed().as_secs(),
                     JOVENS.load(Relaxed), NASCIDOS.load(Relaxed), APOSENTADOS.load(Relaxed)));
+                if mes == 6 {
+                    unsafe { registrar_temporada(format!("{}-{:03}", ano, dia)) };
+                }
             }
         }
     });
+}
+/// A linha `season` (log = 1, em julho de cada ano): o retrato da população, só lendo a memória.
+/// `season  data  jogadores  sem_clube  elenco min/média/max (clubes de competição no jogo)  regens  regens_sem_clube
+///  max_regens_num_clube  PA≥150: total / sem clube / em clube grande (reputação ≥ 7000) / reputação média do clube`.
+/// Pessoas: [0xae23bc] + 110 × id, [0xae2364] delas; jogador = +0x61, clube = +0x39, regen = bit 0x40 do +0xb do
+/// registro de 79 bytes. ponytail: lê de outra linha de execução sem trava (só leitura de tabelas fixas); se um dia der
+/// falha aqui, passar para um desvio na virada do dia.
+unsafe fn registrar_temporada(data: String) {
+    let (pessoas, n) = (d(0xae23bc), d(0xae2364));
+    let (clubes, nc) = (d(0xae23b4), d(0xae235c));
+    if pessoas == 0 || clubes == 0 || n > 2_000_000 || nc > 100_000 {
+        return;
+    }
+    let (mut elenco, mut regens_no) = (vec![0u16; nc], vec![0u16; nc]);
+    let (mut jogadores, mut livres, mut regens, mut regens_livres) = (0, 0, 0, 0);
+    let (mut altos, mut altos_livres, mut altos_grandes, mut rep_altos) = (0, 0, 0, 0i64);
+    for s in 0..n {
+        let p = pessoas + 110 * s;
+        let ficha = d(p + 0x61);
+        if ficha == 0 {
+            continue;
+        }
+        jogadores += 1;
+        let clube = d(p + 0x39);
+        let id = if clube != 0 { d(clube) } else { usize::MAX };
+        let regen = *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0;
+        if id < nc {
+            elenco[id] += 1;
+            if regen {
+                regens_no[id] += 1;
+            }
+        } else {
+            livres += 1;
+        }
+        if regen {
+            regens += 1;
+            if id >= nc {
+                regens_livres += 1;
+            }
+            if w(ficha + 7) >= 150 {
+                altos += 1;
+                if id >= nc {
+                    altos_livres += 1;
+                } else {
+                    let rep = w(clube + 0x80) as i64;
+                    rep_altos += rep;
+                    altos_grandes += (rep >= 7000) as i32;
+                }
+            }
+        }
+    }
+    let em_jogo: Vec<u16> = (0..nc).filter(|&i| em_competicao(clubes + 0x245 * i)).map(|i| elenco[i]).collect();
+    let (min, max) = (em_jogo.iter().min().copied().unwrap_or(0), em_jogo.iter().max().copied().unwrap_or(0));
+    let media = em_jogo.iter().map(|&x| x as f64).sum::<f64>() / em_jogo.len().max(1) as f64;
+    let com_clube = altos - altos_livres;
+    let topo = (0..nc).max_by_key(|&i| regens_no[i]).unwrap_or(0);
+    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({})\tpa150 {} free {} big {} rep {}",
+        data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo),
+        altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 }));
 }
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
 unsafe fn conferir_desvios() {
@@ -526,15 +588,27 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
     m
 }
 
-/// Regens (bit 0x40 do +0xb do registro de 79 bytes) no elenco (+0xd7) que entraram no clube (+0x3e dia, +0x40 ano)
-/// nos últimos 365 dias.
+/// Os jovens que a disputa nova entregou: (id do clube, dia corrido = ano × 365 + dia).
+static mut ENTREGUES: Vec<(usize, i32)> = Vec::new();
+
+unsafe fn hoje() -> i32 {
+    w(0xae2c92) as i32 * 365 + w(0xae2c90) as i32
+}
+
+/// Quantos jovens o clube recebeu nos últimos 365 dias: os que esta DLL entregou (mesmo que o clube já os tenha
+/// emprestado, vendido ou mandado para o time B; contar só o elenco deixava o teto vazar, 15 no Real Madrid em 4 anos)
+/// ou, se for maior, os regens (bit 0x40 do +0xb do registro de 79 bytes) do elenco (+0xd7) que entraram no clube
+/// (+0x3e dia, +0x40 ano) no período (o que vale logo depois de carregar um save, com a lista vazia).
+/// ponytail: a lista não vai para o save; depois da carga, só a contagem pelo elenco até a lista encher de novo.
 unsafe fn recebidos_no_ano(clube: usize) -> i32 {
-    let (dia, ano) = (w(0xae2c90) as i32, w(0xae2c92) as i32);
-    (0..50usize)
+    let (id, agora) = (d(clube), hoje());
+    let pela_lista = (*core::ptr::addr_of!(ENTREGUES)).iter().filter(|&&(c, t)| c == id && agora - t < 365).count() as i32;
+    let pelo_elenco = (0..50usize)
         .map(|k| d(clube + 0xd7 + 4 * k))
         .filter(|&p| p != 0 && *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0)
-        .filter(|&p| (ano - w(p + 0x40) as i32) * 365 + dia - (w(p + 0x3e) as i32) < 365)
-        .count() as i32
+        .filter(|&p| agora - (w(p + 0x40) as i32 * 365 + w(p + 0x3e) as i32) < 365)
+        .count() as i32;
+    pela_lista.max(pelo_elenco)
 }
 
 /// O clube joga uma competição que roda no jogo (a divisão +0x57 com `[[0xadadfc] + 4 × id]`, como na 0x7ad220)?
@@ -622,6 +696,10 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
     if r.registrar {
         registrar_escolha("new", jogador, escolhido.0, &format!("{:.1}%\t{}\t{}", 100.0 * escolhido.1 / soma, pesos.len(), if surpresa { "surprise" } else { "-" }));
     }
+    let lista = &mut *core::ptr::addr_of_mut!(ENTREGUES);
+    let agora = hoje();
+    lista.retain(|&(_, t)| agora - t < 365);
+    lista.push((d(escolhido.0), agora));
     escolhido.0
 }
 
@@ -842,6 +920,24 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
     }
     1
 }
+/// Só para as provas (variável de ambiente `TWEAKS_MUTEX` = um caractere): troca a última letra do nome do mutex do jogo
+/// ("Championship Manager 2001/02 Process", 0x9f183c no 3.9.68), para duas cópias rodarem ao mesmo tempo em pastas
+/// diferentes. Sem a variável, nada muda.
+unsafe fn mutex_dos_testes() {
+    const NOME: &[u8] = b"Championship Manager 2001/02 Process";
+    let Some(c) = std::env::var("TWEAKS_MUTEX").ok().and_then(|v| v.bytes().next()) else { return };
+    let a = 0x9f183cusize;
+    if core::slice::from_raw_parts(a as *const u8, NOME.len()) != NOME {
+        registro::linha("TWEAKS_MUTEX: the mutex name isn't at 0x9f183c in this exe; left alone");
+        return;
+    }
+    let fim = a + NOME.len() - 1;
+    (*core::ptr::addr_of_mut!(MARCAS)).push((fim, 1));
+    let mut antiga = 0u32;
+    VirtualProtect(fim as *mut c_void, 1, 0x40, &mut antiga);
+    *(fim as *mut u8) = c;
+    VirtualProtect(fim as *mut c_void, 1, antiga, &mut antiga);
+}
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     if motivo == 1 {
@@ -852,6 +948,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             AddVectoredExceptionHandler(1, ao_falhar);
         }
         retrato::do_disco(r.registrar);
+        mutex_dos_testes();
         let s = r.sobrescrever;
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");

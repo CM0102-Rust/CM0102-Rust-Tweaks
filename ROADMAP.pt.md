@@ -18,7 +18,7 @@ Legenda: ✅ feito · 🔨 em andamento · ⏳ a fazer · 🔬 a pesquisar · �
 - ✅ **Save acima de 2 GB** (`save_over_2gb`), o mesmo do save2gb.
 - ✅ **Idade dos regens** por tabela (`age_NN`, `contest_max_age`, `ages_out_of_game`).
 - ✅ **Regens mais novos**, a ideia de petermf23: com 22 anos ou mais, 6 a menos (`younger_from_age`, `younger_by`).
-- 🔨 **Sem clube só sem vaga** (`unattached = only_if_no_room`): todo jovem de nação no jogo vai à disputa; a medir numa carreira contra a de `original`.
+- ✅ **Sem clube só sem vaga** (`unattached = only_if_no_room`): todo jovem de nação no jogo vai à disputa; em cinco temporadas, os regens sem clube caem de 899 para 353 (fábrica) e de 233 para 77 (CLZ).
 - ✅ **A disputa por sorteio proporcional** (`rule = new`): nível × instalações × comissão × vaga.
 - ✅ As ferramentas: `calibrar.py` (as duas regras com os clubes reais de um save), `regens_por_clube.py`, `simula_nota.py`.
 
@@ -52,11 +52,14 @@ Os testes e os números de cada execução: [docs/TESTES.md](docs/TESTES.md).
 
 - ✅ Carreira automática de férias numa bancada, oculta e em janela, com a DLL encadeada atrás da `ddraw.dll` de trabalho (só o vídeo): cada ajuste aparece no `tweaks.log`, as carreiras passam de uma temporada e meia (até quase duas no CLZ) sem travar, e cada regen vai para o log com idade, clube e chance.
 - ✅ A distribuição no jogo contra a original, no banco de fábrica, no oficial de outubro de 2026 e no CLZ: a concentração some (máximo de 3 por clube, contra 13), como o simulador previu.
-- 🔨 **Quantos regens a mais por ano** com `retire_idle_players`: 35 a 37 aposentadorias por temporada e meia no banco de fábrica; falta a medida em vários anos.
+- ✅ **Quantos regens a mais por ano** com `retire_idle_players`: 772 aposentadorias em cinco temporadas no banco de fábrica (cerca de 150 por ano); no CLZ, 9, porque o RetirePatchV4 barra quase todas.
 - ✅ **Os jovens que nasciam sem clube** (uns 44%): `unattached = only_if_no_room` os põe na disputa; no banco de 2026, todos os 266 foram a algum clube.
 - ✅ Save: o acima de 2 GB carrega com a chave e falha sem ela, no exe do projeto e no CLZ. ⏳ Gravar um save acima de 2 GB numa carreira de verdade, com o Lucas.
 - ✅ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
-- ⏳ **A carreira longa** (5 a 10 temporadas, com saves no caminho), **mais ligas** (com ligas de fundo) e `unattached` no CLZ: ver [docs/TESTES.md](docs/TESTES.md) §5.
+- ✅ **A carreira longa**: cinco temporadas com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (regras do Nick e as nossas, com `unattached`), sem nenhuma queda; a linha `season` do log dá a população a cada julho ([docs/TESTES.md](docs/TESTES.md) §4.3).
+- ✅ **Defeito do teto corrigido** (02/11): o teto de 2 por 365 dias contava só o elenco e vazava quando o clube emprestava ou vendia o jovem (15 no Real Madrid em quatro anos); agora a DLL guarda cada jovem entregue, e o máximo por temporada ficou em 2.
+- 🔬 **O acúmulo pelo mercado:** mesmo com o teto, um clube junta 17 (fábrica) a 24 (CLZ) regens em cinco anos por contratação. Saber quem é e se vale um ajuste.
+- ⏳ Repetir as carreiras (a variação entre elas) e ir a 10 temporadas.
 
 ## Fase 2b: o retrato do exe 🔨
 
@@ -79,6 +82,12 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
 - tecnologia a decidir: um exe só, sem instalador e sem depender de nada instalado (por exemplo, Rust com uma biblioteca de interface que desenha sozinha).
 
 ## Fase 4: mais ajustes 💡🔬
+
+- ⏳ **Vídeo, resolução e CD** (pedido do Lucas, 02/11), três chaves desligadas por padrão, cada uma conferindo a assinatura do trecho e ficando com o exe se ele já o mudou (o CLZ tem resolução, fundos dinâmicos e NoCD próprios); nada além disso entra na DLL, para não conflitar com o NickPatcher:
+  - `video = window`: a camada de vídeo do projeto (o jogo desenha num DirectDraw nosso e o quadro vai para uma janela comum): Print Screen, janela redimensionável com escala nítida, nada troca o modo de vídeo do Windows. Vale em 800×600;
+  - `resolution = 1080`: a resolução 1920×1080 do projeto, aplicada em memória, com a trava das 30 linhas no `Area::init` junto (sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507");
+  - `no_cd = 1`: o NoCD do projeto.
+  - Testar no 3.9.68 e no CLZ (as chaves têm de se recusar no CLZ); no futuro, com o Lucas olhando a tela, as resoluções e os fundos dinâmicos do CLZ.
 
 - 🔬 **A queda de 27 de dezembro** (o laço da Copa do Mundo em `world_cup.cpp`, 0x92ea3b..0x92ea71; o contorno de um byte é do Alan_v2):
   - entender a rotina 0x92e940: o que são os 8 registros de 5 bytes, quem os preenche e por que sobram seleções;
