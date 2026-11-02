@@ -59,7 +59,7 @@ Os testes e os números de cada execução: [docs/TESTES.md](docs/TESTES.md).
 - ✅ Exes do NickPatcher e do CLZ, com `override_exe_changes` em 0 e em 1.
 - ✅ **A carreira longa**: cinco temporadas com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (regras do Nick e as nossas, com `unattached`), sem nenhuma queda; a linha `season` do log dá a população a cada julho ([docs/TESTES.md](docs/TESTES.md) §4.3).
 - ✅ **Defeito do teto corrigido** (02/11): o teto de 2 por 365 dias contava só o elenco e vazava quando o clube emprestava ou vendia o jovem (15 no Real Madrid em quatro anos); agora a DLL guarda cada jovem entregue, e o máximo por temporada ficou em 2.
-- 🔬 **O acúmulo pelo mercado:** mesmo com o teto, um clube junta 17 (fábrica) a 24 (CLZ) regens em cinco anos por contratação. Saber quem é e se vale um ajuste.
+- 💡 **O acúmulo nas nações fora do jogo:** mesmo com o teto, um clube junta 17 (fábrica) a 24 (CLZ) regens em cinco anos; no CLZ é o AS Douanes (Senegal, fora do jogo), por onde o regen não passa pela disputa. Invisível para quem joga; um teto ali é opção futura.
 - ⏳ Repetir as carreiras (a variação entre elas) e ir a 10 temporadas.
 
 ## Fase 2b: o retrato do exe 🔨

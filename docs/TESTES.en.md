@@ -161,7 +161,8 @@ What the numbers show:
 - **The population stays stable.** The number of players and of regens is the same under both rules, and so is the average squad; the tweaks don't make the world shrink or swell.
 - **Fewer youngsters without a club.** With `unattached`, almost every regen from a nation in the game goes to the contest: the contest gets 50% (factory) to 80% (CLZ) more youngsters, spread over 50% (factory) to 100% (CLZ) more clubs, and regens without a club fall from 899 to 353 (factory) and from 233 to 77 (CLZ).
 - **The stars still reach the big clubs**, now through the market: PA ≥ 150 regens at big clubs go up from 42 to 72 (factory) and from 18 to 28 (CLZ), even with the big clubs getting fewer from the contest.
-- **What piling up is left comes from the market.** Even with the cap, one club gathers 17 regens in five years on the factory database and 24 on CLZ (47 and 27 without the tweaks): youngsters signed later, which the contest doesn't control. A second CLZ career, with the club's name in the `season` line, is running to say who it is. [inference, to confirm]
+- **What piling up is left is in nations not in the game.** Even with the cap, one club gathers 17 regens in five years on the factory database and 24 on CLZ (47 and 27 without the tweaks). The second CLZ career with our rules, now with the club's name in the `season` line, showed who: AS Douanes, of Dakar (Senegal, a nation not in the game), with 8, 13, 16 and 17 regens from 2027 to 2030, none of them through the contest (the club is in no `regen` line). In nations not in the game, the regen follows the original path and doesn't go through the cap; since those clubs play no running competition, nobody signs them and the regens pile up. Invisible to the player; a cap there too is a future option. In the first season the leader was MC Algiers (Algeria, also not in the game).
+- **The repeat confirms it.** The second CLZ career with our rules gave the same picture as the first: at most 2 per club each season, big clubs with 4% to 6%, 5,259 regens (69 without a club) and 171 with PA ≥ 150 in 2030.
 - **Idle players:** 772 retirements in five years on the factory database; 9 on CLZ, where RetirePatchV4 blocks almost all of them (the log warns).
 - **Stability:** all five careers reached the date, from 1 h 23 min to 2 h 11 min each, with no crash, hang or error box.
 
@@ -169,11 +170,11 @@ What the numbers show:
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
-- **Piling up through the market** (§4.3): find out who gathers the signed regens and whether a tweak is worth it.
+- **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
 
 ## 6. How to reproduce
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).
-- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
+- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
 - `tools/comparar_logs.py` compares two logs; `tools/temporadas.py` builds the long careers' per-season table; `tools/ler_retrato.py` names the snapshot lines; `tools/regens_por_clube.py` reads a save's regens.

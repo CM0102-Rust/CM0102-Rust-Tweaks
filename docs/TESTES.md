@@ -161,7 +161,8 @@ O que os números mostram:
 - **A população fica estável.** O número de jogadores e de regens é o mesmo nas duas regras, e o elenco médio também; os ajustes não fazem o mundo encolher nem inchar.
 - **Menos jovens sem clube.** Com `unattached`, quase todo regen de nação no jogo vai à disputa: a disputa recebe 50% (fábrica) a 80% (CLZ) mais jovens, espalhados por 50% (fábrica) a 100% (CLZ) mais clubes, e os regens sem clube caem de 899 para 353 (fábrica) e de 233 para 77 (CLZ).
 - **Os craques continuam chegando aos grandes**, agora pelo mercado: os regens de PA ≥ 150 em clubes grandes sobem de 42 para 72 (fábrica) e de 18 para 28 (CLZ), mesmo com os grandes recebendo menos na disputa.
-- **O acúmulo que sobra vem do mercado.** Mesmo com o teto, um clube junta 17 regens em cinco anos na fábrica e 24 no CLZ (47 e 27 sem os ajustes): são jovens contratados depois, que a disputa não controla. Uma segunda carreira do CLZ, com o nome do clube na linha `season`, está rodando para dizer quem é. [inferência, a confirmar]
+- **O acúmulo que sobra é de nação fora do jogo.** Mesmo com o teto, um clube junta 17 regens em cinco anos na fábrica e 24 no CLZ (47 e 27 sem os ajustes). A segunda carreira do CLZ com as nossas regras, já com o nome do clube na linha `season`, mostrou quem é: o AS Douanes, de Dakar (Senegal, nação fora do jogo), com 8, 13, 16 e 17 regens de 2027 a 2030, e nenhum deles pela disputa (o clube não aparece em nenhuma linha `regen`). Nas nações fora do jogo, o regen segue o caminho original e não passa pelo teto; como esses clubes não jogam competição que roda, ninguém os contrata e os regens se juntam. Para quem joga, o efeito é invisível; um teto também ali é uma opção futura. Na primeira temporada o líder era o MC Algiers (Argélia, também fora do jogo).
+- **A repetição confirma.** A segunda carreira do CLZ com as nossas regras deu o mesmo quadro da primeira: máximo de 2 por clube em cada temporada, grandes com 4% a 6%, 5.259 regens (69 sem clube) e 171 de PA ≥ 150 em 2030.
 - **Inativos:** 772 aposentadorias em cinco anos na fábrica; 9 no CLZ, onde o RetirePatchV4 barra quase todas (o log avisa).
 - **Estabilidade:** as cinco carreiras chegaram à data, de 1 h 23 min a 2 h 11 min cada, sem nenhuma queda, travamento ou caixa de erro.
 
@@ -169,11 +170,11 @@ O que os números mostram:
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
-- **O acúmulo pelo mercado** (§4.3): saber quem junta os regens contratados e se vale um ajuste.
+- **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
 
 ## 6. Como reproduzir
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).
-- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
+- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
 - `tools/comparar_logs.py` compara dois logs; `tools/temporadas.py` monta a tabela por temporada das carreiras longas; `tools/ler_retrato.py` dá nome às linhas do retrato; `tools/regens_por_clube.py` lê os regens de um save.
