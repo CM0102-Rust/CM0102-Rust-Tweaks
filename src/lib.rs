@@ -917,6 +917,62 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
     1
 }
 
+// ---------- as caixas de mensagem do jogo no log (log = 1) ----------
+
+/// A caixa de mensagem original (ou a da DLL que a desviou antes), pelo trampolim.
+static mut CAIXA_ORIGINAL: usize = 0;
+
+/// `gui_show_message_box` (0x5e8290, cdecl: título, texto, permitir sair): toda caixa do jogo, inclusive os erros com o
+/// arquivo de código e a linha (`Database.cpp 7784`, `comp_stats.cpp 6000`), vai para o log antes de aparecer. A caixa é
+/// desenhada pelo jogo: sem isto, um teste com o jogo oculto não a vê.
+unsafe extern "C" fn caixa_de_mensagem(titulo: *const u8, texto: *const u8, sair: u32) {
+    let ler = |p: *const u8| -> String {
+        if p.is_null() {
+            return String::new();
+        }
+        let n = (0..1024).position(|k| *p.add(k) == 0).unwrap_or(1024);
+        core::slice::from_raw_parts(p, n).iter().map(|&c| if c == b'\n' || c == b'\r' || c == b'\t' { ' ' } else { c as char }).collect()
+    };
+    registro::linha(&format!("msgbox\t{}\t{}\t{}", data_do_jogo(), ler(titulo), ler(texto)));
+    let original: unsafe extern "C" fn(*const u8, *const u8, u32) = core::mem::transmute(CAIXA_ORIGINAL);
+    original(titulo, texto, sair)
+}
+
+/// Instala o desvio da caixa depois das DLLs do exe (a LaMOHatesCD do CLZ troca os mesmos 9 bytes ao carregar). A entrada
+/// original (`sub esp, 0x6c; mov ecx, [0xb67a30]`) vai para o trampolim; um salto de outra DLL ali é encadeado; outra coisa,
+/// não mexe.
+unsafe fn instalar_caixa() {
+    const ENTRADA: [u8; 9] = [0x83, 0xec, 0x6c, 0x8b, 0x0d, 0x30, 0x7a, 0xb6, 0x00];
+    let e = 0x5e8290usize;
+    let atual = core::slice::from_raw_parts(e as *const u8, 9);
+    let t = VirtualAlloc(core::ptr::null_mut(), 32, 0x3000, 0x40) as *mut u8;
+    if t.is_null() {
+        return;
+    }
+    let como = if atual == ENTRADA {
+        core::ptr::copy_nonoverlapping(ENTRADA.as_ptr(), t, 9);
+        *t.add(9) = 0xe9;
+        core::ptr::write_unaligned(t.add(10) as *mut i32, (e + 9).wrapping_sub(t as usize + 14) as i32); // o E9 em t+9 termina em t+14
+        "the exe's own"
+    } else if atual[0] == 0xe9 {
+        let alvo = (e + 5).wrapping_add(core::ptr::read_unaligned((e + 1) as *const i32) as usize);
+        *t = 0xe9;
+        core::ptr::write_unaligned(t.add(1) as *mut i32, alvo.wrapping_sub(t as usize + 5) as i32);
+        "chained to another DLL's hook"
+    } else {
+        registro::linha("msgbox: not logged (another DLL changed 0x5e8290 in a way this DLL doesn't know)");
+        return;
+    };
+    CAIXA_ORIGINAL = t as usize;
+    let mut antiga = 0u32;
+    VirtualProtect(e as *mut c_void, 5, 0x40, &mut antiga);
+    *(e as *mut u8) = 0xe9;
+    core::ptr::write_unaligned((e + 1) as *mut i32, (caixa_de_mensagem as *const () as usize).wrapping_sub(e + 5) as i32);
+    VirtualProtect(e as *mut c_void, 5, antiga, &mut antiga);
+    FlushInstructionCache(GetCurrentProcess(), e as *const c_void, 5);
+    registro::linha(&format!("msgbox: every game message box goes to the log ({})", como));
+}
+
 type FnDirectDrawCreate = unsafe extern "system" fn(*mut c_void, *mut *mut c_void, *mut c_void) -> i32;
 
 /// A ddraw.dll seguinte: `ddraw_chain.dll` na pasta do exe, se existir; senão a do Windows.
@@ -950,6 +1006,7 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
         if REGRAS.registrar {
             conferir_desvios();
             iniciar_batida();
+            instalar_caixa(); // depois do retrato da memória, que assim não o conta
         }
     }
     match proxima_ddraw() {
