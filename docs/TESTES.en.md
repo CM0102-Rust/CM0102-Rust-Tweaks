@@ -108,7 +108,7 @@ Short automatic careers in the October 2026 database's folder (English), without
 | untouched `cm0102.exe` 3.9.68 (asks for the CD) | `no_cd = 1`, `resolution = 1080` | "no CD: on", "resolution 1080: on", "video: window"; a 1920×1080 frame; the career runs to 2001-244 with no box; the memory snapshot: "no other DLL changed the exe's code" |
 | `cm0102-portatil.exe` | `video = window` | an 800×600 frame in the window; to 2001-232 |
 | `cm0102-1080.exe` (already has the CD and the resolution) | `no_cd = 1`, `resolution = 1080` | "this exe already has it" for both; only the 30-row limit goes in; to 2001-245 |
-| CLZ (the exe's bytes only, not run) | — | CD: 38 of 66 places as in 3.9.68; resolution: 196 of 201; the `Area::init` entry the same: the DLL refuses both (all or nothing); CLZ also has `LaMOHatesCD.dll` |
+| CLZ (the exe's bytes only, not run) | — | CD: 38 of 66 places as in 3.9.68 and 28 already changed (14 of the 33 checks); resolution: 196 as in 3.9.68 and 5 already changed (the same NickPatcher code); the `Area::init` entry the same. With the do-what-is-possible rule, the DLL completes what is missing; the CD is left to `LaMOHatesCD.dll`, and the resolution to 6.1's NickDLL when it has a resolution chosen ([COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md)) |
 
 Still to do: the test with the screen: the window, Print Screen and an old match's report at 1080.
 

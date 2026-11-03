@@ -108,7 +108,7 @@ Carreiras automáticas curtas na pasta do banco de outubro de 2026 (inglês), se
 | `cm0102.exe` 3.9.68 intacto (pede o CD) | `no_cd = 1`, `resolution = 1080` | "no CD: on", "resolution 1080: on", "video: window"; quadro de 1920×1080; a carreira anda até 2001-244 sem caixa; o retrato da memória: "no other DLL changed the exe's code" |
 | `cm0102-portatil.exe` | `video = window` | quadro de 800×600 na janela; até 2001-232 |
 | `cm0102-1080.exe` (já tem o CD e a resolução) | `no_cd = 1`, `resolution = 1080` | "this exe already has it" nos dois; só a trava das 30 linhas entra; até 2001-245 |
-| CLZ (só os bytes do exe, sem rodar) | — | CD: 38 de 66 trechos como no 3.9.68; resolução: 196 de 201; a entrada do `Area::init` igual: a DLL recusa as duas (tudo ou nada); o CLZ ainda tem a `LaMOHatesCD.dll` |
+| CLZ (só os bytes do exe, sem rodar) | — | CD: 38 de 66 trechos como no 3.9.68 e 28 já trocados (14 das 33 checagens); resolução: 196 como no 3.9.68 e 5 já trocados (o mesmo código do NickPatcher); a entrada do `Area::init` igual. Com a regra de fazer o possível, a DLL completa o que falta; o CD fica com a `LaMOHatesCD.dll`, e a resolução com a NickDLL do 6.1 quando ela tem uma resolução escolhida ([COMPATIBILIDADE.md](COMPATIBILIDADE.md)) |
 
 Falta o teste com a tela: a janela, o Print Screen e o relatório de uma partida antiga em 1080.
 

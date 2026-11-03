@@ -200,21 +200,20 @@ unsafe fn desviar(de: usize, para: usize) {
     FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
 }
 
-/// Aplica uma lista de trocas (VA, antes, depois) inteira ou nenhuma: todos os trechos têm de estar como no 3.9.68
-/// (ou todos já trocados, num exe que já as tem). Devolve se a lista vale (aplicada agora ou já presente).
-unsafe fn aplicar_trocas(nome: &str, lista: &[(usize, &[u8], &[u8])]) -> bool {
-    let bate = |&(va, antes, _): &(usize, &[u8], &[u8])| core::slice::from_raw_parts(va as *const u8, antes.len()) == antes;
-    let ja = |&(va, _, depois): &(usize, &[u8], &[u8])| core::slice::from_raw_parts(va as *const u8, depois.len()) == depois;
-    if lista.iter().all(ja) {
-        registro::linha(&format!("{}: this exe already has it; nothing to change", nome));
-        return true;
-    }
-    let fora = lista.iter().filter(|t| !bate(t)).count();
-    if fora > 0 {
-        registro::linha(&format!("{}: this exe differs from 3.9.68 in {} of {} places (its own version of this change?); nothing was changed", nome, fora, lista.len()));
+/// Aplica uma lista de trocas (VA, antes, depois), fazendo o possível: o trecho como no 3.9.68 é trocado; o já trocado
+/// fica (o exe já tem essa parte, como o do CLZ, que tem metade das checagens do CD e alguns trechos da resolução); o
+/// trecho diferente dos dois é desconhecido. `inteira`: um trecho desconhecido recusa a lista toda (a resolução: metade
+/// dela daria telas quebradas); senão só ele fica de fora (cada checagem do CD é independente). Devolve se a lista vale.
+unsafe fn aplicar_trocas(nome: &str, lista: &[(usize, &[u8], &[u8])], inteira: bool) -> bool {
+    let em = |va: usize, b: &[u8]| core::slice::from_raw_parts(va as *const u8, b.len()) == b;
+    let novas: Vec<_> = lista.iter().filter(|t| em(t.0, t.1)).collect();
+    let ja = lista.iter().filter(|t| em(t.0, t.2)).count();
+    let estranhas = lista.len() - novas.len() - ja;
+    if estranhas > 0 && inteira {
+        registro::linha(&format!("{}: {} of {} places in this exe are neither 3.9.68 nor this change (another patch there); nothing was changed", nome, estranhas, lista.len()));
         return false;
     }
-    for &(va, _, depois) in lista {
+    for &&(va, _, depois) in &novas {
         (*core::ptr::addr_of_mut!(MARCAS)).push((va, depois.len()));
         let mut antiga = 0u32;
         VirtualProtect(va as *mut c_void, depois.len(), 0x40, &mut antiga);
@@ -222,7 +221,24 @@ unsafe fn aplicar_trocas(nome: &str, lista: &[(usize, &[u8], &[u8])]) -> bool {
         VirtualProtect(va as *mut c_void, depois.len(), antiga, &mut antiga);
         FlushInstructionCache(GetCurrentProcess(), va as *const c_void, depois.len());
     }
-    true
+    registro::linha(&format!("{}: {} places changed now, {} already in the exe{}", nome, novas.len(), ja,
+        if estranhas > 0 { format!(", {} left alone (another patch there)", estranhas) } else { String::new() }));
+    novas.len() + ja > 0
+}
+
+/// A resolução que a NickDLL ao lado do exe aplica sozinha ("resolucao" no NickDLL_config.json, nas versões que têm a
+/// "resolucao ampliada", como a do CLZ 6.1, que usa a mesma tabela de trocas): `Some(valor)` quando ela vai mudar a
+/// resolução, para a nossa ficar de fora (a dela recusa se achar os bytes já trocados).
+fn resolucao_da_nickdll() -> Option<String> {
+    let pasta = std::env::current_exe().ok()?;
+    let dll = std::fs::read(pasta.with_file_name("NickDLL.dll")).ok()?;
+    if !dll.windows(19).any(|w| w == b"layout Nick Patcher") {
+        return None;
+    }
+    let cfg = std::fs::read_to_string(pasta.with_file_name("NickDLL_config.json")).ok()?;
+    let depois = cfg.split("\"resolucao\"").nth(1)?;
+    let valor = depois.split('"').nth(1)?.trim().to_string();
+    (valor != "800x600" && !valor.is_empty()).then_some(valor)
 }
 
 /// A trava das 30 linhas do `Area::init` (0x402ac0, thiscall; a 10ª palavra da pilha é o número de linhas, a 14ª o
@@ -256,24 +272,34 @@ unsafe extern "system" fn mudar_modo_de_video(_modo: *const c_void, _flags: u32)
     0 // DISP_CHANGE_SUCCESSFUL
 }
 
-/// `no_cd`, `resolution` e `video`. A resolução de 1080 vem sempre com a camada de vídeo (é com ela que o projeto
-/// CM0102 a usa) e com a trava das 30 linhas; um exe que já mexe nesses trechos (o CLZ tem resolução, fundos e CD
-/// próprios) fica como está.
+/// `no_cd`, `resolution` e `video`, fazendo o possível: o CD checagem por checagem (fica com a LaMOHatesCD quando ela
+/// está ao lado do exe); a resolução de 1080 completa o que o exe ainda não tem, vem com a camada de vídeo e fica de
+/// fora quando a NickDLL do CLZ cuida da resolução; a trava das 30 linhas entra em qualquer resolução alta.
 unsafe fn ligar_tela(r: &mut Regras) {
     if r.sem_cd {
         let outro = std::env::current_exe().map(|p| p.with_file_name("LaMOHatesCD.dll").exists()).unwrap_or(false);
         if outro {
-            registro::linha("no CD: LaMOHatesCD.dll is next to the exe and already takes care of the CD; nothing was changed");
-        } else if aplicar_trocas("no CD", &trocas::CD) {
-            registro::linha("no CD: on (the 33 CD checks always pass)");
+            registro::linha("no CD: LaMOHatesCD.dll is next to the exe and already takes care of the CD; left to it");
+        } else {
+            aplicar_trocas("no CD", &trocas::CD, false);
         }
     }
+    let da_nick = resolucao_da_nickdll();
     if r.resolucao {
-        if core::slice::from_raw_parts(0x402ac0 as *const u8, 6) != ENTRADA_DA_AREA {
-            registro::linha("resolution 1080: this exe differs from 3.9.68 at Area::init (0x402ac0); nothing was changed");
-        } else if aplicar_trocas("resolution 1080", &trocas::RESOLUCAO) && travar_linhas_da_area() {
+        if let Some(v) = &da_nick {
+            registro::linha(&format!("resolution 1080: NickDLL sets the resolution here (\"resolucao\": \"{}\" in NickDLL_config.json); left to it", v));
+        } else if aplicar_trocas("resolution 1080", &trocas::RESOLUCAO, true) {
             r.video = true;
-            registro::linha("resolution 1080: on (1920x1080, with the 30-row limit of the match report; video = window too)");
+            registro::linha("resolution 1080: on (1920x1080; video = window too)");
+        }
+    }
+    // a trava das 30 linhas vale em qualquer resolução alta (a nossa, a da NickDLL, a de uma janela grande) e não muda
+    // nada em 800x600
+    if r.resolucao || r.video || da_nick.is_some() {
+        if travar_linhas_da_area() {
+            registro::linha("match report: at most 30 rows per area (no \"Area.cpp 507\" at high resolutions)");
+        } else {
+            registro::linha("match report: this exe differs from 3.9.68 at Area::init (0x402ac0); the 30-row limit was not added");
         }
     }
     if r.video {

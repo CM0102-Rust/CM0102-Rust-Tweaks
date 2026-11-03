@@ -72,7 +72,7 @@ Hoje a DLL só percebe as mudanças nas rotinas que ela troca. No CLZ, o NickPat
 
 ## Fase 3: o configurador (seletor de opções) 🔨
 
-O projeto da interface e uma maquete interativa: [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) e `docs/configurador_maquete.html` (02/11). As decisões que dependem do Lucas estão no §9 de lá.
+O projeto da interface e uma maquete interativa: [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) e `docs/configurador_maquete.html` (02/11). As decisões que dependem do Lucas estão no §9 de lá. O painel de estado do exe usa os estados de [docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md): ✅ compatível, ⚠️ sobrescreve (com o nome do patch), 🔁 fica com o outro, ❓ desconhecido.
 
 Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precisa ser Tauri, mas deve ser bonito e visual:
 - cada opção com uma **barra de arrastar junto do campo de digitação**: arrastar ou digitar, os dois andam juntos, dentro da faixa válida;
@@ -90,7 +90,7 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
   - `video = window`: a camada de vídeo do projeto (o jogo desenha num DirectDraw nosso e o quadro vai para uma janela comum): Print Screen, janela redimensionável com escala nítida, nada troca o modo de vídeo do Windows. Vale em 800×600;
   - `resolution = 1080`: a resolução 1920×1080 do projeto, aplicada em memória, com a trava das 30 linhas no `Area::init` junto (sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507");
   - `no_cd = 1`: o NoCD do projeto.
-  - ✅ No 3.9.68, em carreiras ocultas: o `cm0102.exe` intacto passa do CD e roda em 1080 pela camada de vídeo; `video = window` sozinho em 800×600; no exe que já é 1080, "already has it" ([docs/TESTES.md](docs/TESTES.md) §3.7). Nos bytes do exe do CLZ, as trocas não batem e a DLL recusa.
+  - ✅ No 3.9.68, em carreiras ocultas: o `cm0102.exe` intacto passa do CD e roda em 1080 pela camada de vídeo; `video = window` sozinho em 800×600; no exe que já é 1080, "already has it" ([docs/TESTES.md](docs/TESTES.md) §3.7). No CLZ, a DLL faz o possível: completa o que o exe ainda não tem e deixa o CD com a LaMOHatesCD e a resolução com a NickDLL do 6.1 ([docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md)).
   - ⏳ Com o Lucas olhando a tela: a janela, o Print Screen, o relatório de uma partida antiga em 1080 (a trava das 30 linhas) e, no CLZ, `video = window` (o CLZ em janela com a `ddraw.dll` do Windows para em "16 bit colour"; a camada de vídeo deve resolver), as resoluções e os fundos dinâmicos.
 
 - 🔬 **A queda de 27 de dezembro** (o laço da Copa do Mundo em `world_cup.cpp`, 0x92ea3b..0x92ea71; o contorno de um byte é do Alan_v2):

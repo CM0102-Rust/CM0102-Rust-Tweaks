@@ -12,8 +12,8 @@ Cada ajuste tem a sua chave no `tweaks.cfg`, ao lado do exe. **Todos começam de
 | `portable_folder = 1` | **Sem SetupReg**: o `Location` do registro (a pasta para onde o jogo vai ao abrir) é a pasta do próprio exe, pelas importações `RegOpenKeyExA`/`RegQueryValueExA` do exe (`src/pasta.rs`); nada é gravado no registro |
 | `clear_admin_flag = 1` | **Sem "executar como administrador"**: tira o `RUNASADMIN` que a NickDLL grava para o exe em `HKCU\...\AppCompatFlags\Layers` (só essa palavra, só deste exe; o `WIN95` fica, porque sem ele o CLZ 2026 V6.1 cai ao criar a carreira), da execução seguinte em diante |
 | `video = window` | A **camada de vídeo do projeto CM0102** (cópia de `video.rs`, `apresentacao.rs`, `reducao.rs` e `win.rs` de lá): o jogo desenha num DirectDraw nosso e o quadro vai para uma janela comum. Print Screen funciona, a janela muda de tamanho com escala nítida e o modo de vídeo do Windows nunca muda (`ChangeDisplaySettingsA` vira nada). Vale em 800×600 |
-| `resolution = 1080` | A **resolução 1920×1080** do projeto CM0102, em memória (`src/trocas.rs`, gerado por `tools/gerar_trocas.py` da diferença entre o exe portátil e o de 1080 de lá), com `video = window` e a trava das 30 linhas do `Area::init` (0x402ac0; sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507"). Tudo ou nada: um exe que difere do 3.9.68 em algum dos trechos (o CLZ) fica como está |
-| `no_cd = 1` | **Sem o CD**: as 33 checagens do CD contam como achadas (como no exe portátil do projeto CM0102). Fica de fora com a `LaMOHatesCD.dll` ao lado do exe ou num exe que já as mudou |
+| `resolution = 1080` | A **resolução 1920×1080** do projeto CM0102, em memória (`src/trocas.rs`, gerado por `tools/gerar_trocas.py` da diferença entre o exe portátil e o de 1080 de lá), com `video = window` e a trava das 30 linhas do `Area::init` (0x402ac0; sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507"). Faz o possível: troca os trechos como no 3.9.68, mantém os que o exe já tem e só recusa se algum tiver outro patch; com a NickDLL do CLZ 6.1 cuidando da resolução, fica com ela. A trava das 30 linhas entra com qualquer resolução alta. Ver [docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md) |
+| `no_cd = 1` | **Sem o CD**: as 33 checagens do CD contam como achadas (como no exe portátil do projeto CM0102). Checagem por checagem: as que o exe já tem ficam; com a `LaMOHatesCD.dll` ao lado do exe, fica com ela |
 | `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
 | `retire_idle_players = 1` | **Aposentar os inativos**: o jogador sem clube que ninguém quer se aposenta antes, e a ficha dele vira um regen (§ Aposentar os inativos) |
 | `rule = new` | A **disputa dos clubes** pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova). A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md) |
@@ -34,12 +34,14 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `src/video.rs`, `src/apresentacao.rs`, `src/reducao.rs`, `src/win.rs` | A camada de vídeo de `video = window` (cópias dos arquivos do projeto CM0102: mudar lá e copiar para cá) |
 | `src/trocas.rs` | As trocas de `no_cd` e `resolution` (gerado por `tools/gerar_trocas.py`) |
 | `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
+| `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o inventário da NickDLL do CLZ 6.1 |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
 | `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |
 | `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
 | `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
 | `tools/sav.py` | Leitura dos itens de um `.sav` |
+| `tools/inventario_dll.py` | Os trechos do Tweaks que uma DLL de terceiros toca (os endereços que ela traz), para a matriz de compatibilidade |
 | `tools/gerar_trocas.py` | Gera `src/trocas.rs` da diferença entre o `cm0102.exe`, o portátil e o de 1080 do projeto CM0102 |
 | `tools/temporadas.py` | A tabela por temporada de uma carreira longa (as linhas `season` e `regen` do log) |
 | `tools/gerar_referencia.py` | Gera `src/referencia.rs` (o hash de cada função e bloco do 3.9.68) para o retrato da DLL |

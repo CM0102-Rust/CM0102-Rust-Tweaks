@@ -72,7 +72,7 @@ Today the DLL only notices changes in the routines it replaces. On CLZ, NickPatc
 
 ## Phase 3: the configurator (options picker) 🔨
 
-The interface design and an interactive mock-up: [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md) and `docs/configurador_maquete.html` (11/02). The decisions that depend on Lucas are in §9 there.
+The interface design and an interactive mock-up: [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md) and `docs/configurador_maquete.html` (11/02). The decisions that depend on Lucas are in §9 there. The exe status panel uses the states of [docs/COMPATIBILIDADE.en.md](docs/COMPATIBILIDADE.en.md): ✅ compatible, ⚠️ overrides (naming the patch), 🔁 left to the other, ❓ unknown.
 
 A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't need to be Tauri, but it should look good and be visual:
 - each option with a **slider next to its input field**: drag or type, both move together, within the valid range;
@@ -90,7 +90,7 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
   - `video = window`: the project's video layer (the game draws to our DirectDraw and the frame goes to an ordinary window): Print Screen, a resizable window with sharp scaling, nothing changes Windows' video mode. Works at 800×600;
   - `resolution = 1080`: the project's 1920×1080 resolution, applied in memory, together with the 30-row clamp in `Area::init` (without it, an old match's report shows the "Area.cpp 507" box);
   - `no_cd = 1`: the project's NoCD.
-  - ✅ On 3.9.68, in hidden careers: the untouched `cm0102.exe` gets past the CD and runs at 1080 through the video layer; `video = window` alone at 800×600; on the exe that is already 1080, "already has it" ([docs/TESTES.en.md](docs/TESTES.en.md) §3.7). In the CLZ exe's bytes the changes don't match and the DLL refuses.
+  - ✅ On 3.9.68, in hidden careers: the untouched `cm0102.exe` gets past the CD and runs at 1080 through the video layer; `video = window` alone at 800×600; on the exe that is already 1080, "already has it" ([docs/TESTES.en.md](docs/TESTES.en.md) §3.7). On CLZ the DLL does what is possible: it completes what the exe lacks and leaves the CD to LaMOHatesCD and the resolution to 6.1's NickDLL ([docs/COMPATIBILIDADE.en.md](docs/COMPATIBILIDADE.en.md)).
   - ⏳ With Lucas watching the screen: the window, Print Screen, an old match's report at 1080 (the 30-row limit) and, on CLZ, `video = window` (CLZ in a window with Windows' `ddraw.dll` stops at "16 bit colour"; the video layer should fix it), the resolutions and the dynamic backgrounds.
 
 - 🔬 **The 27 December hang** (the World Cup loop in `world_cup.cpp`, 0x92ea3b..0x92ea71; the one-byte workaround is Alan_v2's):
