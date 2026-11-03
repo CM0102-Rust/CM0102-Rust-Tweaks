@@ -83,6 +83,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "surprise", aba: Aba::Disputa, tipo: num(0.0, 100.0, 0.0, 50.0, false), padrao: "15", rotulo: ("Surpresa (%)", "Surprise (%)") },
     Chave { nome: "outside_competitions", aba: Aba::Disputa, tipo: num(0.0, 1.0, 0.0, 1.0, false), padrao: "1", rotulo: ("Clubes fora das competições (peso)", "Clubs outside the competitions (weight)") },
     Chave { nome: "temperature", aba: Aba::Disputa, tipo: num(-INF, INF, 0.25, 3.0, false), padrao: "1", rotulo: ("Temperatura", "Temperature") },
+    Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
     Chave { nome: "log", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];
 

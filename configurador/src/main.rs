@@ -33,6 +33,21 @@ fn cor(e: Estado) -> Color32 {
     }
 }
 
+fn t2(en: bool, pt: &'static str, e: &'static str) -> &'static str {
+    if en { e } else { pt }
+}
+
+/// A data do computador, AAAA-MM-DD (para o nome da cópia do histórico).
+fn hoje_no_computador() -> String {
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetLocalTime(t: *mut [u16; 8]);
+    }
+    let mut t = [0u16; 8];
+    unsafe { GetLocalTime(&mut t) };
+    format!("{:04}-{:02}-{:02}", t[0], t[1], t[3])
+}
+
 /// Uma bolinha da cor do estado, desenhada (a fonte padrão do egui não tem o "●").
 fn bolinha(ui: &mut egui::Ui, c: Color32) {
     let (r, p) = ui.allocate_painter(Vec2::new(12.0, 12.0), Sense::hover());
@@ -90,6 +105,9 @@ struct App {
     mensagem: String,
     /// A predefinição escolhida e as mudanças que ela faria, à espera da confirmação.
     pendente: Option<(usize, Vec<(String, String, String)>)>,
+    /// A busca no histórico de regens e a confirmação de limpar.
+    busca: String,
+    limpar: bool,
 }
 
 impl App {
@@ -111,6 +129,8 @@ impl App {
             ca: 60.0,
             mensagem: String::new(),
             pendente: None,
+            busca: String::new(),
+            limpar: false,
         };
         a.abrir_pasta();
         // só para as capturas de tela da documentação: a aba inicial e o idioma
@@ -618,7 +638,95 @@ impl App {
         }
     }
 
+    /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.
+    fn historico(&mut self, ui: &mut egui::Ui) {
+        self.controle(ui, "regen_origins", true);
+        let caminho = self.pasta.join("regen_origins.csv");
+        let texto = std::fs::read_to_string(&caminho).unwrap_or_default();
+        let linhas: Vec<Vec<&str>> = texto.lines().skip(1).map(|l| l.split(';').collect::<Vec<_>>()).filter(|c| c.len() >= 21 && c[3] == "regen").collect();
+        let en = self.en;
+        let titulo = self.t("Histórico de regens", "Regen history");
+        let busca_rot = self.t("Buscar (nome do regen, da vaga ou da ficha):", "Search (the regen's, slot's or record's name):");
+        let mut abrir_limpar = false;
+        App::cartao(ui, &titulo, |ui| {
+            if linhas.is_empty() {
+                ui.label(if en { "No regens recorded yet in this folder (turn the option on and play)." } else { "Nenhum regen registrado nesta pasta ainda (ligue a opção e jogue)." });
+                return;
+            }
+            ui.horizontal(|ui| {
+                ui.label(format!("{} {}", linhas.len(), if en { "regens recorded" } else { "regens registrados" }));
+                if ui.button(if en { "Clear the history…" } else { "Limpar o histórico…" }).clicked() {
+                    abrir_limpar = true;
+                }
+            });
+            ui.horizontal(|ui| {
+                ui.label(busca_rot);
+                ui.add(egui::TextEdit::singleline(&mut self.busca).desired_width(240.0));
+            });
+            let b = self.busca.to_lowercase();
+            let achadas: Vec<&Vec<&str>> = linhas.iter().rev().filter(|c| b.is_empty() || [5, 13, 17].iter().any(|&i| c[i].to_lowercase().contains(&b))).take(300).collect();
+            egui::ScrollArea::both().max_height(420.0).show(ui, |ui| {
+                egui::Grid::new("historico").striped(true).spacing([10.0, 4.0]).show(ui, |ui| {
+                    for h in [t2(en, "Data (jogo)", "Date (game)"), t2(en, "Regen", "Regen"), t2(en, "Idade", "Age"), t2(en, "Pos.", "Pos."), "PA", "CA",
+                        t2(en, "Clube", "Club"), t2(en, "Vaga de", "Slot from"), t2(en, "Ficha de (idade, CA, PA)", "Record from (age, CA, PA)"), t2(en, "Carreira", "Career")] {
+                        ui.label(RichText::new(h).strong());
+                    }
+                    ui.end_row();
+                    for c in achadas {
+                        ui.label(c[1]);
+                        ui.label(RichText::new(c[5]).color(VERDE));
+                        ui.label(c[6]);
+                        ui.label(c[8]);
+                        ui.label(c[9]);
+                        ui.label(c[10]);
+                        ui.label(c[11]);
+                        ui.label(format!("{} ({})", c[13], match (en, c[15]) { (false, "player") => "jogador", (false, "non-player") => "não jogador", (_, x) => x }));
+                        ui.label(if c.len() >= 21 && !c[17].is_empty() { format!("{} ({}, {}, {})", c[17], c[18], c[19], c[20]) } else { "?".into() });
+                        ui.label(RichText::new(c[2]).size(10.5).color(CINZA));
+                        ui.end_row();
+                    }
+                });
+            });
+        });
+        if abrir_limpar {
+            self.limpar = true;
+        }
+        if self.limpar {
+            let mut fechar = false;
+            egui::Window::new(self.t("Limpar o histórico de regens?", "Clear the regen history?")).collapsible(false).resizable(false)
+                .anchor(Align2::CENTER_CENTER, Vec2::ZERO).show(ui.ctx(), |ui| {
+                    ui.label(self.t("O regen_origins.csv começa de novo vazio. Os regens já criados não voltam a ser registrados.",
+                        "regen_origins.csv starts again empty. Regens already created won't be recorded again."));
+                    ui.horizontal(|ui| {
+                        if ui.button(self.t("Guardar uma cópia e limpar", "Keep a copy and clear")).clicked() {
+                            let copia = self.pasta.join(format!("regen_origins_{}.csv", hoje_no_computador()));
+                            self.mensagem = match std::fs::rename(&caminho, &copia) {
+                                Ok(_) => format!("{} {}", self.t("Histórico guardado em", "History kept in"), copia.display()),
+                                Err(e) => e.to_string(),
+                            };
+                            fechar = true;
+                        }
+                        if ui.button(self.t("Apagar de vez", "Delete for good")).clicked() {
+                            self.mensagem = match std::fs::remove_file(&caminho) {
+                                Ok(_) => self.t("Histórico apagado.", "History deleted."),
+                                Err(e) => e.to_string(),
+                            };
+                            fechar = true;
+                        }
+                        if ui.button(self.t("Cancelar", "Cancel")).clicked() {
+                            fechar = true;
+                        }
+                    });
+                });
+            if fechar {
+                self.limpar = false;
+            }
+        }
+    }
+
     fn aba_registro(&mut self, ui: &mut egui::Ui) {
+        self.historico(ui);
+        ui.add_space(8.0);
         self.controle(ui, "log", true);
         let log = self.exe.as_ref().map(|e| e.caminho.with_file_name("tweaks.log")).unwrap_or_else(|| self.pasta.join("tweaks.log"));
         App::cartao(ui, &self.t("O último tweaks.log (o exe, a memória e cada ajuste)", "The last tweaks.log (the exe, memory and each tweak)"), |ui| match std::fs::read_to_string(&log) {

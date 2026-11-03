@@ -27,6 +27,8 @@ mod retrato;
 mod pasta;
 // A tela do projeto CM0102: a camada de vídeo (cópia de video.rs, apresentacao.rs, reducao.rs e win.rs de lá) e as trocas
 // do CD e da resolução (geradas por tools/gerar_trocas.py).
+// De quem é cada regen (regen_origins.csv).
+mod origem;
 mod apresentacao;
 mod reducao;
 mod trocas;
@@ -235,6 +237,17 @@ unsafe fn ligar_tela(r: &mut Regras) {
             }
         }
     }
+}
+
+/// Troca o destino de uma chamada (E8) do exe.
+pub(crate) unsafe fn chamar(de: usize, para: usize) {
+    (*core::ptr::addr_of_mut!(MARCAS)).push((de, 5));
+    let mut antiga = 0u32;
+    VirtualProtect(de as *mut c_void, 5, 0x40, &mut antiga);
+    *(de as *mut u8) = 0xe8;
+    core::ptr::write_unaligned((de + 1) as *mut i32, para.wrapping_sub(de + 5) as i32);
+    VirtualProtect(de as *mut c_void, 5, antiga, &mut antiga);
+    FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
 }
 
 /// Troca `n` bytes do exe por NOP.
@@ -484,6 +497,8 @@ struct Regras {
     resolucao: bool,
     /// no_cd = 1: as 33 checagens do CD contam como achadas, como no exe portátil do projeto CM0102.
     sem_cd: bool,
+    /// regen_origins = 1: de quem é cada regen, em regen_origins.csv.
+    origens: bool,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -529,6 +544,7 @@ const PADRAO: Regras = Regras {
     video: false,
     resolucao: false,
     sem_cd: false,
+    origens: false,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -590,6 +606,10 @@ fn ler_regras() -> Regras {
         }
         if k == "resolution" {
             r.resolucao = v == "1080"; // resolution = original | 1080
+            continue;
+        }
+        if k == "regen_origins" {
+            r.origens = v == "1";
             continue;
         }
         if k == "no_cd" {
@@ -828,7 +848,7 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
 }
 
 /// A data do jogo como AAAA-ddd (o dia do ano em [0xae2c90], o ano em [0xae2c92]).
-unsafe fn data_do_jogo() -> String {
+pub(crate) unsafe fn data_do_jogo() -> String {
     format!("{}-{:03}", w(0xae2c92) as u16, w(0xae2c90) as u16)
 }
 
@@ -1081,6 +1101,9 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             pasta::ligar_pasta();
         }
         ligar_tela(&mut *core::ptr::addr_of_mut!(REGRAS));
+        if r.origens && origem::ligar(r.registrar) {
+            registro::linha("regen origins: on (regen_origins.csv next to the exe: each regen, the slot he took and the player record he inherited)");
+        }
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
         } else if pode_ligar(&SAVE, s) {

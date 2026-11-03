@@ -236,6 +236,12 @@ Values: from … to …. Default: `1`.
 
 ## Log
 
+### Record where each regen comes from — `regen_origins`
+
+Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or "no club"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find "Ronaldo's regen". The game keeps this nowhere: only regens created with this option on are recorded.
+
+Values: `1` on, `0` off. Default: `0`.
+
 ### Log (tweaks.log) — `log`
 
 Writes tweaks.log next to the exe: what each tweak did, each youngster and his club, error boxes and, every July, a picture of the population. For testing and to send when something goes wrong. Off in normal use.

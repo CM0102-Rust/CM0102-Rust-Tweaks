@@ -250,11 +250,20 @@ A read of the running game's memory (from outside, read only; `resultados/deposi
 
 **And under the original?** One season of the original, read the same way in July 2002: the club with most regens was SC Kleve (Germany), with 6 players, **all regens**, none from the contest. It's the same phenomenon: a small club outside the competitions loses its database squad and rebuilds it with free youngsters. Under the original it hides behind the clubs the contest fills (Tigre with 30 from the contest); with the tweaks the contest is capped and the sink becomes the club with most regens. **It's the game, not the tweaks** [measured in this career; just one]. Guiseley doesn't even exist under that name in this original career: the set of clubs changes from one career to another.
 
+### 4.6 Where each regen comes from (`regen_origins`)
+
+A factory-database career to January 2002, with `regen_origins = 1` [measured, 11/03]: 44 regens in `regen_origins.csv`, **none** with an unknown record owner. Examples: Domenico Marchesini (16, wing-back, PA 140, Milan) inherited Gennaro Marrazzo's slot and Massimiliano Esposito's record (retired at 29, CA 60, PA 140); Fabrício dos Santos inherited the slot and the record of the same player, Roque. Since the queue and the pool move together, one regen's record owner is often the previous one's slot owner. The example is in `resultados/regen_origins_exemplo.csv`.
+
+How the DLL finds the record's owner (changing nothing in the game or the save): it hooks the two calls through which a retired player's record enters the pool (the queue, 0x7a87d0 at 0x7a64c9 and 0x7a64e2, and the player who becomes a coach, 0x7a8350 at 0x7a6335) and notes, in a fixed DLL table indexed by the record, the owner's name, id, age, CA and PA **at that moment**; at creation (0x7abac0, called at 0x7a664f), it reads the slot (A) before it's overwritten and the record at the front of the pool. The career comes from the name of the `.sav` the game opens (the exe's `CreateFileA`). In a loaded save, the records already in the pool show as unknown.
+
+A finding on the way: a youngster born **without a club** and under 20 has his reputation cut by the game (0x7acf61..0x7acf94: current and home at most 1250, world 1), and is almost invisible to the AI. The PA is never touched, and the attribute normalisation (0x538ec0, 0x538bc0) applies to everyone, with or without a club.
+
 ## 5. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
 - **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
+- **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then Davdav's new patch, when it's out (first `tools/inventario_dll.py`).
 
 ## 6. How to reproduce
 

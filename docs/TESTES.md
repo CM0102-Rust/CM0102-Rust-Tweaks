@@ -250,11 +250,20 @@ Uma leitura da memória do jogo em execução (de fora, só leitura; `resultados
 
 **E na original?** Uma temporada da original, lida da mesma forma em julho de 2002: o clube com mais regens era o SC Kleve (Alemanha), com 6 jogadores, **todos regens**, nenhum pela disputa. É o mesmo fenômeno: um clube pequeno, fora das competições, perde o elenco do banco e o refaz com jovens livres. Na original ele fica escondido atrás dos clubes que a disputa enche (o Tigre com 30 pela disputa); com os ajustes, a disputa tem teto e o depósito passa a ser o clube com mais regens. **É do jogo, não dos ajustes** [medido nesta carreira; uma só]. O Guiseley nem existe com esse nome nessa carreira da original: o conjunto de clubes muda de uma carreira para outra.
 
+### 4.6 De quem é cada regen (`regen_origins`)
+
+Uma carreira na base de fábrica até janeiro de 2002, com `regen_origins = 1` [medido, 03/11]: 44 regens no `regen_origins.csv`, **nenhum** com o dono da ficha desconhecido. Exemplos: Domenico Marchesini (16 anos, ala, PA 140, Milan) herdou a vaga de Gennaro Marrazzo e a ficha de Massimiliano Esposito (aposentado aos 29, CA 60, PA 140); Fabrício dos Santos herdou vaga e ficha do mesmo jogador, Roque. Como a fila e a reserva andam juntas, o dono da ficha de um regen costuma ser o dono da vaga do anterior. O exemplo está em `resultados/regen_origins_exemplo.csv`.
+
+Como a DLL acha o dono da ficha (sem mudar nada no jogo nem no save): desvia as duas chamadas por onde a ficha de um jogador aposentado entra na reserva (a fila, 0x7a87d0 em 0x7a64c9 e 0x7a64e2, e o jogador que vira técnico, 0x7a8350 em 0x7a6335) e anota, numa tabela fixa da DLL indexada pela ficha, o nome, o id, a idade, o CA e o PA do dono **naquele momento**; na criação (0x7abac0, chamada em 0x7a664f), lê a vaga (A) antes da sobrescrita e a ficha da frente da reserva. A carreira vem do nome do `.sav` que o jogo abre (o `CreateFileA` do exe). Num save carregado, as fichas que já estavam na reserva aparecem como desconhecidas.
+
+Um achado no caminho: o jovem que nasce **sem clube** e com menos de 20 anos tem a reputação cortada pelo jogo (0x7acf61..0x7acf94: atual e em casa no máximo 1250, mundial 1), e fica quase invisível para a IA. O PA não é mexido em nenhum caso, e a normalização dos atributos (0x538ec0, 0x538bc0) vale para todos, com ou sem clube.
+
 ## 5. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
 - **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
+- **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois o patch novo do Davdav, quando sair (primeiro o `tools/inventario_dll.py`).
 
 ## 6. Como reproduzir
 

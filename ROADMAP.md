@@ -60,7 +60,10 @@ The tests and each run's numbers: [docs/TESTES.en.md](docs/TESTES.en.md).
 - ✅ **The long career**: five seasons with 10 leagues (6 playable and 4 background), on the factory database and on CLZ (Nick's rules and ours, with `unattached`), with no crash; the log's `season` line gives the population every July ([docs/TESTES.en.md](docs/TESTES.en.md) §4.3).
 - ✅ **Cap bug fixed** (11/02): the cap of 2 per 365 days only counted the squad and leaked when the club loaned out or sold the youngster (15 at Real Madrid in four years); now the DLL keeps every youngster it handed out, and the most per season is 2.
 - 💡 **Piling up in nations not in the game:** even with the cap, one club gathers 17 (factory) to 24 (CLZ) regens in five years; on CLZ it's AS Douanes (Senegal, not in the game), where the regen doesn't go through the contest. Invisible to the player; a cap there is a future option.
-- ⏳ Repeat the careers (the variation between them) and go to 10 seasons.
+- ✅ Ten-season careers and variants ([docs/TESTES.en.md](docs/TESTES.en.md) §4.4 and §4.5); `outside_competitions` for squad sizes (11/03, being measured).
+- ✅ **Where each regen comes from** (`regen_origins`, 11/03): `regen_origins.csv` with each regen's slot and record, names of the moment, game and computer dates and the career; search and clearing in the configurator (§4.6).
+- ⏳ The order of databases: the factory one (reference); CLZ, with Lucas; Davdav's new patch, when it's out.
+- 💡 Don't cut the reputation of a youngster born without a club (the game cuts it to 1250 and the world one to 1, §4.6).
 
 ## Phase 2b: the exe snapshot 🔨
 

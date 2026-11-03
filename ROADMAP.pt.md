@@ -60,7 +60,10 @@ Os testes e os números de cada execução: [docs/TESTES.md](docs/TESTES.md).
 - ✅ **A carreira longa**: cinco temporadas com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (regras do Nick e as nossas, com `unattached`), sem nenhuma queda; a linha `season` do log dá a população a cada julho ([docs/TESTES.md](docs/TESTES.md) §4.3).
 - ✅ **Defeito do teto corrigido** (02/11): o teto de 2 por 365 dias contava só o elenco e vazava quando o clube emprestava ou vendia o jovem (15 no Real Madrid em quatro anos); agora a DLL guarda cada jovem entregue, e o máximo por temporada ficou em 2.
 - 💡 **O acúmulo nas nações fora do jogo:** mesmo com o teto, um clube junta 17 (fábrica) a 24 (CLZ) regens em cinco anos; no CLZ é o AS Douanes (Senegal, fora do jogo), por onde o regen não passa pela disputa. Invisível para quem joga; um teto ali é opção futura.
-- ⏳ Repetir as carreiras (a variação entre elas) e ir a 10 temporadas.
+- ✅ Carreiras de 10 temporadas e variantes ([docs/TESTES.md](docs/TESTES.md) §4.4 e §4.5); `outside_competitions` para os elencos (03/11, em medição).
+- ✅ **De quem é cada regen** (`regen_origins`, 03/11): o `regen_origins.csv` com a vaga e a ficha de cada regen, nomes do momento, datas do jogo e do computador e a carreira; busca e limpeza no configurador (§4.6).
+- ⏳ A ordem dos bancos: a base de fábrica (referência); o CLZ, com o Lucas; o patch novo do Davdav, quando sair.
+- 💡 Não cortar a reputação do jovem que nasce sem clube (o jogo a corta para 1250 e a mundial para 1, §4.6).
 
 ## Fase 2b: o retrato do exe 🔨
 

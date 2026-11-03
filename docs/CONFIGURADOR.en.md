@@ -300,6 +300,8 @@ Text: "A nation in the game is one whose league you picked when creating the car
 - `src/exe.rs`: each tweak's state on the exe (§6), with the DLL's **own** tables: `src/partes.rs` (the `Parte`s, the signatures and the known cases, now out of `lib.rs`) and `src/trocas.rs`, included by path, not copied.
 - `src/main.rs`: the window (§2) and the tabs (§3): Start with the snapshot and the state table; Game; Ages with the draggable chart and the "younger regens" outline; Idle players with the chance of retiring by age; Contest with the level curve and the example clubs' chances (the same sum as `peso()`); Log with the last `tweaks.log`; tweaks.cfg with the changed lines. Portuguese and English (EN button). The help is the distributed `.cfg`'s comment, embedded.
 
+**The regen history** (Log tab): how many regens `regen_origins.csv` holds, a search by the regen's name or whom he inherited the slot or the record from, and "Clear the history" (keeps a dated copy or deletes for good, with confirmation).
+
 **The help:** each control has the name of what it does (not the key) and, in the tooltip and the right panel, a practical text in Portuguese and English: what it does, when to use it and the consequence in the game (`src/guia.rs`). The key and the `.cfg`'s technical comment sit below, under "Technical detail". The same texts generate [GUIA_DAS_CHAVES.en.md](GUIA_DAS_CHAVES.en.md) (`tweaks-config.exe --guia pt|en FILE`); a test makes sure every key has both texts.
 
 Decisions taken in the prototype (they can change): egui with `glow`; i686 target (the same as the DLL; runs on any Windows); `video` locked by the resolution only shows as locked, without writing `video = window`; the example clubs are made up.
@@ -310,3 +312,4 @@ Done later: Windows' folder dialog (the "…" button, through the `rfd` library)
 |---|---|
 | ![Start on CLZ](imagens/configurador_inicio_clz.png) | ![Ages](imagens/configurador_idades.png) |
 | ![Contest](imagens/configurador_disputa.png) | ![The help](imagens/configurador_ajuda.png) |
+| ![The regen history](imagens/configurador_historico.png) | |
