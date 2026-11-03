@@ -246,6 +246,8 @@ Uma suspeita, descartada [medido]: a lista `PELA_DISPUTA` da DLL (um `Vec` que c
 
 O que falta saber: se esses regens chegam por contratação ou por empréstimo (no empréstimo, o +0x39 do jogador passa a ser o clube que recebe), e se o mesmo acontece na original sem ser notado (a disputa original já concentra tanto que o depósito não aparece no topo). Para isso, um save no meio de uma carreira com o depósito, lido com `tools/regens_por_clube.py`.
 
+Uma leitura da memória do jogo em execução (de fora, só leitura; `resultados/deposito.py`), na carreira final do §4.5 em 2003: o Guiseley tinha 16 jogadores, **todos regens**, de 17 a 21 anos. O clube de fora das ligas trocou o elenco inteiro por jovens. A leitura do dono do contrato não deu valores coerentes (o leiaute do contrato ainda não está certo), então contratação contra empréstimo segue em aberto.
+
 ## 5. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.

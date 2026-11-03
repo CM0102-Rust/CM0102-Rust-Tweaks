@@ -246,6 +246,8 @@ A suspicion, ruled out [measured]: the DLL's `PELA_DISPUTA` list (a `Vec` growin
 
 Still to find out: whether those regens arrive by signing or by loan (on a loan, the player's +0x39 becomes the borrowing club), and whether the same happens under the original unnoticed (the original contest already concentrates so much that the sink doesn't reach the top). For that, a save in the middle of a career with the sink, read with `tools/regens_por_clube.py`.
 
+A read of the running game's memory (from outside, read only; `resultados/deposito.py`), in the §4.5 final career in 2003: Guiseley had 16 players, **all regens**, aged 17 to 21. The non-league club replaced its whole squad with youngsters. Reading the contract's owner didn't give coherent values (the contract layout isn't right yet), so signing against loan is still open.
+
 ## 5. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
