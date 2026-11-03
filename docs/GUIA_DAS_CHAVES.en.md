@@ -219,7 +219,7 @@ Below this age no clubless player retires by the idle rule. 0 = no protection (t
 
 Values: from 0 to 126 (whole number). Default: `0`.
 
-## Where each regen comes from
+## Regen origins
 
 Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.
 

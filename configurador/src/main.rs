@@ -444,10 +444,10 @@ impl App {
                 // o nome da opção como nas abas; a chave do tweaks.cfg em cinza, para quem edita à mão
                 let nome = chaves::chave(l.ajuste).map(|c| if en { c.rotulo.1 } else { c.rotulo.0 }).unwrap_or(l.ajuste);
                 ui.horizontal(|ui| {
-                    rotulo_fixo(ui, 250.0, nome);
-                    rotulo_fixo(ui, 140.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA));
+                    rotulo_fixo(ui, 210.0, nome);
+                    rotulo_fixo(ui, 135.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA));
                     bolinha(ui, cor(l.estado));
-                    rotulo_fixo(ui, 130.0, RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado)));
+                    rotulo_fixo(ui, 115.0, RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado)));
                     ui.add(egui::Label::new(if en { &l.motivo.1 } else { &l.motivo.0 }).wrap());
                 });
             }
@@ -557,7 +557,10 @@ impl App {
                 ui.horizontal(|ui| {
                     let mut tem_teto = teto >= 0;
                     let mut t = if teto >= 0 { teto } else { 100 };
-                    let r2 = ui.add_sized([150.0, 18.0], egui::Checkbox::new(&mut tem_teto, t2(en, "Teto do CA", "CA cap")));
+                    let r2 = ui.allocate_ui_with_layout(Vec2::new(150.0, 18.0), egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                        ui.set_min_width(150.0);
+                        ui.checkbox(&mut tem_teto, t2(en, "Teto do CA", "CA cap"))
+                    }).inner;
                     let r3 = ui.add_enabled(tem_teto, egui::DragValue::new(&mut t).range(1..=200));
                     ui.label(RichText::new(if tem_teto {
                         if en { format!("no {}-year-old regen is born with CA above {}", n, t) } else { format!("nenhum regen de {} anos nasce com CA acima de {}", n, t) }

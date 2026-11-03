@@ -37,7 +37,7 @@ pub const ABAS: [(Aba, &str, &str, &str, &str); 8] = [
     (Aba::Idades, "Idades", "Ages", "Regens", "Regens"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Regens", "Regens"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Regens", "Regens"),
-    (Aba::Registro, "De quem é cada regen", "Where each regen comes from", "Regens", "Regens"),
+    (Aba::Registro, "De quem é cada regen", "Regen origins", "Regens", "Regens"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Jogo", "Game"),
     (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos", "Files"),
     (Aba::Log, "tweaks.log", "tweaks.log", "Arquivos", "Files"),
