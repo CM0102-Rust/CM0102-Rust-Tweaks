@@ -36,6 +36,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `src/trocas.rs` | As trocas de `no_cd` e `resolution` (gerado por `tools/gerar_trocas.py`) |
 | `configurador/` | O configurador, `tweaks-config.exe` (Rust + egui, um exe só): edita o `tweaks.cfg` com barras, gráficos e o estado de cada ajuste no exe (`cd configurador && cargo build --release`) |
 | `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
+| `docs/GUIA_DAS_CHAVES.md` | **O guia das chaves para quem joga:** cada opção, o que faz, quando usar e o que acontece no jogo (gerado pelo configurador, `tweaks-config.exe --guia pt`) |
 | `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o inventário da NickDLL do CLZ 6.1 |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |

@@ -300,6 +300,8 @@ Texto: "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, 
 - `src/exe.rs`: o estado de cada ajuste no exe (§6), com as **mesmas** tabelas da DLL: `src/partes.rs` (as `Parte`, as assinaturas e os casos conhecidos, agora fora do `lib.rs`) e `src/trocas.rs`, incluídos pelo caminho, sem cópia.
 - `src/main.rs`: a janela (§2) e as abas (§3): o Início com o retrato e a tabela de estados; Jogo; Idades com o gráfico arrastável e o contorno dos "regens mais novos"; Inativos com a chance de aposentar por idade; Disputa com a curva do nível e as chances dos clubes de exemplo (a mesma conta de `peso()`); Registro com o último `tweaks.log`; tweaks.cfg com as linhas mudadas. Português e inglês (botão EN). A ajuda é o comentário do `.cfg` distribuído, embutido.
 
+**A ajuda:** cada controle tem o nome do que faz (não a chave) e, na dica e no painel da direita, um texto prático em português e inglês: o que faz, quando usar e a consequência no jogo (`src/guia.rs`). A chave e o comentário técnico do `.cfg` ficam embaixo, em "Detalhe técnico". Os mesmos textos geram o [GUIA_DAS_CHAVES.md](GUIA_DAS_CHAVES.md) (`tweaks-config.exe --guia pt|en ARQUIVO`); um teste garante que toda chave tem os dois textos.
+
 Decisões tomadas no protótipo (dá para mudar): egui com `glow`; alvo i686 (o mesmo da DLL; roda em qualquer Windows); o `video` travado pela resolução só aparece travado, sem gravar `video = window`; os clubes do exemplo são fictícios.
 
 Feito depois: o diálogo de pasta do Windows (o botão "…", pela biblioteca `rfd`) e a lista de mudanças antes de aplicar uma predefinição. Falta: o teste numa máquina sem placa de vídeo (o `glow` precisa de OpenGL 2).
@@ -307,4 +309,4 @@ Feito depois: o diálogo de pasta do Windows (o botão "…", pela biblioteca `r
 | | |
 |---|---|
 | ![Início no CLZ](imagens/configurador_inicio_clz.png) | ![Idades](imagens/configurador_idades.png) |
-| ![Disputa](imagens/configurador_disputa.png) | |
+| ![Disputa](imagens/configurador_disputa.png) | ![A ajuda](imagens/configurador_ajuda.png) |
