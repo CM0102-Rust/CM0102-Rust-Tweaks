@@ -25,7 +25,17 @@ Quando este repositório for aberto, ele substitui o `CM0102-Rust/cm0102-save2gb
 
 O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 
-**Estado: em teste, ainda não publicado.** Rodou em carreiras automáticas de até cinco temporadas no 3.9.68 e no CLZ, sem queda; os números estão em [docs/TESTES.md](docs/TESTES.md). O configurador está desenhado em [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) (maquete em `docs/configurador_maquete.html`).
+**Estado: trabalho em andamento.** A versão 1.0 é um pré-lançamento ([Releases](https://github.com/CM0102-Rust/CM0102-Rust-Tweaks/releases): a DLL, o configurador, o `tweaks.cfg` e os guias, e o código-fonte): melhorias vão surgir, e ela precisa de testes de quem joga. **Sempre faça backup dos seus saves** antes de experimentar, e mande o `tweaks.log` se algo der errado. Rodou em carreiras automáticas de até dez temporadas no 3.9.68 e cinco no CLZ, sem queda; os números estão em [docs/TESTES.md](docs/TESTES.md). O configurador está descrito em [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md).
+
+**Instalar:** copie `ddraw.dll`, `tweaks.cfg` e `tweaks-config.exe` para a pasta do `cm0102.exe` e abra o configurador. **Tirar:** apague a `ddraw.dll`.
+
+### Telas
+
+| | |
+|---|---|
+| ![Início, numa base com o NickPatcher](assets/screenshots/pt/01-start.png) | ![Tela, save e pasta](assets/screenshots/pt/02-game.png) |
+| ![Idades](assets/screenshots/pt/03-ages.png) | ![Disputa dos clubes](assets/screenshots/pt/04-contest.png) |
+| ![Aposentadoria](assets/screenshots/pt/05-retirement.png) | ![De quem é cada regen](assets/screenshots/pt/06-regen-origins.png) |
 
 ## Arquivos
 
@@ -225,3 +235,7 @@ Rodar: `python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham --tem
 ## Próximos passos
 
 Ver o [ROADMAP.pt.md](ROADMAP.pt.md). O próximo é a prova no jogo (fase 2).
+
+## Licença
+
+MIT ([LICENSE](LICENSE)). O jogo, o executável e o banco de dados não fazem parte deste repositório.

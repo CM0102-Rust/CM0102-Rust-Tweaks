@@ -1,6 +1,6 @@
 [package]
 name = "configurador"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "CM0102-Rust-Tweaks: o configurador do tweaks.cfg (um exe só)"
 publish = false
