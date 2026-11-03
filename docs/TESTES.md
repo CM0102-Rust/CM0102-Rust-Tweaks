@@ -225,7 +225,7 @@ O que os números mostram:
 - **Ponto a acertar: o elenco médio dos clubes das competições cai** de 32,9 (2004) para 27,6 (2011) com os ajustes; na original fica em torno de 30. O total de jogadores é igual nas duas; com os ajustes, menos jogadores livres (2.079 contra 3.282) e os jovens espalhados por 2.745 clubes, muitos fora das competições. As variantes do §4.5 descartam os inativos como causa; o teto de 3 ajuda pouco.
 - **Sem clube na disputa (84):** a partir de 2007, 16 a 26 jovens por temporada não acham clube elegível no país (elencos no teto ou teto da temporada): é o `unattached` funcionando como pedido ("sem clube só sem vaga").
 
-### 4.5 Por que o elenco cai, e um defeito achado no caminho
+### 4.5 Por que o elenco cai, e o clube "depósito"
 
 **As variantes (10 temporadas cada, o resto igual ao §4.4)** [medido]:
 
@@ -240,18 +240,11 @@ O que os números mostram:
 - **Os inativos não são a causa:** sem eles, o elenco cai do mesmo jeito.
 - **O teto de 3 segura cerca de um jogador por elenco** (28,7 contra 27,6 em 2011), com os grandes ainda em 4% a 10% da disputa. Não resolve sozinho. A causa mais provável é o espalhamento dos jovens por clubes fora das competições (2.745 clubes recebem na carreira de 10 anos). A decisão fica com o Lucas: aceitar 28 de média, usar o teto de 3, ou um ajuste novo que prefira os clubes das competições.
 
-**O defeito:** nas duas variantes e numa carreira de controle, um clube inglês fora das ligas (o Guiseley) juntou de 17 a 49 regens, quase nenhum pela disputa (a linha `season` mostra quantos vieram dela). Nas carreiras com a DLL anterior isso nunca aconteceu. A bisseção [medido]:
+**Um clube "depósito" de regens (em aberto):** em várias carreiras com os ajustes, um clube fora das competições junta muitos regens que não vieram da disputa (a linha `season` mostra quantos vieram dela): o Universidad de Las Palmas com 30 (§4.4) e, em outras carreiras, o Guiseley (inglês, fora das ligas) com 13 a 49. Nas carreiras da original, o clube com mais regens recebeu a maior parte pela disputa (o Tigre, 30 de 40).
 
-| DLL | O clube com mais regens em julho de 2002 |
-|---|---|
-| a anterior (607d559) | York City, 2 (o mesmo da carreira do §4.4) |
-| a nova, com a lista `PELA_DISPUTA` (um `Vec` que crescia a cada jovem, na linha do jogo) | Guiseley, 6 a 17, em três carreiras (duas com o mesmo sorteio, uma com outro) |
-| a nova sem a lista | NK Amater, 3 |
-| a nova com um mapa de bits fixo no lugar da lista (a correção) | Remont Canepak Cacak, 4; em 2003, Volta Redonda, 6 (5 pela disputa) |
+Uma suspeita, descartada [medido]: a lista `PELA_DISPUTA` da DLL (um `Vec` que crescia a cada jovem na linha do jogo) pareceu a causa, porque o Guiseley apareceu nas três primeiras carreiras com ela e sumiu sem ela. Mas a carreira final, com um mapa de bits fixo no lugar da lista, também teve o Guiseley (13 em julho de 2002). Contagem: o depósito do Guiseley apareceu em 4 de 8 carreiras com a DLL nova (com e sem a lista) e em 0 de 2 com a anterior; é a trajetória da carreira, que muda com qualquer diferença (o jogo sorteia pelo relógio e lê memória não inicializada), e não um defeito da lista. O mapa de bits ficou: não alocar na linha do jogo é a prática certa.
 
-A causa: o jogo lê memória não inicializada (já visto no projeto CM0102), e a lista que crescia na heap a cada jovem mudava o que ele lia; a carreira seguia outra trajetória, e numa delas o Guiseley virava um depósito de jovens contratados ou emprestados. **Regra para a DLL: não alocar memória na linha do jogo** durante a carreira. A linha `season` agora usa um vetor fixo de bits.
-
-As variantes acima rodaram com a lista: o elenco médio delas vale como tendência (a mesma da carreira do §4.4, que não tinha a lista), mas o Guiseley delas é o defeito.
+O que falta saber: se esses regens chegam por contratação ou por empréstimo (no empréstimo, o +0x39 do jogador passa a ser o clube que recebe), e se o mesmo acontece na original sem ser notado (a disputa original já concentra tanto que o depósito não aparece no topo). Para isso, um save no meio de uma carreira com o depósito, lido com `tools/regens_por_clube.py`.
 
 ## 5. Limites e próximos testes
 

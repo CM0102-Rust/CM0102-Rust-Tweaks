@@ -225,7 +225,7 @@ What the numbers show:
 - **Something to tune: the average squad of the competition clubs falls** from 32.9 (2004) to 27.6 (2011) with the tweaks; under the original it stays around 30. The total number of players is the same in both; with the tweaks, fewer free players (2,079 against 3,282) and the youngsters spread over 2,745 clubs, many outside the competitions. The §4.5 variants rule out idle retirements as the cause; a cap of 3 helps a little.
 - **Without a club in the contest (84):** from 2007, 16 to 26 youngsters a season find no eligible club in their country (squads at the limit or the season cap): that is `unattached` working as asked ("clubless only without room").
 
-### 4.5 Why squads shrink, and a bug found on the way
+### 4.5 Why squads shrink, and the "sink" club
 
 **The variants (10 seasons each, the rest as in §4.4)** [measured]:
 
@@ -240,18 +240,11 @@ What the numbers show:
 - **Idle retirements are not the cause:** without them squads fall the same way.
 - **A cap of 3 holds about one player per squad** (28.7 against 27.6 in 2011), with big clubs still at 4% to 10% of the contest. It doesn't fix it alone. The most likely cause is the youngsters spreading over clubs outside the competitions (2,745 clubs get some in the ten-year career). The decision is Lucas's: accept an average of 28, use a cap of 3, or a new tweak that prefers competition clubs.
 
-**The bug:** in both variants and in a control career, an English non-league club (Guiseley) gathered 17 to 49 regens, almost none from the contest (the `season` line shows how many came from it). In the careers with the previous DLL this never happened. The bisection [measured]:
+**A regen "sink" club (open):** in several careers with the tweaks, a club outside the competitions gathers many regens that didn't come from the contest (the `season` line shows how many came from it): Universidad de Las Palmas with 30 (§4.4) and, in other careers, Guiseley (English, non-league) with 13 to 49. In the original's careers, the club with most regens got most of them from the contest (Tigre, 30 of 40).
 
-| DLL | The club with most regens in July 2002 |
-|---|---|
-| the previous one (607d559) | York City, 2 (the same as the §4.4 career) |
-| the new one, with the `PELA_DISPUTA` list (a `Vec` growing with each youngster, on the game's thread) | Guiseley, 6 to 17, in three careers (two with the same seed, one with another) |
-| the new one without the list | NK Amater, 3 |
-| the new one with a fixed bitmap instead of the list (the fix) | Remont Canepak Cacak, 4; in 2003, Volta Redonda, 6 (5 from the contest) |
+A suspicion, ruled out [measured]: the DLL's `PELA_DISPUTA` list (a `Vec` growing with each youngster on the game's thread) looked like the cause, since Guiseley showed up in the first three careers with it and went away without it. But the final career, with a fixed bitmap instead of the list, also had Guiseley (13 in July 2002). Count: the Guiseley sink appeared in 4 of 8 careers with the new DLL (with and without the list) and in 0 of 2 with the previous one; it's the career's path, which changes with any difference (the game seeds from the clock and reads uninitialised memory), not a bug in the list. The bitmap stayed: not allocating on the game's thread is the right practice.
 
-The cause: the game reads uninitialised memory (already seen in the CM0102 project), and the list growing on the heap with each youngster changed what it read; the career took another path, and on one of them Guiseley became a sink of signed or loaned youngsters. **Rule for the DLL: no memory allocation on the game's thread** during the career. The `season` line now uses a fixed bit vector.
-
-The variants above ran with the list: their average squad holds as a trend (the same as the §4.4 career, which didn't have the list), but their Guiseley is the bug.
+Still to find out: whether those regens arrive by signing or by loan (on a loan, the player's +0x39 becomes the borrowing club), and whether the same happens under the original unnoticed (the original contest already concentrates so much that the sink doesn't reach the top). For that, a save in the middle of a career with the sink, read with `tools/regens_por_clube.py`.
 
 ## 5. Limits and next tests
 

@@ -680,9 +680,8 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
 }
 
 /// As pessoas (id) que a disputa mandou a um clube, pela regra nova ou pela do jogo, para a linha `season` separar o que
-/// veio da disputa do que veio por contratação: um bit por id, num vetor fixo. **Sem alocar na linha do jogo:** uma lista
-/// que crescia a cada jovem mudava a heap, e o jogo, que lê memória não inicializada, seguia outra trajetória (nas três
-/// carreiras com ela, um clube inglês fora das ligas virou um depósito de jovens livres; TESTES §4.5).
+/// veio da disputa do que veio por contratação: um bit por id, num vetor fixo, para não alocar na linha do jogo (o jogo lê
+/// memória não inicializada, e a heap muda a trajetória da carreira; TESTES §4.5).
 /// ponytail: um id reaproveitado por outro regen conta como da disputa; ids acima de 2^21 não contam.
 static PELA_DISPUTA: [core::sync::atomic::AtomicU32; 1 << 16] = [const { core::sync::atomic::AtomicU32::new(0) }; 1 << 16];
 
