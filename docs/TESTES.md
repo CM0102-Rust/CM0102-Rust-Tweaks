@@ -14,6 +14,7 @@ Tudo o que foi rodado para provar o CM0102-Rust-Tweaks, de 01/11 a 02/11/2026 (a
 | O retrato do exe e o aviso de dependência | ✅ reconhece o original, o Regen Tweak e o CLZ; acha os desvios da NickDLL e da LaMOHatesCD em tempo de execução |
 | As caixas de mensagem no log | ✅ três erros reais apanhados |
 | A distribuição dos regens | ✅ em cinco temporadas, com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (§4.3) |
+| Jogadores cinzentos (`grey_players`) | ✅ no 3.9.68 (três carreiras até 14/09/2001) e no CLZ 6.1 com a NickDLL (um mês de jogo): nenhum CA negativo, nenhum clube abaixo do original, sem queda (§3.9) |
 | Estabilidade nas carreiras longas | ✅ cinco carreiras de cinco temporadas, sem nenhuma queda, travamento ou caixa de erro |
 
 ## 2. O método
@@ -135,6 +136,37 @@ Duas pastas do 3.9.68 de fábrica (as bancadas `jogo_tweaks` e `jogo_tweaks2`), 
 |---|---|---|
 | 1 | abriu (trava "...2001/02 6f59faf") | abriu (trava "...2001/02 1aa4427") |
 | 0 | abriu | recusada ("Already Running") |
+
+### 3.9 Jogadores cinzentos (`grey_players`)
+
+Os cinzentos são os jogadores virtuais que o jogo põe antes de cada partida para completar um elenco curto (`VIRTUAL_STAFF`). A regra nova dá a eles o nível do clube ± 5 (`grey_players = squad`, `grey_players_spread = 10`). O estudo e o código são da sessão dos cinzentos do projeto CM0102 (pedido P9). Critério: a carreira chega à data sem queda nem caixa de erro, nenhum cinzento sai com CA negativo, e nenhum clube recebe cinzentos mais fracos que no original. Com `log = 1`, a DLL escreve uma linha `grey` por cinzento: o clube, a reputação, a fonte do nível (elenco ou reputação), o nível, o CA original e o novo.
+
+**No 3.9.68** [medido pela sessão dos cinzentos, 03/11/2026]: carreira de férias oculta, banco mínimo, Inglaterra carregada, de 2001 até 14/09/2001, no `cm0102-1080.exe`. Três execuções, todas até a data.
+
+| Execução | Regra | Cinzentos | CA original (média; negativos) | CA novo (média; mín.–máx.) |
+|---|---|---|---|---|
+| 1 | elenco, ou reputação sem elenco; faixa só para baixo | 149.239 | −11,7; 94.676 (63%) | 65,7; 1–171 |
+| 2 | maior entre elenco e reputação; faixa para baixo | 150.449 | −12,4; 96.381 (64%) | 67,1; 10–180 |
+| 3 (a publicada) | maior entre elenco e reputação; faixa centrada | 150.574 | −12,0; 95.610 (63%) | 72,3; 15–185 |
+
+Na execução 1, 73 clubes ficavam abaixo do original: os grandes de ligas não carregadas, que no banco mínimo têm poucos jogadores reais. Na 3, nenhum dos 1.217 clubes fica mais de 1 ponto abaixo. Exemplos:
+
+| Clube | Reputação | Nível | CA original | CA novo |
+|---|---|---|---|---|
+| Rochdale | 3000 | 82 (elenco) | −82 | 85 |
+| Mansfield Town | 2500 | 95 (elenco) | −95 | 94 |
+| Wimbledon | 5000 | 107 (elenco) | 1 | 107 |
+| Corinthians | 9000 | 164 (reputação) | 143 | 164 |
+| Tonga (seleção) | 500 | 45 (reputação) | −124 | 44 |
+
+**No CLZ 6.1, com a NickDLL** [medido, 03/11/2026]: as assinaturas da parte batem no exe do CLZ 6.1 em disco e na memória (a linha "grey players: squad" no log). O teste usou o save `MenosBelgica` carregado, de férias, oculto e em janela.
+
+| Execução | Datas do jogo | Cinzentos | Clubes | CA original (média; negativos) | CA novo (média; mín.–máx.) | Clubes abaixo do original |
+|---|---|---|---|---|---|---|
+| curta | 02/01 a 10/01/2027 | 184.742 | — | −60,5; 163.008 (88%) | 65,7; 19–185 | 0 |
+| longa (20 min) | 02/01 a 02/02/2027 | 670.718 | 6.878 | −60,2; 589.255 (88%) | 67,6; 19–185 | 0 |
+
+Nenhuma queda e nenhuma caixa de erro. No CLZ, com muitas ligas de fundo, o original é ainda pior que no 3.9.68: 88% dos cinzentos saem com CA negativo.
 
 ## 4. Os regens
 

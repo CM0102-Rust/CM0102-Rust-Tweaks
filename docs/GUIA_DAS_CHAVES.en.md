@@ -4,7 +4,7 @@
 
 Each option: what it does, when to use it and what happens in the game. Without the line in `tweaks.cfg`, the default shown applies (the DLL's). Each `tweaks.cfg` line's comment has the technical detail.
 
-## Ages
+## Regen ages
 
 At what age each regen is born, and with how much CA. The bars are the ages 14 to 35: the height is the chance of being born at that age, and the number below is the CA cap. Click a bar to pick it and drag to change the chance. The settings apply to regens born from then on, in a save in progress too.
 
@@ -34,7 +34,7 @@ Format: `age_NN = chance, CA cap`.
 
 Values: from 0 to 126 (whole number). Default: `22`.
 
-### Younger: years less (0 = off) — `younger_by`
+### Younger: years less — `younger_by`
 
 How many years younger for regens from "from age" up. 0 turns it off. More years = more 16-to-20 youngsters and fewer newly generated veterans.
 
@@ -46,7 +46,7 @@ Nations not in the game with few people in the database draw ages their own way 
 
 Values: `original` (Original draw), `table` (The table too). Default: `original`.
 
-### Skip the CA cap (%) — `ca_cap_skip`
+### Youngsters without the CA cap (%) — `ca_cap_skip`
 
 Chance (%) that a youngster ignores the CA cap of his age: a few are born ready, as in the original game (about 1 in 200). Higher = more youngsters ready early.
 
@@ -89,7 +89,7 @@ What club reputation suits the youngster: the target is this times the PA (50 ×
 
 Values: from … to …. Default: `50`.
 
-### Target: CA weight (0 = PA, 1 = CA) — `target_ca`
+### Target: potential or current ability — `target_ca`
 
 How much the target looks at the CA (what the youngster can do now) instead of the PA (what he may become). 0 = PA only; 1 = CA only.
 
@@ -101,7 +101,7 @@ How much a club above the target still has a chance. Larger = youngsters spread 
 
 Values: from 1 to …. Default: `2500`.
 
-### Width below the target (0 = same) — `sigma_below`
+### Width below the target — `sigma_below`
 
 The same for clubs below the target (0 = the same as above). Kept smaller because the hundreds of small clubs in a country, added up, would take the good youngsters.
 
@@ -143,13 +143,13 @@ A club with this many players or more gets no youngster. Lower = youngsters go t
 
 Values: from 1 to 50. Default: `48`.
 
-### Squad: room exponent — `squad_exp`
+### How much squad room counts — `squad_exp`
 
 How much squad room weighs: larger = clubs with short squads get much more chance than nearly full ones.
 
 Values: from … to …. Default: `0.5`.
 
-### Cap per club every 365 days (0 = none) — `season_cap`
+### Most youngsters per club per year — `season_cap`
 
 How many youngsters a club gets at most every 365 days from the contest (0 = no cap). It's what stops a club collecting dozens of regens. With 3, the squads of the leagues you play stay a bit fuller.
 
@@ -161,13 +161,13 @@ Percentage of youngsters drawn without looking at the club's level, only among c
 
 Values: from 0 to 100. Default: `15`.
 
-### Clubs outside the competitions (weight) — `outside_competitions`
+### Clubs in divisions not running — `outside_competitions`
 
 The weight of clubs whose division doesn't run in your career (not even as a background league). 1 = the same as the others; 0.25 = a quarter of the chance; 0 = never (with no competition club with room, the youngster stays clubless). Low values keep the squads of the leagues you play fuller; with few leagues loaded, 1 may suit better.
 
 Values: from 0 to 1. Default: `1`.
 
-### Temperature — `temperature`
+### Difference between clubs (temperature) — `temperature`
 
 Sharpens (above 1) or softens (below 1) the weight differences between clubs. 1 = the weight as calculated.
 
@@ -213,11 +213,32 @@ How much the reputation threshold rises per year above the minimum age: older pl
 
 Values: from 0 to …. Default: `250`.
 
-### Protect those under (0 = no) — `protect_young_unemployed`
+### Protect the young: under — `protect_young_unemployed`
 
 Below this age no clubless player retires by the idle rule. 0 = no protection (the default: the game already gives a clubless youngster 365 days). Protecting the young reduces recycling into regens.
 
 Values: from 0 to 126 (whole number). Default: `0`.
+
+## Grey players
+
+Grey players. Before every match (and when you open a squad), the game fills short squads with virtual players, shown in grey, whom nobody can sign. The original gives them an ability taken from the club's reputation, by a formula that collapses: at mid-sized and small clubs it comes out negative, and the match engine treats that as the weakest possible player. Here they can come at the club's own level.
+
+- **Grey player**: a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again.
+- **CA**: Current Ability (1 to 200): how well the player plays today.
+- **Club's level**: the higher of two values: the average CA of the squad's 16 best real players (with at least 5), and a formula from the reputation that rises with it and is never negative (reputation × 0.016 + 20; national team, reputation / 100 + 40). The reputation keeps a big club from a league you didn't load strong, since it has few players in the database.
+- **Variation**: how far each grey player's CA can be above or below the club's level, drawn for each one.
+
+### The grey players' level — `grey_players`
+
+At the club's level: each grey player (the virtual ones the game adds to fill a squad before a match) gets the club's own level, within the variation chosen below. Original: the game's formula, which takes the level from the reputation and collapses at mid-sized and small clubs (in a test career, 63% of grey players got a negative CA, the weakest possible player). The same club still gets the same grey players: only the CA changes. It applies from the next match, in a career already under way too.
+
+Values: `original` (Original (the game's formula)), `squad` (At the club's level). Default: `original`.
+
+### Variation around the level — `grey_players_spread`
+
+How far each grey player's CA can be above or below the club's level. With ± 5, at a level-82 club the grey players come from 77 to 87. ± 0 makes them all equal to the level; more variation, grey players more different from each other. tweaks.cfg keeps the full width (± 5 = 10).
+
+Values: from 0 to 100 (whole number). Default: `10`.
 
 ## Regen origins
 
@@ -253,7 +274,7 @@ The game uses the folder its exe is in, with no SetupReg and no Windows registry
 
 Values: `1` on, `0` off. Default: `0`.
 
-### Several games open (one per folder) — `multiple_instances`
+### Open more than one game at a time — `multiple_instances`
 
 Lets you open more than one game at the same time, as long as each is in its own folder (for example, 3.9.68 and CLZ, or two careers in two copies). The game has a lock that only allows one copy open; with this option, the lock is per folder. Two games from the same folder are still blocked, since they would use the same temporary files and the same save. Turn on the portable folder too, so each copy uses its own folder. Each open game uses its own memory.
 

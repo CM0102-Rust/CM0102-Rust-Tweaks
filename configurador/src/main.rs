@@ -22,6 +22,8 @@ const VERMELHO: Color32 = Color32::from_rgb(0xe0, 0x5a, 0x4f);
 const CINZA: Color32 = Color32::from_rgb(0x80, 0x88, 0x84);
 const FUNDO: Color32 = Color32::from_rgb(0x12, 0x1a, 0x16);
 const CARTAO: Color32 = Color32::from_rgb(0x1a, 0x25, 0x1f);
+/// A frase "com este valor..." embaixo de cada opção.
+const FRASE: Color32 = Color32::from_rgb(0xb4, 0xc6, 0xbc);
 
 fn cor(e: Estado) -> Color32 {
     match e {
@@ -340,7 +342,10 @@ impl App {
                         x = xb;
                     }
                     let passo = if *inteiro { 0.2 } else { ((barra.1 - barra.0) / 300.0).max(0.0001) };
-                    let r2 = ui.add(egui::DragValue::new(&mut x).range(*min..=*max).speed(passo).max_decimals(if *inteiro { 0 } else { 4 }));
+                    // o número como se lê: "2" e não "2.00"; no português, com vírgula (e a vírgula também vale ao digitar)
+                    let r2 = ui.add(egui::DragValue::new(&mut x).range(*min..=*max).speed(passo).max_decimals(if *inteiro { 0 } else { 4 })
+                        .custom_formatter(move |v, _| { let s = format!("{:.4}", v); let s = s.trim_end_matches('0').trim_end_matches('.'); if en { s.to_string() } else { s.replace('.', ",") } })
+                        .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
                     if r1.changed() || r2.changed() {
                         novo = Some(cfg::numero(if *inteiro { x.round() } else { x }));
                     }
@@ -353,8 +358,156 @@ impl App {
         if let Some(v) = novo {
             self.definir(nome, &v);
         }
+        // o que o valor quer dizer no jogo, por extenso (03/11, Lucas: nenhum número sem explicação)
+        if let Some(f) = self.frase(nome) {
+            ui.horizontal(|ui| {
+                ui.add_space(22.0);
+                ui.add(egui::Label::new(RichText::new(f).size(12.5).color(FRASE)).wrap());
+            });
+            ui.add_space(4.0);
+        }
         if resp.response.hovered() || resp.inner.hovered() || resp.inner.has_focus() {
             self.foco = Some(nome);
+        }
+    }
+
+    /// Um número no jeito do idioma (vírgula no português), sem zeros sobrando.
+    fn n(&self, x: f64) -> String {
+        let s = format!("{:.2}", x);
+        let s = s.trim_end_matches('0').trim_end_matches('.').to_string();
+        if self.en { s } else { s.replace('.', ",") }
+    }
+
+    /// O que o valor atual de uma opção faz no jogo, em uma frase (ou nada, para as que se explicam sozinhas).
+    fn frase(&self, nome: &str) -> Option<String> {
+        let g = |k: &str| self.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
+        let en = self.en;
+        let f = |pt: String, e: String| Some(if en { e } else { pt });
+        let x = g(nome);
+        match nome {
+            "multiple_instances" => {
+                let mut s = if self.ligado(nome) {
+                    (String::from("Ligado: cada pasta do jogo pode ter um jogo aberto (por exemplo, o 3.9.68 numa pasta e o CLZ em outra, ou duas carreiras em duas cópias). Dois jogos da mesma pasta continuam barrados."),
+                     String::from("On: each game folder can have one game open (for example, 3.9.68 in one folder and CLZ in another, or two careers in two copies). Two games from the same folder are still blocked."))
+                } else {
+                    (String::from("Desligado (como o original): só um jogo aberto no computador; o segundo para na caixa \"Already Running\"."),
+                     String::from("Off (as the original): only one game open on the computer; the second one stops at the \"Already Running\" box."))
+                };
+                if self.ligado(nome) && !self.ligado("portable_folder") {
+                    s.0 += " Atenção: ligue também a pasta portátil, para cada cópia usar a própria pasta.";
+                    s.1 += " Note: turn on the portable folder too, so each copy uses its own folder.";
+                }
+                f(s.0, s.1)
+            }
+            "younger_from_age" | "younger_by" => {
+                let (a, b) = (g("younger_from_age"), g("younger_by"));
+                if nome == "younger_from_age" {
+                    return f(format!("Vale para quem nasceria com {} anos ou mais.", a), format!("It applies to those who would be born aged {} or more.", a));
+                }
+                if b <= 0.0 {
+                    f("0: desligado, as idades ficam como na tabela.".into(), "0: off, the ages stay as in the table.".into())
+                } else {
+                    f(format!("Quem nasceria com {} anos ou mais nasce {} anos mais novo: um de {} vira um de {}.", a, b, a, (a - b).max(14.0)),
+                      format!("Those who would be born aged {} or more are born {} years younger: a {}-year-old becomes a {}-year-old.", a, b, a, (a - b).max(14.0)))
+                }
+            }
+            "ca_cap_skip" => if x <= 0.0 {
+                f("0: todo jovem respeita o teto do CA da idade dele.".into(), "0: every youngster keeps his age's CA cap.".into())
+            } else {
+                f(format!("{}% = cerca de 1 em {:.0} jovens nasce sem o teto do CA da idade (pode nascer já pronto).", self.n(x), 100.0 / x),
+                  format!("{}% = about 1 in {:.0} youngsters is born without his age's CA cap (he may be born ready).", self.n(x), 100.0 / x))
+            },
+            "contest_max_age" => if self.valor("unattached") == "only_if_no_room" {
+                f("Sem efeito agora: com \"Sem clube só sem vaga\", todos vão à disputa.".into(), "No effect now: with \"Clubless only without room\", everyone goes to the contest.".into())
+            } else {
+                f(format!("Vão à disputa dos clubes os jovens de até {} anos; os mais velhos começam sem clube.", x), format!("Youngsters up to {} go to the clubs' contest; older ones start without a club.", x))
+            },
+            "idle_days" => f(format!("{} dias = uns {:.0} meses sem clube antes de a regra valer.", x, x / 30.4), format!("{} days = about {:.0} months without a club before the rule applies.", x, x / 30.4)),
+            "idle_min_age" => f(format!("Só vale para quem tem {} anos ou mais; os mais novos seguem a regra original.", x), format!("It only applies from age {} up; younger players keep the original rule.", x)),
+            "idle_rep" => {
+                let i = g("idle_min_age");
+                f(format!("Aos {} anos, quem tem reputação abaixo de {:.0} se aposenta quase sempre; acima, a chance cai (a reputação vai de 0 a 10000).", i, x),
+                  format!("At {}, a player with reputation below {:.0} retires almost always; above it, the chance drops (reputation goes from 0 to 10000).", i, x))
+            }
+            "idle_rep_per_year" => {
+                let (i, r) = (g("idle_min_age"), g("idle_rep"));
+                f(format!("O limite sobe {:.0} por ano de idade: {:.0} aos {}, {:.0} aos {}, {:.0} aos {}.", x, r + x, i + 1.0, r + 2.0 * x, i + 2.0, r + 5.0 * x, i + 5.0),
+                  format!("The threshold rises {:.0} per year of age: {:.0} at {}, {:.0} at {}, {:.0} at {}.", x, r + x, i + 1.0, r + 2.0 * x, i + 2.0, r + 5.0 * x, i + 5.0))
+            }
+            "protect_young_unemployed" => if x <= 0.0 {
+                f("0: ninguém fica protegido (o jogo já dá 365 dias ao jovem sem clube).".into(), "0: nobody is protected (the game already gives a clubless youngster 365 days).".into())
+            } else {
+                f(format!("Ninguém com menos de {} anos se aposenta por esta regra.", x), format!("Nobody under {} retires through this rule.", x))
+            },
+            "target_k" => f(format!("Um jovem de PA {:.0} (o de exemplo) mira um clube de reputação {:.0}: o PA × {}.", self.pa, x * self.pa, self.n(x)),
+                format!("A PA {:.0} youngster (the example) aims at a club of reputation {:.0}: the PA × {}.", self.pa, x * self.pa, self.n(x))),
+            "target_ca" => {
+                let c = x.clamp(0.0, 1.0);
+                f(format!("O alvo olha {:.0}% o potencial (PA) e {:.0}% o que ele já sabe (CA).", 100.0 * (1.0 - c), 100.0 * c),
+                  format!("The target looks {:.0}% at the potential (PA) and {:.0}% at what he can do now (CA).", 100.0 * (1.0 - c), 100.0 * c))
+            }
+            "sigma" => f(format!("Um clube {:.0} de reputação acima do alvo fica com uns 60% da chance de um clube no alvo; {:.0} acima, uns 14%.", x, 2.0 * x),
+                format!("A club {:.0} reputation above the target keeps about 60% of a club on target's chance; {:.0} above, about 14%.", x, 2.0 * x)),
+            "sigma_below" => {
+                let y = if x > 0.0 { x } else { g("sigma") };
+                f(format!("{}Um clube {:.0} abaixo do alvo fica com uns 60% da chance; {:.0} abaixo, uns 14%.", if x > 0.0 { "" } else { "0 = igual à de cima. " }, y, 2.0 * y),
+                  format!("{}A club {:.0} below the target keeps about 60% of the chance; {:.0} below, about 14%.", if x > 0.0 { "" } else { "0 = same as above. " }, y, 2.0 * y))
+            }
+            "level_floor" => if x <= 0.0 {
+                f("0: um clube muito longe do alvo não tem chance nenhuma.".into(), "0: a club far from the target has no chance at all.".into())
+            } else {
+                f(format!("Um clube muito longe do alvo ainda fica com {}% da chance de um clube no alvo (1 em {:.0}).", self.n(100.0 * x), 1.0 / x),
+                  format!("A club far from the target still keeps {}% of a club on target's chance (1 in {:.0}).", self.n(100.0 * x), 1.0 / x))
+            },
+            "facilities_base" => f(format!("O ponto de partida: um clube com Training 0 multiplica a chance por {}. Cada ponto de Training soma o valor de baixo.", self.n(x)),
+                format!("The starting point: a club with Training 0 multiplies its chance by {}. Each Training point adds the value below.", self.n(x))),
+            "facilities_k" => {
+                let (b, k) = (g("facilities_base"), g("facilities_k"));
+                f(format!("A chance do clube é multiplicada pelas instalações de base: Training 1 = ×{}, 10 = ×{}, 20 = ×{}.", self.n(b + k), self.n(b + 10.0 * k), self.n(b + 20.0 * k)),
+                  format!("The club's chance is multiplied by its youth facilities: Training 1 = ×{}, 10 = ×{}, 20 = ×{}.", self.n(b + k), self.n(b + 10.0 * k), self.n(b + 20.0 * k)))
+            }
+            "staff_min" => f(format!("A comissão que pior trabalha com jovens (Working with Youngsters 1) multiplica a chance do clube por {} ({:+.0}%).", self.n(x), 100.0 * (x - 1.0)),
+                format!("The staff worst with youngsters (Working with Youngsters 1) multiplies the club's chance by {} ({:+.0}%).", self.n(x), 100.0 * (x - 1.0))),
+            "staff_max" => f(format!("A comissão que melhor trabalha com jovens (Working with Youngsters 20) multiplica a chance do clube por {} ({:+.0}%).", self.n(x), 100.0 * (x - 1.0)),
+                format!("The staff best with youngsters (Working with Youngsters 20) multiplies the club's chance by {} ({:+.0}%).", self.n(x), 100.0 * (x - 1.0))),
+            "squad_limit" => f(format!("Um clube com {:.0} jogadores ou mais não recebe jovem.", x), format!("A club with {:.0} players or more gets no youngster.", x)),
+            "squad_exp" => {
+                let l = g("squad_limit").clamp(1.0, 50.0);
+                if x <= 0.0 {
+                    f("0: a vaga não conta; só o teto do elenco.".into(), "0: the room doesn't count; only the squad limit.".into())
+                } else if l > 40.0 {
+                    let r = ((l - 24.0) / (l - 40.0)).powf(x);
+                    f(format!("Um clube com 24 jogadores tem ×{} a chance de um com 40.", self.n(r)), format!("A club with 24 players has ×{} the chance of one with 40.", self.n(r)))
+                } else {
+                    None
+                }
+            }
+            "season_cap" => if x <= 0.0 {
+                f("0: sem teto; um clube pode receber quantos jovens ganhar.".into(), "0: no cap; a club can get as many youngsters as it wins.".into())
+            } else {
+                f(format!("Nenhum clube recebe mais de {} jovens pela disputa a cada 365 dias.", x), format!("No club gets more than {} youngsters from the contest every 365 days.", x))
+            },
+            "surprise" => f(format!("{} em cada 100 jovens vão a um clube sorteado sem olhar o nível.", self.n(x)), format!("{} in every 100 youngsters go to a club drawn without looking at the level.", self.n(x))),
+            "outside_competitions" => {
+                let w = x.clamp(0.0, 1.0);
+                if w >= 1.0 {
+                    f("1: a mesma chance dos clubes que jogam.".into(), "1: the same chance as the clubs that play.".into())
+                } else if w <= 0.0 {
+                    f("0: nunca recebem jovem.".into(), "0: they never get a youngster.".into())
+                } else {
+                    f(format!("{}% da chance de um clube igual que joga.", self.n(100.0 * w)), format!("{}% of the chance of a similar club that plays.", self.n(100.0 * w)))
+                }
+            }
+            "temperature" => {
+                let r = 2f64.powf(x);
+                if (x - 1.0).abs() < 1e-9 {
+                    f("1: normal; um clube com o dobro do peso tem o dobro da chance.".into(), "1: normal; a club with twice the weight has twice the chance.".into())
+                } else {
+                    f(format!("{}: um clube com o dobro do peso tem ×{} a chance do outro ({}).", self.n(x), self.n(r), if x > 1.0 { "acentua as diferenças" } else { "suaviza as diferenças" }),
+                      format!("{}: a club with twice the weight has ×{} the other's chance ({}).", self.n(x), self.n(r), if x > 1.0 { "sharper differences" } else { "softer differences" }))
+                }
+            }
+            _ => None,
         }
     }
 
@@ -444,7 +597,7 @@ impl App {
                 // o nome da opção como nas abas; a chave do tweaks.cfg em cinza, para quem edita à mão
                 let nome = chaves::chave(l.ajuste).map(|c| if en { c.rotulo.1 } else { c.rotulo.0 }).unwrap_or(l.ajuste);
                 ui.horizontal(|ui| {
-                    rotulo_fixo(ui, 210.0, nome);
+                    rotulo_fixo(ui, 260.0, nome);
                     rotulo_fixo(ui, 135.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA));
                     bolinha(ui, cor(l.estado));
                     rotulo_fixo(ui, 115.0, RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado)));
@@ -547,8 +700,16 @@ impl App {
             ui.add_enabled_ui(ativo, |ui| {
                 ui.horizontal(|ui| {
                     rotulo_fixo(ui, 150.0, t2(en, "Chance", "Chance"));
-                    let r = ui.add(egui::DragValue::new(&mut chance).range(0.0..=1000.0).speed(0.05).max_decimals(4));
-                    ui.label(RichText::new(format!("= {:.1}% {}", 100.0 * chance / soma, t2(en, "dos regens da tabela", "of the table's regens"))).color(CINZA));
+                    let virgula = move |s: String| if en { s } else { s.replace('.', ",") };
+                    let r = ui.add(egui::DragValue::new(&mut chance).range(0.0..=1000.0).speed(0.05).max_decimals(4)
+                        .custom_formatter(move |v, _| { let s = format!("{:.4}", v); virgula(s.trim_end_matches('0').trim_end_matches('.').to_string()) })
+                        .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
+                    let pct = 100.0 * chance / soma;
+                    ui.label(RichText::new(if en {
+                        format!("= {:.1}% of the table's regens (about 1 in {:.0})", pct, 100.0 / pct.max(1e-9))
+                    } else {
+                        format!("= {}% dos regens da tabela (cerca de 1 em {:.0})", format!("{:.1}", pct).replace('.', ","), 100.0 / pct.max(1e-9))
+                    }).color(CINZA));
                     ajuda_icone(ui, ajuda_chance);
                     if r.changed() {
                         mudou = Some((chance, teto));
@@ -723,12 +884,80 @@ impl App {
                 });
             }
         });
-        for k in ["target_k", "target_ca", "sigma", "sigma_below", "level_floor", "facilities_base", "facilities_k", "staff_min", "staff_max", "squad_limit", "squad_exp", "season_cap", "surprise", "outside_competitions", "temperature"] {
+        for k in ["target_k", "target_ca", "squad_limit", "season_cap", "surprise", "outside_competitions"] {
             self.controle(ui, k, ativo);
         }
+        ui.add_space(6.0);
+        // o ajuste fino fica fechado: a predefinição Equilibrado já o deixa certo (03/11, Lucas)
+        egui::CollapsingHeader::new(RichText::new(self.t("Avançado: o ajuste fino do sorteio", "Advanced: fine-tuning the draw")).strong()).default_open(std::env::var("TWEAKS_CONFIG_AVANCADO").is_ok()).show(ui, |ui| {
+            ui.label(RichText::new(self.t("Quase ninguém precisa mexer aqui: a predefinição Equilibrado já deixa estes valores certos. Cada um diz embaixo o que faz.",
+                "Almost nobody needs to change these: the Balanced preset already sets them right. Each one says below what it does.")).size(12.0).color(CINZA));
+            for k in ["sigma", "sigma_below", "level_floor", "facilities_base", "facilities_k", "staff_min", "staff_max", "squad_exp", "temperature"] {
+                self.controle(ui, k, ativo);
+            }
+        });
         if self.valor("staff_max").parse::<f64>().unwrap_or(1.2) < self.valor("staff_min").parse::<f64>().unwrap_or(0.8) {
             ui.colored_label(AMARELO, self.t("staff_max está abaixo de staff_min.", "staff_max is below staff_min."));
         }
+    }
+
+    fn aba_cinzentos(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Cinzentos);
+        self.controle(ui, "grey_players", true);
+        let ativo = self.ligado("grey_players");
+        let largura = self.valor("grey_players_spread").parse::<f64>().unwrap_or(10.0).clamp(0.0, 100.0);
+        // a barra mostra o ± (a metade); o tweaks.cfg guarda a largura toda
+        let mut mais_menos = (largura / 2.0).round() as i32;
+        let en = self.en;
+        let rotulo = self.t("Variação em volta do nível", "Variation around the level");
+        let (a_pt, a_en) = guia::ajuda("grey_players_spread");
+        let mut mudou = false;
+        let r = ui.horizontal(|ui| {
+            let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| {
+                rotulo_fixo(ui, 260.0, rotulo);
+                let r = ui.add(egui::Slider::new(&mut mais_menos, 0..=25).show_value(false));
+                ui.label(RichText::new(format!("± {}", mais_menos)).strong());
+                mudou = r.changed();
+                r
+            }).inner).inner;
+            ajuda_icone(ui, if en { a_en } else { a_pt });
+            r
+        });
+        if mudou {
+            self.definir("grey_players_spread", &(2 * mais_menos).to_string());
+        }
+        if r.response.hovered() || r.inner.hovered() {
+            self.foco = Some("grey_players_spread");
+        }
+        let m = mais_menos;
+        ui.horizontal(|ui| {
+            ui.add_space(22.0);
+            ui.add(egui::Label::new(RichText::new(if m == 0 {
+                t2(en, "± 0: todo cinzento vem exatamente no nível do clube.", "± 0: every grey player comes exactly at the club's level.").to_string()
+            } else if en {
+                format!("± {m}: each grey player comes with a CA from {m} below to {m} above the club's level. At a level-82 club: from {} to {}.", 82 - m, 82 + m)
+            } else {
+                format!("± {m}: cada cinzento vem com um CA de {m} abaixo a {m} acima do nível do clube. Num clube de nível 82: de {} a {}.", 82 - m, 82 + m)
+            }).size(12.5).color(FRASE)).wrap());
+        });
+        ui.add_space(10.0);
+        App::cartao(ui, &self.t("Exemplos (de uma carreira de teste, Inglaterra carregada, 2001)", "Examples (from a test career, England loaded, 2001)"), |ui| {
+            egui::Grid::new("cinzentos").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
+                for h in [t2(en, "Clube", "Club"), t2(en, "Reputação", "Reputation"), t2(en, "Nível do clube", "Club's level"), t2(en, "CA no original", "CA in the original"), t2(en, "CA com esta opção", "CA with this option")] {
+                    ui.label(RichText::new(h).strong());
+                }
+                ui.end_row();
+                for (clube, rep, nivel, fonte, orig) in [("Rochdale", 3000, 82, 0, -82), ("Mansfield Town", 2500, 95, 0, -95), ("Wimbledon", 5000, 107, 0, 1), ("Corinthians", 9000, 164, 1, 143), ("Tonga", 500, 45, 1, -124)] {
+                    ui.label(if clube == "Tonga" { t2(en, "Tonga (seleção)", "Tonga (national team)") } else { clube });
+                    ui.label(rep.to_string());
+                    ui.label(format!("{} ({})", nivel, if fonte == 0 { t2(en, "elenco", "squad") } else { t2(en, "reputação", "reputation") }));
+                    ui.label(RichText::new(orig.to_string()).color(if orig < 0 { VERMELHO } else { Color32::LIGHT_GRAY }));
+                    ui.label(RichText::new(if m == 0 { nivel.to_string() } else { format!("{} {} {}", nivel - m, t2(en, "a", "to"), nivel + m) }).color(if ativo { VERDE } else { CINZA }));
+                    ui.end_row();
+                }
+            });
+            ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA));
+        });
     }
 
     /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.
@@ -1041,12 +1270,18 @@ impl eframe::App for App {
             });
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match self.aba {
+            let mut area = egui::ScrollArea::vertical().auto_shrink([false, false]);
+            // só para as capturas de tela da documentação: começar rolado
+            if let Some(y) = std::env::var("TWEAKS_CONFIG_ROLAR").ok().and_then(|v| v.parse::<f32>().ok()) {
+                area = area.vertical_scroll_offset(y);
+            }
+            area.show(ui, |ui| match self.aba {
                 Aba::Inicio => self.aba_inicio(ui),
                 Aba::Jogo => self.aba_jogo(ui),
                 Aba::Idades => self.aba_idades(ui),
                 Aba::Inativos => self.aba_inativos(ui),
                 Aba::Disputa => self.aba_disputa(ui),
+                Aba::Cinzentos => self.aba_cinzentos(ui),
                 Aba::Registro => self.aba_registro(ui),
                 Aba::Cfg => self.aba_cfg(ui),
                 Aba::Log => self.aba_log(ui),

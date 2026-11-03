@@ -30,6 +30,7 @@ mod pasta;
 // De quem é cada regen (regen_origins.csv).
 mod origem;
 mod apresentacao;
+mod cinzentos;
 mod reducao;
 mod trocas;
 mod video;
@@ -501,6 +502,10 @@ struct Regras {
     sem_cd: bool,
     /// regen_origins = 1: de quem é cada regen, em regen_origins.csv.
     origens: bool,
+    /// grey_players = squad: o CA dos jogadores cinzentos (VIRTUAL_STAFF) pelo nível do clube (o maior entre o elenco e a reputação).
+    cinzentos: bool,
+    /// grey_players_spread: a largura da faixa do CA do cinzento, centrada no nível.
+    cinzentos_espalhar: i32,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -548,6 +553,8 @@ const PADRAO: Regras = Regras {
     resolucao: false,
     sem_cd: false,
     origens: false,
+    cinzentos: false,
+    cinzentos_espalhar: 10,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -619,6 +626,10 @@ fn ler_regras() -> Regras {
             r.origens = v == "1";
             continue;
         }
+        if k == "grey_players" {
+            r.cinzentos = v == "squad"; // grey_players = original | squad
+            continue;
+        }
         if k == "no_cd" {
             r.sem_cd = v == "1";
             continue;
@@ -654,6 +665,7 @@ fn ler_regras() -> Regras {
             "ca_cap_skip" => r.pular_teto = x,
             "younger_from_age" => r.mais_novo_a_partir = x as i32,
             "younger_by" => r.mais_novo_em = (x as i32).max(0),
+            "grey_players_spread" => r.cinzentos_espalhar = (x as i32).clamp(0, 100),
             _ => {}
         }
     }
@@ -1170,6 +1182,17 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             // 0x7a5806 para a seção dele. A regra dos inativos continua ligada, mas quase não acha ninguém para avaliar
             if *(0x7a5806 as *const u8) == 0xe9 {
                 registro::linha("retire idle players: note: this exe skips retirements under 34 (a NickPatcher option), so this rule will rarely find anyone");
+            }
+        }
+        if !r.cinzentos {
+            registro::linha("grey players: original (ability from the club reputation)");
+        } else if pode_ligar(&CINZENTOS, s) {
+            cinzentos::ESPALHAR = r.cinzentos_espalhar;
+            cinzentos::REGISTRAR = r.registrar;
+            if cinzentos::instalar() {
+                registro::linha(&format!("grey players: squad (ability = the club's level, the higher of its own squad and its reputation, within a spread of {})", r.cinzentos_espalhar));
+            } else {
+                registro::linha("grey players: could not allocate the code stub; nothing was changed");
             }
         }
         // depois da IDADE, que confere 0x7ace65..0x7ace6b antes de mexer no corte

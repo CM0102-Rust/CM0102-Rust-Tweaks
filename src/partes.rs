@@ -91,3 +91,14 @@ pub const CONHECIDOS: [(&str, u32, &[u8]); 6] = [
     ("Regen CA level reset (Saturn): regen age bands changed (14 to 17)", 0x7ac5b1, &[0x0e]),
     ("Regen CA level reset (Saturn): regen age bands changed (20 to 25)", 0x7ac699, &[0x14]),
 ];
+
+/// Os jogadores cinzentos (`VIRTUAL_STAFF::create_virtual_player` 0x90e0a0): a entrada e o quadro da rotina (até a ficha
+/// guardada em [esp+0x50], 0x90e10a), o ponto do desvio (0x90e6d4, as duas leituras antes de gravar o CA), a seleção
+/// (0x53b900) e o `rand` da CRT; o corpo é a conta original do CA (0x90e5f9..0x90e6d4).
+pub const CINZENTOS: Parte = Parte {
+    nome: "grey players",
+    bordas: &[(0x90e0a0, 0x70), (0x90e6d4, 8), (0x53b900, 32), (0x946a04, 32)],
+    assinatura_das_bordas: 0x13e59acd609def6e,
+    corpo: &[(0x90e5f9, 0x90e6d4 - 0x90e5f9)],
+    assinatura_do_corpo: 0xcad8528356a77961,
+};

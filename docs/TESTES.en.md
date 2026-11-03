@@ -14,6 +14,7 @@ Everything run to prove CM0102-Rust-Tweaks, from 11/01 to 11/02/2026 (the five-s
 | The exe snapshot and the dependency warning | ✅ recognises the original, the Regen Tweak and CLZ; finds NickDLL's and LaMOHatesCD's run-time hooks |
 | The message boxes in the log | ✅ three real errors caught |
 | Regen distribution | ✅ over five seasons, with 10 leagues (6 playable and 4 background), on the factory database and on CLZ (§4.3) |
+| Grey players (`grey_players`) | ✅ on 3.9.68 (three careers to 14/09/2001) and on CLZ 6.1 with NickDLL (one game month): no negative CA, no club below the original, no crash (§3.9) |
 | Stability in long careers | ✅ five careers of five seasons, with no crash, hang or error box |
 
 ## 2. Method
@@ -135,6 +136,37 @@ Two folders of the factory 3.9.68 (the `jogo_tweaks` and `jogo_tweaks2` benches)
 |---|---|---|
 | 1 | started (lock "...2001/02 6f59faf") | started (lock "...2001/02 1aa4427") |
 | 0 | started | refused ("Already Running") |
+
+### 3.9 Grey players (`grey_players`)
+
+Grey players are the virtual players the game adds before each match to fill a short squad (`VIRTUAL_STAFF`). The new rule gives them the club's level ± 5 (`grey_players = squad`, `grey_players_spread = 10`). The study and the code come from the CM0102 project's grey-players session (request P9). Criterion: the career reaches the date with no crash and no error box, no grey player gets a negative CA, and no club gets weaker grey players than in the original. With `log = 1`, the DLL writes one `grey` line per grey player: the club, the reputation, the level's source (squad or reputation), the level, the original CA and the new one.
+
+**On 3.9.68** [measured by the grey-players session, 11/03/2026]: hidden holiday career, minimum database, England loaded, from 2001 to 14/09/2001, on `cm0102-1080.exe`. Three runs, all to the date.
+
+| Run | Rule | Grey players | Original CA (average; negative) | New CA (average; min–max) |
+|---|---|---|---|---|
+| 1 | squad, or reputation without a squad; spread downward only | 149,239 | −11.7; 94,676 (63%) | 65.7; 1–171 |
+| 2 | higher of squad and reputation; spread downward | 150,449 | −12.4; 96,381 (64%) | 67.1; 10–180 |
+| 3 (the published one) | higher of squad and reputation; centred spread | 150,574 | −12.0; 95,610 (63%) | 72.3; 15–185 |
+
+In run 1, 73 clubs were below the original: the big clubs of leagues not loaded, which have few real players in the minimum database. In run 3, none of the 1,217 clubs is more than 1 point below. Examples:
+
+| Club | Reputation | Level | Original CA | New CA |
+|---|---|---|---|---|
+| Rochdale | 3000 | 82 (squad) | −82 | 85 |
+| Mansfield Town | 2500 | 95 (squad) | −95 | 94 |
+| Wimbledon | 5000 | 107 (squad) | 1 | 107 |
+| Corinthians | 9000 | 164 (reputation) | 143 | 164 |
+| Tonga (national team) | 500 | 45 (reputation) | −124 | 44 |
+
+**On CLZ 6.1, with NickDLL** [measured, 11/03/2026]: the part's signatures match on the CLZ 6.1 exe on disk and in memory (the "grey players: squad" line in the log). The test used the `MenosBelgica` save, loaded, on holiday, hidden and windowed.
+
+| Run | Game dates | Grey players | Clubs | Original CA (average; negative) | New CA (average; min–max) | Clubs below the original |
+|---|---|---|---|---|---|---|
+| short | 02/01 to 10/01/2027 | 184,742 | — | −60.5; 163,008 (88%) | 65.7; 19–185 | 0 |
+| long (20 min) | 02/01 to 02/02/2027 | 670,718 | 6,878 | −60.2; 589,255 (88%) | 67.6; 19–185 | 0 |
+
+No crash and no error box. On CLZ, with many background leagues, the original is even worse than on 3.9.68: 88% of grey players get a negative CA.
 
 ## 4. Regens
 

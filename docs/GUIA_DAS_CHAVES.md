@@ -4,7 +4,7 @@
 
 Cada opção: o que faz, quando usar e o que acontece no jogo. Sem a linha no `tweaks.cfg`, vale o padrão indicado (o da DLL). O comentário de cada linha do `tweaks.cfg` traz o detalhe técnico.
 
-## Idades
+## Idades dos regens
 
 Com que idade nasce cada regen, e com quanto CA. As barras são as idades de 14 a 35: a altura é a chance de nascer com aquela idade, e o número embaixo é o teto do CA. Clique numa barra para escolhê-la e arraste para mudar a chance. Os ajustes valem para os regens que nascerem dali em diante, também num save em andamento.
 
@@ -34,7 +34,7 @@ Formato: `age_NN = chance, teto do CA`.
 
 Valores: de 0 a 126 (inteiro). Padrão: `22`.
 
-### Mais novos: anos a menos (0 = desligado) — `younger_by`
+### Mais novos: anos a menos — `younger_by`
 
 Quantos anos a menos para os regens de "a partir de" para cima. 0 desliga. Mais anos a menos = mais jovens de 16 a 20 e menos veteranos recém-gerados.
 
@@ -46,7 +46,7 @@ As nações fora do jogo com poucas pessoas no banco sorteiam idades de um jeito
 
 Valores: `original` (Sorteio original), `table` (A tabela também). Padrão: `original`.
 
-### Pular o teto do CA (%) — `ca_cap_skip`
+### Jovens sem o teto do CA (%) — `ca_cap_skip`
 
 Chance (%) de um jovem ignorar o teto do CA da idade dele: alguns nascem já prontos, como no jogo original (cerca de 1 em 200). Mais alto = mais jovens prontos cedo.
 
@@ -89,7 +89,7 @@ Que reputação de clube combina com o jovem: o alvo é este valor vezes o PA (5
 
 Valores: de … a …. Padrão: `50`.
 
-### Alvo: peso do CA (0 = PA, 1 = CA) — `target_ca`
+### Alvo: potencial ou o que já sabe — `target_ca`
 
 Quanto o alvo olha o CA (o que o jovem já sabe) em vez do PA (o que pode vir a ser). 0 = só o PA; 1 = só o CA.
 
@@ -101,7 +101,7 @@ Quanto um clube acima do alvo ainda tem chance. Maior = os jovens se espalham po
 
 Valores: de 1 a …. Padrão: `2500`.
 
-### Largura abaixo do alvo (0 = igual) — `sigma_below`
+### Largura abaixo do alvo — `sigma_below`
 
 O mesmo, para os clubes abaixo do alvo (0 = igual à largura de cima). Mantido menor porque as centenas de clubes pequenos de um país, somadas, levariam os jovens bons.
 
@@ -143,13 +143,13 @@ Clube com este número de jogadores ou mais não recebe jovem. Mais baixo = os j
 
 Valores: de 1 a 50. Padrão: `48`.
 
-### Elenco: expoente da vaga — `squad_exp`
+### Quanto pesa a vaga no elenco — `squad_exp`
 
 O quanto a vaga no elenco pesa: maior = clubes com elenco curto têm muito mais chance que os de elenco quase cheio.
 
 Valores: de … a …. Padrão: `0.5`.
 
-### Teto por clube a cada 365 dias (0 = sem) — `season_cap`
+### Máximo de jovens por clube por ano — `season_cap`
 
 Quantos jovens um clube recebe no máximo a cada 365 dias pela disputa (0 = sem teto). É o que impede um clube de recolher dezenas de regens. Com 3, os elencos das ligas jogadas ficam um pouco mais cheios.
 
@@ -161,13 +161,13 @@ Percentagem dos jovens sorteados sem olhar o nível do clube, só entre clubes d
 
 Valores: de 0 a 100. Padrão: `15`.
 
-### Clubes fora das competições (peso) — `outside_competitions`
+### Clubes de divisões que não rodam — `outside_competitions`
 
 O peso dos clubes cuja divisão não roda na sua carreira (nem como liga de fundo). 1 = iguais aos outros; 0,25 = um quarto da chance; 0 = nunca (sem clube de competição com vaga, o jovem fica sem clube). Valores baixos mantêm cheios os elencos das ligas que você joga; com poucas ligas carregadas, 1 pode servir melhor.
 
 Valores: de 0 a 1. Padrão: `1`.
 
-### Temperatura — `temperature`
+### Diferença entre os clubes (temperatura) — `temperature`
 
 Acentua (maior que 1) ou suaviza (menor que 1) as diferenças de peso entre os clubes. 1 = o peso como calculado.
 
@@ -213,11 +213,32 @@ Quanto a reputação-limite sobe por ano acima da idade mínima: os mais velhos 
 
 Valores: de 0 a …. Padrão: `250`.
 
-### Proteger os menores de (0 = não) — `protect_young_unemployed`
+### Proteger os jovens: menores de — `protect_young_unemployed`
 
 Abaixo desta idade, nenhum jogador sem clube se aposenta pela regra dos inativos. 0 = sem proteção (o padrão: o jogo já dá 365 dias ao jovem sem clube). Proteger os jovens diminui a reciclagem em regens.
 
 Valores: de 0 a 126 (inteiro). Padrão: `0`.
+
+## Jogadores cinzentos
+
+Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.
+
+- **Jogador cinzento**: um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.
+- **CA**: Current Ability, a habilidade atual (1 a 200): o quanto o jogador joga hoje.
+- **Nível do clube**: o maior entre dois valores: a média de CA dos 16 melhores jogadores de verdade do elenco (com pelo menos 5), e uma conta pela reputação que sobe com ela e nunca fica negativa (reputação × 0,016 + 20; seleção, reputação / 100 + 40). A reputação segura o clube grande de uma liga que você não carregou, que tem poucos jogadores no banco.
+- **Variação**: quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube, sorteado para cada um.
+
+### O nível dos cinzentos — `grey_players`
+
+No nível do clube: cada jogador cinzento (os virtuais que o jogo põe para completar o elenco antes da partida) tem o nível do próprio clube, com a variação escolhida abaixo. Original: a conta do jogo, que tira o nível da reputação e despenca nos clubes médios e pequenos (numa carreira de teste, 63% dos cinzentos saíram com CA negativo, o pior jogador possível). O mesmo clube continua recebendo os mesmos cinzentos: só o CA muda. Vale a partir da próxima partida, também num save em andamento.
+
+Valores: `original` (Original (a conta do jogo)), `squad` (No nível do clube). Padrão: `original`.
+
+### Variação em volta do nível — `grey_players_spread`
+
+Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com ± 5, num clube de nível 82 os cinzentos vêm de 77 a 87. ± 0 deixa todos iguais ao nível; mais variação, cinzentos mais diferentes entre si. No tweaks.cfg fica a largura total (± 5 = 10).
+
+Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ## De quem é cada regen
 
@@ -253,7 +274,7 @@ O jogo usa a pasta onde está o exe, sem precisar do SetupReg nem do registro do
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 
-### Vários jogos abertos (um por pasta) — `multiple_instances`
+### Abrir mais de um jogo ao mesmo tempo — `multiple_instances`
 
 Deixa abrir mais de um jogo ao mesmo tempo, desde que cada um esteja na sua pasta (por exemplo, o 3.9.68 e o CLZ, ou duas carreiras em duas cópias). O jogo tem uma trava que só deixa uma cópia aberta; com esta opção, a trava vale por pasta. Dois jogos da mesma pasta continuam barrados, porque usariam os mesmos arquivos temporários e o mesmo save. Ligue também a pasta portátil, para cada cópia usar a própria pasta. Cada jogo aberto ocupa a memória dele.
 
