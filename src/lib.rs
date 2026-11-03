@@ -398,10 +398,8 @@ unsafe fn registrar_temporada(data: String) {
     let com_clube = altos - altos_livres;
     let topo = (0..nc).max_by_key(|&i| regens_no[i]).unwrap_or(0);
     // quantos regens do clube líder chegaram pela disputa (o resto veio por contratação ou por outro caminho)
-    let pela_disputa = PELA_DISPUTA.lock().map(|v| {
-        (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo)
-            .filter(|&p| *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 && v.contains(&d(p))).count()
-    }).unwrap_or(0);
+    let pela_disputa = (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo)
+        .filter(|&p| *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 && veio_pela_disputa(d(p))).count();
     registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} from the contest)\tpa150 {} free {} big {} rep {}",
         data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), pela_disputa,
         altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 }));
@@ -682,8 +680,21 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
 }
 
 /// As pessoas (id) que a disputa mandou a um clube, pela regra nova ou pela do jogo, para a linha `season` separar o que
-/// veio da disputa do que veio por contratação. ponytail: um id reaproveitado por outro regen conta como da disputa.
-static PELA_DISPUTA: std::sync::Mutex<Vec<usize>> = std::sync::Mutex::new(Vec::new());
+/// veio da disputa do que veio por contratação: um bit por id, num vetor fixo. **Sem alocar na linha do jogo:** uma lista
+/// que crescia a cada jovem mudava a heap, e o jogo, que lê memória não inicializada, seguia outra trajetória (nas três
+/// carreiras com ela, um clube inglês fora das ligas virou um depósito de jovens livres; TESTES §4.5).
+/// ponytail: um id reaproveitado por outro regen conta como da disputa; ids acima de 2^21 não contam.
+static PELA_DISPUTA: [core::sync::atomic::AtomicU32; 1 << 16] = [const { core::sync::atomic::AtomicU32::new(0) }; 1 << 16];
+
+fn marcar_pela_disputa(id: usize) {
+    if id < 1 << 21 {
+        PELA_DISPUTA[id >> 5].fetch_or(1 << (id & 31), core::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+fn veio_pela_disputa(id: usize) -> bool {
+    id < 1 << 21 && PELA_DISPUTA[id >> 5].load(core::sync::atomic::Ordering::Relaxed) & (1 << (id & 31)) != 0
+}
 
 /// Os jovens que a disputa nova entregou: (id do clube, dia corrido = ano × 365 + dia).
 static mut ENTREGUES: Vec<(usize, i32)> = Vec::new();
@@ -810,7 +821,7 @@ unsafe fn data_do_jogo() -> String {
 unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &str) {
     JOVENS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
     if clube != 0 {
-        PELA_DISPUTA.lock().map(|mut v| v.push(d(jogador))).ok();
+        marcar_pela_disputa(d(jogador));
     }
     let ficha = d(jogador + 0x61);
     let (rep, tr, nome_clube) = if clube != 0 { (w(clube + 0x80) as i32, b(clube + 0x7f) as i32, nome(clube)) } else { (-1, -1, "(no club)".into()) };

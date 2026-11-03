@@ -222,8 +222,36 @@ O que os números mostram:
 - **Os grandes recebem 4% dos jovens da disputa (15% na original) e terminam com o mesmo número de craques** (238 contra 245 de PA ≥ 150 em clube grande): chegam a eles pelo mercado.
 - **Muito menos talento perdido:** os regens sem clube caem pela metade (869 contra 1.785), e os de PA ≥ 150 sem clube de 42 para 9.
 - **O acúmulo que sobra vem do mercado:** o Universidad de Las Palmas junta 30 regens, mas só 2 vieram pela disputa (o log mostra cada jovem da disputa e o clube); na original, o Tigre junta 40, quase todos pela disputa (30). Desde 03/11 a linha `season` diz quantos regens do clube líder vieram da disputa.
-- **Ponto a acertar: o elenco médio dos clubes das competições cai** de 32,9 (2004) para 27,6 (2011) com os ajustes; na original fica em torno de 30. O total de jogadores é igual nas duas; com os ajustes, menos jogadores livres (2.079 contra 3.282) e os jovens espalhados por 2.745 clubes, muitos fora das competições. Duas carreiras de 10 temporadas estão rodando para separar as causas: sem os inativos e com o teto de 3 por temporada. [inferência, a confirmar]
+- **Ponto a acertar: o elenco médio dos clubes das competições cai** de 32,9 (2004) para 27,6 (2011) com os ajustes; na original fica em torno de 30. O total de jogadores é igual nas duas; com os ajustes, menos jogadores livres (2.079 contra 3.282) e os jovens espalhados por 2.745 clubes, muitos fora das competições. As variantes do §4.5 descartam os inativos como causa; o teto de 3 ajuda pouco.
 - **Sem clube na disputa (84):** a partir de 2007, 16 a 26 jovens por temporada não acham clube elegível no país (elencos no teto ou teto da temporada): é o `unattached` funcionando como pedido ("sem clube só sem vaga").
+
+### 4.5 Por que o elenco cai, e um defeito achado no caminho
+
+**As variantes (10 temporadas cada, o resto igual ao §4.4)** [medido]:
+
+| Julho | Elenco médio: ajustes (§4.4) | sem os inativos | teto de 3 por temporada |
+|---|---|---|---|
+| 2004 | 32,9 | — | 32,9 |
+| 2006 | 30,9 | 30,8 | 31,3 |
+| 2008 | 28,9 | 28,9 | 29,7 |
+| 2010 | 27,9 | 28,1 | 29,0 |
+| 2011 | 27,6 | — | 28,7 |
+
+- **Os inativos não são a causa:** sem eles, o elenco cai do mesmo jeito.
+- **O teto de 3 segura cerca de um jogador por elenco** (28,7 contra 27,6 em 2011), com os grandes ainda em 4% a 10% da disputa. Não resolve sozinho. A causa mais provável é o espalhamento dos jovens por clubes fora das competições (2.745 clubes recebem na carreira de 10 anos). A decisão fica com o Lucas: aceitar 28 de média, usar o teto de 3, ou um ajuste novo que prefira os clubes das competições.
+
+**O defeito:** nas duas variantes e numa carreira de controle, um clube inglês fora das ligas (o Guiseley) juntou de 17 a 49 regens, quase nenhum pela disputa (a linha `season` mostra quantos vieram dela). Nas carreiras com a DLL anterior isso nunca aconteceu. A bisseção [medido]:
+
+| DLL | O clube com mais regens em julho de 2002 |
+|---|---|
+| a anterior (607d559) | York City, 2 (o mesmo da carreira do §4.4) |
+| a nova, com a lista `PELA_DISPUTA` (um `Vec` que crescia a cada jovem, na linha do jogo) | Guiseley, 6 a 17, em três carreiras (duas com o mesmo sorteio, uma com outro) |
+| a nova sem a lista | NK Amater, 3 |
+| a nova com um mapa de bits fixo no lugar da lista (a correção) | Remont Canepak Cacak, 4; em 2003, Volta Redonda, 6 (5 pela disputa) |
+
+A causa: o jogo lê memória não inicializada (já visto no projeto CM0102), e a lista que crescia na heap a cada jovem mudava o que ele lia; a carreira seguia outra trajetória, e numa delas o Guiseley virava um depósito de jovens contratados ou emprestados. **Regra para a DLL: não alocar memória na linha do jogo** durante a carreira. A linha `season` agora usa um vetor fixo de bits.
+
+As variantes acima rodaram com a lista: o elenco médio delas vale como tendência (a mesma da carreira do §4.4, que não tinha a lista), mas o Guiseley delas é o defeito.
 
 ## 5. Limites e próximos testes
 
@@ -235,5 +263,5 @@ O que os números mostram:
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).
-- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
+- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`, `dezSemInativos.log`, `dezTeto3.log`, `controleDllNova.log`, `bisect*.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
 - `tools/comparar_logs.py` compara dois logs; `tools/temporadas.py` monta a tabela por temporada das carreiras longas; `tools/ler_retrato.py` dá nome às linhas do retrato; `tools/regens_por_clube.py` lê os regens de um save.

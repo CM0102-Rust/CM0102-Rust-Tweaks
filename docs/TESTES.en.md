@@ -222,8 +222,36 @@ What the numbers show:
 - **Big clubs get 4% of the contest's youngsters (15% under the original) and end with the same number of stars** (238 against 245 PA ≥ 150 at big clubs): they reach them through the market.
 - **Much less wasted talent:** regens without a club are halved (869 against 1,785), and PA ≥ 150 ones without a club go from 42 to 9.
 - **What piling up is left comes from the market:** Universidad de Las Palmas gathers 30 regens, but only 2 came from the contest (the log lists every contest youngster and his club); under the original, Tigre gathers 40, almost all from the contest (30). Since 11/03 the `season` line says how many of the leading club's regens came from the contest.
-- **Something to tune: the average squad of the competition clubs falls** from 32.9 (2004) to 27.6 (2011) with the tweaks; under the original it stays around 30. The total number of players is the same in both; with the tweaks, fewer free players (2,079 against 3,282) and the youngsters spread over 2,745 clubs, many outside the competitions. Two ten-season careers are running to separate the causes: without idle retirements and with a cap of 3 a season. [inference, to be confirmed]
+- **Something to tune: the average squad of the competition clubs falls** from 32.9 (2004) to 27.6 (2011) with the tweaks; under the original it stays around 30. The total number of players is the same in both; with the tweaks, fewer free players (2,079 against 3,282) and the youngsters spread over 2,745 clubs, many outside the competitions. The §4.5 variants rule out idle retirements as the cause; a cap of 3 helps a little.
 - **Without a club in the contest (84):** from 2007, 16 to 26 youngsters a season find no eligible club in their country (squads at the limit or the season cap): that is `unattached` working as asked ("clubless only without room").
+
+### 4.5 Why squads shrink, and a bug found on the way
+
+**The variants (10 seasons each, the rest as in §4.4)** [measured]:
+
+| July | Average squad: tweaks (§4.4) | without idle retirements | cap of 3 a season |
+|---|---|---|---|
+| 2004 | 32.9 | — | 32.9 |
+| 2006 | 30.9 | 30.8 | 31.3 |
+| 2008 | 28.9 | 28.9 | 29.7 |
+| 2010 | 27.9 | 28.1 | 29.0 |
+| 2011 | 27.6 | — | 28.7 |
+
+- **Idle retirements are not the cause:** without them squads fall the same way.
+- **A cap of 3 holds about one player per squad** (28.7 against 27.6 in 2011), with big clubs still at 4% to 10% of the contest. It doesn't fix it alone. The most likely cause is the youngsters spreading over clubs outside the competitions (2,745 clubs get some in the ten-year career). The decision is Lucas's: accept an average of 28, use a cap of 3, or a new tweak that prefers competition clubs.
+
+**The bug:** in both variants and in a control career, an English non-league club (Guiseley) gathered 17 to 49 regens, almost none from the contest (the `season` line shows how many came from it). In the careers with the previous DLL this never happened. The bisection [measured]:
+
+| DLL | The club with most regens in July 2002 |
+|---|---|
+| the previous one (607d559) | York City, 2 (the same as the §4.4 career) |
+| the new one, with the `PELA_DISPUTA` list (a `Vec` growing with each youngster, on the game's thread) | Guiseley, 6 to 17, in three careers (two with the same seed, one with another) |
+| the new one without the list | NK Amater, 3 |
+| the new one with a fixed bitmap instead of the list (the fix) | Remont Canepak Cacak, 4; in 2003, Volta Redonda, 6 (5 from the contest) |
+
+The cause: the game reads uninitialised memory (already seen in the CM0102 project), and the list growing on the heap with each youngster changed what it read; the career took another path, and on one of them Guiseley became a sink of signed or loaned youngsters. **Rule for the DLL: no memory allocation on the game's thread** during the career. The `season` line now uses a fixed bit vector.
+
+The variants above ran with the list: their average squad holds as a trend (the same as the §4.4 career, which didn't have the list), but their Guiseley is the bug.
 
 ## 5. Limits and next tests
 
@@ -235,5 +263,5 @@ What the numbers show:
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).
-- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
+- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`, `dezSemInativos.log`, `dezTeto3.log`, `controleDllNova.log`, `bisect*.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
 - `tools/comparar_logs.py` compares two logs; `tools/temporadas.py` builds the long careers' per-season table; `tools/ler_retrato.py` names the snapshot lines; `tools/regens_por_clube.py` reads a save's regens.
