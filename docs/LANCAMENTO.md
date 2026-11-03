@@ -48,7 +48,7 @@ Os números estão em [TESTES.md](TESTES.md).
 - Tela e CD: no 3.9.68 intacto, no de 1080, numa cópia "misturada" como a do CLZ e numa com outro patch.
 - A origem dos regens: 44 regens numa carreira, todos com a vaga e a ficha identificadas.
 
-Ainda sem teste: a janela, o Print Screen e o relatório em 1080 olhando a tela; o `video = window` e o `regen_origins` no CLZ; a ligação da carreira com o nome do save (a carreira automática não grava).
+Ainda sem teste: a janela, o Print Screen e o relatório em 1080 olhando a tela; o `video = window` no CLZ. O `regen_origins` foi provado na base de fábrica e no CLZ 6.1, com o nome do save e o `.regens` (TESTES §4.6).
 
 ## Instalar e tirar
 

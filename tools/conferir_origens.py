@@ -36,7 +36,11 @@ def main():
              for k in range(len(N) // 290)}
     pa = {struct.unpack_from('<i', P, k * 70)[0]: struct.unpack_from('<h', P, k * 70 + 7)[0] for k in range(len(P) // 70)}
     linhas = [l for l in csv.reader(open(csv_, encoding='utf-8-sig'), delimiter=';')][1:]
-    regens = [l for l in linhas if len(l) >= 22 and l[3] == 'regen' and (carreira is None or l[2] == carreira)]
+    # só o que nasceu antes da gravação deste save: as linhas até o "saved as" dele (os regens do mesmo dia, depois da
+    # gravação, não estão no save)
+    nome_save = os.path.basename(save).lower()
+    fim = next((k for k, l in enumerate(linhas) if len(l) >= 4 and l[2].lower() == nome_save and l[3].startswith('saved as')), len(linhas))
+    regens = [l for l in linhas[:fim] if len(l) >= 22 and l[3] == 'regen' and (carreira is None or l[2] == carreira)]
     erros, avisos, desconhecidos = [], [], 0
     for l in regens:
         rid, nome, pais, pa_csv, clube_csv = int(l[4]), l[5], l[7], int(l[9]), l[11]

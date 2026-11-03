@@ -226,7 +226,7 @@ Where each regen comes from. The game keeps this nowhere: with the option on, th
 - **Slot**: the retired person the game reuses for the regen: the id and personality come from him. The name, age and nation change.
 - **Player record**: another retiree's record, kept in a pool: the PA, positions, feet and attributes come from it. It's "whose" the regen is: Ronaldo's regen is whoever gets Ronaldo's record.
 - **regen_origins.csv**: the history, next to the exe: one line per regen, separated by semicolons. It opens in Excel with a double click and in Notepad. To share it, send the file.
-- **X.regens**: when you save the game, the DLL writes next to the save (X.sav) the owners of the records still in the pool, and reads it on load. Copy the save and the .regens together.
+- **X.regens**: when you save the game, the DLL writes next to the save (X.sav) the owners of the records still in the pool, and reads it on load. Copy the save and the .regens together. If the .regens isn't from that save (the save re-saved with recording off, or a .regens from another save), the DLL ignores it, so no owner comes out wrong.
 
 ### Record where each regen comes from — `regen_origins`
 

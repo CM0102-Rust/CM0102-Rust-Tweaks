@@ -1111,7 +1111,14 @@ fn main() -> eframe::Result {
         .or_else(|| std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)))
         .unwrap_or_else(|| PathBuf::from("."));
     let opcoes = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1280.0, 820.0]).with_title("CM0102 Rust Tweaks"),
+        viewport: {
+            let v = egui::ViewportBuilder::default().with_inner_size([1280.0, 820.0]).with_title("CM0102 Rust Tweaks");
+            // o ícone da janela (o do exe vem do build.rs)
+            match eframe::icon_data::from_png_bytes(include_bytes!("../../assets/icon/cm0102-rust-tweaks-icon-256px.png")) {
+                Ok(i) => v.with_icon(std::sync::Arc::new(i)),
+                Err(_) => v,
+            }
+        },
         ..Default::default()
     };
     eframe::run_native("CM0102 Rust Tweaks", opcoes, Box::new(move |cc| {

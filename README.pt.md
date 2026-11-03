@@ -1,5 +1,7 @@
 # CM0102-Rust-Tweaks
 
+![CM0102 Rust Tweaks: Your game. Your settings.](assets/social/cm0102-rust-tweaks-github-social-preview-en-1280x640.png)
+
 *English version: [README.md](README.md)*
 
 Ajustes para o **Championship Manager 01/02 (3.9.68)** numa `ddraw.dll`, sem alterar o exe. Feitos com IA, a partir da reescrita do jogo em Rust (o projeto CM0102). Roda com o exe original ou com os do NickPatcher; cada ajuste confere o código do exe antes de ligar.

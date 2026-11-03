@@ -48,7 +48,7 @@ The numbers are in [TESTES.en.md](TESTES.en.md).
 - Screen and CD: on the untouched 3.9.68, the 1080 one, a "mixed" copy like CLZ's and one with another patch.
 - Regen origins: 44 regens in a career, all with the slot and the record identified.
 
-Not tested yet: the window, Print Screen and the 1080 report while watching the screen; `video = window` and `regen_origins` on CLZ; the career's link with the save's name (the automatic career doesn't save).
+Not tested yet: the window, Print Screen and the 1080 report while watching the screen; `video = window` on CLZ. `regen_origins` was proven on the factory database and on CLZ 6.1, with the save's name and the `.regens` (TESTES §4.6).
 
 ## Install and remove
 

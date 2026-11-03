@@ -210,8 +210,12 @@ unsafe fn trocar_carreira(caminho: &std::path::Path, gravando: bool) {
 
 /// Os donos das fichas vão para um arquivo ao lado do save (`X.sav` → `X.regens`), gravado junto com ele e lido na
 /// carga: assim a carreira carregada segue sabendo de quem é cada ficha que já estava na reserva. O save não muda.
-/// Formato: "CMRTREG1", depois, por ficha anotada, o índice (u32) e o dono (id+1 u32, idade u8, CA i16, PA i16, nome 43).
-const MARCA_DONOS: &[u8; 8] = b"CMRTREG1";
+/// Formato: "CMRTREG2", a reserva no momento da gravação (a quantidade u32 e as fichas u32, na ordem), depois, por ficha
+/// anotada, o índice (u32) e o dono (id+1 u32, idade u8, CA i16, PA i16, nome 43). Na carga, o arquivo só vale se a
+/// reserva do save for exatamente a gravada nele: um .regens de outra gravação (o save regravado com o registro
+/// desligado, ou por outra DLL, ou um .regens copiado de outro save) daria donos errados, porque o id da ficha volta
+/// a ser usado quando um regen se aposenta.
+const MARCA_DONOS: &[u8; 8] = b"CMRTREG2";
 const TAM_DONO: usize = 4 + 4 + 1 + 2 + 2 + 43;
 
 fn caminho_dos_donos(save: &std::path::Path) -> std::path::PathBuf {
@@ -235,6 +239,10 @@ unsafe fn gravar_donos(save: &std::path::Path) {
     let conhecidas = na_reserva.iter().filter(|&&i| i < fichas.len() && fichas[i].id_mais_1 != 0).count();
     crate::registro::linha(&format!("regen origins: saved; {} records in the pool, {} with a known owner", na_reserva.len(), conhecidas));
     let mut v = MARCA_DONOS.to_vec();
+    v.extend_from_slice(&(na_reserva.len() as u32).to_le_bytes());
+    for &i in &na_reserva {
+        v.extend_from_slice(&(i as u32).to_le_bytes());
+    }
     for (i, f) in na_reserva.iter().filter(|&&i| i < fichas.len()).map(|&i| (i, &fichas[i])).filter(|(_, f)| f.id_mais_1 != 0) {
         v.extend_from_slice(&(i as u32).to_le_bytes());
         v.extend_from_slice(&f.id_mais_1.to_le_bytes());
@@ -248,17 +256,25 @@ unsafe fn gravar_donos(save: &std::path::Path) {
     }
 }
 
-/// Zera as anotações (outra carreira) e lê as do save, se ele tem o arquivo dos donos.
+/// Zera as anotações (outra carreira) e lê as do save, se ele tem o arquivo dos donos e o arquivo é desta gravação
+/// (a reserva carregada igual à gravada nele). Chamada depois da carga, com a reserva do save já na memória.
 unsafe fn ler_donos(save: Option<&std::path::Path>) {
     let fichas = &mut *core::ptr::addr_of_mut!(FICHAS);
     fichas.fill(SEM_DONO);
     let Some(save) = save else { return };
     let Ok(v) = std::fs::read(caminho_dos_donos(save)) else { return };
-    if v.len() < 8 || &v[..8] != MARCA_DONOS || (v.len() - 8) % TAM_DONO != 0 {
-        crate::registro::linha("regen origins: the record owners file next to the save is not valid; ignored");
+    let u = |o: usize| v.get(o..o + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize);
+    let n = if v.len() >= 12 && &v[..8] == MARCA_DONOS { u(8) } else { None };
+    let Some(n) = n.filter(|&n| v.len() >= 12 + 4 * n && (v.len() - 12 - 4 * n) % TAM_DONO == 0) else {
+        crate::registro::linha("regen origins: the .regens next to the save is not valid (or from an older version); ignored");
+        return;
+    };
+    let gravada: Vec<usize> = (0..n).filter_map(|k| u(12 + 4 * k)).collect();
+    if gravada != reserva() {
+        crate::registro::linha("regen origins: the .regens next to the save is from another save of it (the pool differs); ignored");
         return;
     }
-    for r in v[8..].chunks_exact(TAM_DONO) {
+    for r in v[12 + 4 * n..].chunks_exact(TAM_DONO) {
         let i = u32::from_le_bytes([r[0], r[1], r[2], r[3]]) as usize;
         if i < fichas.len() {
             let mut nome = [0u8; 43];
