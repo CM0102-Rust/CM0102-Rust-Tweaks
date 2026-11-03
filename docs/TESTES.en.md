@@ -190,6 +190,37 @@ What the numbers show:
 - **Idle players:** 772 retirements in five years on the factory database; 9 on CLZ, where RetirePatchV4 blocks almost all of them (the log warns).
 - **Stability:** all five careers reached the date, from 1 h 23 min to 2 h 11 min each, with no crash, hang or error box.
 
+### 4.4 Ten-season careers (2001 to 2011)
+
+The same 10 leagues, factory database, the original against the tweaks as they ship (today's `tweaks.cfg`, with `protect_young_unemployed = 0`, plus `unattached = only_if_no_room`). Both reached 2011-202, in 2 h 48 min and 2 h 42 min, with no crash, hang or error box. **[measured]**
+
+**The contest, summed over 10 seasons:**
+
+| Career | Youngsters in the contest | Clubs that got some | Most at one club in a season | Who got most | To big clubs | Without a club | PA ≥ 150 in the contest | Idle retirements |
+|---|---|---|---|---|---|---|---|---|
+| original | 12,257 | 1,894 | 14 | Real Madrid and Milan, 57 each | 15% | 1 | 331 | — |
+| tweaks | 18,932 | 2,745 | **2** | Burgos, 19 | **4%** | 84 | 587 | 2,278 |
+
+**The population every July (the `season` line):**
+
+| July | Original: without a club / average squad / regens without a club / most at one club | Tweaks: without a club / average squad / regens without a club / most at one club |
+|---|---|---|
+| 2002 | 1,008 / 32.5 / — / 7 | 675 / 32.7 / — / 2 |
+| 2004 | 1,954 / 32.9 / — / 15 | 1,512 / 32.9 / — / 8 |
+| 2006 | 3,168 / 30.9 / 913 / 23 (Tigre) | 2,418 / 30.9 / 367 / 15 (U. Las Palmas) |
+| 2008 | 3,544 / 29.9 / — / 34 (Defensores de Belgrano) | 2,278 / 28.9 / 607 / 23 (U. Las Palmas) |
+| 2011 | 3,282 / 30.3 / 1,785 / 40 (Tigre) | 2,079 / **27.6** / 869 / 30 (U. Las Palmas) |
+
+In 2011: 18,875 regens under the original and 18,982 with the tweaks; PA ≥ 150: 868 (42 without a club, 245 at a big club) against 867 (9 without a club, 238 at a big club).
+
+What the numbers show:
+- **The cap holds for 10 years:** no club goes past 2 youngsters a season from the contest. Under the original, Real Madrid and Milan get 57 each, and one club gets 14 in a season.
+- **Big clubs get 4% of the contest's youngsters (15% under the original) and end with the same number of stars** (238 against 245 PA ≥ 150 at big clubs): they reach them through the market.
+- **Much less wasted talent:** regens without a club are halved (869 against 1,785), and PA ≥ 150 ones without a club go from 42 to 9.
+- **What piling up is left comes from the market:** Universidad de Las Palmas gathers 30 regens, but only 2 came from the contest (the log lists every contest youngster and his club); under the original, Tigre gathers 40, almost all from the contest (30). Since 11/03 the `season` line says how many of the leading club's regens came from the contest.
+- **Something to tune: the average squad of the competition clubs falls** from 32.9 (2004) to 27.6 (2011) with the tweaks; under the original it stays around 30. The total number of players is the same in both; with the tweaks, fewer free players (2,079 against 3,282) and the youngsters spread over 2,745 clubs, many outside the competitions. Two ten-season careers are running to separate the causes: without idle retirements and with a cap of 3 a season. [inference, to be confirmed]
+- **Without a club in the contest (84):** from 2007, 16 to 26 youngsters a season find no eligible club in their country (squads at the limit or the season cap): that is `unattached` working as asked ("clubless only without room").
+
 ## 5. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
@@ -200,5 +231,5 @@ What the numbers show:
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).
-- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
+- Each run's raw logs (named as in the tables: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`...), the `.cfg` files used and the test runner (`prova_tweaks.py`) are in `resultados/`, outside git.
 - `tools/comparar_logs.py` compares two logs; `tools/temporadas.py` builds the long careers' per-season table; `tools/ler_retrato.py` names the snapshot lines; `tools/regens_por_clube.py` reads a save's regens.

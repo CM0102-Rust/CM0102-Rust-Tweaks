@@ -397,8 +397,13 @@ unsafe fn registrar_temporada(data: String) {
     let media = em_jogo.iter().map(|&x| x as f64).sum::<f64>() / em_jogo.len().max(1) as f64;
     let com_clube = altos - altos_livres;
     let topo = (0..nc).max_by_key(|&i| regens_no[i]).unwrap_or(0);
-    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({})\tpa150 {} free {} big {} rep {}",
-        data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo),
+    // quantos regens do clube líder chegaram pela disputa (o resto veio por contratação ou por outro caminho)
+    let pela_disputa = PELA_DISPUTA.lock().map(|v| {
+        (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo)
+            .filter(|&p| *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 && v.contains(&d(p))).count()
+    }).unwrap_or(0);
+    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} from the contest)\tpa150 {} free {} big {} rep {}",
+        data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), pela_disputa,
         altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 }));
 }
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
@@ -676,6 +681,10 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
     m
 }
 
+/// As pessoas (id) que a disputa mandou a um clube, pela regra nova ou pela do jogo, para a linha `season` separar o que
+/// veio da disputa do que veio por contratação. ponytail: um id reaproveitado por outro regen conta como da disputa.
+static PELA_DISPUTA: std::sync::Mutex<Vec<usize>> = std::sync::Mutex::new(Vec::new());
+
 /// Os jovens que a disputa nova entregou: (id do clube, dia corrido = ano × 365 + dia).
 static mut ENTREGUES: Vec<(usize, i32)> = Vec::new();
 
@@ -800,6 +809,9 @@ unsafe fn data_do_jogo() -> String {
 /// `regen  regra  data  idade  PA  CA  reputação  Training  elenco  clube  [chance  disputaram  surpresa]`.
 unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &str) {
     JOVENS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
+    if clube != 0 {
+        PELA_DISPUTA.lock().map(|mut v| v.push(d(jogador))).ok();
+    }
     let ficha = d(jogador + 0x61);
     let (rep, tr, nome_clube) = if clube != 0 { (w(clube + 0x80) as i32, b(clube + 0x7f) as i32, nome(clube)) } else { (-1, -1, "(no club)".into()) };
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
@@ -1123,6 +1135,12 @@ unsafe extern "C" fn caixa_de_mensagem(titulo: *const u8, texto: *const u8, sair
         core::slice::from_raw_parts(p, n).iter().map(|&c| if c == b'\n' || c == b'\r' || c == b'\t' { ' ' } else { c as char }).collect()
     };
     registro::linha(&format!("msgbox\t{}\t{}\t{}", data_do_jogo(), ler(titulo), ler(texto)));
+    // o detalhe que o jogo monta antes de algumas caixas (0xde1f64: "Only %d home players ** A v B..." em match_eng.cpp
+    // 612, por exemplo); só se for texto legível
+    let detalhe = ler(0xde1f64 as *const u8);
+    if !detalhe.is_empty() && detalhe.len() < 1000 && detalhe.chars().all(|c| (' '..='~').contains(&c) || c as u32 >= 0xa0) {
+        registro::linha(&format!("msgbox-detail\t{}\t{}", data_do_jogo(), detalhe));
+    }
     let original: unsafe extern "C" fn(*const u8, *const u8, u32) = core::mem::transmute(CAIXA_ORIGINAL);
     original(titulo, texto, sair)
 }

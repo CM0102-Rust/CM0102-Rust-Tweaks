@@ -190,6 +190,37 @@ O que os números mostram:
 - **Inativos:** 772 aposentadorias em cinco anos na fábrica; 9 no CLZ, onde o RetirePatchV4 barra quase todas (o log avisa).
 - **Estabilidade:** as cinco carreiras chegaram à data, de 1 h 23 min a 2 h 11 min cada, sem nenhuma queda, travamento ou caixa de erro.
 
+### 4.4 Carreiras de 10 temporadas (2001 a 2011)
+
+As mesmas 10 ligas, banco de fábrica, a original contra os ajustes como vão para o jogador (o `tweaks.cfg` de hoje, com `protect_young_unemployed = 0`, mais `unattached = only_if_no_room`). As duas chegaram a 2011-202, em 2 h 48 min e 2 h 42 min, sem queda, travamento ou caixa de erro. **[medido]**
+
+**A disputa, somada em 10 temporadas:**
+
+| Carreira | Jovens na disputa | Clubes que receberam | Máx. num clube numa temporada | Quem mais recebeu | Para os grandes | Sem clube | PA ≥ 150 na disputa | Aposentadorias de inativos |
+|---|---|---|---|---|---|---|---|---|
+| original | 12.257 | 1.894 | 14 | Real Madrid e Milan, 57 cada | 15% | 1 | 331 | — |
+| ajustes | 18.932 | 2.745 | **2** | Burgos, 19 | **4%** | 84 | 587 | 2.278 |
+
+**A população em julho, ano a ano (linha `season`):**
+
+| Julho | Original: sem clube / elenco médio / regens sem clube / máx. num clube | Ajustes: sem clube / elenco médio / regens sem clube / máx. num clube |
+|---|---|---|
+| 2002 | 1.008 / 32,5 / — / 7 | 675 / 32,7 / — / 2 |
+| 2004 | 1.954 / 32,9 / — / 15 | 1.512 / 32,9 / — / 8 |
+| 2006 | 3.168 / 30,9 / 913 / 23 (Tigre) | 2.418 / 30,9 / 367 / 15 (U. Las Palmas) |
+| 2008 | 3.544 / 29,9 / — / 34 (Defensores de Belgrano) | 2.278 / 28,9 / 607 / 23 (U. Las Palmas) |
+| 2011 | 3.282 / 30,3 / 1.785 / 40 (Tigre) | 2.079 / **27,6** / 869 / 30 (U. Las Palmas) |
+
+Em 2011: 18.875 regens na original e 18.982 com os ajustes; PA ≥ 150: 868 (42 sem clube, 245 em clube grande) contra 867 (9 sem clube, 238 em clube grande).
+
+O que os números mostram:
+- **O teto se mantém por 10 anos:** nenhum clube passa de 2 jovens por temporada pela disputa. Na original, o Real Madrid e o Milan recebem 57 cada, e um clube chega a 14 numa temporada.
+- **Os grandes recebem 4% dos jovens da disputa (15% na original) e terminam com o mesmo número de craques** (238 contra 245 de PA ≥ 150 em clube grande): chegam a eles pelo mercado.
+- **Muito menos talento perdido:** os regens sem clube caem pela metade (869 contra 1.785), e os de PA ≥ 150 sem clube de 42 para 9.
+- **O acúmulo que sobra vem do mercado:** o Universidad de Las Palmas junta 30 regens, mas só 2 vieram pela disputa (o log mostra cada jovem da disputa e o clube); na original, o Tigre junta 40, quase todos pela disputa (30). Desde 03/11 a linha `season` diz quantos regens do clube líder vieram da disputa.
+- **Ponto a acertar: o elenco médio dos clubes das competições cai** de 32,9 (2004) para 27,6 (2011) com os ajustes; na original fica em torno de 30. O total de jogadores é igual nas duas; com os ajustes, menos jogadores livres (2.079 contra 3.282) e os jovens espalhados por 2.745 clubes, muitos fora das competições. Duas carreiras de 10 temporadas estão rodando para separar as causas: sem os inativos e com o teto de 3 por temporada. [inferência, a confirmar]
+- **Sem clube na disputa (84):** a partir de 2007, 16 a 26 jovens por temporada não acham clube elegível no país (elencos no teto ou teto da temporada): é o `unattached` funcionando como pedido ("sem clube só sem vaga").
+
 ## 5. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
@@ -200,5 +231,5 @@ O que os números mostram:
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).
-- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
+- Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
 - `tools/comparar_logs.py` compara dois logs; `tools/temporadas.py` monta a tabela por temporada das carreiras longas; `tools/ler_retrato.py` dá nome às linhas do retrato; `tools/regens_por_clube.py` lê os regens de um save.
