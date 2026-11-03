@@ -127,6 +127,15 @@ As cópias de teste são geradas por `resultados/misto.py` a partir do `cm0102.e
 
 Falta o teste com a tela: a janela, o Print Screen e o relatório de uma partida antiga em 1080.
 
+### 3.8 Vários jogos abertos (`multiple_instances`)
+
+Duas pastas do 3.9.68 de fábrica (as bancadas `jogo_tweaks` e `jogo_tweaks2`), os dois jogos abertos com 12 s de diferença, ocultos e em janela, e outro jogo de outra sessão já aberto na máquina [medido, 03/11/2026]. Critério: o jogo chegou ao vídeo (a linha `check:` que a DLL escreve no `DirectDrawCreate`); o recusado para antes, na caixa "Already Running" do próprio jogo (0x68d3ba), que espera um clique.
+
+| `multiple_instances` | 1ª pasta | 2ª pasta |
+|---|---|---|
+| 1 | abriu (trava "...2001/02 6f59faf") | abriu (trava "...2001/02 1aa4427") |
+| 0 | abriu | recusada ("Already Running") |
+
 ## 4. Os regens
 
 ### 4.1 Fora do jogo: o simulador

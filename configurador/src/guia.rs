@@ -8,6 +8,10 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "Permite gravar e carregar saves acima de 2 GB (até 4 GB). Ligue se o seu save é grande (muitas ligas, carreira longa) ou se o jogo dá erro ao carregar. Desligado, um save acima de 2 GB não carrega. Não muda nada na carreira.",
             "Lets the game save and load saves above 2 GB (up to 4 GB). Turn it on if your save is large (many leagues, a long career) or the game errors when loading. Off, a save above 2 GB won't load. It changes nothing in the career.",
         ),
+        "multiple_instances" => (
+            "Deixa abrir mais de um jogo ao mesmo tempo, desde que cada um esteja na sua pasta (por exemplo, o 3.9.68 e o CLZ, ou duas carreiras em duas cópias). O jogo tem uma trava que só deixa uma cópia aberta; com esta opção, a trava vale por pasta. Dois jogos da mesma pasta continuam barrados, porque usariam os mesmos arquivos temporários e o mesmo save. Ligue também a pasta portátil, para cada cópia usar a própria pasta. Cada jogo aberto ocupa a memória dele.",
+            "Lets you open more than one game at the same time, as long as each is in its own folder (for example, 3.9.68 and CLZ, or two careers in two copies). The game has a lock that only allows one copy open; with this option, the lock is per folder. Two games from the same folder are still blocked, since they would use the same temporary files and the same save. Turn on the portable folder too, so each copy uses its own folder. Each open game uses its own memory.",
+        ),
         "portable_folder" => (
             "O jogo usa a pasta onde está o exe, sem precisar do SetupReg nem do registro do Windows. Útil para ter várias instalações lado a lado ou uma cópia num pendrive. Nada é gravado no registro.",
             "The game uses the folder its exe is in, with no SetupReg and no Windows registry. Useful for several installs side by side or a copy on a USB stick. Nothing is written to the registry.",

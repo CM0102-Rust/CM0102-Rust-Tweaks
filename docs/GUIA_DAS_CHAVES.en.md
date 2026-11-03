@@ -253,6 +253,12 @@ The game uses the folder its exe is in, with no SetupReg and no Windows registry
 
 Values: `1` on, `0` off. Default: `0`.
 
+### Several games open (one per folder) — `multiple_instances`
+
+Lets you open more than one game at the same time, as long as each is in its own folder (for example, 3.9.68 and CLZ, or two careers in two copies). The game has a lock that only allows one copy open; with this option, the lock is per folder. Two games from the same folder are still blocked, since they would use the same temporary files and the same save. Turn on the portable folder too, so each copy uses its own folder. Each open game uses its own memory.
+
+Values: `1` on, `0` off. Default: `0`.
+
 ### Clear NickDLL's admin flag — `clear_admin_flag`
 
 Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark (keeps Windows 95 mode). It takes effect from the next start. Leave it off if you set that on purpose.

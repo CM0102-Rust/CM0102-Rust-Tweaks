@@ -142,6 +142,12 @@ impl Exe {
         let ok = || (Estado::Compativel, (String::new(), String::new()));
         push("save_over_2gb", ligado("save_over_2gb"), self.parte(&SAVE, sobrescrever));
         push("portable_folder", ligado("portable_folder"), ok());
+        // a trava de jogo único: o nome do mutex onde o 3.9.68 o tem
+        push("multiple_instances", ligado("multiple_instances"), match self.bytes(0x9f183c, 36) {
+            Some(b) if &b[..] == b"Championship Manager 2001/02 Process" => ok(),
+            _ => (Estado::Desconhecido, ("o nome da trava de jogo único não está onde o 3.9.68 o tem: um jogo por vez".into(),
+                "the single-game lock's name isn't where 3.9.68 has it: one game at a time".into())),
+        });
         push("clear_admin_flag", ligado("clear_admin_flag"), if self.nick { ok() } else {
             (Estado::Compativel, ("sem NickDLL.dll na pasta: não há marca para tirar".into(), "no NickDLL.dll here: no flag to clear".into()))
         });

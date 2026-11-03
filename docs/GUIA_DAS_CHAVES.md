@@ -253,6 +253,12 @@ O jogo usa a pasta onde está o exe, sem precisar do SetupReg nem do registro do
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 
+### Vários jogos abertos (um por pasta) — `multiple_instances`
+
+Deixa abrir mais de um jogo ao mesmo tempo, desde que cada um esteja na sua pasta (por exemplo, o 3.9.68 e o CLZ, ou duas carreiras em duas cópias). O jogo tem uma trava que só deixa uma cópia aberta; com esta opção, a trava vale por pasta. Dois jogos da mesma pasta continuam barrados, porque usariam os mesmos arquivos temporários e o mesmo save. Ligue também a pasta portátil, para cada cópia usar a própria pasta. Cada jogo aberto ocupa a memória dele.
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
+
 ### Tirar a marca de administrador da NickDLL — `clear_admin_flag`
 
 Só para quem usa a NickDLL (CLZ e outros pacotes do NickPatcher): ela marca o exe para rodar como administrador a cada abertura. Esta opção tira essa marca (mantém o modo Windows 95). Vale a partir da abertura seguinte. Deixe desligado se você marcou isso de propósito.

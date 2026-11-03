@@ -457,7 +457,7 @@ impl App {
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Jogo);
         ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE));
-        for k in ["save_over_2gb", "portable_folder", "clear_admin_flag", "override_exe_changes"] {
+        for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes"] {
             self.controle(ui, k, true);
         }
         ui.add_space(8.0);

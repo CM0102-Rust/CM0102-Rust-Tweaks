@@ -52,6 +52,7 @@ const INF: f64 = 1e9;
 pub const CHAVES: &[Chave] = &[
     Chave { nome: "save_over_2gb", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "0", rotulo: ("Save acima de 2 GB", "Saves above 2 GB") },
     Chave { nome: "portable_folder", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "0", rotulo: ("Pasta portátil (sem SetupReg)", "Portable folder (no SetupReg)") },
+    Chave { nome: "multiple_instances", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "0", rotulo: ("Vários jogos abertos (um por pasta)", "Several games open (one per folder)") },
     Chave { nome: "clear_admin_flag", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "0", rotulo: ("Tirar a marca de administrador da NickDLL", "Clear NickDLL's admin flag") },
     Chave { nome: "override_exe_changes", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "0", rotulo: ("Sobrescrever as mudanças do exe", "Override the exe's changes") },
     Chave { nome: "video", aba: Aba::Jogo, tipo: Tipo::Escolha(&[("original", "DirectDraw do Windows", "Windows DirectDraw"), ("window", "Janela do projeto (Print Screen, escala)", "Project window (Print Screen, scaling)")]), padrao: "original", rotulo: ("Vídeo", "Video") },
