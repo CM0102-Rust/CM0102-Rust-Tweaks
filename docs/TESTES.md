@@ -238,7 +238,7 @@ O que os números mostram:
 | 2011 | 27,6 | 27,8 | 28,7 |
 
 - **Os inativos não são a causa:** sem eles, o elenco cai do mesmo jeito.
-- **O teto de 3 segura cerca de um jogador por elenco** (28,7 contra 27,6 em 2011), com os grandes ainda em 4% a 10% da disputa. Não resolve sozinho. A causa mais provável é o espalhamento dos jovens por clubes fora das competições (2.745 clubes recebem na carreira de 10 anos). A decisão fica com o Lucas: aceitar 28 de média, usar o teto de 3, ou um ajuste novo que prefira os clubes das competições.
+- **O teto de 3 segura cerca de um jogador por elenco** (28,7 contra 27,6 em 2011), com os grandes ainda em 4% a 10% da disputa. Não resolve sozinho. A causa mais provável é o espalhamento dos jovens por clubes fora das competições (2.745 clubes recebem na carreira de 10 anos). Decisão do Lucas (03/11): uma chave nova, `outside_competitions`, o peso dos clubes fora das competições (1 = como hoje; 0 = nunca); uma carreira de 10 temporadas com 0,25 está rodando.
 
 **Um clube "depósito" de regens (em aberto):** em várias carreiras com os ajustes, um clube fora das competições junta muitos regens que não vieram da disputa (a linha `season` mostra quantos vieram dela): o Universidad de Las Palmas com 30 (§4.4) e, em outras carreiras, o Guiseley (inglês, fora das ligas) com 13 a 49. Nas carreiras da original, o clube com mais regens recebeu a maior parte pela disputa (o Tigre, 30 de 40).
 

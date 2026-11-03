@@ -459,6 +459,8 @@ struct Regras {
     proteger_jovens: i32,
     /// surprise: % dos jovens sorteados sem o fator do nível, só entre clubes de competição que roda no jogo.
     surpresa: f64,
+    /// outside_competitions: o peso dos clubes fora das competições que rodam no jogo (1 = como o resto; 0 = nunca).
+    fora_competicao: f64,
     temperatura: f64,
     registrar: bool,
     /// unattached = only_if_no_room: todo jovem de nação no jogo vai à disputa (qualquer idade, sem o 1 em 4); fica sem
@@ -510,6 +512,7 @@ const PADRAO: Regras = Regras {
     inativo_rep_por_ano: 250.0,
     proteger_jovens: 0,
     surpresa: 15.0,
+    fora_competicao: 1.0,
     temperatura: 1.0,
     registrar: false,
     so_sem_vaga: false,
@@ -609,6 +612,7 @@ fn ler_regras() -> Regras {
             "idle_rep_per_year" => r.inativo_rep_por_ano = x.max(0.0),
             "protect_young_unemployed" => r.proteger_jovens = (x as i32).max(0),
             "surprise" => r.surpresa = x.clamp(0.0, 100.0),
+            "outside_competitions" => r.fora_competicao = x.clamp(0.0, 1.0),
             "temperature" => r.temperatura = x,
             "log" => r.registrar = x != 0.0,
             "contest_max_age" => r.idade_max_disputa = (x as i32).clamp(0, 126),
@@ -743,7 +747,10 @@ unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa
     let inst = r.inst_base + r.inst_k * b(clube + 0x7f) as f64;
     let comissao = r.com_min + (r.com_max - r.com_min) * (melhor_com_jovens(clube) - 1) as f64 / 19.0;
     let vaga = ((r.elenco_teto - elenco as f64) / r.elenco_teto).powf(r.elenco_exp);
-    (nivel * inst * comissao * vaga).max(0.0).powf(r.temperatura)
+    let p = (nivel * inst * comissao * vaga).max(0.0).powf(r.temperatura);
+    // os clubes fora das competições que rodam (a divisão não roda no jogo): o peso vezes `outside_competitions`; na
+    // surpresa eles já ficaram de fora acima
+    if r.fora_competicao < 1.0 && !surpresa && !em_competicao(clube) { p * r.fora_competicao } else { p }
 }
 
 /// Um número uniforme em [0, 1) com dois sorteios do jogo (30 bits).

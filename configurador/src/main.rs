@@ -540,7 +540,8 @@ impl App {
         let (cmin, cmax) = (g("staff_min", 0.8), g("staff_max", 1.2));
         let com = cmin + (cmax - cmin) * (c.comissao - 1.0) / 19.0;
         let vaga = ((teto - c.elenco) / teto).powf(exp);
-        (nivel * inst * com * vaga).max(0.0).powf(g("temperature", 1.0))
+        let p = (nivel * inst * com * vaga).max(0.0).powf(g("temperature", 1.0));
+        if !surpresa && !c.competicao { p * g("outside_competitions", 1.0).clamp(0.0, 1.0) } else { p }
     }
 
     fn aba_disputa(&mut self, ui: &mut egui::Ui) {
@@ -603,7 +604,7 @@ impl App {
                 });
             }
         });
-        for k in ["target_k", "target_ca", "sigma", "sigma_below", "level_floor", "facilities_base", "facilities_k", "staff_min", "staff_max", "squad_limit", "squad_exp", "season_cap", "surprise", "temperature"] {
+        for k in ["target_k", "target_ca", "sigma", "sigma_below", "level_floor", "facilities_base", "facilities_k", "staff_min", "staff_max", "squad_limit", "squad_exp", "season_cap", "surprise", "outside_competitions", "temperature"] {
             self.controle(ui, k, ativo);
         }
         if self.valor("staff_max").parse::<f64>().unwrap_or(1.2) < self.valor("staff_min").parse::<f64>().unwrap_or(0.8) {

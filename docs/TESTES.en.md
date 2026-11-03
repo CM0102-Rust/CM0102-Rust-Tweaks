@@ -238,7 +238,7 @@ What the numbers show:
 | 2011 | 27.6 | 27.8 | 28.7 |
 
 - **Idle retirements are not the cause:** without them squads fall the same way.
-- **A cap of 3 holds about one player per squad** (28.7 against 27.6 in 2011), with big clubs still at 4% to 10% of the contest. It doesn't fix it alone. The most likely cause is the youngsters spreading over clubs outside the competitions (2,745 clubs get some in the ten-year career). The decision is Lucas's: accept an average of 28, use a cap of 3, or a new tweak that prefers competition clubs.
+- **A cap of 3 holds about one player per squad** (28.7 against 27.6 in 2011), with big clubs still at 4% to 10% of the contest. It doesn't fix it alone. The most likely cause is the youngsters spreading over clubs outside the competitions (2,745 clubs get some in the ten-year career). Lucas's decision (11/03): a new switch, `outside_competitions`, the weight of clubs outside the competitions (1 = as today; 0 = never); a ten-season career with 0.25 is running.
 
 **A regen "sink" club (open):** in several careers with the tweaks, a club outside the competitions gathers many regens that didn't come from the contest (the `season` line shows how many came from it): Universidad de Las Palmas with 30 (§4.4) and, in other careers, Guiseley (English, non-league) with 13 to 49. In the original's careers, the club with most regens got most of them from the contest (Tigre, 30 of 40).
 
