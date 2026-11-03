@@ -398,10 +398,18 @@ unsafe fn registrar_temporada(data: String) {
     let com_clube = altos - altos_livres;
     let topo = (0..nc).max_by_key(|&i| regens_no[i]).unwrap_or(0);
     // quantos regens do clube líder chegaram pela disputa (o resto veio por contratação ou por outro caminho)
-    let pela_disputa = (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo)
-        .filter(|&p| *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 && veio_pela_disputa(d(p))).count();
-    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} from the contest)\tpa150 {} free {} big {} rep {}",
-        data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), pela_disputa,
+    let (mut dados, mut de_outro) = (0, 0);
+    for p in (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo) {
+        if *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 {
+            match destino(d(p)) {
+                Some(c) if c == topo => dados += 1,
+                Some(_) => de_outro += 1,
+                None => {}
+            }
+        }
+    }
+    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} given by the contest, {} via the contest to another club)\tpa150 {} free {} big {} rep {}",
+        data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), dados, de_outro,
         altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 }));
 }
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
@@ -683,20 +691,22 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
     m
 }
 
-/// As pessoas (id) que a disputa mandou a um clube, pela regra nova ou pela do jogo, para a linha `season` separar o que
-/// veio da disputa do que veio por contratação: um bit por id, num vetor fixo, para não alocar na linha do jogo (o jogo lê
-/// memória não inicializada, e a heap muda a trajetória da carreira; TESTES §4.5).
-/// ponytail: um id reaproveitado por outro regen conta como da disputa; ids acima de 2^21 não contam.
-static PELA_DISPUTA: [core::sync::atomic::AtomicU32; 1 << 16] = [const { core::sync::atomic::AtomicU32::new(0) }; 1 << 16];
+/// O clube (id + 1) para o qual a disputa mandou cada pessoa, pela regra nova ou pela do jogo: a linha `season` separa
+/// os regens que a disputa deu ao clube dos que passaram por ela rumo a outro clube e chegaram depois (transferência ou
+/// empréstimo). Vetor fixo, sem alocar na linha do jogo (o jogo lê memória não inicializada, e a heap muda a trajetória
+/// da carreira; TESTES §4.5). ponytail: um id reaproveitado por outro regen herda o destino; ids acima de 2^18 não contam.
+static DESTINO: [core::sync::atomic::AtomicU16; 1 << 18] = [const { core::sync::atomic::AtomicU16::new(0) }; 1 << 18];
 
-fn marcar_pela_disputa(id: usize) {
-    if id < 1 << 21 {
-        PELA_DISPUTA[id >> 5].fetch_or(1 << (id & 31), core::sync::atomic::Ordering::Relaxed);
+fn marcar_destino(pessoa: usize, clube: usize) {
+    if pessoa < 1 << 18 && clube < 0xffff {
+        DESTINO[pessoa].store(clube as u16 + 1, core::sync::atomic::Ordering::Relaxed);
     }
 }
 
-fn veio_pela_disputa(id: usize) -> bool {
-    id < 1 << 21 && PELA_DISPUTA[id >> 5].load(core::sync::atomic::Ordering::Relaxed) & (1 << (id & 31)) != 0
+/// `Some(clube)` se a pessoa passou pela disputa.
+fn destino(pessoa: usize) -> Option<usize> {
+    let v = if pessoa < 1 << 18 { DESTINO[pessoa].load(core::sync::atomic::Ordering::Relaxed) } else { 0 };
+    (v != 0).then(|| v as usize - 1)
 }
 
 /// Os jovens que a disputa nova entregou: (id do clube, dia corrido = ano × 365 + dia).
@@ -827,7 +837,7 @@ unsafe fn data_do_jogo() -> String {
 unsafe fn registrar_escolha(regra: &str, jogador: usize, clube: usize, extra: &str) {
     JOVENS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
     if clube != 0 {
-        marcar_pela_disputa(d(jogador));
+        marcar_destino(d(jogador), d(clube));
     }
     let ficha = d(jogador + 0x61);
     let (rep, tr, nome_clube) = if clube != 0 { (w(clube + 0x80) as i32, b(clube + 0x7f) as i32, nome(clube)) } else { (-1, -1, "(no club)".into()) };
