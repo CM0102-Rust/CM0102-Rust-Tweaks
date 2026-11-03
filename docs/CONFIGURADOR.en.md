@@ -35,7 +35,7 @@ Sources: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, the `Part
 ```
 
 - **Top bar:** the chosen exe (a list of the `.exe` files in the folder), the preset (§4) and Save. The preset shows "Custom" when the values match none.
-- **Left:** the tabs, each with a coloured dot summing up the tweak's status in that exe (green on, yellow kept by the exe, red won't work, grey off).
+- **Left:** the tabs, each with a coloured dot with the worst state among its tweaks that are on, in that exe (§6.1: green ✅, yellow ⚠️, blue 🔁, red ❓, grey off). Above everything, the warning strip when there is a ⚠️ or ❓.
 - **Right:** the help and the tweak's status in the exe (§6).
 - **Footer:** pending changes, the `.cfg` path, and whether there is a recent `tweaks.log` (§6.3).
 
@@ -51,7 +51,8 @@ Switches always write `1` or `0`, because the DLL only turns on with an exact `v
 
 No value controls. It shows:
 - the **exe snapshot**: name, size, whether it is the untouched 3.9.68 or how many functions and blocks changed, new sections (the CLZ's `.nick`), the known cases by name (the `CONHECIDOS` table in `retrato.rs`);
-- the **"what each tweak will do" table** (§6), one row per tweak, with a "go to tab" button;
+- the **"what each tweak will do" table** (§6), one row per tweak, with the state, the reason, the patch name and a "go to tab" button;
+- the DLLs found next to the exe (`NickDLL.dll`, `LaMOHatesCD.dll`) and, with NickDLL, the `"resolucao"` in `NickDLL_config.json`;
 - the preset in use and the differences from it.
 
 ### 3.2 Game (save, folder, admin flag, override)
@@ -66,7 +67,8 @@ No value controls. It shows:
 | `resolution` | selector (original / 1920×1080); with 1080, `video` shows on and locked | `1080` turns it on, anything else off | — | original | original |
 | `no_cd` | switch | `1` turns it on, anything else off | — | 0 | 0 |
 
-`video`, `resolution` and `no_cd` already exist in the DLL (11/02; the mock-up still shows them as "coming soon").
+- `resolution = 1080` **turns on and locks `video`**: when the resolution applies in this exe, the video selector shows "window", greyed out, with the note "turned on by the resolution" (the DLL turns the window on by itself; the `.cfg` keeps the `video` the user chose). When the resolution is left to another (NickDLL) or won't work, the video follows its own selector again.
+- The resolution card also shows the state of the **30-row limit** for the match report (`Area::init`), which the DLL adds with `resolution`, `video` or NickDLL's resolution, with no key of its own.
 
 ### 3.3 Ages
 
@@ -197,43 +199,57 @@ Acceptance test: reading the distributed `tweaks.cfg` and writing it with no cha
 
 ## 6. The exe's status
 
-### 6.1 What the configurator checks
+The states, the per-exe matrix and the inventory of the CLZ DLLs are in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md). The configurator shows exactly those states, with the reason and the patch name, tweak by tweak. The rule from there applies here: **do what's possible**. Each tweak is checked on its own, and one that won't work is left out without blocking the others.
 
-The same checks as the DLL, read from the exe file instead of memory: for each `Parte` in `lib.rs` (`SAVE`, `IDADE`, `IDADE_FORA`, `DISPUTA`, `INATIVOS`, `SEM_CLUBE`), the 64-bit FNV-1a of the **edges** (`bordas`) and of the **body** (`corpo`), with the addresses (VA) turned into file offsets through the PE sections. Plus the disk snapshot (`retrato.rs`: functions and blocks against `referencia.rs`, new sections, `CONHECIDOS`).
+### 6.1 The four states (COMPATIBILIDADE.en.md §1)
 
-To avoid duplicating the tables, the `Parte` entries and `referencia.rs` move to a shared module used by the DLL and the configurator (Lucas's decision, §9).
-
-### 6.2 Each tweak's states
-
-| State | When | Colour |
-|---|---|---|
-| **Off** | the tweak's key is off in the `.cfg` | grey |
-| **On** | edges and body match | green |
-| **On, overriding the exe** | body differs and `override_exe_changes = 1` (with the name of the known change) | blue |
-| **Kept by the exe** | body differs and `override_exe_changes = 0`; shows the name found ("Regen Tweak by xeno/Saturn") and a "use this DLL's rules" button (turns on `override_exe_changes`) | yellow |
-| **Won't work in this exe** | edges differ: the DLL never turns it on | red |
-
-Notes that go with the state (the same as in the log):
-- **Idle players** with the jump at 0x7a5806 (RetirePatchV4): "on, but will rarely find anyone: this exe skips retirements under 34".
-- **Ages for nations not in the game** in CLZ, overriding: "the hook stays, but the exe skips the branch; it still doesn't run".
-- **`clear_admin_flag`**: "useful: there's a NickDLL in this folder" or "without NickDLL, it does nothing".
-- **`portable_folder`**: shows the folder the registry points to today (`Location`) if it's a different one.
-- **Future keys (`video`, `resolution`, `no_cd`)**: in CLZ, "won't work: the exe already has its own resolution and NoCD" (Phase 4 says to refuse).
-
-Examples, from the numbers in [TESTES.en.md](TESTES.en.md) §3:
-
-| Tweak | 3.9.68 | 3.9.68 + Regen Tweak | CLZ (NickPatcher) |
+| State | When | Colour | What the configurator shows |
 |---|---|---|---|
-| Saves above 2 GB | on | on | on |
-| Ages | on | on | kept by the exe (rare bands changed) |
-| Ages, nations not in the game | on | on | kept by the exe (branch skipped) |
-| Contest | on | kept by the exe (Regen Tweak) | kept by the exe (Regen Tweak) |
-| Idle players | on | on | on, with the RetirePatchV4 note |
-| Unattached only if no room | on | on | on |
+| ✅ **compatible** | the code is as in 3.9.68, or the exe already has this same change | green | the reason, when there is one (e.g. "the exe already has 5 of the 201 places changed; the DLL completes the rest") |
+| ⚠️ **overrides** | the exe has a **known** change there and `override_exe_changes = 1` says to replace it with ours | yellow | the change's name and what is lost |
+| 🔁 **left to the other** | a **known** change does the same job; ours stays out and the exe's or the other DLL's applies | blue | the name (Regen Tweak, NickDLL, LaMOHatesCD); for `override_exe_changes` cases, the "use this DLL's rules" button |
+| ❓ **unknown** | the code differs from 3.9.68 in a way the catalogue doesn't recognise; only this tweak stays out | red | how many places and where; a request to send `tweaks.log` |
 
-### 6.3 What the disk doesn't show
+A tweak that is off in the `.cfg` shows in grey ("off") and doesn't count. "Known" = named by the exe snapshot (`CONHECIDOS` in `src/retrato.rs`), by the NickPatcher catalogue (`tools/retrato_exe.py`) or by COMPATIBILIDADE.en.md.
 
-NickDLL and LaMOHatesCD change the exe **at run time** (1,205 ranges in CLZ). The configurator doesn't run the game. It reads the last `tweaks.log` in the folder, if there is one, and shows the `runtime` lines (warnings and notes) and each tweak's line, with the date. So the panel says what the DLL actually did at the last start, next to what the configurator predicts. If the two disagree, the panel shows the difference.
+**General warning:** when any tweak that is on is ⚠️ or ❓, a strip at the top of the window says "warning: X tweaks are not compatible with this exe/patch", with the names and a shortcut to the Start table. Each tab's coloured dot shows the worst state among its tweaks that are on.
+
+### 6.2 How the configurator works it out
+
+Without running the game, from three sources:
+
+1. **The exe file**, with the same checks as the DLL, reading from disk instead of memory (VAs turned into offsets through the PE sections):
+   - for each `Parte` in `lib.rs` (`SAVE`, `IDADE`, `IDADE_FORA`, `DISPUTA`, `INATIVOS`, `SEM_CLUBE`), the 64-bit FNV-1a of the **edges** and of the **body**. Edges differ → ❓. Body matches → ✅. Body differs → 🔁 or ⚠️ (by `override_exe_changes`) if the change is known, ❓ if not;
+   - for the **replacements** (`aplicar_trocas`: the 201 for the resolution and the 33 for the CD, in `src/trocas.rs`), each place is counted as "as in 3.9.68", "already changed" or "foreign". For the resolution, one foreign place refuses the whole list (❓), because half a list would give broken screens. For the CD, each check stands alone, and the foreign ones are just left out. "Already changed" is ✅ (the exe already has it);
+   - the **30-row limit**: the 6 entry bytes of `Area::init` (0x402ac0) as in 3.9.68;
+   - the **video**: `ChangeDisplaySettingsA` in the import table;
+   - the **disk snapshot** (`retrato.rs`: functions and blocks against `referencia.rs`, new sections, `CONHECIDOS`) on the Start card.
+2. **The exe's folder**, as `ligar_tela` does:
+   - `LaMOHatesCD.dll` next to it → `no_cd` 🔁 (left to it);
+   - `NickDLL.dll` with the `layout Nick Patcher` mark and `"resolucao"` other than `800x600` in `NickDLL_config.json` → `resolution` 🔁 (left to NickDLL), the same reading as `resolucao_da_nickdll`. Start shows the value read. With NickDLL's resolution, the 30-row limit goes in even without `resolution`;
+   - `NickDLL.dll` present → the `clear_admin_flag` note ("useful here").
+3. **The last `tweaks.log`** in the folder, for what only shows **in memory**. NickDLL and LaMOHatesCD change the exe at run time (1,205 ranges in CLZ): the B team (0x540a50), the message box (0x5e8290). The configurator shows the `runtime` lines (warnings and notes), `check` and each tweak's line, with the date. If the prediction and the log disagree, the panel shows the difference. Cases that only the log or the matrix know (`log = 1` and the message box in CLZ 6.1, ⚠️ [inference]) come from the matrix in COMPATIBILIDADE.en.md §2, built into the configurator.
+
+To avoid duplicating the tables, the `Parte` entries, the replacements and `referencia.rs` move to a shared module used by the DLL and the configurator (Lucas's decision, §9).
+
+### 6.3 The mock-up's examples (the matrix in COMPATIBILIDADE.en.md §2)
+
+| Tweak | 3.9.68 | Regen Tweak | CLZ 6.1 (NickPatcher + 6.1 NickDLL + LaMOHatesCD) | Exe with an unknown patch |
+|---|---|---|---|---|
+| `save_over_2gb` | ✅ | ✅ | ✅ (NickDLL calls 0x933610, which the tweak doesn't replace) | ✅ |
+| `portable_folder`, `clear_admin_flag` | ✅ | ✅ | ✅ made for CLZ | ✅ |
+| `ages` | ✅ | ✅ | 🔁 NickPatcher's rare bands; ⚠️ with override 1 | ✅ |
+| `ages_out_of_game` | ✅ | ✅ | 🔁 branch skipped; ⚠️ with override 1 (still doesn't run) | ✅ |
+| `rule = new` | ✅ | 🔁 Regen Tweak; ⚠️ with override 1 | 🔁 / ⚠️ the same; NickDLL replaces the B-team routine, and the contest uses it | ❓ body not in the catalogue |
+| `retire_idle_players` | ✅ | ✅ | ✅ with the RetirePatchV4 note | ✅ |
+| `unattached` | ✅ | ✅ | ✅ | ✅ |
+| `no_cd` | ✅ | ✅ | 🔁 left to LaMOHatesCD | ✅ |
+| `resolution = 1080` | ✅ | ✅ | 🔁 left to NickDLL when `"resolucao"` ≠ 800x600; otherwise ✅ (the exe has 5 of the 201 places, the DLL completes them) | ❓ 3 of the 201 places hold another patch: nothing changed |
+| 30-row limit | ✅ | ✅ | ✅ | ✅ |
+| `video = window` | ✅ | ✅ | ❓ not tested ("16 bit colour") | ✅ |
+| `log = 1` | ✅ | ✅ | ⚠️ NickDLL and LaMOHatesCD also hook 0x5e8290 [inference] | ✅ |
+
+The exe with an unknown patch is made up, to show ❓. In the mock-up, the Start selector changes the CLZ's `"resolucao"` in `NickDLL_config.json` (800x600 → our resolution ✅; anything else → 🔁).
 
 ## 7. "Nation in the game"
 
@@ -272,5 +288,5 @@ Text: "A nation in the game is one whose league you picked when creating the car
 4. **Interface language:** English and Portuguese with a switch, or English only at release. The help is the `.cfg` comment, which is in English; translating the help means embedding Portuguese text.
 5. **Shared module** between the DLL and the configurator (`Parte`, `referencia.rs`, `peso()`), as a Cargo workspace in the same repository, or a copy.
 6. **Sample clubs:** made up (as in the mock-up) or read from the user's save (like `calibrar.py`), in a later version.
-7. **Phase 4 keys** (`video`, `resolution`, `no_cd`): the accepted values beyond `window`, `1080` and `1` are to be decided.
+7. **`video` locked by the resolution:** show "window" locked (as in the mock-up) or also write `video = window` to the `.cfg`.
 8. **Where the configurator goes:** in the same zip as the DLL (`tweaks-config.exe` next to `ddraw.dll` and `tweaks.cfg`), suggested.
