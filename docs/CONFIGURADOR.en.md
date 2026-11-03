@@ -302,7 +302,7 @@ Text: "A nation in the game is one whose league you picked when creating the car
 
 Decisions taken in the prototype (they can change): egui with `glow`; i686 target (the same as the DLL; runs on any Windows); `video` locked by the resolution only shows as locked, without writing `video = window`; the example clubs are made up.
 
-Still to do: Windows' folder dialog (today the folder is typed, or comes from the argument or the configurator's own folder); the list of changes before applying a preset; the test on a machine without a graphics card (`glow` needs OpenGL 2).
+Done later: Windows' folder dialog (the "…" button, through the `rfd` library) and the list of changes before applying a preset. Still to do: the test on a machine without a graphics card (`glow` needs OpenGL 2).
 
 | | |
 |---|---|

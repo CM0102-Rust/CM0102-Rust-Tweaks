@@ -302,7 +302,7 @@ Texto: "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, 
 
 Decisões tomadas no protótipo (dá para mudar): egui com `glow`; alvo i686 (o mesmo da DLL; roda em qualquer Windows); o `video` travado pela resolução só aparece travado, sem gravar `video = window`; os clubes do exemplo são fictícios.
 
-Falta: o diálogo de pasta do Windows (hoje a pasta é digitada ou vem do argumento ou da pasta do próprio configurador); a lista de mudanças antes de aplicar uma predefinição; o teste numa máquina sem placa de vídeo (o `glow` precisa de OpenGL 2).
+Feito depois: o diálogo de pasta do Windows (o botão "…", pela biblioteca `rfd`) e a lista de mudanças antes de aplicar uma predefinição. Falta: o teste numa máquina sem placa de vídeo (o `glow` precisa de OpenGL 2).
 
 | | |
 |---|---|
