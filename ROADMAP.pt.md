@@ -72,7 +72,7 @@ Hoje a DLL só percebe as mudanças nas rotinas que ela troca. No CLZ, o NickPat
 
 ## Fase 3: o configurador (seletor de opções) 🔨
 
-O projeto da interface e uma maquete interativa: [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) e `docs/configurador_maquete.html` (02/11). As decisões que dependem do Lucas estão no §9 de lá. O painel de estado do exe usa os estados de [docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md): ✅ compatível, ⚠️ sobrescreve (com o nome do patch), 🔁 fica com o outro, ❓ desconhecido.
+O projeto da interface e uma maquete interativa: [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) e `docs/configurador_maquete.html` (02/11). **O protótipo do programa** (`configurador/`, Rust + egui, `tweaks-config.exe`) está pronto desde a noite de 02/11 (§10 de lá): falta o diálogo de pasta, a confirmação das predefinições e o teste sem placa de vídeo. As decisões que dependem do Lucas estão no §9 de lá. O painel de estado do exe usa os estados de [docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md): ✅ compatível, ⚠️ sobrescreve (com o nome do patch), 🔁 fica com o outro, ❓ desconhecido.
 
 Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precisa ser Tauri, mas deve ser bonito e visual:
 - cada opção com uma **barra de arrastar junto do campo de digitação**: arrastar ou digitar, os dois andam juntos, dentro da faixa válida;

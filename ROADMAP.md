@@ -72,7 +72,7 @@ Today the DLL only notices changes in the routines it replaces. On CLZ, NickPatc
 
 ## Phase 3: the configurator (options picker) 🔨
 
-The interface design and an interactive mock-up: [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md) and `docs/configurador_maquete.html` (11/02). The decisions that depend on Lucas are in §9 there. The exe status panel uses the states of [docs/COMPATIBILIDADE.en.md](docs/COMPATIBILIDADE.en.md): ✅ compatible, ⚠️ overrides (naming the patch), 🔁 left to the other, ❓ unknown.
+The interface design and an interactive mock-up: [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md) and `docs/configurador_maquete.html` (11/02). **The program prototype** (`configurador/`, Rust + egui, `tweaks-config.exe`) is ready since the night of 11/02 (§10 there): the folder dialog, preset confirmation and the no-graphics-card test are left. The decisions that depend on Lucas are in §9 there. The exe status panel uses the states of [docs/COMPATIBILIDADE.en.md](docs/COMPATIBILIDADE.en.md): ✅ compatible, ⚠️ overrides (naming the patch), 🔁 left to the other, ❓ unknown.
 
 A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't need to be Tauri, but it should look good and be visual:
 - each option with a **slider next to its input field**: drag or type, both move together, within the valid range;

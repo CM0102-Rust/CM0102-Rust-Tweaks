@@ -2,7 +2,7 @@
 
 *English version: [CONFIGURADOR.en.md](CONFIGURADOR.en.md)*
 
-Projeto da Fase 3 do [ROADMAP](../ROADMAP.pt.md): o programa que edita o `tweaks.cfg` com barras, gráficos e o estado do exe. Isto é projeto e maquete, não o programa. A maquete interativa, que abre no navegador, está em [configurador_maquete.html](configurador_maquete.html). Escrito em 02/11/2026.
+Projeto da Fase 3 do [ROADMAP](../ROADMAP.pt.md): o programa que edita o `tweaks.cfg` com barras, gráficos e o estado do exe. O projeto, a maquete e, desde 02/11, o protótipo do programa (§10). A maquete interativa, que abre no navegador, está em [configurador_maquete.html](configurador_maquete.html). Escrito em 02/11/2026.
 
 Fontes: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, as `Parte` e `pode_ligar`), `src/retrato.rs`, `src/pasta.rs`, [TESTES.md](TESTES.md). As faixas abaixo são as do código; onde o código não limita, a faixa é **proposta** (ou "a definir") e está marcada assim.
 
@@ -290,3 +290,21 @@ Texto: "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, 
 6. **Clubes do exemplo:** fictícios (como na maquete) ou lidos de um save do usuário (como o `calibrar.py`), numa versão seguinte.
 7. **O `video` travado pela resolução:** mostrar "janela" travada (como na maquete) ou gravar também `video = window` no `.cfg`.
 8. **Onde fica o configurador:** no mesmo zip da DLL (`tweaks-config.exe` ao lado de `ddraw.dll` e `tweaks.cfg`), sugerido.
+
+## 10. O programa (protótipo de 02/11/2026)
+
+`configurador/` é o programa: Rust com eframe/egui (renderizador `glow`), alvo i686 com a CRT estática, um `tweaks-config.exe` só, de uns 4,5 MB. Compilar: `cd configurador && cargo build --release`; testes: `cargo test --release` (a ida e volta do `.cfg` byte a byte, a troca só do valor, a última linha que vence, a chave nova no lugar certo).
+
+- `src/cfg.rs`: ler e gravar o `.cfg` como no §5 (só o valor muda; `.bak` e troca atômica; recusa gravar se o arquivo mudou no disco).
+- `src/chaves.rs`: as chaves, as faixas, os padrões da DLL e as quatro predefinições do §4.
+- `src/exe.rs`: o estado de cada ajuste no exe (§6), com as **mesmas** tabelas da DLL: `src/partes.rs` (as `Parte`, as assinaturas e os casos conhecidos, agora fora do `lib.rs`) e `src/trocas.rs`, incluídos pelo caminho, sem cópia.
+- `src/main.rs`: a janela (§2) e as abas (§3): o Início com o retrato e a tabela de estados; Jogo; Idades com o gráfico arrastável e o contorno dos "regens mais novos"; Inativos com a chance de aposentar por idade; Disputa com a curva do nível e as chances dos clubes de exemplo (a mesma conta de `peso()`); Registro com o último `tweaks.log`; tweaks.cfg com as linhas mudadas. Português e inglês (botão EN). A ajuda é o comentário do `.cfg` distribuído, embutido.
+
+Decisões tomadas no protótipo (dá para mudar): egui com `glow`; alvo i686 (o mesmo da DLL; roda em qualquer Windows); o `video` travado pela resolução só aparece travado, sem gravar `video = window`; os clubes do exemplo são fictícios.
+
+Falta: o diálogo de pasta do Windows (hoje a pasta é digitada ou vem do argumento ou da pasta do próprio configurador); a lista de mudanças antes de aplicar uma predefinição; o teste numa máquina sem placa de vídeo (o `glow` precisa de OpenGL 2).
+
+| | |
+|---|---|
+| ![Início no CLZ](imagens/configurador_inicio_clz.png) | ![Idades](imagens/configurador_idades.png) |
+| ![Disputa](imagens/configurador_disputa.png) | |

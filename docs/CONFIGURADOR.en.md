@@ -2,7 +2,7 @@
 
 *Versão em português: [CONFIGURADOR.md](CONFIGURADOR.md)*
 
-The design for Phase 3 of the [ROADMAP](../ROADMAP.md): the program that edits `tweaks.cfg` with sliders, charts and the exe's status. This is a design and a mock-up, not the program. The interactive mock-up, which opens in a browser, is [configurador_maquete.html](configurador_maquete.html). Written on 02/11/2026.
+The design for Phase 3 of the [ROADMAP](../ROADMAP.md): the program that edits `tweaks.cfg` with sliders, charts and the exe's status. The design, the mock-up and, since 11/02, the program prototype (§10). The interactive mock-up, which opens in a browser, is [configurador_maquete.html](configurador_maquete.html). Written on 02/11/2026.
 
 Sources: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, the `Parte` entries and `pode_ligar`), `src/retrato.rs`, `src/pasta.rs`, [TESTES.en.md](TESTES.en.md). The ranges below are the code's; where the code sets no limit, the range is **proposed** (or "to be decided") and marked as such.
 
@@ -290,3 +290,21 @@ Text: "A nation in the game is one whose league you picked when creating the car
 6. **Sample clubs:** made up (as in the mock-up) or read from the user's save (like `calibrar.py`), in a later version.
 7. **`video` locked by the resolution:** show "window" locked (as in the mock-up) or also write `video = window` to the `.cfg`.
 8. **Where the configurator goes:** in the same zip as the DLL (`tweaks-config.exe` next to `ddraw.dll` and `tweaks.cfg`), suggested.
+
+## 10. The program (prototype of 11/02/2026)
+
+`configurador/` is the program: Rust with eframe/egui (the `glow` renderer), i686 target with the static CRT, a single `tweaks-config.exe` of about 4.5 MB. Build: `cd configurador && cargo build --release`; tests: `cargo test --release` (the `.cfg` round trip byte by byte, only the value changing, the last line winning, a new key in the right place).
+
+- `src/cfg.rs`: reading and writing the `.cfg` as in §5 (only the value changes; `.bak` and an atomic swap; refuses to save if the file changed on disk).
+- `src/chaves.rs`: the keys, the ranges, the DLL's defaults and the four presets of §4.
+- `src/exe.rs`: each tweak's state on the exe (§6), with the DLL's **own** tables: `src/partes.rs` (the `Parte`s, the signatures and the known cases, now out of `lib.rs`) and `src/trocas.rs`, included by path, not copied.
+- `src/main.rs`: the window (§2) and the tabs (§3): Start with the snapshot and the state table; Game; Ages with the draggable chart and the "younger regens" outline; Idle players with the chance of retiring by age; Contest with the level curve and the example clubs' chances (the same sum as `peso()`); Log with the last `tweaks.log`; tweaks.cfg with the changed lines. Portuguese and English (EN button). The help is the distributed `.cfg`'s comment, embedded.
+
+Decisions taken in the prototype (they can change): egui with `glow`; i686 target (the same as the DLL; runs on any Windows); `video` locked by the resolution only shows as locked, without writing `video = window`; the example clubs are made up.
+
+Still to do: Windows' folder dialog (today the folder is typed, or comes from the argument or the configurator's own folder); the list of changes before applying a preset; the test on a machine without a graphics card (`glow` needs OpenGL 2).
+
+| | |
+|---|---|
+| ![Start on CLZ](imagens/configurador_inicio_clz.png) | ![Ages](imagens/configurador_idades.png) |
+| ![Contest](imagens/configurador_disputa.png) | |

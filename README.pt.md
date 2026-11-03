@@ -30,9 +30,11 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 |---|---|
 | `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows; com `video = window`, a camada de vídeo própria), lê `tweaks.cfg`, confere as assinaturas e liga cada ajuste |
 | `src/conteiner.rs` | O contêiner do save acima de 2 GB (cópia do `rust/src/conteiner.rs` do projeto CM0102; estável desde o save2gb) |
+| `src/partes.rs` | As partes, as assinaturas e os casos conhecidos (usados também pelo configurador) |
 | `src/pasta.rs` | `portable_folder` e `clear_admin_flag` |
 | `src/video.rs`, `src/apresentacao.rs`, `src/reducao.rs`, `src/win.rs` | A camada de vídeo de `video = window` (cópias dos arquivos do projeto CM0102: mudar lá e copiar para cá) |
 | `src/trocas.rs` | As trocas de `no_cd` e `resolution` (gerado por `tools/gerar_trocas.py`) |
+| `configurador/` | O configurador, `tweaks-config.exe` (Rust + egui, um exe só): edita o `tweaks.cfg` com barras, gráficos e o estado de cada ajuste no exe (`cd configurador && cargo build --release`) |
 | `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
 | `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o inventário da NickDLL do CLZ 6.1 |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
