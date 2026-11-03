@@ -4,7 +4,7 @@
 
 Leitura do fórum champman0102.co.uk em 01/11/2026, por script, só páginas públicas e sem login. A ideia é não repetir o que o NickPatcher e os outros autores já fazem, e atacar o que está em aberto e que só a nossa base em Rust permite.
 
-**Escopo (decisão do Lucas, 01/11/2026):** este repositório é a frente da DLL. As correções e o que se aprende aqui vão ser consolidados no projeto CM0102 quando ele estiver 100% em Rust. **Estruturas de competições ficam de fora:** o davdav já faz isso, e bem (o patch de reestruturação). Na tabela "Onde temos vantagem", as frentes escolhidas são a queda de dezembro (estudo), os empréstimos e a economia.
+**Escopo (decisão do Lucas, 01/11/2026):** este repositório é a frente da DLL. As correções e o que se aprende aqui vão ser consolidados no projeto CM0102 quando ele estiver 100% em Rust. **Estruturas de competições ficam de fora:** a comunidade já faz isso, e bem (o patch de reestruturação). Na tabela "Onde temos vantagem", as frentes escolhidas são a queda de dezembro (estudo), os empréstimos e a economia.
 
 ## Método
 
@@ -50,7 +50,7 @@ A resolução e as telas maiores também já têm patch (Nick, Tapani, melanzalk
 
 ### 1. Estruturas de competições: a maior demanda
 - "Mudar a estrutura das ligas é o que mais importa para mim: aumentar ou diminuir o número de times e tornar mais ligas jogáveis" (SteveHarle, t=1593). O MLS, por exemplo, tem só 12 times no jogo original.
-- O patch de reestruturação do davdav tem 1.423 respostas, mais 335 no tópico de suporte. Os formatos da Champions e da Liga Europa (t=3206, t=10794), os playoffs da National League inglesa (xeno 82) e as copas extintas convertidas em novas (xeno 79–81) são todos pedidos recorrentes.
+- O patch de reestruturação mais usado da comunidade tem 1.423 respostas, mais 335 no tópico de suporte. Os formatos da Champions e da Liga Europa (t=3206, t=10794), os playoffs da National League inglesa (xeno 82) e as copas extintas convertidas em novas (xeno 79–81) são todos pedidos recorrentes.
 - Hoje tudo isso se faz trocando ponteiros e ids gravados no exe ("dezenas de pontos do código", ver `CAMPOS.md` do projeto). Cada mudança é um patch frágil.
 - Bugs em aberto: o rebaixamento holandês (xeno 5.1), o ranking da FIFA (35), as nações pequenas fora das eliminatórias (83), clube promovido sem estádio (46), o sorteio das quartas da Champions (103), datas das Olimpíadas e da Champions asiática (84, 86).
 
@@ -104,7 +104,7 @@ A resolução e as telas maiores também já têm patch (Nick, Tapani, melanzalk
 
 | Frente | Por que é nossa | Tamanho |
 |---|---|---|
-| ~~Estruturas de competições~~ | **fora do escopo:** o davdav já faz isso, e bem | (a maior demanda, mas já atendida) |
+| ~~Estruturas de competições~~ | **fora do escopo:** a comunidade já faz isso, e bem | (a maior demanda, mas já atendida) |
 | **A queda de dezembro e outras quedas** | o contorno do Alan_v2 pula o laço; com a rotina entendida, dá para corrigir a causa (a vaga que falta) e registrar o que a provoca | pequeno a médio; muito pedido |
 | **Regens: fornada, nomes, nacionalidade, atributos** | já estamos dentro dessas rotinas | médio a grande (a fornada é a fase 6) |
 | **Empréstimos e IA do mercado** | as rotinas de transferência e contrato estão em Rust | médio |

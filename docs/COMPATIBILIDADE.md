@@ -36,23 +36,11 @@ Os mesmos que o configurador vai mostrar ([CONFIGURADOR.md](CONFIGURADOR.md)):
 | `video = window` | ✅ | ✅ | ❓ não testado: o CLZ em janela com a `ddraw.dll` do Windows para em "16 bit colour"; a camada de vídeo deve resolver [inferência] | ❓ |
 | `log = 1` (o registro das caixas, 0x5e8290) | ✅ | ✅ | ✅ | ⚠️ a LaMOHatesCD e a NickDLL do 6.1 (`hook_msgbox`) também desviam a 0x5e8290; o registro encadeia no desvio que já estiver lá; se a NickDLL instalar o dela depois e conferir os bytes originais, o dela pode se recusar [inferência, a confirmar no jogo] |
 
-## 3. O inventário da NickDLL do CLZ 6.1
+## 3. A NickDLL do CLZ 6.1
 
-`tools/inventario_dll.py` procura, nas seções de uma DLL, os endereços que caem nos trechos de cada ajuste. Não roda nada e não copia código: aponta onde olhar, e a confirmação é o retrato em memória (as linhas `runtime` do `tweaks.log`). A leitura da NickDLL tem a autorização do autor (dmcarmo), e a versão do CLZ é editada pela equipe do CLZ.
+O que a NickDLL do CLZ 6.1 e a LaMOHatesCD mudam nos trechos que o Tweaks usa, observado pelo retrato em memória (as linhas `runtime` do `tweaks.log`) e nos testes:
 
-| Versão (`D:\Games\CLZ Leagues Patch v6.1`) | O que toca nos nossos trechos |
+| DLL | O que muda nos nossos trechos |
 |---|---|
-| `NickDLL.dll` de 02/11 22:08 (a do 6.1) | **a resolução:** 208 dos nossos endereços; a "resolucao ampliada" (1280×720, 1280×800, 1280×1024, 1920×1080, pelo `NickDLL_config.json`) usa a mesma tabela de trocas e recusa se achar os bytes já mudados. **A caixa de mensagem** (0x5e8290). **O time B** (0x540a50). Chamadas à 0x933610 (contêiner do save) e a dois pontos da criação do regen (0x7abd90/96), fora dos trechos que trocamos |
-| `NickDLL.dllold` de 02/11 14:40 | o mesmo |
-| a de 18/10 (a das carreiras longas, em `copias\bancada4\clz_tweaks`) | sem a resolução; o resto igual |
-| `NickDLL.dlloriginal` de 08/10 | sem a resolução (só 3 endereços do Display) e com a 0x7a8060 (dentro da aposentadoria do desempregado) |
-| `LaMOHatesCD.dll` | só a caixa de mensagem |
-
-As correções da NickDLL do 6.1 (0x6847C0, 0x51F890, 0x768310, 0x522E00, 0x4A2540, 0x48F150, 0x4A4850, 0x4ACEB0, 0x6F46B0, 0x6E1090, 0x6CD35C, 0x6CD3FE, 0x6F3A67, pelas mensagens do log dela) não caem em nenhum trecho do Tweaks [observado].
-
-## 4. Uma DLL nova (a do Davdav e as próximas)
-
-1. `python tools/inventario_dll.py NovaDLL.dll`: os ajustes cujos trechos ela toca.
-2. Para cada ajuste tocado, ler o que ela faz ali (sem copiar) e pôr na matriz: ✅, ⚠️, 🔁 ou ❓.
-3. Uma carreira curta com `log = 1`: as linhas `runtime` mostram o que ela mudou de fato na memória, e o `check` diz se algum desvio nosso foi sobrescrito.
-4. Se ela faz o mesmo papel de um ajuste nosso (como a resolução da NickDLL), a DLL a reconhece e fica com ela, como em `resolucao_da_nickdll` (`src/lib.rs`).
+| NickDLL do 6.1 | **a resolução**, quando há uma `"resolucao"` escolhida no `NickDLL_config.json`: aí a nossa fica de fora (é uma ou outra); **a caixa de mensagem** (0x5e8290): o nosso registro das caixas encadeia; **o time B** (0x540a50): a disputa usa a rotina dela para deixar os times B de fora. Os outros ajustes não são tocados |
+| LaMOHatesCD | só a caixa de mensagem |

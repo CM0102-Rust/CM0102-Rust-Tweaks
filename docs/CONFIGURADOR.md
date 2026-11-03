@@ -199,7 +199,7 @@ Teste de aceitação: ler o `tweaks.cfg` distribuído e gravar sem mudar nada d�
 
 ## 6. O estado do exe
 
-Os estados, a matriz por exe e o inventário das DLLs do CLZ estão em [COMPATIBILIDADE.md](COMPATIBILIDADE.md); o aviso para quem usa o NickPatcher, em [NICKPATCHER.md](NICKPATCHER.md). O configurador mostra exatamente aqueles estados, com o motivo e o nome do patch, ajuste por ajuste. A regra de lá vale aqui: **fazer o possível**. Cada ajuste é conferido sozinho, e o que não serve fica de fora sem barrar os outros.
+Os estados, a matriz por exe e o que as DLLs do CLZ mudam estão em [COMPATIBILIDADE.md](COMPATIBILIDADE.md); o aviso para quem usa o NickPatcher, em [NICKPATCHER.md](NICKPATCHER.md). O configurador mostra exatamente aqueles estados, com o motivo e o nome do patch, ajuste por ajuste. A regra de lá vale aqui: **fazer o possível**. Cada ajuste é conferido sozinho, e o que não serve fica de fora sem barrar os outros.
 
 ### 6.1 Os quatro estados (COMPATIBILIDADE.md §1)
 

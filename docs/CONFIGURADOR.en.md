@@ -199,7 +199,7 @@ Acceptance test: reading the distributed `tweaks.cfg` and writing it with no cha
 
 ## 6. The exe's status
 
-The states, the per-exe matrix and the inventory of the CLZ DLLs are in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md); the warning for NickPatcher users, in [NICKPATCHER.en.md](NICKPATCHER.en.md). The configurator shows exactly those states, with the reason and the patch name, tweak by tweak. The rule from there applies here: **do what's possible**. Each tweak is checked on its own, and one that won't work is left out without blocking the others.
+The states, the per-exe matrix and what the CLZ DLLs change are in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md); the warning for NickPatcher users, in [NICKPATCHER.en.md](NICKPATCHER.en.md). The configurator shows exactly those states, with the reason and the patch name, tweak by tweak. The rule from there applies here: **do what's possible**. Each tweak is checked on its own, and one that won't work is left out without blocking the others.
 
 ### 6.1 The four states (COMPATIBILIDADE.en.md §1)
 

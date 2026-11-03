@@ -100,7 +100,7 @@ The hook chains to LaMOHatesCD's on CLZ and changes nothing in the game (loads a
 
 A copy of CLZ 2026 V6.1 (the V5.3 exe, the group's new NickDLL, untouched), with the registry `Location` pointing to another install (the V5.4 one) [measured, 02/11/2026]:
 - `portable_folder = 1`: the log says `portable folder: on (... Location is this folder: <the copy>)`, and the game opens and writes in the copy;
-- `clear_admin_flag = 1`: NickDLL writes `WIN95 RUNASADMIN` for the copy's exe and the DLL removes `RUNASADMIN` at the first `DirectDrawCreate`; the next start doesn't ask for elevation. `WIN95` stays: without Windows 95 mode, v6.1's NickDLL crashes creating a career (heap fault in `ntdll`, right after `bra_setup Brasileiro Sub-21 B`, four times, with and without this DLL); with `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, not elevated, the career is created and saved (suggested by the CLZ team);
+- `clear_admin_flag = 1`: NickDLL writes `WIN95 RUNASADMIN` for the copy's exe and the DLL removes `RUNASADMIN` at the first `DirectDrawCreate`; the next start doesn't ask for elevation. `WIN95` stays: without Windows 95 mode, v6.1 doesn't create the career (with and without this DLL); with `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, not elevated, the career is created and saved (suggested by the CLZ team);
 - windowed, with Windows' `ddraw.dll` CLZ stops at "Unable to initialise the graphics in windowed mode ... 16 bit colour" (box in the log): the test uses the working `ddraw.dll` as `ddraw_chain.dll`, for video only (`CM_SEM_DESVIOS=1`).
 
 ### 3.7 Video, resolution and CD
@@ -285,7 +285,7 @@ A finding on the way: a youngster born **without a club** and under 20 has his r
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
 - **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
-- **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then Davdav's new patch, when it's out (first `tools/inventario_dll.py`).
+- **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then other community packs, when they're out.
 
 ## 6. How to reproduce
 

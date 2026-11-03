@@ -36,23 +36,11 @@ The same ones the configurator will show ([CONFIGURADOR.en.md](CONFIGURADOR.en.m
 | `video = window` | ✅ | ✅ | ❓ not tested: CLZ in a window with Windows' `ddraw.dll` stops at "16 bit colour"; the video layer should fix it [inference] | ❓ |
 | `log = 1` (logging message boxes, 0x5e8290) | ✅ | ✅ | ✅ | ⚠️ LaMOHatesCD and 6.1's NickDLL (`hook_msgbox`) also hook 0x5e8290; the log chains to whatever hook is already there; if NickDLL installs its own later and checks for the original bytes, its own may refuse [inference, to confirm in the game] |
 
-## 3. The inventory of CLZ 6.1's NickDLL
+## 3. CLZ 6.1's NickDLL
 
-`tools/inventario_dll.py` looks, in a DLL's sections, for addresses that fall in each setting's code. It runs nothing and copies no code: it points where to look, and the confirmation is the memory snapshot (the `runtime` lines of `tweaks.log`). Reading NickDLL has its author's (dmcarmo) permission, and the CLZ version is edited by the CLZ team.
+What CLZ 6.1's NickDLL and LaMOHatesCD change in the code the Tweaks use, observed through the memory snapshot (the `runtime` lines of `tweaks.log`) and in the tests:
 
-| Version (`D:\Games\CLZ Leagues Patch v6.1`) | What it touches in our code |
+| DLL | What it changes in our code |
 |---|---|
-| `NickDLL.dll` of 11/02 22:08 (6.1's) | **the resolution:** 208 of our addresses; the "resolucao ampliada" (1280×720, 1280×800, 1280×1024, 1920×1080, through `NickDLL_config.json`) uses the same table of changes and refuses if it finds the bytes already changed. **The message box** (0x5e8290). **The B team** (0x540a50). Calls to 0x933610 (the save container) and to two places in regen creation (0x7abd90/96), outside the code we replace |
-| `NickDLL.dllold` of 11/02 14:40 | the same |
-| the one of 10/18 (the long careers', in `copias\bancada4\clz_tweaks`) | no resolution; the rest the same |
-| `NickDLL.dlloriginal` of 10/08 | no resolution (only 3 Display addresses) and 0x7a8060 (inside the unemployed retirement) |
-| `LaMOHatesCD.dll` | only the message box |
-
-The fixes in 6.1's NickDLL (0x6847C0, 0x51F890, 0x768310, 0x522E00, 0x4A2540, 0x48F150, 0x4A4850, 0x4ACEB0, 0x6F46B0, 0x6E1090, 0x6CD35C, 0x6CD3FE, 0x6F3A67, by its log messages) don't fall in any Tweaks code [observed].
-
-## 4. A new DLL (Davdav's and the next ones)
-
-1. `python tools/inventario_dll.py NewDLL.dll`: the settings whose code it touches.
-2. For each setting touched, read what it does there (without copying) and put it in the matrix: ✅, ⚠️, 🔁 or ❓.
-3. A short career with `log = 1`: the `runtime` lines show what it actually changed in memory, and `check` says whether any of our hooks was overwritten.
-4. If it does the same job as one of our settings (like NickDLL's resolution), the DLL recognises it and leaves it to it, as in `resolucao_da_nickdll` (`src/lib.rs`).
+| 6.1's NickDLL | **the resolution**, when a `"resolucao"` is chosen in `NickDLL_config.json`: then ours stays out (it's one or the other); **the message box** (0x5e8290): our message box log chains to it; **the B team** (0x540a50): the contest uses its routine to leave B teams out. The other tweaks aren't touched |
+| LaMOHatesCD | only the message box |

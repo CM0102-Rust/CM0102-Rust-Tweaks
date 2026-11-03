@@ -4,7 +4,7 @@
 
 A reading of the champman0102.co.uk forum on 11/01/2026, by script, public pages only and without logging in. The idea is not to repeat what NickPatcher and the other authors already do, and to go after what's still open and only our Rust base makes possible.
 
-**Scope (Lucas's decision, 11/01/2026):** this repository is the DLL front. The fixes and what we learn here will be consolidated into the CM0102 project once it's 100% Rust. **Competition structures are out:** davdav already does that, and does it well (the restructure patch). In the "Where we have an edge" table, the chosen fronts are the December crash (study), loans and the economy.
+**Scope (Lucas's decision, 11/01/2026):** this repository is the DLL front. The fixes and what we learn here will be consolidated into the CM0102 project once it's 100% Rust. **Competition structures are out:** the community already does that, and does it well (the restructure patch). In the "Where we have an edge" table, the chosen fronts are the December crash (study), loans and the economy.
 
 ## Method
 
@@ -50,7 +50,7 @@ Resolution and bigger screens also have patches (Nick, Tapani, melanzalko). Save
 
 ### 1. Competition structures: the biggest demand
 - "Ability to change League Structures is the big thing for me - particularly the ability to Increase/Decrease team numbers and make more leagues playable" (SteveHarle, t=1593). MLS, for example, has only 12 teams in the original game.
-- davdav's restructure patch has 1,423 replies, plus 335 in its support topic. The Champions League and Europa League formats (t=3206, t=10794), the English National League playoffs (xeno 82) and defunct cups turned into new ones (xeno 79–81) are all recurring requests.
+- The community's most used restructure patch has 1,423 replies, plus 335 in its support topic. The Champions League and Europa League formats (t=3206, t=10794), the English National League playoffs (xeno 82) and defunct cups turned into new ones (xeno 79–81) are all recurring requests.
 - Today all of this is done by swapping pointers and ids written into the exe ("dozens of places in the code", see the project's `CAMPOS.md`). Every change is a fragile patch.
 - Open bugs: Dutch relegation (xeno 5.1), the FIFA ranking (35), small nations missing from qualifiers (83), promoted clubs without a stadium (46), the Champions League quarter-final draw (103), Olympics and Asian Champions League dates (84, 86).
 
@@ -104,7 +104,7 @@ Resolution and bigger screens also have patches (Nick, Tapani, melanzalko). Save
 
 | Front | Why it's ours | Size |
 |---|---|---|
-| ~~Competition structures~~ | **out of scope:** davdav already does it, and does it well | (the biggest demand, but already served) |
+| ~~Competition structures~~ | **out of scope:** the community already does it, and does it well | (the biggest demand, but already served) |
 | **The December crash and other crashes** | Alan_v2's workaround skips the loop; with the routine understood, we can fix the cause (the missing slot) and log what triggers it | small to medium; much requested |
 | **Regens: intake, names, nationality, attributes** | we're already inside these routines | medium to large (the intake is phase 6) |
 | **Loans and market AI** | the transfer and contract routines are in Rust | medium |

@@ -100,7 +100,7 @@ O desvio encadeia no da LaMOHatesCD no CLZ e não muda nada no jogo (as cargas e
 
 Uma cópia do CLZ 2026 V6.1 (exe do V5.3, NickDLL nova do grupo, intocada), com o `Location` do registro apontando para outra instalação (a do V5.4) [medido, 02/11/2026]:
 - `portable_folder = 1`: o log diz `portable folder: on (... Location is this folder: <a cópia>)`, e o jogo abre e grava na cópia;
-- `clear_admin_flag = 1`: a NickDLL grava `WIN95 RUNASADMIN` para o exe da cópia e a DLL tira o `RUNASADMIN` na primeira `DirectDrawCreate`; a abertura seguinte não pede elevação. O `WIN95` fica: sem o modo Windows 95, a NickDLL do v6.1 cai ao criar a carreira (falha de heap no `ntdll`, logo depois de `bra_setup Brasileiro Sub-21 B`, quatro vezes, com e sem esta DLL); com `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, sem elevação, a carreira é criada e salva (sugestão da equipe do CLZ);
+- `clear_admin_flag = 1`: a NickDLL grava `WIN95 RUNASADMIN` para o exe da cópia e a DLL tira o `RUNASADMIN` na primeira `DirectDrawCreate`; a abertura seguinte não pede elevação. O `WIN95` fica: sem o modo Windows 95, o v6.1 não cria a carreira (com e sem esta DLL); com `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, sem elevação, a carreira é criada e salva (sugestão da equipe do CLZ);
 - em janela, com a `ddraw.dll` do Windows o CLZ para em "Unable to initialise the graphics in windowed mode ... 16 bit colour" (caixa no log): o teste usa a `ddraw.dll` de trabalho como `ddraw_chain.dll`, só pelo vídeo (`CM_SEM_DESVIOS=1`).
 
 ### 3.7 Vídeo, resolução e CD
@@ -285,7 +285,7 @@ Um achado no caminho: o jovem que nasce **sem clube** e com menos de 20 anos tem
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
 - **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
-- **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois o patch novo do Davdav, quando sair (primeiro o `tools/inventario_dll.py`).
+- **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois outros pacotes da comunidade, quando saírem.
 
 ## 6. Como reproduzir
 

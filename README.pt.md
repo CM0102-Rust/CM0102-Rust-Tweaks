@@ -50,7 +50,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `configurador/` | O configurador, `tweaks-config.exe` (Rust + egui, um exe só): edita o `tweaks.cfg` com barras, gráficos e o estado de cada ajuste no exe (`cd configurador && cargo build --release`) |
 | `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
 | `docs/GUIA_DAS_CHAVES.md` | **O guia das chaves para quem joga:** cada opção, o que faz, quando usar e o que acontece no jogo (gerado pelo configurador, `tweaks-config.exe --guia pt`) |
-| `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o inventário da NickDLL do CLZ 6.1 |
+| `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o que a NickDLL do CLZ 6.1 muda |
 | `docs/NICKPATCHER.md` | **Para quem usa o NickPatcher:** cada opção dele que mexe no mesmo lugar de um ajuste, o que convive e o que cada escolha causa |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
@@ -58,7 +58,6 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
 | `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
 | `tools/sav.py` | Leitura dos itens de um `.sav` |
-| `tools/inventario_dll.py` | Os trechos do Tweaks que uma DLL de terceiros toca (os endereços que ela traz), para a matriz de compatibilidade |
 | `tools/gerar_trocas.py` | Gera `src/trocas.rs` da diferença entre o `cm0102.exe`, o portátil e o de 1080 do projeto CM0102 |
 | `tools/temporadas.py` | A tabela por temporada de uma carreira longa (as linhas `season` e `regen` do log) |
 | `tools/gerar_referencia.py` | Gera `src/referencia.rs` (o hash de cada função e bloco do 3.9.68) para o retrato da DLL |
