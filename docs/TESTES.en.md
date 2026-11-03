@@ -231,11 +231,11 @@ What the numbers show:
 
 | July | Average squad: tweaks (§4.4) | without idle retirements | cap of 3 a season |
 |---|---|---|---|
-| 2004 | 32.9 | — | 32.9 |
+| 2004 | 32.9 | 32.8 | 32.9 |
 | 2006 | 30.9 | 30.8 | 31.3 |
 | 2008 | 28.9 | 28.9 | 29.7 |
 | 2010 | 27.9 | 28.1 | 29.0 |
-| 2011 | 27.6 | — | 28.7 |
+| 2011 | 27.6 | 27.8 | 28.7 |
 
 - **Idle retirements are not the cause:** without them squads fall the same way.
 - **A cap of 3 holds about one player per squad** (28.7 against 27.6 in 2011), with big clubs still at 4% to 10% of the contest. It doesn't fix it alone. The most likely cause is the youngsters spreading over clubs outside the competitions (2,745 clubs get some in the ten-year career). The decision is Lucas's: accept an average of 28, use a cap of 3, or a new tweak that prefers competition clubs.

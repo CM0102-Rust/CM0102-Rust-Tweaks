@@ -231,11 +231,11 @@ O que os números mostram:
 
 | Julho | Elenco médio: ajustes (§4.4) | sem os inativos | teto de 3 por temporada |
 |---|---|---|---|
-| 2004 | 32,9 | — | 32,9 |
+| 2004 | 32,9 | 32,8 | 32,9 |
 | 2006 | 30,9 | 30,8 | 31,3 |
 | 2008 | 28,9 | 28,9 | 29,7 |
 | 2010 | 27,9 | 28,1 | 29,0 |
-| 2011 | 27,6 | — | 28,7 |
+| 2011 | 27,6 | 27,8 | 28,7 |
 
 - **Os inativos não são a causa:** sem eles, o elenco cai do mesmo jeito.
 - **O teto de 3 segura cerca de um jogador por elenco** (28,7 contra 27,6 em 2011), com os grandes ainda em 4% a 10% da disputa. Não resolve sozinho. A causa mais provável é o espalhamento dos jovens por clubes fora das competições (2.745 clubes recebem na carreira de 10 anos). A decisão fica com o Lucas: aceitar 28 de média, usar o teto de 3, ou um ajuste novo que prefira os clubes das competições.
