@@ -87,6 +87,8 @@ struct App {
     pa: f64,
     ca: f64,
     mensagem: String,
+    /// A predefinição escolhida e as mudanças que ela faria, à espera da confirmação.
+    pendente: Option<(usize, Vec<(String, String, String)>)>,
 }
 
 impl App {
@@ -107,6 +109,7 @@ impl App {
             pa: 150.0,
             ca: 60.0,
             mensagem: String::new(),
+            pendente: None,
         };
         a.abrir_pasta();
         // só para as capturas de tela da documentação: a aba inicial e o idioma
@@ -372,12 +375,12 @@ impl App {
     }
 
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
-        App::cartao(ui, &self.t("O save e a instalação", "The save and the install"), |_| {});
+        ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE));
         for k in ["save_over_2gb", "portable_folder", "clear_admin_flag", "override_exe_changes"] {
             self.controle(ui, k, true);
         }
         ui.add_space(8.0);
-        App::cartao(ui, &self.t("Tela e CD", "Screen and CD"), |_| {});
+        ui.label(RichText::new(self.t("Tela e CD", "Screen and CD")).strong().size(15.0).color(VERDE));
         self.controle(ui, "resolution", true);
         let pela_resolucao = self.ligado("resolution") && self.estados().iter().any(|l| l.ajuste == "resolution" && l.estado == Estado::Compativel);
         self.controle(ui, "video", !pela_resolucao);
@@ -652,6 +655,13 @@ impl eframe::App for App {
                 ui.separator();
                 ui.label(self.t("Pasta do jogo:", "Game folder:"));
                 ui.add(egui::TextEdit::singleline(&mut self.pasta_digitada).desired_width(320.0));
+                if ui.button("…").on_hover_text(self.t("Escolher a pasta do jogo", "Choose the game folder")).clicked() {
+                    if let Some(p) = rfd::FileDialog::new().set_directory(&self.pasta).pick_folder() {
+                        self.pasta_digitada = p.display().to_string();
+                        self.pasta = p;
+                        self.abrir_pasta();
+                    }
+                }
                 if ui.button(self.t("Abrir", "Open")).clicked() {
                     self.pasta = PathBuf::from(self.pasta_digitada.trim());
                     self.abrir_pasta();
@@ -672,16 +682,17 @@ impl eframe::App for App {
                     }
                 });
                 if let Some(i) = escolha {
-                    for (k, v) in PREDEFINICOES[i].2 {
-                        self.definir(k, v);
-                    }
+                    let mut lista: Vec<(String, String, String)> = PREDEFINICOES[i].2.iter().map(|(k, v)| (k.to_string(), self.valor(k), v.to_string()))
+                        .filter(|(_, a, b)| a != b && !a.parse::<f64>().ok().zip(b.parse::<f64>().ok()).is_some_and(|(x, y)| (x - y).abs() < 1e-9)).collect();
                     if i >= 2 {
-                        // os "Equilibrado" usam a tabela de idades original
                         for n in 14..36 {
-                            let p = IDADES_PADRAO[n - 14];
-                            self.definir_idade(n, p.0, p.1);
+                            let (p, atual) = (IDADES_PADRAO[n - 14], self.idade_de(n));
+                            if (p.0 - atual.0).abs() > 1e-9 || p.1 != atual.1 {
+                                lista.push((format!("age_{}", n), format!("{}, {}", cfg::numero(atual.0), atual.1), format!("{}, {}", cfg::numero(p.0), p.1)));
+                            }
                         }
                     }
+                    self.pendente = Some((i, lista));
                 }
                 ui.separator();
                 let m = self.mudancas();
@@ -701,6 +712,38 @@ impl eframe::App for App {
             }
             ui.add_space(4.0);
         });
+        if let Some((i, lista)) = self.pendente.clone() {
+            let mut fechar = false;
+            egui::Window::new(self.t("Aplicar a predefinição?", "Apply the preset?")).collapsible(false).resizable(false)
+                .anchor(Align2::CENTER_CENTER, Vec2::ZERO).show(ctx, |ui| {
+                    ui.label(format!("{} — {} {}", if self.en { PREDEFINICOES[i].1 } else { PREDEFINICOES[i].0 }, lista.len(), self.t("valor(es) vão mudar:", "value(s) will change:")));
+                    egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
+                        for (k, a, b) in &lista {
+                            ui.label(RichText::new(format!("{:<26} {}  →  {}", k, a, b)).monospace());
+                        }
+                    });
+                    ui.horizontal(|ui| {
+                        if ui.button(self.t("Aplicar", "Apply")).clicked() {
+                            for (k, _, v) in &lista {
+                                match k.strip_prefix("age_").and_then(|n| n.parse::<usize>().ok()) {
+                                    Some(n) => {
+                                        let p = IDADES_PADRAO[n - 14];
+                                        self.definir_idade(n, p.0, p.1);
+                                    }
+                                    None => self.definir(k, v),
+                                }
+                            }
+                            fechar = true;
+                        }
+                        if ui.button(self.t("Cancelar", "Cancel")).clicked() {
+                            fechar = true;
+                        }
+                    });
+                });
+            if fechar {
+                self.pendente = None;
+            }
+        }
         egui::TopBottomPanel::bottom("rodape").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 let m = self.mudancas();
@@ -780,4 +823,32 @@ fn main() -> eframe::Result {
         cc.egui_ctx.set_visuals(v);
         Ok(Box::new(App::new(pasta)))
     }))
+}
+
+#[cfg(test)]
+mod testes {
+    use super::*;
+
+    #[test]
+    fn grava_so_o_que_mudou() {
+        let pasta = std::env::temp_dir().join(format!("tweaks_config_teste_{}", std::process::id()));
+        std::fs::create_dir_all(&pasta).unwrap();
+        std::fs::write(pasta.join("tweaks.cfg"), cfg::DISTRIBUIDO).unwrap();
+        let mut a = App::new(pasta.clone());
+        assert_eq!(a.mudancas(), 0);
+        a.definir("log", "1");
+        a.definir("unattached", "only_if_no_room");
+        a.definir_idade(27, 1.5, -1);
+        a.definir("sigma", "2500"); // igual ao que está: nada muda
+        a.gravar();
+        let novo = std::fs::read_to_string(pasta.join("tweaks.cfg")).unwrap();
+        let (antes, depois): (Vec<&str>, Vec<&str>) = (cfg::DISTRIBUIDO.lines().collect(), novo.lines().collect());
+        assert_eq!(depois.len(), antes.len() + 1); // só a age_27 entrou
+        let mudadas: Vec<&&str> = depois.iter().filter(|l| !antes.contains(l)).collect();
+        assert_eq!(mudadas.len(), 3, "{:?}", mudadas);
+        assert!(novo.contains("age_27 = 1.5"));
+        assert_eq!(std::fs::read_to_string(pasta.join("tweaks.cfg.bak")).unwrap(), cfg::DISTRIBUIDO);
+        assert_eq!(a.mudancas(), 0);
+        std::fs::remove_dir_all(&pasta).ok();
+    }
 }
