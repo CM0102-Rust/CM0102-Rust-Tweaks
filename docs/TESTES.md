@@ -110,6 +110,17 @@ Carreiras automáticas curtas na pasta do banco de outubro de 2026 (inglês), se
 | `cm0102-1080.exe` (já tem o CD e a resolução) | `no_cd = 1`, `resolution = 1080` | "this exe already has it" nos dois; só a trava das 30 linhas entra; até 2001-245 |
 | CLZ (só os bytes do exe, sem rodar) | — | CD: 38 de 66 trechos como no 3.9.68 e 28 já trocados (14 das 33 checagens); resolução: 196 como no 3.9.68 e 5 já trocados (o mesmo código do NickPatcher); a entrada do `Area::init` igual. Com a regra de fazer o possível, a DLL completa o que falta; o CD fica com a `LaMOHatesCD.dll`, e a resolução com a NickDLL do 6.1 quando ela tem uma resolução escolhida ([COMPATIBILIDADE.md](COMPATIBILIDADE.md)) |
 
+Depois da regra de fazer o possível (a lista da resolução completa o que o exe já tem; o CD checagem por checagem) [medido, 02/11 à noite]:
+
+| Exe | Resultado |
+|---|---|
+| `cm0102.exe` intacto | CD: 66 trechos trocados agora; resolução: 201; a trava das 30 linhas; o vídeo em janela; até 2001-216 |
+| `cm0102-1080.exe` | CD: 0 agora, 66 já no exe; resolução: 0 agora, 201 já no exe; até 2001-215 |
+| cópia "misturada", como o CLZ (14 checagens do CD e 5 trechos da resolução já trocados) | CD: 38 agora, 28 já no exe; resolução: 196 agora, 5 já no exe; o jogo em 1080; até 2001-215 |
+| cópia "estranha" (um trecho da resolução com bytes de outro patch) | a resolução recusa ("1 of 201 places ... another patch there; nothing was changed"); o CD e a trava entram; o jogo segue em 800×600 até 2001-215 |
+
+As cópias de teste são geradas por `resultados/misto.py` a partir do `cm0102.exe`, numa pasta de teste, e apagadas depois.
+
 Falta o teste com a tela: a janela, o Print Screen e o relatório de uma partida antiga em 1080.
 
 ## 4. Os regens
