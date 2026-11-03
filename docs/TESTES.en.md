@@ -89,6 +89,10 @@ With `log = 1`, every box goes to the log before it shows. Real cases caught [me
 | `Database..cpp 7784` | automatic career in Portuguese on the official October 2026 database: the language change fails (0x5339a0). In English (`ENG_UK`) it runs |
 | `friendly..cpp 4695` / `4634` | save above 2 GB without `save_over_2gb` |
 | "Insert the CD" | the untouched `cm0102.exe` 3.9.68 asks for the CD |
+| `Cup..cpp 1187` | in a ten-season career with the tweaks, at 2001-331 (factory database): `Cup::process_fixture` (0x51a150) didn't find the fixture's home club in the cup tree (`find_tree_slot_for_fixture` returned -1). Code the DLL doesn't touch; the same setup, repeated, ran to 2011 |
+| `match_eng..cpp 612` and `652` | on the official October 2026 database: "Only %d home players" (and the away side), a team without enough players for the match. 2 of 8 short careers to January 2002; in one of them, at 2001-248, the tweaks hadn't done anything in the game yet (no retirement, no youngster in the contest). The database has a competition club that starts with 0 players (the `season` line): it's the database, not the DLL |
+
+Since 11/03 the log also records the detail the game builds before some boxes (the `msgbox-detail` line, the text at 0xde1f64), such as the match's teams in `match_eng`.
 
 The hook chains to LaMOHatesCD's on CLZ and changes nothing in the game (loads and careers with it on ran normally).
 

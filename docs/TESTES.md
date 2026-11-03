@@ -89,6 +89,10 @@ Com `log = 1`, toda caixa vai para o log antes de aparecer. Casos reais apanhado
 | `Database..cpp 7784` | carreira automática em português no banco oficial de outubro de 2026: a troca de idioma falha (0x5339a0). Em inglês (`ENG_UK`) anda |
 | `friendly..cpp 4695` / `4634` | save acima de 2 GB sem `save_over_2gb` |
 | "Coloque o CD" | o `cm0102.exe` 3.9.68 intacto pede o CD |
+| `Cup..cpp 1187` | numa carreira de 10 temporadas com os ajustes, em 2001-331 (banco de fábrica): a `Cup::process_fixture` (0x51a150) não achou o mandante do jogo na chave da copa (`find_tree_slot_for_fixture` devolveu -1). Código em que a DLL não mexe; a mesma configuração, repetida, passou e chegou a 2011 |
+| `match_eng..cpp 612` e `652` | no banco oficial de outubro de 2026: "Only %d home players" (e o visitante), um time sem jogadores suficientes para a partida. 2 de 8 carreiras curtas até janeiro de 2002; numa delas, em 2001-248, os ajustes ainda não tinham feito nada no jogo (nenhuma aposentadoria, nenhum jovem na disputa). O banco tem clube de competição que começa com 0 jogadores (a linha `season`): é do banco, não da DLL |
+
+Desde 03/11, o registro também grava o detalhe que o jogo monta antes de algumas caixas (a linha `msgbox-detail`, o texto em 0xde1f64), como os times da partida no `match_eng`.
 
 O desvio encadeia no da LaMOHatesCD no CLZ e não muda nada no jogo (as cargas e carreiras com ele ligado seguiram normais).
 
