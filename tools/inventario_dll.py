@@ -28,6 +28,22 @@ TRECHOS = [
     ('msgbox (0x5e8290)', 0x5e8290, 0x5e8299),
     ('trava das 30 linhas (Area::init 0x402ac0)', 0x402ac0, 0x402ac6),
     ('mutex do jogo (0x9f183c)', 0x9f183c, 0x9f1861),
+    ('regen_origins (chamada em 0x7a664f)', 0x7a664f, 0x7a6654),
+    ('regen_origins (chamada em 0x7a6335)', 0x7a6335, 0x7a633a),
+    ('regen_origins (chamada em 0x7a64c9)', 0x7a64c9, 0x7a64ce),
+    ('regen_origins (chamada em 0x7a64e2)', 0x7a64e2, 0x7a64e7),
+    ('regen_origins (chamada em 0x81bee7)', 0x81bee7, 0x81beec),
+    ('regen_origins (chamada em 0x81c53a)', 0x81c53a, 0x81c53f),
+    ('regen_origins (chamada em 0x81f360)', 0x81f360, 0x81f365),
+    ('regen_origins (chamada em 0x7617d8)', 0x7617d8, 0x7617dd),
+    ('regen_origins (chamada em 0x76276a)', 0x76276a, 0x76276f),
+    ('regen_origins (chamada em 0x81ba5e)', 0x81ba5e, 0x81ba63),
+    ('regen_origins (chamada em 0x5cd0c8)', 0x5cd0c8, 0x5cd0cd),
+    ('regen_origins (chamada em 0x5cc7d4)', 0x5cc7d4, 0x5cc7d9),
+    ('regen_origins (chamada em 0x827b77)', 0x827b77, 0x827b7c),
+    ('regen_origins (chamada em 0x8389d2)', 0x8389d2, 0x8389d7),
+    ('regen_origins (rotinas da reserva e do regen)', 0x7a8350, 0x7a8b70),
+    ('regen_origins (regen jovem)', 0x7abac0, 0x7ad0e0),
 ]
 
 

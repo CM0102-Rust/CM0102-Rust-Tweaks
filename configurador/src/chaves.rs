@@ -28,16 +28,19 @@ pub enum Aba {
     Disputa,
     Registro,
     Cfg,
+    Log,
 }
 
-pub const ABAS: [(Aba, &str, &str); 7] = [
-    (Aba::Inicio, "Início", "Start"),
-    (Aba::Jogo, "Jogo", "Game"),
-    (Aba::Idades, "Idades", "Ages"),
-    (Aba::Inativos, "Inativos", "Idle players"),
-    (Aba::Disputa, "Disputa", "Contest"),
-    (Aba::Registro, "Registro", "Log"),
-    (Aba::Cfg, "tweaks.cfg", "tweaks.cfg"),
+/// O menu da esquerda, na ordem: (aba, nome pt, nome en, grupo pt, grupo en); o grupo vazio não tem título.
+pub const ABAS: [(Aba, &str, &str, &str, &str); 8] = [
+    (Aba::Inicio, "Início", "Start", "", ""),
+    (Aba::Idades, "Idades", "Ages", "Regens", "Regens"),
+    (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Regens", "Regens"),
+    (Aba::Inativos, "Aposentadoria", "Retirement", "Regens", "Regens"),
+    (Aba::Registro, "De quem é cada regen", "Where each regen comes from", "Regens", "Regens"),
+    (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Jogo", "Game"),
+    (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos", "Files"),
+    (Aba::Log, "tweaks.log", "tweaks.log", "Arquivos", "Files"),
 ];
 
 const fn num(min: f64, max: f64, b0: f64, b1: f64, inteiro: bool) -> Tipo {
@@ -84,7 +87,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "outside_competitions", aba: Aba::Disputa, tipo: num(0.0, 1.0, 0.0, 1.0, false), padrao: "1", rotulo: ("Clubes fora das competições (peso)", "Clubs outside the competitions (weight)") },
     Chave { nome: "temperature", aba: Aba::Disputa, tipo: num(-INF, INF, 0.25, 3.0, false), padrao: "1", rotulo: ("Temperatura", "Temperature") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
-    Chave { nome: "log", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
+    Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];
 
 /// A tabela de idades sem as linhas (`PADRAO.peso_da_idade` e `teto_da_idade`), de 14 a 35.

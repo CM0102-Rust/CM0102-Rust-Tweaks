@@ -4,51 +4,17 @@
 
 Each option: what it does, when to use it and what happens in the game. Without the line in `tweaks.cfg`, the default shown applies (the DLL's). Each `tweaks.cfg` line's comment has the technical detail.
 
-## Game
-
-### Saves above 2 GB — `save_over_2gb`
-
-Lets the game save and load saves above 2 GB (up to 4 GB). Turn it on if your save is large (many leagues, a long career) or the game errors when loading. Off, a save above 2 GB won't load. It changes nothing in the career.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Portable folder (no SetupReg) — `portable_folder`
-
-The game uses the folder its exe is in, with no SetupReg and no Windows registry. Useful for several installs side by side or a copy on a USB stick. Nothing is written to the registry.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Clear NickDLL's admin flag — `clear_admin_flag`
-
-Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark (keeps Windows 95 mode). It takes effect from the next start. Leave it off if you set that on purpose.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Override the exe's changes — `override_exe_changes`
-
-When your exe already has a change where a tweak hooks in (the Regen Tweak, NickPatcher's ages), the exe's stays by default. On, this DLL's tweaks replace those changes. Use it only if you want this DLL's rules instead of your pack's.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Video — `video`
-
-Window: the game draws to an ordinary window. Print Screen and screen recorders work, the window resizes with sharp scaling, and Windows never changes resolution (no flicker on Alt+Tab). Original: Windows' DirectDraw, as always.
-
-Values: `original` (Windows DirectDraw), `window` (Project window (Print Screen, scaling)). Default: `original`.
-
-### Resolution — `resolution`
-
-1920×1080: the game's screens at 1920×1080, applied in memory (the exe file isn't changed). It turns on the windowed video too and avoids the old match report error. If the exe or NickDLL already has its own resolution, theirs stays.
-
-Values: `original` (The exe's), `1080` (1920×1080). Default: `original`.
-
-### No CD — `no_cd`
-
-The game runs without the CD. If you already use a NoCD (CLZ's LaMOHatesCD, a no-CD exe), that one stays.
-
-Values: `1` on, `0` off. Default: `0`.
-
 ## Ages
+
+At what age each regen is born, and with how much CA. The bars are the ages 14 to 35: the height is the chance of being born at that age, and the number below is the CA cap. Click a bar to pick it and drag to change the chance. The settings apply to regens born from then on, in a save in progress too.
+
+- **Regen**: the new player the game creates when someone retires. The game doesn't create a person from scratch: it reuses one retiree's slot and another's player record.
+- **CA**: Current Ability (1 to 200): how well the player plays today.
+- **PA**: Potential Ability (1 to 200): how far the CA can grow over time. The regen inherits the PA of the player record he got.
+- **Chance**: each age's weight in the draw. It doesn't need to add up to 100: what counts is the proportion between ages (the percentage above each bar). 0 removes the age.
+- **CA cap**: the highest CA a youngster of that age is born with, the number below the bar. With a cap of 80 at 17, no 17-year-old regen is born with CA above 80, even with PA 180: he has to grow. With no cap, the CA comes only from the game's formula.
+- **age_18 in tweaks.cfg**: it's how age 18 is written in the file: "age_18 = 29.11, 100" means chance 29.11 and CA cap 100. Each bar is one of these lines, from age_14 to age_35.
+- **Contest**: the choice of the club that gets the youngster (Clubs' contest tab). The two options that decide who enters it are here.
 
 ### Regen ages — `ages`
 
@@ -98,45 +64,18 @@ Clubless only without room: every youngster from a nation in the game goes to th
 
 Values: `original` (Original), `only_if_no_room` (Clubless only without room). Default: `original`.
 
-## Idle players
+## Clubs' contest
 
-### Retire idle players — `retire_idle_players`
+Which club the young regen goes to. When a youngster from a nation in the game is born, the clubs of his country compete for him. Here you choose the rule of that contest and tune the draw. The chart and the list of chances use an example youngster and example clubs: move his PA and CA to see where the rule would send him.
 
-A clubless player nobody wants retires sooner, and his record becomes a regen a few weeks later. Result: more youngsters and fewer idle veterans on the market. In a pack that blocks retirements (NickPatcher's RetirePatchV4) it barely acts.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Days without a club — `idle_days`
-
-How many days without a club before the idle rule applies. Fewer days = faster retirements.
-
-Values: from 0 to … (whole number). Default: `180`.
-
-### Minimum age — `idle_min_age`
-
-From what age the idle rule applies. Below it, the game's original rule stays.
-
-Values: from 0 to 126 (whole number). Default: `28`.
-
-### Reputation threshold — `idle_rep`
-
-The reputation up to which an idle player retires: lower-reputation players almost always go; higher ones rarely. Higher = more retirements.
-
-Values: from 0 to …. Default: `1500`.
-
-### More per year of age — `idle_rep_per_year`
-
-How much the reputation threshold rises per year above the minimum age: older players retire more easily.
-
-Values: from 0 to …. Default: `250`.
-
-### Protect those under (0 = no) — `protect_young_unemployed`
-
-Below this age no clubless player retires by the idle rule. 0 = no protection (the default: the game already gives a clubless youngster 365 days). Protecting the young reduces recycling into regens.
-
-Values: from 0 to 126 (whole number). Default: `0`.
-
-## Contest
+- **Original**: the 3.9.68 rule: clubs with the highest reputation and best facilities almost always win. A big club can collect over 10 regens in a season, and small ones almost never get any.
+- **Proportional draw**: this DLL's rule: each club in the country gets a weight, and the club is drawn in proportion to its weight. A club with twice the weight has twice the chance; nobody is guaranteed and nobody is left out. The weight is level × facilities × staff × room.
+- **Club reputation**: the club's size in the game, from 0 to 10000 (a European giant is above 9000; a local club is near 1000).
+- **Target**: the club reputation that suits the youngster: his PA times the target rule (with 50, a PA 150 aims at a 7500 club). The yellow line on the chart.
+- **Level**: how close the club is to the target, from 0 to 1: the bell curve on the chart. At the target it's 1; far from it, it drops.
+- **Example youngster**: an imaginary youngster, only for the charts: move his PA and CA to see where the rule would send a youngster like him. It changes neither the game nor tweaks.cfg.
+- **Example clubs**: imaginary clubs of several sizes (the blue dots on the chart and the list of chances), for comparison. In the game, the real clubs of the youngster's country take part.
+- **Surprise**: a share of youngsters is drawn without looking at the club's level: the star who turns up at a small club, like Ronaldo at São Cristóvão.
 
 ### The clubs' contest — `rule`
 
@@ -234,13 +173,119 @@ Sharpens (above 1) or softens (below 1) the weight differences between clubs. 1 
 
 Values: from … to …. Default: `1`.
 
-## Log
+## Retirement
+
+Retiring clubless players nobody wants. Every regen is born from a retired player's record: retiring the idle veteran sooner means more youngsters are born, with the same total number of people and no change to the save format. The chart shows the chance of retiring by age, for an example player.
+
+- **Idle player**: a player without a club for a long time, whom no club signs.
+- **Check**: the game tests retirements four times a year (days 0, 80, 173 and 250). The chart's chance is per check.
+- **Reputation**: the player's fame, from 0 to 10000. Players with low reputation retire more easily.
+- **Example reputation**: an imaginary player, only for the chart: change the reputation to see the chance of retiring by age. It doesn't change the game.
+- **Original rule**: the dashed line: in 3.9.68, after 365 days without a club, the chance is 750 / reputation, at any age.
+
+### Retire idle players — `retire_idle_players`
+
+A clubless player nobody wants retires sooner, and his record becomes a regen a few weeks later. Result: more youngsters and fewer idle veterans on the market. In a pack that blocks retirements (NickPatcher's RetirePatchV4) it barely acts.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Days without a club — `idle_days`
+
+How many days without a club before the idle rule applies. Fewer days = faster retirements.
+
+Values: from 0 to … (whole number). Default: `180`.
+
+### Minimum age — `idle_min_age`
+
+From what age the idle rule applies. Below it, the game's original rule stays.
+
+Values: from 0 to 126 (whole number). Default: `28`.
+
+### Reputation threshold — `idle_rep`
+
+The reputation up to which an idle player retires: lower-reputation players almost always go; higher ones rarely. Higher = more retirements.
+
+Values: from 0 to …. Default: `1500`.
+
+### More per year of age — `idle_rep_per_year`
+
+How much the reputation threshold rises per year above the minimum age: older players retire more easily.
+
+Values: from 0 to …. Default: `250`.
+
+### Protect those under (0 = no) — `protect_young_unemployed`
+
+Below this age no clubless player retires by the idle rule. 0 = no protection (the default: the game already gives a clubless youngster 365 days). Protecting the young reduces recycling into regens.
+
+Values: from 0 to 126 (whole number). Default: `0`.
+
+## Where each regen comes from
+
+Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.
+
+- **Slot**: the retired person the game reuses for the regen: the id and personality come from him. The name, age and nation change.
+- **Player record**: another retiree's record, kept in a pool: the PA, positions, feet and attributes come from it. It's "whose" the regen is: Ronaldo's regen is whoever gets Ronaldo's record.
+- **regen_origins.csv**: the history, next to the exe: one line per regen, separated by semicolons. It opens in Excel with a double click and in Notepad. To share it, send the file.
+- **X.regens**: when you save the game, the DLL writes next to the save (X.sav) the owners of the records still in the pool, and reads it on load. Copy the save and the .regens together.
 
 ### Record where each regen comes from — `regen_origins`
 
-Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or "no club"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find "Ronaldo's regen". The game keeps this nowhere: only regens created with this option on are recorded.
+Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or "no club"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find "Ronaldo's regen". The game keeps this nowhere: only regens created with this option on are recorded. The file opens in Excel with a double click (UTF-8, columns separated by semicolons; in an English Excel, use Data > From Text/CSV). When you save the game, the DLL writes an X.regens next to the save with the owners of the records still waiting to become regens; when you load, it reads it. Copy both together: without the .regens, some of the first regens after loading may show an unknown owner.
 
 Values: `1` on, `0` off. Default: `0`.
+
+## Screen, save, folder
+
+The save, the install, the screen and the CD. These tweaks don't change the game's rules: only how it saves, where it looks for its files and how it draws.
+
+- **Override the exe's changes**: when the exe already has a change (from NickPatcher, the Regen Tweak) where a tweak hooks in, the exe's stays by default. On, this DLL's applies, and that exe option stops working.
+- **SetupReg**: the program that writes in the Windows registry where the game is installed. With the portable folder, the game doesn't need it.
+
+### Saves above 2 GB — `save_over_2gb`
+
+Lets the game save and load saves above 2 GB (up to 4 GB). Turn it on if your save is large (many leagues, a long career) or the game errors when loading. Off, a save above 2 GB won't load. It changes nothing in the career.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Portable folder (no SetupReg) — `portable_folder`
+
+The game uses the folder its exe is in, with no SetupReg and no Windows registry. Useful for several installs side by side or a copy on a USB stick. Nothing is written to the registry.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Clear NickDLL's admin flag — `clear_admin_flag`
+
+Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark (keeps Windows 95 mode). It takes effect from the next start. Leave it off if you set that on purpose.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Override the exe's changes — `override_exe_changes`
+
+When your exe already has a change where a tweak hooks in (the Regen Tweak, NickPatcher's ages), the exe's stays by default. On, this DLL's tweaks replace those changes. Use it only if you want this DLL's rules instead of your pack's.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Video — `video`
+
+Window: the game draws to an ordinary window. Print Screen and screen recorders work, the window resizes with sharp scaling, and Windows never changes resolution (no flicker on Alt+Tab). Original: Windows' DirectDraw, as always.
+
+Values: `original` (Windows DirectDraw), `window` (Project window (Print Screen, scaling)). Default: `original`.
+
+### Resolution — `resolution`
+
+1920×1080: the game's screens at 1920×1080, applied in memory (the exe file isn't changed). It turns on the windowed video too and avoids the old match report error. If the exe or NickDLL already has its own resolution, theirs stays.
+
+Values: `original` (The exe's), `1080` (1920×1080). Default: `original`.
+
+### No CD — `no_cd`
+
+The game runs without the CD. If you already use a NoCD (CLZ's LaMOHatesCD, a no-CD exe), that one stays.
+
+Values: `1` on, `0` off. Default: `0`.
+
+## tweaks.log
+
+tweaks.log is the DLL's diary: the exe it found, what each tweak did and, with logging on, each youngster and his club. It's the file to send when something goes wrong.
 
 ### Log (tweaks.log) — `log`
 

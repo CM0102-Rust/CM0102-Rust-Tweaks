@@ -252,9 +252,24 @@ Uma leitura da memória do jogo em execução (de fora, só leitura; `resultados
 
 ### 4.6 De quem é cada regen (`regen_origins`)
 
-Uma carreira na base de fábrica até janeiro de 2002, com `regen_origins = 1` [medido, 03/11]: 44 regens no `regen_origins.csv`, **nenhum** com o dono da ficha desconhecido. Exemplos: Domenico Marchesini (16 anos, ala, PA 140, Milan) herdou a vaga de Gennaro Marrazzo e a ficha de Massimiliano Esposito (aposentado aos 29, CA 60, PA 140); Fabrício dos Santos herdou vaga e ficha do mesmo jogador, Roque. Como a fila e a reserva andam juntas, o dono da ficha de um regen costuma ser o dono da vaga do anterior. O exemplo está em `resultados/regen_origins_exemplo.csv`.
+**A prova (03/11), na base de fábrica**, com o verificador `tools/conferir_origens.py`: ele confere cada regen do `regen_origins.csv` contra um save da mesma carreira, gravado depois. O regen tem de ser regen no save, com o mesmo nome, a mesma nação e o mesmo PA, e o PA tem de ser o da ficha registrada, a do dono. Uma mutação proposital (um PA e um nome trocados no CSV) deu 3 erros: o verificador discrimina. **[medido]**
 
-Como a DLL acha o dono da ficha (sem mudar nada no jogo nem no save): desvia as duas chamadas por onde a ficha de um jogador aposentado entra na reserva (a fila, 0x7a87d0 em 0x7a64c9 e 0x7a64e2, e o jogador que vira técnico, 0x7a8350 em 0x7a6335) e anota, numa tabela fixa da DLL indexada pela ficha, o nome, o id, a idade, o CA e o PA do dono **naquele momento**; na criação (0x7abac0, chamada em 0x7a664f), lê a vaga (A) antes da sobrescrita e a ficha da frente da reserva. A carreira vem do nome do `.sav` que o jogo abre (o `CreateFileA` do exe). Num save carregado, as fichas que já estavam na reserva aparecem como desconhecidas.
+| Prova | Regens | Donos desconhecidos | Erros | Reserva na carga / na gravação |
+|---|---|---|---|---|
+| 1. Carreira nova, de julho a 01/12/2001, gravada | 23 | 0 | 0 | — / 0 |
+| 2. Carga dela, até 30/05/2002, gravada | 550 | 0 | 0 | 0 / 0 |
+| 3. Carga dela, até 29/07/2002, gravada | 265 | 0 | 0 | 0 / 511, todos com dono |
+| 4. Carga da 3 **sem** o `.regens`, até 07/10/2002 | 450 | 168 | 0 | 511: 326 donos recuperados do jogo, 185 desconhecidos |
+| 5. Carga da 3 **com** o `.regens`, até 07/10/2002 | 450 | 0 | 0 | 511: 511 do arquivo / 77, todos com dono |
+
+O que essas provas corrigiram, antes do lançamento:
+- **O caminho do técnico.** O jogador que se aposenta e segue como técnico põe a ficha na reserva pela 0x7a8350, cujo 1º argumento é o **índice da pessoa**, e não a ficha. A DLL tratava esse número como ficha e quase nunca achava o dono: daí os desconhecidos numa carreira nova (1 em 32, o Mark Evans, na primeira pasta de teste).
+- **A carga.** Num save carregado, as fichas que já estavam na reserva perdiam o dono, e no meio do ano a reserva tem centenas delas (511 em julho). Agora, ao gravar o jogo, a DLL grava ao lado do save um `X.regens` com os donos das fichas da reserva e o lê na carga. O save não muda. Sem o arquivo, ela recupera o dono que a fila gravou na entrada, quando ele ainda aponta para a ficha (326 de 511); o resto fica "desconhecido", e a linha diz por quê.
+- **O nome da carreira.** O jogo grava num `temp_save_file.sav` e renomeia no fim (o bit 0x20000000 do `game.cfg`), e o `-load` chega em minúsculas. A carreira vinha do `CreateFileA` e saía "temp_save_file.sav". Agora vem da carga e da gravação (as entradas de 0x82a9c0 e 0x82e430, desviadas com trampolim) e usa o nome como está no disco.
+- **Uma linha falsa.** A 0x7abac0 desiste quando a pessoa não está aposentada ou tem clube. A DLL só registra quando a ficha da frente da reserva foi de fato para a pessoa.
+- **O Excel.** O CSV sai com BOM (UTF-8): abre com dois cliques. Se o arquivo estiver aberto no Excel (trancado), as linhas esperam na memória e entram depois; se o jogo fechar antes, vão para `regen_origins_pending.txt` e entram na próxima abertura.
+
+Como a DLL acha o dono da ficha (sem mudar nada no jogo nem no save): desvia as duas chamadas por onde a ficha de um jogador aposentado entra na reserva (a fila, 0x7a87d0 em 0x7a64c9 e 0x7a64e2, e o jogador que vira técnico, 0x7a8350 em 0x7a6335) e anota, numa tabela fixa da DLL indexada pela ficha, o nome, o id, a idade, o CA e o PA do dono **naquele momento**. Na criação (0x7abac0, chamada em 0x7a664f, a única), lê a vaga (A) antes da sobrescrita e a ficha da frente da reserva, que é a que o jogo usa sempre. A liberação do jogo (0x82ff40) zera a tabela: outra carreira começa limpa. Se qualquer um desses pontos difere do 3.9.68, o registro não liga, e o `tweaks.log` diz onde. No exe do CLZ e no da base com o NickPatcher, os pontos estão intactos no arquivo; a NickDLL do 6.1 aponta para as chamadas da carga, e por isso a carga é desviada na entrada. Falta a prova no jogo do CLZ.
 
 Um achado no caminho: o jovem que nasce **sem clube** e com menos de 20 anos tem a reputação cortada pelo jogo (0x7acf61..0x7acf94: atual e em casa no máximo 1250, mundial 1), e fica quase invisível para a IA. O PA não é mexido em nenhum caso, e a normalização dos atributos (0x538ec0, 0x538bc0) vale para todos, com ou sem clube.
 

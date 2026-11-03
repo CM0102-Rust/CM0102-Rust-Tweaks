@@ -252,9 +252,24 @@ A read of the running game's memory (from outside, read only; `resultados/deposi
 
 ### 4.6 Where each regen comes from (`regen_origins`)
 
-A factory-database career to January 2002, with `regen_origins = 1` [measured, 11/03]: 44 regens in `regen_origins.csv`, **none** with an unknown record owner. Examples: Domenico Marchesini (16, wing-back, PA 140, Milan) inherited Gennaro Marrazzo's slot and Massimiliano Esposito's record (retired at 29, CA 60, PA 140); Fabrício dos Santos inherited the slot and the record of the same player, Roque. Since the queue and the pool move together, one regen's record owner is often the previous one's slot owner. The example is in `resultados/regen_origins_exemplo.csv`.
+**The proof (11/03), on the factory database**, with the checker `tools/conferir_origens.py`: it checks each regen in `regen_origins.csv` against a save of the same career written later. The regen must be a regen in the save, with the same name, nation and PA, and the PA must be that of the recorded record, the owner's. A deliberate mutation (a PA and a name changed in the CSV) gave 3 errors: the checker discriminates. **[measured]**
 
-How the DLL finds the record's owner (changing nothing in the game or the save): it hooks the two calls through which a retired player's record enters the pool (the queue, 0x7a87d0 at 0x7a64c9 and 0x7a64e2, and the player who becomes a coach, 0x7a8350 at 0x7a6335) and notes, in a fixed DLL table indexed by the record, the owner's name, id, age, CA and PA **at that moment**; at creation (0x7abac0, called at 0x7a664f), it reads the slot (A) before it's overwritten and the record at the front of the pool. The career comes from the name of the `.sav` the game opens (the exe's `CreateFileA`). In a loaded save, the records already in the pool show as unknown.
+| Test | Regens | Unknown owners | Errors | Pool on load / on save |
+|---|---|---|---|---|
+| 1. New career, July to 12/01/2001, saved | 23 | 0 | 0 | — / 0 |
+| 2. Loaded, to 05/30/2002, saved | 550 | 0 | 0 | 0 / 0 |
+| 3. Loaded, to 07/29/2002, saved | 265 | 0 | 0 | 0 / 511, all with an owner |
+| 4. Test 3 loaded **without** the `.regens`, to 10/07/2002 | 450 | 168 | 0 | 511: 326 owners recovered from the game, 185 unknown |
+| 5. Test 3 loaded **with** the `.regens`, to 10/07/2002 | 450 | 0 | 0 | 511: 511 from the file / 77, all with an owner |
+
+What these tests fixed, before the release:
+- **The coach path.** A player who retires and stays on as a coach puts his record in the pool through 0x7a8350, whose 1st argument is the **person's index**, not the record. The DLL took that number for the record and almost never found the owner: hence the unknowns in a new career (1 in 32, Mark Evans, in the first test folder).
+- **Loading.** In a loaded save, the records already in the pool lost their owner, and mid-year the pool holds hundreds (511 in July). Now, when the game is saved, the DLL writes an `X.regens` next to the save with the owners of the records in the pool and reads it on load. The save doesn't change. Without the file, it recovers the owner the queue wrote in the entry, when he still points to the record (326 of 511); the rest stay "unknown", and the line says why.
+- **The career name.** The game writes to a `temp_save_file.sav` and renames it at the end (bit 0x20000000 of `game.cfg`), and `-load` arrives in lower case. The career came from `CreateFileA` and showed "temp_save_file.sav". Now it comes from loading and saving (the entries of 0x82a9c0 and 0x82e430, hooked with a trampoline) and uses the name as it is on disk.
+- **A false line.** 0x7abac0 gives up when the person isn't retired or has a club. The DLL only records when the record at the front of the pool really went to the person.
+- **Excel.** The CSV has a BOM (UTF-8): it opens with a double click. If the file is open in Excel (locked), the lines wait in memory and go in later; if the game closes first, they go to `regen_origins_pending.txt` and enter at the next start.
+
+How the DLL finds the record's owner (changing nothing in the game or the save): it hooks the two calls through which a retired player's record enters the pool (the queue, 0x7a87d0 at 0x7a64c9 and 0x7a64e2, and the player who becomes a coach, 0x7a8350 at 0x7a6335) and notes, in a fixed DLL table indexed by the record, the owner's name, id, age, CA and PA **at that moment**. At creation (0x7abac0, called at 0x7a664f, the only call), it reads the slot (A) before it's overwritten and the record at the front of the pool, which is always the one the game uses. Freeing the game (0x82ff40) clears the table: another career starts clean. If any of these points differs from 3.9.68, recording doesn't turn on, and `tweaks.log` says where. In the CLZ exe and in the NickPatcher base exe, the points are intact in the file; the 6.1 NickDLL points at the load calls, which is why loading is hooked at the entry. The test in the CLZ game is still missing.
 
 A finding on the way: a youngster born **without a club** and under 20 has his reputation cut by the game (0x7acf61..0x7acf94: current and home at most 1250, world 1), and is almost invisible to the AI. The PA is never touched, and the attribute normalisation (0x538ec0, 0x538bc0) applies to everyone, with or without a club.
 

@@ -59,6 +59,26 @@ fn bolinha(ui: &mut egui::Ui, c: Color32) {
     p.circle_filled(r.rect.center(), 5.0, c);
 }
 
+/// Um texto numa largura fixa, alinhado à esquerda (o `add_sized` do egui centraliza).
+fn rotulo_fixo(ui: &mut egui::Ui, largura: f32, texto: impl Into<egui::WidgetText>) -> egui::Response {
+    ui.allocate_ui_with_layout(Vec2::new(largura, 18.0), egui::Layout::left_to_right(egui::Align::Center), |ui| {
+        ui.set_min_width(largura);
+        ui.label(texto)
+    }).inner
+}
+
+/// O "?" ao lado de uma opção ou de um termo: passe o mouse e a explicação aparece, sem clicar.
+fn ajuda_icone(ui: &mut egui::Ui, texto: &str) {
+    if texto.is_empty() {
+        return;
+    }
+    let (r, p) = ui.allocate_painter(Vec2::new(18.0, 18.0), Sense::hover());
+    let cor = if r.hovered() { AMARELO } else { AZUL };
+    p.circle_stroke(r.rect.center(), 7.5, Stroke::new(1.5f32, cor));
+    p.text(r.rect.center(), Align2::CENTER_CENTER, "?", FontId::proportional(11.0), cor);
+    r.on_hover_text(texto);
+}
+
 fn nome_do_estado(e: Estado, en: bool) -> &'static str {
     match (e, en) {
         (Estado::Compativel, false) => "compatível",
@@ -140,7 +160,7 @@ impl App {
         a.abrir_pasta();
         // só para as capturas de tela da documentação: a aba inicial e o idioma
         if let Ok(v) = std::env::var("TWEAKS_CONFIG_ABA") {
-            if let Some(&(aba, _, _)) = v.parse::<usize>().ok().and_then(|i| ABAS.get(i)) {
+            if let Some(&(aba, ..)) = v.parse::<usize>().ok().and_then(|i| ABAS.get(i)) {
                 a.aba = aba;
             }
         }
@@ -282,8 +302,11 @@ impl App {
         let valor = self.valor(nome);
         let mut novo: Option<String> = None;
         let en = self.en;
-        let resp = ui.add_enabled_ui(ativo, |ui| {
-            ui.horizontal(|ui| match &c.tipo {
+        let (a_pt, a_en) = guia::ajuda(nome);
+        let texto_ajuda = if en { a_en } else { a_pt };
+        // o "?" fica fora da parte desligável: a explicação aparece mesmo com a opção cinza
+        let resp = ui.horizontal(|ui| {
+            let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| match &c.tipo {
                 Tipo::Liga => {
                     let mut on = chaves::ligado(nome, &valor);
                     let r = ui.checkbox(&mut on, rotulo);
@@ -293,7 +316,7 @@ impl App {
                     r
                 }
                 Tipo::Escolha(op) => {
-                    ui.add_sized([260.0, 18.0], egui::Label::new(rotulo));
+                    rotulo_fixo(ui, 260.0, rotulo);
                     let mut atual = op.iter().position(|o| o.0 == valor).unwrap_or(0);
                     let antes = atual;
                     let r = egui::ComboBox::from_id_salt(nome).width(300.0)
@@ -309,7 +332,7 @@ impl App {
                     r
                 }
                 Tipo::Numero { min, max, barra, inteiro } => {
-                    ui.add_sized([260.0, 18.0], egui::Label::new(rotulo));
+                    rotulo_fixo(ui, 260.0, rotulo);
                     let mut x: f64 = valor.parse().unwrap_or_else(|_| c.padrao.parse().unwrap_or(0.0));
                     let mut xb = x.clamp(barra.0, barra.1);
                     let r1 = ui.add(egui::Slider::new(&mut xb, barra.0..=barra.1).show_value(false));
@@ -323,7 +346,9 @@ impl App {
                     }
                     r1.union(r2)
                 }
-            }).inner
+            }).inner).inner;
+            ajuda_icone(ui, texto_ajuda);
+            r
         });
         if let Some(v) = novo {
             self.definir(nome, &v);
@@ -331,8 +356,33 @@ impl App {
         if resp.response.hovered() || resp.inner.hovered() || resp.inner.has_focus() {
             self.foco = Some(nome);
         }
-        let (pt, en) = guia::ajuda(nome);
-        resp.response.on_hover_text(if self.en { en } else { pt });
+    }
+
+    /// A explicação de um termo da aba (o nome em português, como em `guia::termos`), no idioma da tela.
+    fn termo(&self, aba: Aba, nome: &str) -> &'static str {
+        guia::termos(aba).iter().find(|t| t.0 == nome).map(|t| if self.en { t.3 } else { t.2 }).unwrap_or("")
+    }
+
+    /// O topo de cada aba: para que ela serve e o que quer dizer cada termo que ela usa.
+    fn cabecalho(&self, ui: &mut egui::Ui, aba: Aba) {
+        let (pt, en) = guia::intro(aba);
+        let termos = guia::termos(aba);
+        let ingles = self.en;
+        egui::Frame::group(ui.style()).fill(CARTAO).inner_margin(10.0).show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.label(RichText::new(if ingles { en } else { pt }).size(13.5));
+            if !termos.is_empty() {
+                ui.add_space(6.0);
+                egui::Grid::new(("termos", aba as u8)).num_columns(2).spacing([12.0, 5.0]).show(ui, |ui| {
+                    for &(n_pt, n_en, t_pt, t_en) in termos {
+                        ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(AMARELO));
+                        ui.add(egui::Label::new(if ingles { t_en } else { t_pt }).wrap());
+                        ui.end_row();
+                    }
+                });
+            }
+        });
+        ui.add_space(10.0);
     }
 
     fn cartao(ui: &mut egui::Ui, titulo: &str, corpo: impl FnOnce(&mut egui::Ui)) {
@@ -348,6 +398,7 @@ impl App {
     // ---------- abas ----------
 
     fn aba_inicio(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Inicio);
         let en = self.en;
         let mut escolhido: Option<PathBuf> = None;
         let exes = self.exes.clone();
@@ -390,24 +441,21 @@ impl App {
         let estados = self.estados();
         App::cartao(ui, &self.t("O que cada ajuste vai fazer neste exe", "What each tweak will do on this exe"), |ui| {
             for l in &estados {
+                // o nome da opção como nas abas; a chave do tweaks.cfg em cinza, para quem edita à mão
+                let nome = chaves::chave(l.ajuste).map(|c| if en { c.rotulo.1 } else { c.rotulo.0 }).unwrap_or(l.ajuste);
                 ui.horizontal(|ui| {
-                    ui.add_sized([190.0, 18.0], egui::Label::new(RichText::new(l.ajuste).monospace()));
+                    rotulo_fixo(ui, 250.0, nome);
+                    rotulo_fixo(ui, 140.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA));
                     bolinha(ui, cor(l.estado));
-                    ui.add_sized([150.0, 18.0], egui::Label::new(RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado))));
+                    rotulo_fixo(ui, 130.0, RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado)));
                     ui.add(egui::Label::new(if en { &l.motivo.1 } else { &l.motivo.0 }).wrap());
                 });
             }
         });
-        App::cartao(ui, &self.t("Nação no jogo", "Nation in the game"), |ui| {
-            ui.label(if en {
-                "A nation in the game is one whose league you chose when creating the career, playable OR background: for regens both count the same (the game only checks that NationLeagueSelected isn't 0). A nation not in the game is one whose league wasn't chosen."
-            } else {
-                "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, jogável OU de fundo: para os regens as duas contam igual (o jogo só olha se o NationLeagueSelected não é 0). Fora do jogo é a nação cuja liga não foi escolhida."
-            });
-        });
     }
 
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Jogo);
         ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE));
         for k in ["save_over_2gb", "portable_folder", "clear_admin_flag", "override_exe_changes"] {
             self.controle(ui, k, true);
@@ -424,6 +472,7 @@ impl App {
     }
 
     fn aba_idades(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Idades);
         self.controle(ui, "ages", true);
         let ativo = self.ligado("ages");
         if !ativo {
@@ -483,24 +532,47 @@ impl App {
         }
         let resp = resp.on_hover_text(if self.en { guia::ajuda("age_NN").1 } else { guia::ajuda("age_NN").0 });
         let _ = resp;
-        ui.label(RichText::new(self.t("Arraste as barras. Embaixo, a idade e o teto do CA. O contorno azul é a distribuição depois de \"regens mais novos\".",
-            "Drag the bars. Below: the age and the CA cap. The blue outline is the distribution after \"younger regens\".")).size(11.0).color(CINZA));
-        // a idade escolhida
+        ui.label(RichText::new(self.t("Clique numa barra para escolher a idade e arraste para mudar a chance. Embaixo de cada barra: a idade e o teto do CA. O contorno azul é como fica a distribuição depois de \"regens mais novos\".",
+            "Click a bar to pick the age and drag to change the chance. Below each bar: the age and the CA cap. The blue outline is the distribution after \"younger regens\".")).size(11.5).color(CINZA));
+        ui.add_space(6.0);
+        // a idade escolhida, por extenso
         let n = self.idade;
         let (mut chance, teto) = self.idade_de(n);
-        let rotulo_teto = self.t("teto do CA", "CA cap");
+        let soma: f64 = (14..36).map(|k| self.idade_de(k).0).sum::<f64>().max(1e-9);
+        let en = self.en;
+        let termo = |nome: &str| guia::termos(Aba::Idades).iter().find(|t| t.0 == nome).map(|t| if en { t.3 } else { t.2 }).unwrap_or("");
+        let (ajuda_chance, ajuda_teto, ajuda_linha) = (termo("Chance"), termo("Teto do CA"), termo("age_18 no tweaks.cfg"));
         let mut mudou = None;
-        ui.add_enabled_ui(ativo, |ui| {
-            ui.horizontal(|ui| {
-                ui.label(format!("age_{}:", n));
-                let r = ui.add(egui::DragValue::new(&mut chance).range(0.0..=1000.0).speed(0.05).max_decimals(4));
-                let mut tem_teto = teto >= 0;
-                let mut t = if teto >= 0 { teto } else { 100 };
-                let r2 = ui.checkbox(&mut tem_teto, rotulo_teto);
-                let r3 = ui.add_enabled(tem_teto, egui::DragValue::new(&mut t).range(1..=200));
-                if r.changed() || r2.changed() || r3.changed() {
-                    mudou = Some((chance, if tem_teto { t } else { -1 }));
-                }
+        App::cartao(ui, &format!("{} {} {}", self.t("Idade escolhida:", "Chosen age:"), n, self.t("anos", "years")), |ui| {
+            ui.add_enabled_ui(ativo, |ui| {
+                ui.horizontal(|ui| {
+                    rotulo_fixo(ui, 150.0, t2(en, "Chance", "Chance"));
+                    let r = ui.add(egui::DragValue::new(&mut chance).range(0.0..=1000.0).speed(0.05).max_decimals(4));
+                    ui.label(RichText::new(format!("= {:.1}% {}", 100.0 * chance / soma, t2(en, "dos regens da tabela", "of the table's regens"))).color(CINZA));
+                    ajuda_icone(ui, ajuda_chance);
+                    if r.changed() {
+                        mudou = Some((chance, teto));
+                    }
+                });
+                ui.horizontal(|ui| {
+                    let mut tem_teto = teto >= 0;
+                    let mut t = if teto >= 0 { teto } else { 100 };
+                    let r2 = ui.add_sized([150.0, 18.0], egui::Checkbox::new(&mut tem_teto, t2(en, "Teto do CA", "CA cap")));
+                    let r3 = ui.add_enabled(tem_teto, egui::DragValue::new(&mut t).range(1..=200));
+                    ui.label(RichText::new(if tem_teto {
+                        if en { format!("no {}-year-old regen is born with CA above {}", n, t) } else { format!("nenhum regen de {} anos nasce com CA acima de {}", n, t) }
+                    } else if en { "no cap: the CA comes from the game's formula".to_string() } else { "sem teto: o CA sai da fórmula do jogo".to_string() }).color(CINZA));
+                    ajuda_icone(ui, ajuda_teto);
+                    if r2.changed() || r3.changed() {
+                        mudou = Some((chance, if tem_teto { t } else { -1 }));
+                    }
+                });
+                ui.horizontal(|ui| {
+                    rotulo_fixo(ui, 150.0, t2(en, "No tweaks.cfg", "In tweaks.cfg"));
+                    let linha = if teto >= 0 { format!("age_{} = {}, {}", n, cfg::numero(chance), teto) } else { format!("age_{} = {}", n, cfg::numero(chance)) };
+                    ui.label(RichText::new(linha).monospace().color(AMARELO));
+                    ajuda_icone(ui, ajuda_linha);
+                });
             });
         });
         if let Some((c, t)) = mudou {
@@ -516,6 +588,7 @@ impl App {
     }
 
     fn aba_inativos(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Inativos);
         self.controle(ui, "retire_idle_players", true);
         let ativo = self.ligado("retire_idle_players");
         for k in ["idle_days", "idle_min_age", "idle_rep", "idle_rep_per_year", "protect_young_unemployed"] {
@@ -523,9 +596,11 @@ impl App {
         }
         ui.add_space(8.0);
         let rotulo = self.t("Reputação de exemplo", "Example reputation");
+        let ajuda = self.termo(Aba::Inativos, "Reputação de exemplo");
         ui.horizontal(|ui| {
             ui.label(rotulo);
             ui.add(egui::Slider::new(&mut self.rep_exemplo, 500.0..=10000.0).step_by(100.0));
+            ajuda_icone(ui, ajuda);
         });
         let g = |k: &str, d: f64| self.valor(k).parse::<f64>().unwrap_or(d);
         let (idade_min, rep, por_ano, protege) = (g("idle_min_age", 28.0), g("idle_rep", 1500.0), g("idle_rep_per_year", 250.0), g("protect_young_unemployed", 0.0));
@@ -580,17 +655,23 @@ impl App {
     }
 
     fn aba_disputa(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Disputa);
         self.controle(ui, "rule", true);
         let ativo = self.ligado("rule");
         if !ativo {
             ui.colored_label(CINZA, self.t("O jogo usa a disputa do 3.9.68.", "The game uses 3.9.68's contest."));
         }
         let rotulo = self.t("Jovem de exemplo: PA", "Example youngster: PA");
+        let (a_jovem, a_pa, a_ca) = (self.termo(Aba::Disputa, "Jovem de exemplo"), self.termo(Aba::Idades, "PA"), self.termo(Aba::Idades, "CA"));
         ui.horizontal(|ui| {
+            ajuda_icone(ui, a_jovem);
             ui.label(rotulo);
             ui.add(egui::Slider::new(&mut self.pa, 40.0..=200.0).step_by(1.0));
+            ajuda_icone(ui, a_pa);
+            ui.add_space(10.0);
             ui.label("CA");
             ui.add(egui::Slider::new(&mut self.ca, 20.0..=150.0).step_by(1.0));
+            ajuda_icone(ui, a_ca);
         });
         // a curva do nível
         let g = |k: &str, d: f64| self.valor(k).parse::<f64>().unwrap_or(d);
@@ -631,7 +712,7 @@ impl App {
             for (i, c) in CLUBES.iter().enumerate() {
                 let ch = (1.0 - s) * normal[i] / sn + s * surpr[i] / ss;
                 ui.horizontal(|ui| {
-                    ui.add_sized([230.0, 16.0], egui::Label::new(if en { c.nome.1 } else { c.nome.0 }));
+                    rotulo_fixo(ui, 230.0, if en { c.nome.1 } else { c.nome.0 });
                     let (rr, pp) = ui.allocate_painter(Vec2::new(300.0, 14.0), Sense::hover());
                     pp.rect_filled(rr.rect, 2, FUNDO);
                     pp.rect_filled(Rect::from_min_size(rr.rect.min, Vec2::new(rr.rect.width() * ch as f32, rr.rect.height())), 2, if ativo { VERDE } else { CINZA });
@@ -688,8 +769,16 @@ impl App {
                         ui.label(c[8]);
                         ui.label(c[9]);
                         ui.label(c[10]);
-                        ui.label(c[11]);
-                        ui.label(RichText::new(if c.len() >= 21 && !c[17].is_empty() { format!("{} ({}, {}, {})", c[17], c[18], c[19], c[20]) } else { "?".into() }).color(AMARELO));
+                        // o CSV fica em inglês; na tela, os dois textos fixos dele seguem o idioma
+                        ui.label(if !en && c[11] == "(no club)" { "(sem clube)" } else { c[11] });
+                        let ficha = if c[17].starts_with("(unknown") {
+                            t2(en, "desconhecido (save carregado sem o .regens)", "unknown (save loaded without its .regens)").to_string()
+                        } else if !c[17].is_empty() {
+                            format!("{} ({}, {}, {})", c[17], c[18], c[19], c[20])
+                        } else {
+                            "?".into()
+                        };
+                        ui.label(RichText::new(ficha).color(AMARELO));
                         ui.label(format!("{} ({})", c[13], match (en, c[15]) { (false, "player") => "jogador", (false, "non-player") => "não jogador", (_, x) => x }));
                         ui.label(RichText::new(c[2]).size(10.5).color(CINZA));
                         ui.end_row();
@@ -734,8 +823,12 @@ impl App {
     }
 
     fn aba_registro(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Registro);
         self.historico(ui);
-        ui.add_space(8.0);
+    }
+
+    fn aba_log(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Log);
         self.controle(ui, "log", true);
         let log = self.exe.as_ref().map(|e| e.caminho.with_file_name("tweaks.log")).unwrap_or_else(|| self.pasta.join("tweaks.log"));
         App::cartao(ui, &self.t("O último tweaks.log (o exe, a memória e cada ajuste)", "The last tweaks.log (the exe, memory and each tweak)"), |ui| match std::fs::read_to_string(&log) {
@@ -750,6 +843,7 @@ impl App {
     }
 
     fn aba_cfg(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Cfg);
         let texto = self.cfg.texto();
         let antes: Vec<String> = self.lido.lines().map(str::to_string).collect();
         ui.horizontal(|ui| {
@@ -885,18 +979,29 @@ impl eframe::App for App {
                 }
             });
         });
-        egui::SidePanel::left("abas").resizable(false).exact_width(160.0).show(ctx, |ui| {
+        egui::SidePanel::left("abas").resizable(false).exact_width(215.0).show(ctx, |ui| {
             ui.add_space(8.0);
-            for (aba, pt, en) in ABAS {
+            let mut grupo_atual = "";
+            for (aba, pt, en, g_pt, g_en) in ABAS {
+                let grupo = if self.en { g_en } else { g_pt };
+                if grupo != grupo_atual {
+                    grupo_atual = grupo;
+                    ui.add_space(8.0);
+                    ui.label(RichText::new(grupo.to_uppercase()).size(11.5).strong().color(CINZA));
+                    ui.add_space(2.0);
+                }
                 let pior = CHAVES.iter().filter(|c| c.aba == aba).filter_map(|c| estados.iter().find(|l| l.ajuste == c.nome)).map(|l| l.estado)
                     .filter(|e| *e != Estado::Desligado).max();
                 ui.horizontal(|ui| {
+                    if !grupo.is_empty() {
+                        ui.add_space(6.0);
+                    }
                     bolinha(ui, pior.map(cor).unwrap_or(Color32::TRANSPARENT));
-                    if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(15.0)).clicked() {
+                    if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(14.5)).clicked() {
                         self.aba = aba;
                     }
                 });
-                ui.add_space(4.0);
+                ui.add_space(3.0);
             }
         });
         egui::SidePanel::right("ajuda").resizable(true).default_width(340.0).show(ctx, |ui| {
@@ -941,6 +1046,7 @@ impl eframe::App for App {
                 Aba::Disputa => self.aba_disputa(ui),
                 Aba::Registro => self.aba_registro(ui),
                 Aba::Cfg => self.aba_cfg(ui),
+                Aba::Log => self.aba_log(ui),
             });
         });
     }
@@ -956,12 +1062,20 @@ fn escrever_guia(en: bool, arquivo: &Path) -> std::io::Result<()> {
         "Versão em português: [GUIA_DAS_CHAVES.md](GUIA_DAS_CHAVES.md). Generated by `tweaks-config.exe --guia en` from the same texts as the configurator's help; don't edit by hand."));
     let _ = writeln!(s, "{}\n", t("Cada opção: o que faz, quando usar e o que acontece no jogo. Sem a linha no `tweaks.cfg`, vale o padrão indicado (o da DLL). O comentário de cada linha do `tweaks.cfg` traz o detalhe técnico.",
         "Each option: what it does, when to use it and what happens in the game. Without the line in `tweaks.cfg`, the default shown applies (the DLL's). Each `tweaks.cfg` line's comment has the technical detail."));
-    for (aba, pt, e) in ABAS {
+    for (aba, pt, e, ..) in ABAS {
         let chaves: Vec<_> = CHAVES.iter().filter(|c| c.aba == aba).collect();
         if chaves.is_empty() {
             continue;
         }
         let _ = writeln!(s, "## {}\n", if en { e } else { pt });
+        let (i_pt, i_en) = guia::intro(aba);
+        let _ = writeln!(s, "{}\n", if en { i_en } else { i_pt });
+        for &(n_pt, n_en, x_pt, x_en) in guia::termos(aba) {
+            let _ = writeln!(s, "- **{}**: {}", if en { n_en } else { n_pt }, if en { x_en } else { x_pt });
+        }
+        if !guia::termos(aba).is_empty() {
+            s.push('\n');
+        }
         for c in chaves {
             let rotulo = if en { c.rotulo.1 } else { c.rotulo.0 };
             let (a_pt, a_en) = guia::ajuda(c.nome);
@@ -1008,6 +1122,8 @@ fn main() -> eframe::Result {
         v.selection.bg_fill = Color32::from_rgb(0x2d, 0x7a, 0x45);
         v.hyperlink_color = VERDE;
         cc.egui_ctx.set_visuals(v);
+        // as dicas do "?" trazem explicações de várias linhas: mais largas que o padrão
+        cc.egui_ctx.style_mut(|s| s.spacing.tooltip_width = 480.0);
         Ok(Box::new(App::new(pasta)))
     }))
 }
