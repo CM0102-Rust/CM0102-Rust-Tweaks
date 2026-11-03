@@ -248,6 +248,8 @@ Still to find out: whether those regens arrive by signing or by loan (on a loan,
 
 A read of the running game's memory (from outside, read only; `resultados/deposito.py`), in the §4.5 final career in 2003: Guiseley had 16 players, **all regens**, aged 17 to 21. The non-league club replaced its whole squad with youngsters. Reading the contract's owner didn't give coherent values (the contract layout isn't right yet), so signing against loan is still open.
 
+**And under the original?** One season of the original, read the same way in July 2002: the club with most regens was SC Kleve (Germany), with 6 players, **all regens**, none from the contest. It's the same phenomenon: a small club outside the competitions loses its database squad and rebuilds it with free youngsters. Under the original it hides behind the clubs the contest fills (Tigre with 30 from the contest); with the tweaks the contest is capped and the sink becomes the club with most regens. **It's the game, not the tweaks** [measured in this career; just one]. Guiseley doesn't even exist under that name in this original career: the set of clubs changes from one career to another.
+
 ## 5. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.

@@ -248,6 +248,8 @@ O que falta saber: se esses regens chegam por contratação ou por empréstimo (
 
 Uma leitura da memória do jogo em execução (de fora, só leitura; `resultados/deposito.py`), na carreira final do §4.5 em 2003: o Guiseley tinha 16 jogadores, **todos regens**, de 17 a 21 anos. O clube de fora das ligas trocou o elenco inteiro por jovens. A leitura do dono do contrato não deu valores coerentes (o leiaute do contrato ainda não está certo), então contratação contra empréstimo segue em aberto.
 
+**E na original?** Uma temporada da original, lida da mesma forma em julho de 2002: o clube com mais regens era o SC Kleve (Alemanha), com 6 jogadores, **todos regens**, nenhum pela disputa. É o mesmo fenômeno: um clube pequeno, fora das competições, perde o elenco do banco e o refaz com jovens livres. Na original ele fica escondido atrás dos clubes que a disputa enche (o Tigre com 30 pela disputa); com os ajustes, a disputa tem teto e o depósito passa a ser o clube com mais regens. **É do jogo, não dos ajustes** [medido nesta carreira; uma só]. O Guiseley nem existe com esse nome nessa carreira da original: o conjunto de clubes muda de uma carreira para outra.
+
 ## 5. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
