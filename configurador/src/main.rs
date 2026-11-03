@@ -33,6 +33,11 @@ fn cor(e: Estado) -> Color32 {
     }
 }
 
+/// `tweaks-config.lang`, ao lado do configurador: "en" ou "pt".
+fn arquivo_do_idioma() -> PathBuf {
+    std::env::current_exe().map(|p| p.with_file_name("tweaks-config.lang")).unwrap_or_else(|_| PathBuf::from("tweaks-config.lang"))
+}
+
 fn t2(en: bool, pt: &'static str, e: &'static str) -> &'static str {
     if en { e } else { pt }
 }
@@ -139,8 +144,12 @@ impl App {
                 a.aba = aba;
             }
         }
-        a.en = std::env::var("TWEAKS_CONFIG_EN").is_ok();
+        // o idioma: inglês por padrão; a escolha fica em tweaks-config.lang, ao lado do configurador (ou
+        // TWEAKS_CONFIG_LANG=pt|en, para as capturas de tela)
+        a.en = std::env::var("TWEAKS_CONFIG_LANG").ok().or_else(|| std::fs::read_to_string(arquivo_do_idioma()).ok())
+            .map(|v| !v.trim().eq_ignore_ascii_case("pt")).unwrap_or(true);
         a.foco = std::env::var("TWEAKS_CONFIG_FOCO").ok().and_then(|k| chaves::chave(&k)).map(|c| c.nome);
+        a.busca = std::env::var("TWEAKS_CONFIG_BUSCA").unwrap_or_default();
         a
     }
 
@@ -668,7 +677,7 @@ impl App {
             egui::ScrollArea::both().max_height(420.0).show(ui, |ui| {
                 egui::Grid::new("historico").striped(true).spacing([10.0, 4.0]).show(ui, |ui| {
                     for h in [t2(en, "Data (jogo)", "Date (game)"), t2(en, "Regen", "Regen"), t2(en, "Idade", "Age"), t2(en, "Pos.", "Pos."), "PA", "CA",
-                        t2(en, "Clube", "Club"), t2(en, "Vaga de", "Slot from"), t2(en, "Ficha de (idade, CA, PA)", "Record from (age, CA, PA)"), t2(en, "Carreira", "Career")] {
+                        t2(en, "Clube", "Club"), t2(en, "Ficha de (idade, CA, PA na aposentadoria)", "Record from (age, CA, PA at retirement)"), t2(en, "Vaga de", "Slot from"), t2(en, "Carreira", "Career")] {
                         ui.label(RichText::new(h).strong());
                     }
                     ui.end_row();
@@ -680,8 +689,8 @@ impl App {
                         ui.label(c[9]);
                         ui.label(c[10]);
                         ui.label(c[11]);
+                        ui.label(RichText::new(if c.len() >= 21 && !c[17].is_empty() { format!("{} ({}, {}, {})", c[17], c[18], c[19], c[20]) } else { "?".into() }).color(AMARELO));
                         ui.label(format!("{} ({})", c[13], match (en, c[15]) { (false, "player") => "jogador", (false, "non-player") => "não jogador", (_, x) => x }));
-                        ui.label(if c.len() >= 21 && !c[17].is_empty() { format!("{} ({}, {}, {})", c[17], c[18], c[19], c[20]) } else { "?".into() });
                         ui.label(RichText::new(c[2]).size(10.5).color(CINZA));
                         ui.end_row();
                     }
@@ -814,8 +823,13 @@ impl eframe::App for App {
                 if ui.add_enabled(m > 0 || !self.existe, egui::Button::new(RichText::new(self.t("Gravar", "Save")).strong())).clicked() {
                     self.gravar();
                 }
-                if ui.selectable_label(self.en, "EN").clicked() {
-                    self.en = !self.en;
+                let antes = self.en;
+                egui::ComboBox::from_id_salt("idioma").width(110.0).selected_text(if self.en { "English" } else { "Português" }).show_ui(ui, |ui| {
+                    ui.selectable_value(&mut self.en, true, "English");
+                    ui.selectable_value(&mut self.en, false, "Português");
+                });
+                if self.en != antes {
+                    std::fs::write(arquivo_do_idioma(), if self.en { "en" } else { "pt" }).ok();
                 }
             });
             if !alerta.is_empty() {
