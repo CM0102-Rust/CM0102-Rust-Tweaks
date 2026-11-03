@@ -56,5 +56,3 @@ The fixes in 6.1's NickDLL (0x6847C0, 0x51F890, 0x768310, 0x522E00, 0x4A2540, 0x
 2. For each setting touched, read what it does there (without copying) and put it in the matrix: ✅, ⚠️, 🔁 or ❓.
 3. A short career with `log = 1`: the `runtime` lines show what it actually changed in memory, and `check` says whether any of our hooks was overwritten.
 4. If it does the same job as one of our settings (like NickDLL's resolution), the DLL recognises it and leaves it to it, as in `resolucao_da_nickdll` (`src/lib.rs`).
-
-Credits: NickDLL (Nick and dmcarmo), NickPatcher (Nick), LaMOHatesCD (LaMO), Regen Tweak (xeno/Saturn), CLZ (the CLZ team).

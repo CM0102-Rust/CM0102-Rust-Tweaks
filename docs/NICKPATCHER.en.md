@@ -4,7 +4,7 @@
 
 The Tweaks' compatibility with an exe changed by NickPatcher (or by the community patches that come with it) holds **as far as the changes applied allow**. Before turning on, each tweak checks the part of the exe it uses. If a NickPatcher option already changed that part, the tweak doesn't turn on over it: the exe's version stays, with a warning in `tweaks.log` and in the configurator. The other tweaks turn on normally, and the game is never stopped because of it. With `override_exe_changes = 1`, the ages, contest, idle-player and save tweaks replace the exe's version with the Tweaks', and that NickPatcher option's effect is lost.
 
-The table below crosses NickPatcher's options with each tweak's code, from NickPatcher's own data (the `Patcher.cs` options and the `MiscPatches.zip` patches, read with `tools/nickpatcher_vs_tweaks.py`). Credit to Nick+Co and the patch authors (Saturn, xeno, Tapani and others).
+The table below crosses NickPatcher's options with each tweak's code, from NickPatcher's own data (the `Patcher.cs` options and the `MiscPatches.zip` patches, read with `tools/nickpatcher_vs_tweaks.py`).
 
 ## Options that change the same place (one or the other)
 

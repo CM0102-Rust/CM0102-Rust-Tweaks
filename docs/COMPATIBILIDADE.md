@@ -56,5 +56,3 @@ As correções da NickDLL do 6.1 (0x6847C0, 0x51F890, 0x768310, 0x522E00, 0x4A25
 2. Para cada ajuste tocado, ler o que ela faz ali (sem copiar) e pôr na matriz: ✅, ⚠️, 🔁 ou ❓.
 3. Uma carreira curta com `log = 1`: as linhas `runtime` mostram o que ela mudou de fato na memória, e o `check` diz se algum desvio nosso foi sobrescrito.
 4. Se ela faz o mesmo papel de um ajuste nosso (como a resolução da NickDLL), a DLL a reconhece e fica com ela, como em `resolucao_da_nickdll` (`src/lib.rs`).
-
-Os créditos: NickDLL (Nick e dmcarmo), NickPatcher (Nick), LaMOHatesCD (LaMO), Regen Tweak (xeno/Saturn), CLZ (a equipe do CLZ).
