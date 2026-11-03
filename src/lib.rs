@@ -25,6 +25,20 @@ mod referencia;
 mod retrato;
 // A pasta do jogo sem o SetupReg e a marca RUNASADMIN da NickDLL.
 mod pasta;
+// A tela do projeto CM0102: a camada de vídeo (cópia de video.rs, apresentacao.rs, reducao.rs e win.rs de lá) e as trocas
+// do CD e da resolução (geradas por tools/gerar_trocas.py).
+mod apresentacao;
+mod reducao;
+mod trocas;
+mod video;
+mod win;
+
+/// O registro da camada de vídeo: só com `log = 1`.
+pub(crate) fn linha_de_video(texto: &str) {
+    if unsafe { REGRAS.registrar } {
+        registro::linha(texto);
+    }
+}
 
 /// Os contadores de ramo do projeto: aqui não contam nada.
 mod comparacao {
@@ -184,6 +198,93 @@ unsafe fn desviar(de: usize, para: usize) {
     core::ptr::write_unaligned((de + 1) as *mut i32, para.wrapping_sub(de + 5) as i32);
     VirtualProtect(de as *mut c_void, 5, antiga, &mut antiga);
     FlushInstructionCache(GetCurrentProcess(), de as *const c_void, 5);
+}
+
+/// Aplica uma lista de trocas (VA, antes, depois) inteira ou nenhuma: todos os trechos têm de estar como no 3.9.68
+/// (ou todos já trocados, num exe que já as tem). Devolve se a lista vale (aplicada agora ou já presente).
+unsafe fn aplicar_trocas(nome: &str, lista: &[(usize, &[u8], &[u8])]) -> bool {
+    let bate = |&(va, antes, _): &(usize, &[u8], &[u8])| core::slice::from_raw_parts(va as *const u8, antes.len()) == antes;
+    let ja = |&(va, _, depois): &(usize, &[u8], &[u8])| core::slice::from_raw_parts(va as *const u8, depois.len()) == depois;
+    if lista.iter().all(ja) {
+        registro::linha(&format!("{}: this exe already has it; nothing to change", nome));
+        return true;
+    }
+    let fora = lista.iter().filter(|t| !bate(t)).count();
+    if fora > 0 {
+        registro::linha(&format!("{}: this exe differs from 3.9.68 in {} of {} places (its own version of this change?); nothing was changed", nome, fora, lista.len()));
+        return false;
+    }
+    for &(va, _, depois) in lista {
+        (*core::ptr::addr_of_mut!(MARCAS)).push((va, depois.len()));
+        let mut antiga = 0u32;
+        VirtualProtect(va as *mut c_void, depois.len(), 0x40, &mut antiga);
+        core::ptr::copy_nonoverlapping(depois.as_ptr(), va as *mut u8, depois.len());
+        VirtualProtect(va as *mut c_void, depois.len(), antiga, &mut antiga);
+        FlushInstructionCache(GetCurrentProcess(), va as *const c_void, depois.len());
+    }
+    true
+}
+
+/// A trava das 30 linhas do `Area::init` (0x402ac0, thiscall; a 10ª palavra da pilha é o número de linhas, a 14ª o
+/// dono): a grade tem no máximo 30 linhas, e em 1920×1080 o relatório de uma partida antiga pede mais e o jogo para na
+/// caixa "Area.cpp 507". Como no projeto CM0102: acima de 30, 30, e o resto vai para a barra de rolagem. O trecho:
+/// `cmp byte [esp+0x28], 30; jbe +5; mov byte [esp+0x28], 30`, a instrução tirada da entrada
+/// (`cmp word [esp+0x38], -1`, cujas flags o `je` de 0x402acc usa) e a volta para 0x402ac6.
+const ENTRADA_DA_AREA: [u8; 6] = [0x66, 0x83, 0x7c, 0x24, 0x38, 0xff];
+
+unsafe fn travar_linhas_da_area() -> bool {
+    if core::slice::from_raw_parts(0x402ac0 as *const u8, 6) != ENTRADA_DA_AREA {
+        return false;
+    }
+    let t = VirtualAlloc(core::ptr::null_mut(), 32, 0x3000, 0x40) as *mut u8;
+    if t.is_null() {
+        return false;
+    }
+    let mut c: Vec<u8> = vec![0x80, 0x7c, 0x24, 0x28, 0x1e, 0x76, 0x05, 0xc6, 0x44, 0x24, 0x28, 0x1e];
+    c.extend_from_slice(&ENTRADA_DA_AREA);
+    c.push(0xe9);
+    let fim = t as usize + c.len() + 4;
+    c.extend_from_slice(&(0x402ac6usize.wrapping_sub(fim) as i32).to_le_bytes());
+    core::ptr::copy_nonoverlapping(c.as_ptr(), t, c.len());
+    desviar(0x402ac0, t as usize);
+    true
+}
+
+/// `ChangeDisplaySettingsA` com a camada de vídeo: o modo do Windows nunca muda (o jogo pede 800×600×16 ao abrir e
+/// devolve o modo ao sair).
+unsafe extern "system" fn mudar_modo_de_video(_modo: *const c_void, _flags: u32) -> i32 {
+    0 // DISP_CHANGE_SUCCESSFUL
+}
+
+/// `no_cd`, `resolution` e `video`. A resolução de 1080 vem sempre com a camada de vídeo (é com ela que o projeto
+/// CM0102 a usa) e com a trava das 30 linhas; um exe que já mexe nesses trechos (o CLZ tem resolução, fundos e CD
+/// próprios) fica como está.
+unsafe fn ligar_tela(r: &mut Regras) {
+    if r.sem_cd {
+        let outro = std::env::current_exe().map(|p| p.with_file_name("LaMOHatesCD.dll").exists()).unwrap_or(false);
+        if outro {
+            registro::linha("no CD: LaMOHatesCD.dll is next to the exe and already takes care of the CD; nothing was changed");
+        } else if aplicar_trocas("no CD", &trocas::CD) {
+            registro::linha("no CD: on (the 33 CD checks always pass)");
+        }
+    }
+    if r.resolucao {
+        if core::slice::from_raw_parts(0x402ac0 as *const u8, 6) != ENTRADA_DA_AREA {
+            registro::linha("resolution 1080: this exe differs from 3.9.68 at Area::init (0x402ac0); nothing was changed");
+        } else if aplicar_trocas("resolution 1080", &trocas::RESOLUCAO) && travar_linhas_da_area() {
+            r.video = true;
+            registro::linha("resolution 1080: on (1920x1080, with the 30-row limit of the match report; video = window too)");
+        }
+    }
+    if r.video {
+        match pasta::trocar_importacao("USER32.dll", "ChangeDisplaySettingsA", mudar_modo_de_video as *const () as usize) {
+            Some(_) => registro::linha("video: window (the project's video layer: an ordinary window, Print Screen works, Windows' video mode never changes)"),
+            None => {
+                r.video = false;
+                registro::linha("video: ChangeDisplaySettingsA is not in this exe's import table; keeping the system's DirectDraw");
+            }
+        }
+    }
 }
 
 /// Troca `n` bytes do exe por NOP.
@@ -414,6 +515,12 @@ struct Regras {
     pasta: bool,
     /// clear_admin_flag: tirar a marca WIN95 RUNASADMIN que a NickDLL grava para o exe.
     limpar_marca: bool,
+    /// video = window: a camada de vídeo do projeto CM0102 (o quadro numa janela comum) em vez do DirectDraw do sistema.
+    video: bool,
+    /// resolution = 1080: a resolução 1920×1080 do projeto CM0102, em memória (liga também a camada de vídeo).
+    resolucao: bool,
+    /// no_cd = 1: as 33 checagens do CD contam como achadas, como no exe portátil do projeto CM0102.
+    sem_cd: bool,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -455,6 +562,9 @@ const PADRAO: Regras = Regras {
     so_sem_vaga: false,
     pasta: false,
     limpar_marca: false,
+    video: false,
+    resolucao: false,
+    sem_cd: false,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -508,6 +618,18 @@ fn ler_regras() -> Regras {
         }
         if k == "portable_folder" {
             r.pasta = v == "1";
+            continue;
+        }
+        if k == "video" {
+            r.video = v == "window"; // video = original | window
+            continue;
+        }
+        if k == "resolution" {
+            r.resolucao = v == "1080"; // resolution = original | 1080
+            continue;
+        }
+        if k == "no_cd" {
+            r.sem_cd = v == "1";
             continue;
         }
         if k == "clear_admin_flag" {
@@ -969,6 +1091,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         if r.pasta {
             pasta::ligar_pasta();
         }
+        ligar_tela(&mut *core::ptr::addr_of_mut!(REGRAS));
         if !r.save {
             registro::linha("save over 2 GB: off (save_over_2gb = 0)");
         } else if pode_ligar(&SAVE, s) {
@@ -1127,6 +1250,10 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
             iniciar_batida();
             instalar_caixa(); // depois do retrato da memória, que assim não o conta
         }
+    }
+    if REGRAS.video {
+        *saida = video::criar();
+        return 0;
     }
     match proxima_ddraw() {
         Some(f) => f(guid, saida, externo),

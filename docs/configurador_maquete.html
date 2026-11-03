@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurador dos Tweaks</title>
+<style>
+:root{
+  --bg:#0d1612; --painel:#14211b; --cartao:#1a2a22; --borda:#2a3f34; --texto:#e4efe8; --fraco:#93a89c;
+  --verde:#4cd383; --verde2:#2f8f57; --amarelo:#f2c14e; --vermelho:#ef6b62; --azul:#62a8ef; --cinza:#6c7a72;
+  --raio:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--texto);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:12px 18px;background:var(--painel);border-bottom:1px solid var(--borda)}
+header h1{font-size:17px;margin:0;letter-spacing:.3px}
+header h1 span{color:var(--verde)}
+header label{color:var(--fraco);font-size:12px;display:flex;gap:6px;align-items:center}
+select,input[type=number]{background:#0f1a15;color:var(--texto);border:1px solid var(--borda);border-radius:6px;padding:4px 6px;font:inherit}
+input[type=number]{width:90px;text-align:right}
+button{background:var(--verde2);color:#fff;border:0;border-radius:6px;padding:6px 14px;font:inherit;cursor:pointer}
+button.sec{background:#2a3f34}
+.espaco{flex:1}
+.corpo{display:grid;grid-template-columns:170px 1fr 300px;min-height:calc(100vh - 92px)}
+nav{background:var(--painel);border-right:1px solid var(--borda);padding:10px 0}
+nav a{display:flex;align-items:center;gap:8px;padding:9px 16px;color:var(--fraco);text-decoration:none;cursor:pointer}
+nav a.ativa{color:var(--texto);background:var(--cartao);border-left:3px solid var(--verde)}
+.ponto{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+main{padding:18px 22px;overflow:auto}
+aside{background:var(--painel);border-left:1px solid var(--borda);padding:14px 16px;overflow:auto}
+aside h3{margin:0 0 6px;font-size:13px;color:var(--fraco);text-transform:uppercase;letter-spacing:.6px}
+#ajuda{white-space:pre-wrap;font:12px/1.5 Consolas,monospace;color:#c8d8ce;background:#0f1a15;border-radius:8px;padding:10px;min-height:120px}
+#ajudaChave{color:var(--verde);font-weight:600;margin-bottom:6px}
+footer{padding:6px 18px;background:var(--painel);border-top:1px solid var(--borda);color:var(--fraco);font-size:12px}
+.aba{display:none}.aba.ativa{display:block}
+.cartao{background:var(--cartao);border:1px solid var(--borda);border-radius:var(--raio);padding:14px 16px;margin-bottom:14px}
+.cartao h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.selo{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.s-liga{background:#1f4a32;color:var(--verde)}.s-exe{background:#4a3d1a;color:var(--amarelo)}.s-nao{background:#4a201e;color:var(--vermelho)}
+.s-sobre{background:#1d3550;color:var(--azul)}.s-off{background:#2a332e;color:var(--cinza)}
+.linha{display:grid;grid-template-columns:190px 1fr 100px;gap:12px;align-items:center;padding:5px 0}
+.linha code{color:#bfe9cf}
+.linha small{display:block;color:var(--fraco);font-size:11px}
+input[type=range]{width:100%;accent-color:var(--verde)}
+.inter{display:flex;gap:10px;align-items:center;padding:6px 0}
+.chave{position:relative;width:42px;height:22px;background:#33443b;border-radius:20px;cursor:pointer;flex:none}
+.chave::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#cfd8d3;transition:.15s}
+.chave.on{background:var(--verde2)}.chave.on::after{left:23px;background:#fff}
+.chave.des{opacity:.4;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--borda);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;color:var(--fraco);border-radius:0;padding:5px 12px}
+.seg button.on{background:var(--verde2);color:#fff}
+.desligado{opacity:.38;pointer-events:none}
+.aviso{font-size:12px;color:var(--amarelo);margin:4px 0}
+svg text{fill:var(--fraco);font-size:11px}
+.nacao{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.ficha{padding:6px 10px;border-radius:8px;border:1px solid var(--borda)}
+.ficha b{display:block;font-size:12px}
+.f-j{background:#1f4a32}.f-f{background:#1f3d4a}.f-n{background:#3a2a2a}
+.seta{color:var(--fraco)}
+.grande{font-weight:700;padding:6px 10px;border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{border-bottom:1px solid var(--borda);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--fraco);font-weight:600}
+pre.cfg{font:12px/1.45 Consolas,monospace;background:#0b1410;border-radius:8px;padding:10px;overflow:auto;max-height:70vh;margin:0}
+pre.cfg span{display:block;min-height:1.45em}
+pre.cfg .mud{background:#244a33}
+pre.cfg .nov{background:#1d3550;display:block}
+pre.cfg .com{color:#6f8a7b}
+.barras .b{display:grid;grid-template-columns:200px 1fr 60px;gap:8px;align-items:center;margin:4px 0;font-size:13px}
+.barras .t{background:#0f1a15;border-radius:4px;height:16px;overflow:hidden}
+.barras .t i{display:block;height:100%;background:linear-gradient(90deg,var(--verde2),var(--verde))}
+.barras .zero{color:var(--cinza)}
+.mini{font-size:12px;color:var(--fraco)}
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.corpo{grid-template-columns:150px 1fr}aside{grid-column:1/-1;border-left:0;border-top:1px solid var(--borda)}.duas{grid-template-columns:1fr}}
+@media (max-width:700px){.corpo{grid-template-columns:1fr}nav{display:flex;overflow:auto;padding:0}nav a{white-space:nowrap}.linha{grid-template-columns:1fr 90px}.linha input[type=range]{grid-column:1/-1;grid-row:2}main{padding:12px 16px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CM0102 <span>Rust Tweaks</span> · configurador</h1>
+  <label>Exe
+    <select id="exe">
+      <option value="orig">cm0102.exe · 3.9.68 original</option>
+      <option value="regen">cm0102.exe · 3.9.68 + Regen Tweak</option>
+      <option value="clz" selected>cm0102.exe · CLZ (NickPatcher)</option>
+    </select></label>
+  <label>Predefinição <select id="pred"></select></label>
+  <span class="espaco"></span>
+  <span id="pendentes" class="mini"></span>
+  <button class="sec" id="desfazer">Desfazer tudo</button>
+  <button id="gravar" title="Na maquete, só mostra o arquivo">Gravar</button>
+</header>
+<div class="corpo">
+<nav id="nav"></nav>
+<main>
+  <!-- INÍCIO -->
+  <section class="aba" data-aba="inicio" data-nome="Início">
+    <div class="cartao"><h2>Retrato do exe <span class="mini">(exemplo, pelos números de docs/TESTES.md §3.4)</span></h2><div id="retrato"></div></div>
+    <div class="cartao"><h2>O que cada ajuste vai fazer neste exe</h2><table id="estados"></table>
+      <p class="mini">Previsto pelo arquivo do exe. O que outra DLL muda ao rodar (NickDLL, LaMOHatesCD) vem do último <code>tweaks.log</code>, abaixo.</p></div>
+    <div class="cartao"><h2>Último tweaks.log <span class="mini">(exemplo)</span></h2><pre class="cfg" id="logex"></pre></div>
+  </section>
+
+  <!-- JOGO -->
+  <section class="aba" data-aba="jogo" data-nome="Jogo">
+    <div class="cartao"><h2>Save acima de 2 GB <span data-estado="save"></span></h2><div data-k="save_over_2gb"></div></div>
+    <div class="cartao"><h2>Pasta do jogo e administrador</h2><div data-k="portable_folder"></div><div data-k="clear_admin_flag"></div><div class="mini" id="notaNick"></div></div>
+    <div class="cartao"><h2>Exe já modificado</h2><div data-k="override_exe_changes"></div></div>
+    <div class="cartao"><h2>Vídeo, resolução e CD <span class="selo s-off">em breve (Fase 4)</span></h2>
+      <div class="inter"><span class="chave des"></span><code>video = window</code><span class="mini">a camada de vídeo do projeto (janela, Print Screen, escala nítida)</span></div>
+      <div class="inter"><span class="chave des"></span><code>resolution = 1080</code><span class="mini">1920×1080 em memória</span></div>
+      <div class="inter"><span class="chave des"></span><code>no_cd = 1</code><span class="mini">o NoCD do projeto</span></div>
+      <div class="mini" id="notaFase4"></div></div>
+  </section>
+
+  <!-- IDADES -->
+  <section class="aba" data-aba="idades" data-nome="Idades">
+    <div class="cartao nacaoCartao"></div>
+    <div class="cartao"><h2>Idade dos regens <span data-estado="idade"></span></h2>
+      <div data-k="ages"></div>
+      <div id="blocoIdades">
+        <svg id="gIdades" viewBox="0 0 760 250" width="100%" style="touch-action:none;cursor:ns-resize"></svg>
+        <div class="mini">Arraste as barras (escala de raiz). Contorno = a distribuição depois de "regens mais novos". Clique numa barra para editar a idade abaixo.</div>
+        <div id="editaIdade"></div>
+      </div>
+    </div>
+    <div class="cartao"><h2>Regens mais novos <span class="mini">(a ideia de petermf23)</span></h2><div data-k="younger_from_age"></div><div data-k="younger_by"></div></div>
+    <div class="cartao"><h2>Nações fora do jogo <span data-estado="idadeFora"></span></h2><div data-k="ages_out_of_game"></div></div>
+    <div class="cartao"><h2>Teto do CA e quem vai à disputa <span data-estado="semClube"></span></h2><div data-k="ca_cap_skip"></div><div data-k="unattached"></div><div data-k="contest_max_age"></div></div>
+  </section>
+
+  <!-- INATIVOS -->
+  <section class="aba" data-aba="inativos" data-nome="Inativos">
+    <div class="cartao"><h2>Aposentar quem ninguém quer <span data-estado="inativos"></span></h2>
+      <div data-k="retire_idle_players"></div>
+      <div id="blocoInativos"><div data-k="idle_days"></div><div data-k="idle_min_age"></div><div data-k="idle_rep"></div><div data-k="idle_rep_per_year"></div><div data-k="protect_young_unemployed"></div></div>
+      <div class="aviso" id="notaInativos"></div>
+    </div>
+    <div class="cartao"><h2>Chance de aposentar por verificação</h2>
+      <div class="linha"><span>Reputação do jogador <small>exemplo</small></span><input type="range" id="repEx" min="500" max="10000" step="100" value="3000"><input type="number" id="repExN" min="500" max="10000" value="3000"></div>
+      <svg id="gInativos" viewBox="0 0 760 230" width="100%"></svg>
+      <div class="mini">Linha cheia: a regra nova, depois de <span id="diasTxt"></span> dias sem clube. Tracejada: a original (365 dias, sorteio(reputação) &lt; 750). O jogo verifica nos dias 0, 80, 173 e 250 do ano.</div>
+    </div>
+  </section>
+
+  <!-- DISPUTA -->
+  <section class="aba" data-aba="disputa" data-nome="Disputa">
+    <div class="cartao nacaoCartao"></div>
+    <div class="cartao"><h2>A disputa pelos regens <span data-estado="disputa"></span></h2><div data-k="rule"></div></div>
+    <div id="blocoDisputa">
+    <div class="cartao"><h2>O jovem do exemplo</h2>
+      <div class="linha"><span>PA</span><input type="range" id="paEx" min="1" max="200" value="150"><input type="number" id="paExN" min="1" max="200" value="150"></div>
+      <div class="linha"><span>CA</span><input type="range" id="caEx" min="1" max="200" value="60"><input type="number" id="caExN" min="1" max="200" value="60"></div>
+    </div>
+    <div class="duas">
+      <div class="cartao"><h2>Nível: a curva</h2>
+        <svg id="gCurva" viewBox="0 0 420 220" width="100%"></svg>
+        <div data-k="target_k"></div><div data-k="target_ca"></div><div data-k="sigma"></div><div data-k="sigma_below"></div><div data-k="level_floor"></div>
+      </div>
+      <div class="cartao"><h2>Chance de cada clube <span class="mini">(clubes de exemplo)</span></h2>
+        <div class="barras" id="chances"></div>
+        <div class="mini" id="chancesNota"></div>
+      </div>
+    </div>
+    <div class="duas">
+      <div class="cartao"><h2>Instalações e comissão</h2><div class="mini" id="instTxt"></div>
+        <div data-k="facilities_base"></div><div data-k="facilities_k"></div><div data-k="staff_min"></div><div data-k="staff_max"></div></div>
+      <div class="cartao"><h2>Vaga, teto, surpresa e aleatoriedade</h2>
+        <div data-k="squad_limit"></div><div data-k="squad_exp"></div><div data-k="season_cap"></div><div data-k="surprise"></div><div data-k="temperature"></div></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- REGISTRO -->
+  <section class="aba" data-aba="registro" data-nome="Registro">
+    <div class="cartao"><h2>tweaks.log</h2><div data-k="log"></div></div>
+  </section>
+
+  <!-- CFG -->
+  <section class="aba" data-aba="cfg" data-nome="tweaks.cfg">
+    <div class="cartao"><h2>O arquivo como vai ficar <span class="mini" id="resumoCfg"></span></h2>
+      <p class="mini">Só os valores mudam; comentários, ordem e linhas em branco ficam. Verde: linha mudada. Azul: linha acrescentada (chave sem linha, valor diferente do padrão da DLL).</p>
+      <pre class="cfg" id="cfgSaida"></pre></div>
+  </section>
+</main>
+<aside>
+  <h3>Ajuda</h3>
+  <div id="ajudaChave">passe o mouse numa opção</div>
+  <div id="ajuda">O texto vem do comentário da própria chave no tweaks.cfg.</div>
+  <h3 style="margin-top:16px">Neste exe</h3>
+  <div id="estadoLado" class="mini">—</div>
+</aside>
+</div>
+<footer id="rodape"></footer>
+
+<script>
+const CFG = "# tweaks.cfg - settings for CM0102-Rust-Tweaks, the ddraw.dll for CM 01/02 3.9.68 (saves above 2 GB, regen ages,\n# retiring idle players and how youth regens are distributed)\n#\n# Put this file next to the game exe. One setting per line: \"name = value\". Anything after # is a comment.\n# Without this file the DLL changes nothing in the game: the switches (save_over_2gb, ages, retire_idle_players,\n# rule) are off unless a line here turns them on. A missing number uses the value shown here.\n\n# ---- Exes that are already modified ----\n# Each part checks the exe before hooking in. If the exe already changes the routine that a part would replace (for\n# example the Regen Tweak by xeno/Saturn, or the regen age changes in some NickPatcher exes), the part keeps the\n# exe's own routine and tweaks.log says so. override_exe_changes = 1 replaces those changes with this DLL's rules\n# instead. A part never hooks into an exe whose code differs where it hooks in (that would not be safe).\noverride_exe_changes = 0\n\n# ---- Saves above 2 GB ----\n# The save2gb fix: lets the game write and load saves above 2 GB (up to 4 GB). Without it, a save above 2 GB\n# fails to load. It changes nothing in smaller saves. 1 = on, 0 = off (the default). It's the same fix as the\n# save2gb DLL; turn it on here if you use this DLL instead of that one (two ddraw.dll files can't share a folder\n# unless one is renamed to ddraw_chain.dll).\nsave_over_2gb = 0\n\n# ---- Game folder and the admin flag (no SetupReg, no \"run as administrator\") ----\n# portable_folder = 1: the game normally reads its folder from the registry (the \"Location\" that SetupReg writes) and\n# switches to it, so two installs get mixed up and a new one needs SetupReg. With this on, the game always uses the\n# folder of its own exe. Nothing is written to the registry. 0 = off (the default).\nportable_folder = 0\n# clear_admin_flag = 1: NickDLL (CLZ and other NickPatcher packs) marks the exe \"WIN95 RUNASADMIN\" in Windows'\n# compatibility settings every time it starts, so the game asks to run as administrator. With this on, this DLL removes\n# RUNASADMIN for this exe only. It keeps WIN95 (CLZ 2026 V6.1 crashes when creating a career without Windows 95\n# mode) and anything else Windows put there. It works from the next start on.\n# Leave it off if you set those compatibility options on purpose. 0 = off (the default).\nclear_admin_flag = 0\n\n# ---- Regen ages ----\n# \"Nation in the game\", here and below: a nation whose league you picked when starting the career, either as a playable\n# league or as a background league - for regens the game treats both the same (the nation's NationLeagueSelected byte is\n# 2 for playable, 1 for background, and the regen code only checks it isn't 0). A \"nation not in the game\" is one\n# whose league you didn't pick at all.\n# ages = custom    use the age table below\n# ages = original  change nothing: the game keeps the 3.9.68 ages (the default without this line)\nages = custom\n\n# One line per age: age_NN = chance, CA cap\n#   chance  relative weight of that age (they don't need to add up to 100; 0 = never)\n#   CA cap  the youngster's current ability can't start above this (1 to 200); leave it out for no cap\n# Ages from 14 to 35. The values below are the original game's: mostly 16 to 20, a handful at 15 and 21 to 26.\n# An age without a line keeps the value shown here (ages not listed are 0); to remove an age, set its chance to 0.\nage_15 = 0.0025, 80\nage_16 = 16.67, 80\nage_17 = 29.11, 80\nage_18 = 29.11, 100\nage_19 = 12.44, 110\nage_20 = 12.44, 110\nage_21 = 0.04\nage_22 = 0.04\nage_23 = 0.04\nage_24 = 0.04\nage_25 = 0.04\nage_26 = 0.04\n\n# Younger regens - the idea of petermf23 in his Polish divisions mod for 3.9.60 (item 14, \"Younger regens\"):\n# a regen drawn at younger_from_age or older is made younger_by years younger (22 -> 16, 26 -> 20), so more regens get\n# a proper development period. It applies after the draw, in the table above and for nations not in the game.\n# younger_by = 0 turns it off.\nyounger_from_age = 22\nyounger_by = 6\n\n# Nations not in the game with fewer than 350 people in the database draw ages differently in the original: mostly 23 to 27,\n# sometimes 17 to 23, and there the age also picks the CA formula (younger = lower CA), with no cap. That's where\n# the younger regens rule matters most.\n# ages_out_of_game = original  keep the original draw for them, with the younger regens rule (the default)\n# ages_out_of_game = table     use the table above for them too (the CA caps don't apply there)\nages_out_of_game = original\n\n# Chance (%) that the CA cap is skipped for a youngster (the original skips it about 1 time in 200).\nca_cap_skip = 0.5\n\n# Youngsters up to this age (from countries in the game) enter the clubs' contest 3 times in 4; older ones mostly\n# start without a club. The original is 18 (under 19).\ncontest_max_age = 18\n\n# Who goes to the clubs' contest. In the original, a youngster from a nation in the game goes to the contest only when\n# he's under contest_max_age + 1, and then 3 times in 4; everyone else starts without a club, even when clubs in his\n# country have room. This setting works with any rule and any ages setting.\n# unattached = original         keep that (the default without this line)\n# unattached = only_if_no_room  every youngster from a nation in the game goes to the contest, at any age (so\n#                               contest_max_age no longer matters); he starts without a club only when no club there can\n#                               take him (squad full, or season_cap reached with rule = new). Youngsters from nations\n#                               not in the game keep the original path.\nunattached = original\n\n# ---- Retiring idle players ----\n# Each regen is born from a retired player's record, so more retirements of players nobody wants mean more regens\n# a year, with the same total number of people and no change to the save format.\n# How the original game retires a player without a club (checked on days 0, 80, 173 and 250 of the year):\n#   - past his position's age limit (30 for strikers and attacking midfielders, 31 for the others, 34 for\n#     goalkeepers): over 34 and 65+ days without a club, he retires; there are other cases by age and reputation;\n#   - otherwise, any age: 365+ days without a club and random(current reputation) < 750.\n# A retired player first goes to a retirement list and, on its date, his record feeds the regen queue (a few weeks).\n# retire_idle_players = 1 changes the second rule, for players only:\n#   - at idle_min_age or older and idle_days+ days without a club, he retires when\n#     random(current reputation) < idle_rep + idle_rep_per_year x (age - idle_min_age);\n#     e.g. reputation 3000: 50% per check at 28, 75% at 31, 100% at 34;\n#   - under protect_young_unemployed he never retires by this rule; 0 = no protection (the default: the original\n#     already gives a clubless youngster 365 days, and protecting the young cut most of the recycling into regens);\n#   - everyone else keeps the original rule. Players on any club's shortlist never retire by it, as in the original.\n# Note: some NickPatcher exes (the CLZ ones) skip retirements under 34 altogether, so this rule rarely finds anyone\n# there; tweaks.log says so at start-up.\nretire_idle_players = 1\nidle_days = 180\nidle_min_age = 28\nidle_rep = 1500\nidle_rep_per_year = 250\nprotect_young_unemployed = 0\n# ---- Regens ----\n# How it works: when the game creates a youth regen, every eligible club in his country (not foreign there,\n# not a B team, squad below the limit) gets a weight, and the club is drawn in proportion to its weight:\n#\n#     weight = (level x facilities x staff x room) ^ temperature\n#\n# A club with twice the weight has twice the chance. If no club has any weight, the youngster stays without\n# a club (as in the original game).\n#\n# rule = new       use the rules below\n# rule = original  change nothing: the game keeps the 3.9.68 rule (the default without this line)\nrule = new\n\n# ---- Level: the youngster tends to go to a club of \"his size\" ----\n# Target reputation = target_k x (PA, or a mix of PA and CA set by target_ca). Club reputation is 0 to 10000,\n# PA is 1 to 200, so target_k = 50 puts a PA 180 youngster's target at reputation 9000.\ntarget_k = 50\n# 0 = target by PA only (the level he will reach); 1 = by CA only (the level he has now); 0.3 = 70% PA, 30% CA.\ntarget_ca = 0\n# Width of the bell curve around the target, in reputation points. A club this far from the target keeps\n# 61% of the level weight; twice this far, 14%. Smaller = fewer surprises.\nsigma = 2500\n# The width for clubs SMALLER than the target. Narrower than sigma on purpose: a country has hundreds of small\n# clubs, and with the same width they would add up and take most of the good youngsters. With 1200, a club 2400\n# below the target keeps 14%; one 2400 above keeps 63%. 0 = the same as sigma.\nsigma_below = 1200\n# Minimum level weight (0 to 1) for a club far from the target. Keep it small: a country has hundreds of\n# small clubs, and a small floor added over all of them becomes the biggest slice of the draw.\nlevel_floor = 0.002\n\n# ---- Facilities: the club's Training (1 to 20) ----\n# facilities = facilities_base + facilities_k x Training. With 0.4 and 0.06: Training 1 = 0.46,\n# Training 10 = 1.0, Training 20 = 1.6 (no jump between 19 and 20, unlike the original).\nfacilities_base = 0.4\nfacilities_k = 0.06\n\n# ---- Staff: the best \"Working with Youngsters\" among the manager and the coaches ----\n# Goes from staff_min (attribute 1) to staff_max (attribute 20). Counts the same for AI and human clubs.\nstaff_min = 0.8\nstaff_max = 1.2\n\n# ---- Room in the squad ----\n# room = ((squad_limit - squad size) / squad_limit) ^ squad_exp. A club with squad_limit players or more\n# doesn't take part. squad_limit goes up to 50 (the game's squad size); the Regen Tweak uses 45, and 48 leaves the big\n# squads in the contest while season_cap does the braking.\nsquad_limit = 48\nsquad_exp = 0.5\n\n# ---- Cap per club ----\n# A club that already got this many regens in the last 365 days doesn't take part. 0 = no cap.\nseason_cap = 2\n\n# ---- Surprise ----\n# Share (%) of youngsters drawn ignoring the level: only clubs that play in a competition running in the game take\n# part, still weighted by facilities, staff and room. It's the gem born at a small club (Ronaldo started at\n# Sao Cristovao); the transfer market takes him further later. 0 = off.\nsurprise = 15\n\n# ---- Randomness ----\n# Exponent on the weight. 1 = plain proportional draw; 2 = more predictable (the best-fitting clubs win more\n# often); 0.5 = more random.\ntemperature = 1\n\n# ---- Log ----\n# log = 1 writes what happens to tweaks.log, one line per event, tab-separated:\n#   tick    once per game month: the game date, seconds since start, and how many contest, birth and idle lines so far\n#           (shows the career is moving even when no tweak writes anything, e.g. override_exe_changes = 0)\n#   regen   each youngster of the clubs' contest: the rule (new, original or exe), date, age, PA, CA, the club's\n#           reputation, Training, squad size and name, and (new rule) his chance, how many clubs took part, surprise\n#   birth   each regen born through the age table: date, age, PA\n#   idle    each retirement by the idle rule: date, age, reputation, days without a club\n#   check   after the exe's DLLs load: whether every hook is still in place\n#   crash   the first access violations: address, registers and stack, before the game goes down\n# With rule = original (or a contest kept by the exe), log = 1 still records the game's own picks, for comparison.\n# 0 = only the start-up lines.\nlog = 0\n";
+
+// ---- o esquema: as chaves de ler_regras (src/lib.rs). dll = o padrão sem a linha (PADRAO); [min,max] = faixa válida do campo;
+// barra = faixa da barra; "proposta" onde o código não limita.
+const SW='sw', NUM='num', SEL='sel';
+const ESQ = [
+ {k:'override_exe_changes',t:SW,dll:0,n:'Sobrescrever o exe'},
+ {k:'save_over_2gb',t:SW,dll:0,n:'Save acima de 2 GB'},
+ {k:'portable_folder',t:SW,dll:0,n:'Pasta do exe (sem SetupReg)'},
+ {k:'clear_admin_flag',t:SW,dll:0,n:'Tirar o RUNASADMIN da NickDLL'},
+ {k:'ages',t:SEL,dll:'original',op:[['custom','Tabela'],['original','Original']],n:'Idades'},
+ {k:'younger_from_age',t:NUM,dll:22,min:0,max:126,b:[14,35],st:1,n:'A partir de',u:'anos',p:1},
+ {k:'younger_by',t:NUM,dll:0,min:0,max:30,b:[0,15],st:1,n:'Ficam mais novos em',u:'anos (0 = desligado)',p:1},
+ {k:'ages_out_of_game',t:SEL,dll:'original',op:[['original','Sorteio original'],['table','A tabela também']],n:'Idades fora do jogo'},
+ {k:'ca_cap_skip',t:NUM,dll:0.5,min:0,max:100,b:[0,5],st:0.1,n:'Pular o teto do CA',u:'%',p:1},
+ {k:'contest_max_age',t:NUM,dll:18,min:0,max:126,b:[14,25],st:1,n:'Idade máxima na disputa',u:'anos'},
+ {k:'unattached',t:SEL,dll:'original',op:[['original','Original'],['only_if_no_room','Sem clube só sem vaga']],n:'Quem fica sem clube'},
+ {k:'retire_idle_players',t:SW,dll:0,n:'Aposentar inativos'},
+ {k:'idle_days',t:NUM,dll:180,min:0,max:3650,b:[0,730],st:1,n:'Dias sem clube',u:'dias',p:1},
+ {k:'idle_min_age',t:NUM,dll:28,min:14,max:50,b:[16,40],st:1,n:'Idade mínima',u:'anos',p:1},
+ {k:'idle_rep',t:NUM,dll:1500,min:0,max:10000,b:[0,10000],st:50,n:'Base da chance',u:'reputação',p:1},
+ {k:'idle_rep_per_year',t:NUM,dll:250,min:0,max:5000,b:[0,2000],st:10,n:'A mais por ano',u:'reputação',p:1},
+ {k:'protect_young_unemployed',t:NUM,dll:0,min:0,max:50,b:[0,30],st:1,n:'Proteger abaixo de',u:'anos (0 = sem)',p:1},
+ {k:'rule',t:SEL,dll:'original',op:[['new','Sorteio proporcional'],['original','Original']],n:'Regra da disputa'},
+ {k:'target_k',t:NUM,dll:50,min:0,max:200,b:[0,100],st:1,n:'Alvo × PA',p:1},
+ {k:'target_ca',t:NUM,dll:0,min:0,max:1,b:[0,1],st:0.05,n:'Peso do CA no alvo',u:'0 = PA, 1 = CA',p:1},
+ {k:'sigma',t:NUM,dll:2500,min:1,max:10000,b:[100,10000],st:50,n:'Largura acima',u:'reputação',p:1},
+ {k:'sigma_below',t:NUM,dll:1200,min:0,max:10000,b:[0,10000],st:50,n:'Largura abaixo',u:'0 = igual',p:1},
+ {k:'level_floor',t:NUM,dll:0.002,min:0,max:1,b:[0,0.05],st:0.0005,n:'Piso do nível',p:1},
+ {k:'facilities_base',t:NUM,dll:0.4,min:0,max:5,b:[0,2],st:0.05,n:'Instalações: base',p:1},
+ {k:'facilities_k',t:NUM,dll:0.06,min:0,max:1,b:[0,0.2],st:0.005,n:'Instalações: × Training',p:1},
+ {k:'staff_min',t:NUM,dll:0.8,min:0,max:5,b:[0,2],st:0.05,n:'Comissão: pior (1)',p:1},
+ {k:'staff_max',t:NUM,dll:1.2,min:0,max:5,b:[0,2],st:0.05,n:'Comissão: melhor (20)',p:1},
+ {k:'squad_limit',t:NUM,dll:48,min:1,max:50,b:[20,50],st:1,n:'Limite do elenco',u:'jogadores'},
+ {k:'squad_exp',t:NUM,dll:0.5,min:0,max:5,b:[0,3],st:0.05,n:'Expoente da vaga',p:1},
+ {k:'season_cap',t:NUM,dll:2,min:0,max:50,b:[0,10],st:1,n:'Teto por clube em 365 dias',u:'0 = sem',p:1},
+ {k:'surprise',t:NUM,dll:15,min:0,max:100,b:[0,50],st:1,n:'Surpresa',u:'%'},
+ {k:'temperature',t:NUM,dll:1,min:0.05,max:5,b:[0.25,3],st:0.05,n:'Temperatura',p:1},
+ {k:'log',t:SW,dll:0,n:'Registrar no tweaks.log'},
+];
+const POR = Object.fromEntries(ESQ.map(e=>[e.k,e]));
+const IDADE_MIN=14, IDADES=22;
+const IDADES_DLL=[0,0.0025,16.67,29.11,29.11,12.44,12.44,0.04,0.04,0.04,0.04,0.04,0.04,0,0,0,0,0,0,0,0,0];
+const TETOS_DLL=[80,80,80,80,100,110,110,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1];
+
+// ---- ler como a DLL (ler_regras): a última linha vence ----
+function linhasDe(t){return t.split(/\r?\n/)}
+function chaveDe(l){const c=l.split('#')[0];const i=c.indexOf('=');if(i<0)return null;return {k:c.slice(0,i).trim(),v:c.slice(i+1).trim()}}
+function lerCfg(texto){
+  const v={}; for(const e of ESQ) v[e.k]=e.dll;
+  v.idades=IDADES_DLL.map((w,i)=>({w,cap:TETOS_DLL[i]}));
+  for(const l of linhasDe(texto)){
+    const kv=chaveDe(l); if(!kv) continue; const {k,v:val}=kv;
+    const m=k.match(/^age_(\d+)$/);
+    if(m){const n=+m[1]; if(n>=IDADE_MIN&&n<IDADE_MIN+IDADES){const p=val.split(',').map(s=>s.trim()); const w=parseFloat(p[0]); if(!isNaN(w)){const c=parseInt(p[1]); v.idades[n-IDADE_MIN]={w:Math.max(0,w),cap:isNaN(c)?-1:c}}} continue}
+    const e=POR[k]; if(!e) continue;
+    if(e.t===SW) v[k]= k==='log' ? (parseFloat(val)!==0&&!isNaN(parseFloat(val))?1:0) : (val==='1'?1:0);
+    else if(e.t===SEL) v[k]= e.op.some(o=>o[0]===val)&&val!=='original' ? val : 'original';
+    else {const x=parseFloat(val); if(!isNaN(x)) v[k]=Math.min(e.max,Math.max(e.min,x))}
+  }
+  return v;
+}
+// ---- a ajuda: os comentários logo acima da chave; sem eles, a da chave anterior ----
+function ajudas(texto){
+  const L=linhasDe(texto), h={}; let ant='';
+  L.forEach((l,i)=>{const kv=chaveDe(l); if(!kv) return; const bl=[]; for(let j=i-1;j>=0&&L[j].trim().startsWith('#');j--) bl.unshift(L[j]);
+    const k=/^age_\d+$/.test(kv.k)?'age':kv.k; const t=bl.length?bl.join('\n'):ant; if(!h[k]) h[k]=t; ant=t;});
+  return h;
+}
+const AJUDA=ajudas(CFG);
+
+// ---- gravar sem apagar comentários ----
+function fmt(x){return String(Number(x.toFixed(4)))}
+function texto(v,k){const e=POR[k]; return e.t===NUM?fmt(v[k]):String(v[k])}
+function gravarCfg(orig,v){
+  const nl=orig.includes('\r\n')?'\r\n':'\n', L=linhasDe(orig), pos={}, estado=L.map(()=>'');
+  L.forEach((l,i)=>{const kv=chaveDe(l); if(kv) pos[kv.k]=i});
+  const subst=(i,val)=>{const m=L[i].match(/^(\s*[^=#]+?\s*=\s*)([^#]*?)(\s*(#.*)?)$/); if(m&&m[2]!==val){L[i]=m[1]+val+m[3]; estado[i]='mud'}};
+  const desejado={};
+  for(const e of ESQ) desejado[e.k]=texto(v,e.k);
+  v.idades.forEach((a,i)=>{desejado['age_'+(i+IDADE_MIN)]=fmt(a.w)+(a.cap>=0?', '+a.cap:'')});
+  const ordem=[]; for(const l of linhasDe(CFG)){const kv=chaveDe(l); if(kv&&!ordem.includes(kv.k)) ordem.push(kv.k)}
+  for(let n=IDADE_MIN;n<IDADE_MIN+IDADES;n++){const k='age_'+n; if(!ordem.includes(k)){const ant=ordem.filter(x=>/^age_/.test(x)&&+x.slice(4)<n).pop()||'ages'; ordem.splice(ordem.indexOf(ant)+1,0,k)}}
+  const novas=[];
+  for(const k of ordem){
+    const val=desejado[k]; if(val===undefined) continue;
+    if(pos[k]!==undefined){subst(pos[k],val); continue}
+    const padrao=/^age_/.test(k)?(()=>{const i=+k.slice(4)-IDADE_MIN;return fmt(IDADES_DLL[i])+(TETOS_DLL[i]>=0?', '+TETOS_DLL[i]:'')})():texto(Object.fromEntries(ESQ.map(e=>[e.k,e.dll])),k);
+    if(val===padrao) continue;
+    const antes=ordem.slice(0,ordem.indexOf(k)).reverse().find(x=>pos[x]!==undefined);
+    novas.push({depois:antes===undefined?L.length-1:pos[antes],linha:k+' = '+val});
+  }
+  // insere de baixo para cima para não mexer nos índices
+  novas.sort((a,b)=>b.depois-a.depois).forEach(n=>{L.splice(n.depois+1,0,n.linha); estado.splice(n.depois+1,0,'nov')});
+  return {texto:L.join(nl),linhas:L,estado,mud:estado.filter(s=>s==='mud').length,nov:novas.length};
+}
+
+// ---- predefinições (docs/CONFIGURADOR.md §4) ----
+const DISTRIB=lerCfg(CFG);
+const JOGO=['ages','younger_from_age','younger_by','ages_out_of_game','ca_cap_skip','contest_max_age','unattached','retire_idle_players','idle_days','idle_min_age','idle_rep','idle_rep_per_year','protect_young_unemployed','rule','target_k','target_ca','sigma','sigma_below','level_floor','facilities_base','facilities_k','staff_min','staff_max','squad_limit','squad_exp','season_cap','surprise','temperature'];
+const PRED={
+  'Original':{ages:'original',ages_out_of_game:'original',unattached:'original',retire_idle_players:0,rule:'original'},
+  'Só o save':{save_over_2gb:1,ages:'original',ages_out_of_game:'original',unattached:'original',retire_idle_players:0,rule:'original'},
+  'Equilibrado':Object.assign(Object.fromEntries(JOGO.map(k=>[k,DISTRIB[k]])),{idades:DISTRIB.idades}),
+  'Equilibrado, todos com clube':Object.assign(Object.fromEntries(JOGO.map(k=>[k,DISTRIB[k]])),{idades:DISTRIB.idades,unattached:'only_if_no_room'}),
+};
+function bate(p,v){return Object.entries(p).every(([k,x])=>k==='idades'?JSON.stringify(x)===JSON.stringify(v.idades):v[k]===x)}
+
+// ---- estado ----
+let V=JSON.parse(JSON.stringify(DISTRIB));
+let idadeSel=4;
+
+// ---- o exe: estados por ajuste (exemplos de docs/TESTES.md §3) ----
+const EXES={
+ orig:{nome:'cm0102.exe · 3.9.68 original',retrato:'the same code and data as the original 3.9.68',conhecidos:[],corpo:{},nick:false,retire34:false},
+ regen:{nome:'3.9.68 + Regen Tweak',retrato:'differs from 3.9.68: 83 of 11314 functions, 3 of 373 data blocks',conhecidos:['Regen Tweak by xeno/Saturn (squad limit 45 in the regens\' contest)'],corpo:{disputa:'Regen Tweak by xeno/Saturn'},nick:false,retire34:false},
+ clz:{nome:'CLZ (NickPatcher + NickDLL)',retrato:'entry point in the new section .nick (2 MB); differs from 3.9.68: 519 of 11314 functions, 28 of 373 data blocks',
+  conhecidos:['Regen Tweak by xeno/Saturn (squad limit 45 in the regens\' contest)','NickPatcher: no retirement under 34 (RetirePatchV4)','NickPatcher: AlwaysRegenToNewGoodCountry (a PA 120+ regen moves to a strong nation)','regen ages of nations not in the game: branch skipped (CLZ)','regen ages: rare bands changed (14 to 17, CLZ)','regen ages: rare bands changed (20 to 25, CLZ)'],
+  corpo:{idade:'faixas raras de idade mudadas (CLZ)',idadeFora:'ramo das nações fora do jogo pulado (CLZ)',disputa:'Regen Tweak by xeno/Saturn'},nick:true,retire34:true},
+};
+const AJUSTES=[
+ {id:'save',n:'Save acima de 2 GB',liga:v=>v.save_over_2gb,aba:'jogo'},
+ {id:'idade',n:'Idades',liga:v=>v.ages==='custom',aba:'idades'},
+ {id:'idadeFora',n:'Idades, nações fora do jogo',liga:v=>v.ages==='custom'&&(v.ages_out_of_game==='table'||v.younger_by>0),aba:'idades'},
+ {id:'semClube',n:'Sem clube só sem vaga',liga:v=>v.unattached==='only_if_no_room',aba:'idades'},
+ {id:'inativos',n:'Aposentar inativos',liga:v=>v.retire_idle_players,aba:'inativos'},
+ {id:'disputa',n:'Disputa (sorteio proporcional)',liga:v=>v.rule==='new',aba:'disputa'},
+];
+function estado(a){
+  const x=EXES[exe.value];
+  if(!a.liga(V)) return {c:'s-off',t:'desligado',cor:'var(--cinza)'};
+  const mud=x.corpo[a.id];
+  if(mud&&!V.override_exe_changes) return {c:'s-exe',t:'fica com o exe: '+mud,cor:'var(--amarelo)'};
+  let nota='';
+  if(a.id==='inativos'&&x.retire34) nota=' · quase não acha ninguém: o exe pula aposentadorias abaixo de 34 (RetirePatchV4)';
+  if(a.id==='idadeFora'&&mud) nota=' · o desvio fica, mas o exe pula o ramo: continua sem rodar';
+  if(mud) return {c:'s-sobre',t:'liga, sobrescrevendo: '+mud+nota,cor:'var(--azul)'};
+  return {c:'s-liga',t:'liga'+nota,cor:'var(--verde)'};
+}
+
+// ---- controles ----
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function ajudaDe(k){$('#ajudaChave').textContent=k; $('#ajuda').textContent=AJUDA[k]||'(sem comentário no .cfg)'}
+function montar(el){
+  const k=el.dataset.k, e=POR[k];
+  el.addEventListener('mouseenter',()=>ajudaDe(k)); el.addEventListener('focusin',()=>ajudaDe(k));
+  if(e.t===SW){el.className='inter'; el.innerHTML=`<span class="chave"></span><span>${e.n} <code>${k}</code></span>`;
+    el.querySelector('.chave').onclick=()=>{if(k==='override_exe_changes'&&!V[k]&&!confirm('Substituir as mudanças do exe pelas regras desta DLL?'))return; V[k]=V[k]?0:1; tudo()};}
+  else if(e.t===SEL){el.className='inter'; el.innerHTML=`<span>${e.n} <code>${k}</code></span><span class="seg">${e.op.map(o=>`<button data-v="${o[0]}">${o[1]}</button>`).join('')}</span>`;
+    el.querySelectorAll('button').forEach(b=>b.onclick=()=>{V[k]=b.dataset.v; tudo()});}
+  else{el.className='linha'; el.innerHTML=`<span>${e.n}<small><code>${k}</code>${e.u?' · '+e.u:''}${e.p?' · faixa proposta':''}</small></span><input type="range" min="${e.b[0]}" max="${e.b[1]}" step="${e.st}"><input type="number" min="${e.min}" max="${e.max}" step="${e.st}">`;
+    const [r,n]=el.querySelectorAll('input');
+    r.oninput=()=>{V[k]=+r.value; tudo(el)};
+    n.onchange=()=>{let x=parseFloat(n.value); if(isNaN(x)) x=e.dll; V[k]=Math.min(e.max,Math.max(e.min,x)); tudo()};
+    n.oninput=()=>{const x=parseFloat(n.value); if(!isNaN(x)&&x>=e.min&&x<=e.max){V[k]=x; tudo(el)}};}
+}
+function pintar(){
+  $$('[data-k]').forEach(el=>{const k=el.dataset.k,e=POR[k];
+    if(e.t===SW) el.querySelector('.chave').classList.toggle('on',!!V[k]);
+    else if(e.t===SEL) el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===V[k]));
+    else{const [r,n]=el.querySelectorAll('input'); r.value=V[k]; if(document.activeElement!==n) n.value=fmt(V[k])}});
+}
+
+// ---- gráfico das idades ----
+const NS='http://www.w3.org/2000/svg';
+function svg(el,tag,a,txt){const n=document.createElementNS(NS,tag); for(const k in a) n.setAttribute(k,a[k]); if(txt!==undefined) n.textContent=txt; el.appendChild(n); return n}
+const MAXW=40, GX=40, GY=20, GH=180, BW=31;
+function gIdades(origem){
+  const g=$('#gIdades'); g.innerHTML='';
+  const soma=V.idades.reduce((s,a)=>s+a.w,0)||1;
+  const depois=Array(IDADES).fill(0);
+  V.idades.forEach((a,i)=>{const id=i+IDADE_MIN; let d=id; if(V.younger_by>0&&id>=V.younger_from_age) d=id-V.younger_by; d=Math.max(IDADE_MIN,d); depois[d-IDADE_MIN]+=a.w});
+  const h=w=>Math.sqrt(Math.min(w,MAXW)/MAXW)*GH;
+  [0,1,5,15,40].forEach(t=>{const y=GY+GH-h(t); svg(g,'line',{x1:GX,x2:GX+IDADES*BW+4,y1:y,y2:y,stroke:'#22352b'}); svg(g,'text',{x:GX-6,y:y+4,'text-anchor':'end'},t)});
+  V.idades.forEach((a,i)=>{
+    const x=GX+4+i*BW, hh=h(a.w), sel=i===idadeSel;
+    svg(g,'rect',{x,y:GY+GH-hh,width:BW-6,height:Math.max(hh,1),rx:3,fill:sel?'#7ff0ad':'#3fbf74','data-i':i});
+    if(V.younger_by>0&&depois[i]!==a.w){const hd=h(depois[i]); svg(g,'rect',{x:x-1,y:GY+GH-hd,width:BW-4,height:Math.max(hd,1),rx:3,fill:'none',stroke:'#f2c14e','stroke-dasharray':'3 2'})}
+    const pct=a.w/soma*100; if(pct>=0.05) svg(g,'text',{x:x+(BW-6)/2,y:GY+GH-hh-4,'text-anchor':'middle'},pct>=1?pct.toFixed(0)+'%':pct.toFixed(1)+'%');
+    svg(g,'text',{x:x+(BW-6)/2,y:GY+GH+15,'text-anchor':'middle',style:sel?'fill:#e4efe8':''},i+IDADE_MIN);
+    if(a.cap>=0) svg(g,'text',{x:x+(BW-6)/2,y:GY+GH+29,'text-anchor':'middle',style:'fill:#62a8ef;font-size:10px'},a.cap);
+  });
+  svg(g,'text',{x:GX-6,y:GY+GH+29,'text-anchor':'end',style:'fill:#62a8ef;font-size:10px'},'teto');
+  const ed=$('#editaIdade'), a=V.idades[idadeSel];
+  if(origem===ed) return;
+  ed.innerHTML=`<div class="linha"><span>Chance aos ${idadeSel+IDADE_MIN} anos<small><code>age_${idadeSel+IDADE_MIN}</code> · peso relativo (0 = nunca)</small></span><input type="range" min="0" max="${MAXW}" step="0.01" value="${a.w}"><input type="number" min="0" step="0.01" value="${fmt(a.w)}"></div>
+  <div class="linha"><span>Teto do CA<small>1 a 200; vazio = sem teto</small></span><span></span><input type="number" min="1" max="200" value="${a.cap>=0?a.cap:''}"></div>`;
+  const [r,n,c]=ed.querySelectorAll('input');
+  r.oninput=()=>{a.w=+r.value; n.value=fmt(a.w); tudo(ed)};
+  n.onchange=()=>{a.w=Math.max(0,parseFloat(n.value)||0); tudo()};
+  c.onchange=()=>{const x=parseInt(c.value); a.cap=isNaN(x)?-1:Math.min(200,Math.max(1,x)); tudo()};
+  ed.onmouseenter=()=>ajudaDe('age');
+}
+(function(){const g=$('#gIdades'); let arr=false;
+  const aplicar=ev=>{const p=g.createSVGPoint(); p.x=ev.clientX; p.y=ev.clientY; const q=p.matrixTransform(g.getScreenCTM().inverse());
+    const i=Math.floor((q.x-GX-4)/BW); if(i<0||i>=IDADES) return; idadeSel=i;
+    if(arr){const f=Math.min(1,Math.max(0,(GY+GH-q.y)/GH)); V.idades[i].w=Number((f*f*MAXW).toFixed(f<0.2?4:2))} tudo()};
+  g.addEventListener('pointerdown',ev=>{arr=true; g.setPointerCapture(ev.pointerId); aplicar(ev)});
+  g.addEventListener('pointermove',ev=>{if(arr) aplicar(ev)});
+  g.addEventListener('pointerup',()=>arr=false);
+  g.addEventListener('mouseenter',()=>ajudaDe('age'));})();
+
+// ---- gráfico dos inativos ----
+function gInativos(){
+  const g=$('#gInativos'); g.innerHTML=''; const rep=+$('#repEx').value;
+  const X=a=>40+(a-18)*31, Y=p=>20+(1-p)*170;
+  [0,0.25,0.5,0.75,1].forEach(p=>{svg(g,'line',{x1:40,x2:722,y1:Y(p),y2:Y(p),stroke:'#22352b'}); svg(g,'text',{x:34,y:Y(p)+4,'text-anchor':'end'},(p*100)+'%')});
+  for(let a=18;a<=40;a+=2) svg(g,'text',{x:X(a),y:210,'text-anchor':'middle'},a);
+  const orig=[], novo=[];
+  for(let a=18;a<=40;a++){
+    orig.push(`${X(a)},${Y(Math.min(1,750/rep))}`);
+    let p=null;
+    if(V.retire_idle_players&&a>=V.idle_min_age) p=Math.min(1,(V.idle_rep+V.idle_rep_per_year*(a-V.idle_min_age))/rep);
+    if(V.retire_idle_players&&V.protect_young_unemployed>0&&a<V.protect_young_unemployed) p=0;
+    if(p!==null) novo.push(`${X(a)},${Y(p)}`);
+  }
+  svg(g,'polyline',{points:orig.join(' '),fill:'none',stroke:'#93a89c','stroke-width':2,'stroke-dasharray':'5 4'});
+  if(novo.length) svg(g,'polyline',{points:novo.join(' '),fill:'none',stroke:'#4cd383','stroke-width':3});
+  $('#diasTxt').textContent=V.idle_days;
+}
+
+// ---- disputa: a mesma conta de peso() em lib.rs ----
+const CLUBES=[
+ {n:'Grande A (rep 9200, T20)',rep:9200,tr:20,st:18,el:44,rec:1,comp:true},
+ {n:'Grande B (rep 8400, T18)',rep:8400,tr:18,st:15,el:38,rec:0,comp:true},
+ {n:'Médio forte (rep 6500, T15)',rep:6500,tr:15,st:14,el:32,rec:0,comp:true},
+ {n:'Médio (rep 5000, T12)',rep:5000,tr:12,st:10,el:30,rec:0,comp:true},
+ {n:'Médio modesto (rep 3800, T10)',rep:3800,tr:10,st:12,el:27,rec:0,comp:true},
+ {n:'Pequeno de divisão (rep 2500, T7)',rep:2500,tr:7,st:8,el:26,rec:0,comp:true},
+ {n:'120 pequenos somados (rep 900, T4)',rep:900,tr:4,st:6,el:22,rec:0,comp:false,qtd:120},
+];
+function alvo(){return V.target_k*((1-V.target_ca)*(+$('#paEx').value)+V.target_ca*(+$('#caEx').value))}
+function nivel(rep){const a=alvo(); const l=(rep<a&&V.sigma_below>0)?V.sigma_below:Math.max(1,V.sigma); const z=(rep-a)/l; return V.level_floor+(1-V.level_floor)*Math.exp(-0.5*z*z)}
+function peso(c,surpresa){
+  if(c.el>=V.squad_limit||(V.season_cap>0&&c.rec>=V.season_cap)) return 0;
+  if(surpresa&&!c.comp) return 0;
+  const niv=surpresa?1:nivel(c.rep), inst=V.facilities_base+V.facilities_k*c.tr, com=V.staff_min+(V.staff_max-V.staff_min)*(c.st-1)/19;
+  const vaga=Math.pow((V.squad_limit-c.el)/V.squad_limit,V.squad_exp);
+  return Math.pow(Math.max(0,niv*inst*com*vaga),V.temperature)*(c.qtd||1);
+}
+function gCurva(){
+  const g=$('#gCurva'); g.innerHTML=''; const X=r=>36+r/10000*370, Y=p=>14+(1-p)*170;
+  svg(g,'rect',{x:36,y:Y(V.level_floor),width:370,height:Math.max(0,184-Y(V.level_floor)),fill:'#22352b'});
+  [0,0.5,1].forEach(p=>svg(g,'text',{x:30,y:Y(p)+4,'text-anchor':'end'},p));
+  [0,2500,5000,7500,10000].forEach(r=>svg(g,'text',{x:X(r),y:205,'text-anchor':'middle'},r));
+  const pts=[]; for(let r=0;r<=10000;r+=50) pts.push(`${X(r)},${Y(nivel(r))}`);
+  svg(g,'polyline',{points:pts.join(' '),fill:'none',stroke:'#4cd383','stroke-width':2.5});
+  const a=alvo(); if(a<=10000){svg(g,'line',{x1:X(a),x2:X(a),y1:14,y2:184,stroke:'#f2c14e','stroke-dasharray':'4 3'}); svg(g,'text',{x:X(a)+4,y:24,style:'fill:#f2c14e'},'alvo '+Math.round(a))}
+  else svg(g,'text',{x:400,y:24,'text-anchor':'end',style:'fill:#f2c14e'},'alvo '+Math.round(a)+' (acima de 10000) →');
+  CLUBES.forEach(c=>svg(g,'circle',{cx:X(c.rep),cy:Y(nivel(c.rep)),r:4,fill:'#62a8ef'}));
+}
+function chances(){
+  const s=V.surprise/100, n=CLUBES.map(c=>peso(c,false)), su=CLUBES.map(c=>peso(c,true));
+  const sn=n.reduce((a,b)=>a+b,0), ss=su.reduce((a,b)=>a+b,0);
+  const ch=CLUBES.map((c,i)=>{const pn=sn?n[i]/sn:0; const ps=ss?su[i]/ss:pn; return (1-s)*pn+s*ps});
+  const mx=Math.max(...ch,0.0001);
+  $('#chances').innerHTML=CLUBES.map((c,i)=>`<div class="b"><span class="${ch[i]===0?'zero':''}">${c.n}</span><span class="t"><i style="width:${ch[i]/mx*100}%"></i></span><span>${(ch[i]*100).toFixed(1)}%</span></div>`).join('');
+  const fora=CLUBES.filter(c=>peso(c,false)===0).map(c=>c.n.split(' (')[0]);
+  $('#chancesNota').textContent=(fora.length?'Fora da disputa: '+fora.join(', ')+' (elenco no limite ou teto por clube atingido). ':'')+'O Grande A já recebeu 1 jovem nos últimos 365 dias; os 120 pequenos não jogam competição que roda no jogo, por isso ficam fora da surpresa. Clubes fictícios.';
+  const f=t=>(V.facilities_base+V.facilities_k*t).toFixed(2);
+  $('#instTxt').innerHTML=`Training 1 = <b>${f(1)}</b> · 10 = <b>${f(10)}</b> · 20 = <b>${f(20)}</b> &nbsp;|&nbsp; pior treinador com jovens <b>${V.staff_min.toFixed(2)}</b> · melhor <b>${V.staff_max.toFixed(2)}</b>`+(V.staff_max<V.staff_min?' <span class="aviso">(o melhor vale menos que o pior)</span>':'');
+}
+
+// ---- nação no jogo ----
+const NACAO=`<h2>O que é "nação no jogo"</h2>
+<div class="nacao">
+ <span class="mini">Ao criar a carreira, você escolhe ligas:</span>
+ <span class="ficha f-j"><b>Jogável</b>byte 2</span><span class="ficha f-f"><b>De fundo</b>byte 1</span>
+ <span class="seta">→</span><span class="grande s-liga">NAÇÃO NO JOGO</span>
+ <span class="ficha f-n"><b>Não escolhida</b>byte 0</span><span class="seta">→</span><span class="grande s-off">FORA DO JOGO</span>
+</div>
+<p class="mini">Para os regens, jogável e de fundo contam igual: o jogo só olha se o byte <code>NationLeagueSelected</code> não é 0.
+Importa em três lugares: nas <b>idades</b> (nações fora do jogo com menos de 350 pessoas no banco têm sorteio próprio, <code>ages_out_of_game</code>),
+em <b>quem vai à disputa</b> (só jovens de nação no jogo: <code>contest_max_age</code>, <code>unattached</code>) e na <b>disputa</b> (o jovem de nação fora do jogo segue o caminho original, sem o teto por clube).</p>`;
+
+// ---- tudo ----
+function tudo(origem){
+  pintar(); gIdades(origem); gInativos(); gCurva(); chances();
+  $('#blocoIdades').classList.toggle('desligado',V.ages!=='custom');
+  $('[data-k=contest_max_age]').classList.toggle('desligado',V.unattached==='only_if_no_room');
+  $('#blocoInativos').classList.toggle('desligado',!V.retire_idle_players);
+  $('#blocoDisputa').classList.toggle('desligado',V.rule!=='new');
+  const x=EXES[exe.value];
+  $('#notaInativos').textContent=x.retire34&&V.retire_idle_players?'Neste exe o NickPatcher pula as aposentadorias abaixo de 34 (RetirePatchV4): a regra quase não acha ninguém (no CLZ, 9 em cinco temporadas).':'';
+  $('#notaNick').textContent=x.nick?'Há uma NickDLL nesta pasta: clear_admin_flag é útil aqui (o WIN95 fica; só o RUNASADMIN sai).':'Sem NickDLL nesta pasta: clear_admin_flag não faz nada.';
+  $('#notaFase4').textContent=exe.value==='clz'?'Neste exe as três não serviriam: o CLZ já tem resolução, fundos dinâmicos e NoCD próprios.':'';
+  // estados
+  $$('[data-estado]').forEach(el=>{const a=AJUSTES.find(a=>a.id===el.dataset.estado), e=estado(a); el.className='selo '+e.c; el.textContent=e.t});
+  $('#estados').innerHTML='<tr><th>Ajuste</th><th>Neste exe</th><th></th></tr>'+AJUSTES.map(a=>{const e=estado(a);return `<tr><td>${a.n}</td><td><span class="selo ${e.c}">${e.t}</span></td><td><a href="#" data-ir="${a.aba}" style="color:var(--verde)">abrir</a></td></tr>`}).join('');
+  $$('[data-ir]').forEach(l=>l.onclick=ev=>{ev.preventDefault(); abrir(l.dataset.ir)});
+  $('#retrato').innerHTML=`<div><b>${x.nome}</b></div><div class="mini" style="margin:4px 0 8px"><code>${x.retrato}</code></div>`+(x.conhecidos.length?'<div class="mini">Casos conhecidos:</div><ul class="mini">'+x.conhecidos.map(c=>`<li>${c}</li>`).join('')+'</ul>':'');
+  $('#logex').textContent=x.nick?`exe\tcm0102.exe\tentry point in .nick\nregen ages: this exe already changes this routine; keeping the exe's own routine (override_exe_changes = 0)\nregens 0.1: this exe already changes this routine (the Regen Tweak by xeno/Saturn: squad limit 45); keeping the exe's own routine\nretire idle players: note: this exe skips retirements under 34 (a NickPatcher option), so this rule will rarely find anyone\nruntime\tnote: regens 0.1: 00540a50; it now jumps to NickDLL.dll: NickDLL's own club_get_linked_b_team ... (fine)\nruntime\tanother DLL changed the exe after loading: 1205 ranges, 10090 bytes`
+    :`exe\tcm0102.exe\nexe\t${x.retrato}\nruntime\tno other DLL changed the exe's code after loading`;
+  // abas: pontos
+  $$('nav a').forEach(a=>{const ids=AJUSTES.filter(j=>j.aba===a.dataset.aba).map(estado); const p=a.querySelector('.ponto');
+    p.style.background=ids.length?(ids.find(e=>e.c==='s-exe')||ids.find(e=>e.c==='s-liga'||e.c==='s-sobre')||ids[0]).cor:'transparent'});
+  // predefinição e o .cfg
+  const nome=Object.keys(PRED).find(p=>bate(PRED[p],V)); pred.value=nome||'Personalizado';
+  const r=gravarCfg(CFG,V);
+  $('#cfgSaida').innerHTML=r.linhas.map((l,i)=>{const e=l.replace(/&/g,'&amp;').replace(/</g,'&lt;'); const c=r.estado[i]||(l.trim().startsWith('#')?'com':''); return `<span class="${c}">${e}</span>`}).join('');
+  $('#resumoCfg').textContent=`${r.mud} linhas mudadas, ${r.nov} acrescentadas, nenhuma apagada`;
+  $('#pendentes').textContent=r.mud+r.nov?`${r.mud+r.nov} mudanças não gravadas`:'nada a gravar';
+  $('#rodape').textContent=`tweaks.cfg em D:\\Jogos\\CM0102 (exemplo) · ${r.mud+r.nov} mudanças pendentes · último tweaks.log: 02/11/2026 21:40 (exemplo) · maquete: nada é gravado`;
+}
+function abrir(id){$$('.aba').forEach(s=>s.classList.toggle('ativa',s.dataset.aba===id)); $$('nav a').forEach(a=>a.classList.toggle('ativa',a.dataset.aba===id))}
+
+// ---- início ----
+const exe=$('#exe'), pred=$('#pred');
+$('#nav').innerHTML=$$('.aba').map(s=>`<a data-aba="${s.dataset.aba}"><span class="ponto"></span>${s.dataset.nome}</a>`).join('');
+$$('nav a').forEach(a=>a.onclick=()=>abrir(a.dataset.aba));
+$$('.nacaoCartao').forEach(c=>c.innerHTML=NACAO);
+pred.innerHTML=Object.keys(PRED).map(p=>`<option>${p}</option>`).join('')+'<option disabled>Personalizado</option>';
+pred.onchange=()=>{const p=PRED[pred.value]; const n=Object.keys(p).filter(k=>k==='idades'?JSON.stringify(p[k])!==JSON.stringify(V.idades):V[k]!==p[k]).length;
+  if(n&&confirm(`${n} valores vão mudar. Aplicar "${pred.value}"?`)) for(const k in p) V[k]=JSON.parse(JSON.stringify(p[k])); tudo()};
+exe.onchange=()=>tudo();
+$('#desfazer').onclick=()=>{V=JSON.parse(JSON.stringify(DISTRIB)); tudo()};
+$('#gravar').onclick=()=>abrir('cfg');
+['paEx','caEx','repEx'].forEach(id=>{const r=$('#'+id), n=$('#'+id+'N'); r.oninput=()=>{n.value=r.value; tudo()}; n.onchange=()=>{r.value=Math.min(+r.max,Math.max(+r.min,+n.value||0)); n.value=r.value; tudo()}});
+$$('[data-k]').forEach(montar);
+abrir('inicio'); tudo();
+</script>
+</body>
+</html>

@@ -70,7 +70,9 @@ Today the DLL only notices changes in the routines it replaces. On CLZ, NickPatc
 2. 🔨 **Naming the changes** (done outside the DLL: `tools/ler_retrato.py` gives each log line its function, source file and the catalogue patches applied there; the catalogue doesn't go inside the DLL, so Nick's data isn't redistributed; inside it, only the cases this project identified), from NickPatcher's catalogue (the community patches in `MiscPatches.zip`, with bytes and descriptions, and Nick's own options in `Patcher.cs`), read as data and crediting Nick+Co and the authors. Anything not in the catalogue shows as an unknown change, with the function's name.
 3. 🔨 **What affects each tweak** (first part ready: if another DLL changes, at run time, code a tweak checked at start, the log warns; on CLZ, NickDLL hooks 0x540a50, the B-team routine the contest calls, and 0x5e8290, which the save container calls; both read and harmless, now a note). Still to do, the call graph: from the original exe's call graph, who calls and who is called by the routine each tweak replaces; if any of them is changed, the log warns.
 
-## Phase 3: the configurator (options picker) ⏳
+## Phase 3: the configurator (options picker) 🔨
+
+The interface design and an interactive mock-up: [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md) and `docs/configurador_maquete.html` (11/02). The decisions that depend on Lucas are in §9 there.
 
 A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't need to be Tauri, but it should look good and be visual:
 - each option with a **slider next to its input field**: drag or type, both move together, within the valid range;
@@ -84,11 +86,12 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 
 ## Phase 4: more tweaks 💡🔬
 
-- ⏳ **Video, resolution and CD** (Lucas's request, 11/02), three switches off by default, each checking the code's signature and keeping the exe's when it already changes it (CLZ has its own resolution, dynamic backgrounds and NoCD); nothing else goes into the DLL, so as not to conflict with NickPatcher:
+- 🔨 **Video, resolution and CD** (Lucas's request, 11/02; done, the visual test is left), three switches off by default, each checking the code's signature and keeping the exe's when it already changes it (CLZ has its own resolution, dynamic backgrounds and NoCD); nothing else goes into the DLL, so as not to conflict with NickPatcher:
   - `video = window`: the project's video layer (the game draws to our DirectDraw and the frame goes to an ordinary window): Print Screen, a resizable window with sharp scaling, nothing changes Windows' video mode. Works at 800×600;
   - `resolution = 1080`: the project's 1920×1080 resolution, applied in memory, together with the 30-row clamp in `Area::init` (without it, an old match's report shows the "Area.cpp 507" box);
   - `no_cd = 1`: the project's NoCD.
-  - Test on 3.9.68 and on CLZ (the switches must refuse on CLZ); later, with Lucas watching the screen, CLZ's resolutions and dynamic backgrounds.
+  - ✅ On 3.9.68, in hidden careers: the untouched `cm0102.exe` gets past the CD and runs at 1080 through the video layer; `video = window` alone at 800×600; on the exe that is already 1080, "already has it" ([docs/TESTES.en.md](docs/TESTES.en.md) §3.7). In the CLZ exe's bytes the changes don't match and the DLL refuses.
+  - ⏳ With Lucas watching the screen: the window, Print Screen, an old match's report at 1080 (the 30-row limit) and, on CLZ, `video = window` (CLZ in a window with Windows' `ddraw.dll` stops at "16 bit colour"; the video layer should fix it), the resolutions and the dynamic backgrounds.
 
 - 🔬 **The 27 December hang** (the World Cup loop in `world_cup.cpp`, 0x92ea3b..0x92ea71; the one-byte workaround is Alan_v2's):
   - understand routine 0x92e940: what the 8 five-byte records are, who fills them and why there are national teams left over;

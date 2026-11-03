@@ -70,7 +70,9 @@ Hoje a DLL só percebe as mudanças nas rotinas que ela troca. No CLZ, o NickPat
 2. 🔨 **O nome das mudanças** (feito fora da DLL: `tools/ler_retrato.py` dá a cada linha do log a função, o arquivo de código e os patches do catálogo aplicados nela; o catálogo não vai dentro da DLL, para não redistribuir os dados do Nick; dentro dela, só os casos que este projeto identificou), pelo catálogo do NickPatcher (os patches da comunidade em `MiscPatches.zip`, com bytes e descrição, e as opções do próprio Nick no `Patcher.cs`), lido como dado e com o crédito a Nick+Co e aos autores. O que não estiver no catálogo aparece como mudança desconhecida, com o nome da função.
 3. 🔨 **O que afeta cada ajuste** (primeira parte pronta: se outra DLL muda, ao rodar, um trecho que um ajuste conferiu na abertura, o log avisa; no CLZ, a NickDLL desvia a 0x540a50, do time B, que a disputa chama, e a 0x5e8290, que o contêiner do save chama; as duas lidas e inofensivas, viraram nota). Falta o grafo de chamadas: pelo grafo de chamadas do exe original, quem chama e quem é chamado pela rotina que cada ajuste troca; alterada alguma, o log avisa.
 
-## Fase 3: o configurador (seletor de opções) ⏳
+## Fase 3: o configurador (seletor de opções) 🔨
+
+O projeto da interface e uma maquete interativa: [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) e `docs/configurador_maquete.html` (02/11). As decisões que dependem do Lucas estão no §9 de lá.
 
 Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precisa ser Tauri, mas deve ser bonito e visual:
 - cada opção com uma **barra de arrastar junto do campo de digitação**: arrastar ou digitar, os dois andam juntos, dentro da faixa válida;
@@ -84,11 +86,12 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
 
 ## Fase 4: mais ajustes 💡🔬
 
-- ⏳ **Vídeo, resolução e CD** (pedido do Lucas, 02/11), três chaves desligadas por padrão, cada uma conferindo a assinatura do trecho e ficando com o exe se ele já o mudou (o CLZ tem resolução, fundos dinâmicos e NoCD próprios); nada além disso entra na DLL, para não conflitar com o NickPatcher:
+- 🔨 **Vídeo, resolução e CD** (pedido do Lucas, 02/11; feito, falta o teste visual), três chaves desligadas por padrão, cada uma conferindo a assinatura do trecho e ficando com o exe se ele já o mudou (o CLZ tem resolução, fundos dinâmicos e NoCD próprios); nada além disso entra na DLL, para não conflitar com o NickPatcher:
   - `video = window`: a camada de vídeo do projeto (o jogo desenha num DirectDraw nosso e o quadro vai para uma janela comum): Print Screen, janela redimensionável com escala nítida, nada troca o modo de vídeo do Windows. Vale em 800×600;
   - `resolution = 1080`: a resolução 1920×1080 do projeto, aplicada em memória, com a trava das 30 linhas no `Area::init` junto (sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507");
   - `no_cd = 1`: o NoCD do projeto.
-  - Testar no 3.9.68 e no CLZ (as chaves têm de se recusar no CLZ); no futuro, com o Lucas olhando a tela, as resoluções e os fundos dinâmicos do CLZ.
+  - ✅ No 3.9.68, em carreiras ocultas: o `cm0102.exe` intacto passa do CD e roda em 1080 pela camada de vídeo; `video = window` sozinho em 800×600; no exe que já é 1080, "already has it" ([docs/TESTES.md](docs/TESTES.md) §3.7). Nos bytes do exe do CLZ, as trocas não batem e a DLL recusa.
+  - ⏳ Com o Lucas olhando a tela: a janela, o Print Screen, o relatório de uma partida antiga em 1080 (a trava das 30 linhas) e, no CLZ, `video = window` (o CLZ em janela com a `ddraw.dll` do Windows para em "16 bit colour"; a camada de vídeo deve resolver), as resoluções e os fundos dinâmicos.
 
 - 🔬 **A queda de 27 de dezembro** (o laço da Copa do Mundo em `world_cup.cpp`, 0x92ea3b..0x92ea71; o contorno de um byte é do Alan_v2):
   - entender a rotina 0x92e940: o que são os 8 registros de 5 bytes, quem os preenche e por que sobram seleções;

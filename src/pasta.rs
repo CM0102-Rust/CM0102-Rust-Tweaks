@@ -90,7 +90,7 @@ unsafe extern "system" fn ler(chave: usize, nome: *const u8, r: *mut u32, tipo: 
 }
 
 /// A entrada `funcao` de `dll` na tabela de importações do exe: troca por `nova` e devolve a antiga.
-unsafe fn trocar_importacao(dll: &str, funcao: &str, nova: usize) -> Option<usize> {
+pub(crate) unsafe fn trocar_importacao(dll: &str, funcao: &str, nova: usize) -> Option<usize> {
     let base = GetModuleHandleW(core::ptr::null()) as usize;
     let rd = |o: usize| core::ptr::read_unaligned((base + o) as *const u32) as usize;
     let nt = rd(0x3c);

@@ -99,6 +99,19 @@ A copy of CLZ 2026 V6.1 (the V5.3 exe, the group's new NickDLL, untouched), with
 - `clear_admin_flag = 1`: NickDLL writes `WIN95 RUNASADMIN` for the copy's exe and the DLL removes `RUNASADMIN` at the first `DirectDrawCreate`; the next start doesn't ask for elevation. `WIN95` stays: without Windows 95 mode, v6.1's NickDLL crashes creating a career (heap fault in `ntdll`, right after `bra_setup Brasileiro Sub-21 B`, four times, with and without this DLL); with `__COMPAT_LAYER=WIN95 HIGHDPIAWARE`, not elevated, the career is created and saved (suggested by the CLZ team);
 - windowed, with Windows' `ddraw.dll` CLZ stops at "Unable to initialise the graphics in windowed mode ... 16 bit colour" (box in the log): the test uses the working `ddraw.dll` as `ddraw_chain.dll`, for video only (`CM_SEM_DESVIOS=1`).
 
+### 3.7 Video, resolution and CD
+
+Short automatic careers in the October 2026 database's folder (English), without `ddraw_chain.dll` (the video layer is the DLL's own) [measured, 11/02/2026]:
+
+| Exe | Switches | Result |
+|---|---|---|
+| untouched `cm0102.exe` 3.9.68 (asks for the CD) | `no_cd = 1`, `resolution = 1080` | "no CD: on", "resolution 1080: on", "video: window"; a 1920×1080 frame; the career runs to 2001-244 with no box; the memory snapshot: "no other DLL changed the exe's code" |
+| `cm0102-portatil.exe` | `video = window` | an 800×600 frame in the window; to 2001-232 |
+| `cm0102-1080.exe` (already has the CD and the resolution) | `no_cd = 1`, `resolution = 1080` | "this exe already has it" for both; only the 30-row limit goes in; to 2001-245 |
+| CLZ (the exe's bytes only, not run) | — | CD: 38 of 66 places as in 3.9.68; resolution: 196 of 201; the `Area::init` entry the same: the DLL refuses both (all or nothing); CLZ also has `LaMOHatesCD.dll` |
+
+Still to do: the test with the screen: the window, Print Screen and an old match's report at 1080.
+
 ## 4. Regens
 
 ### 4.1 Outside the game: the simulator

@@ -11,6 +11,9 @@ Cada ajuste tem a sua chave no `tweaks.cfg`, ao lado do exe. **Todos começam de
 | `save_over_2gb = 1` | O **save acima de 2 GB** (até 4 GB), o mesmo do save2gb: as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `src/conteiner.rs` |
 | `portable_folder = 1` | **Sem SetupReg**: o `Location` do registro (a pasta para onde o jogo vai ao abrir) é a pasta do próprio exe, pelas importações `RegOpenKeyExA`/`RegQueryValueExA` do exe (`src/pasta.rs`); nada é gravado no registro |
 | `clear_admin_flag = 1` | **Sem "executar como administrador"**: tira o `RUNASADMIN` que a NickDLL grava para o exe em `HKCU\...\AppCompatFlags\Layers` (só essa palavra, só deste exe; o `WIN95` fica, porque sem ele o CLZ 2026 V6.1 cai ao criar a carreira), da execução seguinte em diante |
+| `video = window` | A **camada de vídeo do projeto CM0102** (cópia de `video.rs`, `apresentacao.rs`, `reducao.rs` e `win.rs` de lá): o jogo desenha num DirectDraw nosso e o quadro vai para uma janela comum. Print Screen funciona, a janela muda de tamanho com escala nítida e o modo de vídeo do Windows nunca muda (`ChangeDisplaySettingsA` vira nada). Vale em 800×600 |
+| `resolution = 1080` | A **resolução 1920×1080** do projeto CM0102, em memória (`src/trocas.rs`, gerado por `tools/gerar_trocas.py` da diferença entre o exe portátil e o de 1080 de lá), com `video = window` e a trava das 30 linhas do `Area::init` (0x402ac0; sem ela, o relatório de uma partida antiga dá a caixa "Area.cpp 507"). Tudo ou nada: um exe que difere do 3.9.68 em algum dos trechos (o CLZ) fica como está |
+| `no_cd = 1` | **Sem o CD**: as 33 checagens do CD contam como achadas (como no exe portátil do projeto CM0102). Fica de fora com a `LaMOHatesCD.dll` ao lado do exe ou num exe que já as mudou |
 | `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
 | `retire_idle_players = 1` | **Aposentar os inativos**: o jogador sem clube que ninguém quer se aposenta antes, e a ficha dele vira um regen (§ Aposentar os inativos) |
 | `rule = new` | A **disputa dos clubes** pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova). A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](docs/DISTRIBUICAO_DOS_REGENS.md) |
@@ -19,20 +22,26 @@ Quando este repositório for aberto, ele substitui o `CM0102-Rust/cm0102-save2gb
 
 O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 
-**Estado: protótipo para discussão.** Compila e confere as assinaturas, mas ainda não rodou no jogo. A curva dos regens é um ponto de partida, não uma proposta fechada.
+**Estado: em teste, ainda não publicado.** Rodou em carreiras automáticas de até cinco temporadas no 3.9.68 e no CLZ, sem queda; os números estão em [docs/TESTES.md](docs/TESTES.md). O configurador está desenhado em [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md) (maquete em `docs/configurador_maquete.html`).
 
 ## Arquivos
 
 | Arquivo | O quê |
 |---|---|
-| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `tweaks.cfg`, confere as assinaturas e liga cada ajuste |
+| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows; com `video = window`, a camada de vídeo própria), lê `tweaks.cfg`, confere as assinaturas e liga cada ajuste |
 | `src/conteiner.rs` | O contêiner do save acima de 2 GB (cópia do `rust/src/conteiner.rs` do projeto CM0102; estável desde o save2gb) |
+| `src/pasta.rs` | `portable_folder` e `clear_admin_flag` |
+| `src/video.rs`, `src/apresentacao.rs`, `src/reducao.rs`, `src/win.rs` | A camada de vídeo de `video = window` (cópias dos arquivos do projeto CM0102: mudar lá e copiar para cá) |
+| `src/trocas.rs` | As trocas de `no_cd` e `resolution` (gerado por `tools/gerar_trocas.py`) |
+| `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
 | `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |
 | `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
 | `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
 | `tools/sav.py` | Leitura dos itens de um `.sav` |
+| `tools/gerar_trocas.py` | Gera `src/trocas.rs` da diferença entre o `cm0102.exe`, o portátil e o de 1080 do projeto CM0102 |
+| `tools/temporadas.py` | A tabela por temporada de uma carreira longa (as linhas `season` e `regen` do log) |
 | `tools/gerar_referencia.py` | Gera `src/referencia.rs` (o hash de cada função e bloco do 3.9.68) para o retrato da DLL |
 | `tools/ler_retrato.py` | Dá nome às linhas do retrato no `tweaks.log` |
 | `tools/retrato_exe.py` | O retrato de um exe contra o 3.9.68 original: o que mudou, função por função (`tools/mapa_funcoes.csv` e os nomes do mapa da comunidade), as seções novas e os desvios para elas, e o nome de cada mudança pelo catálogo do NickPatcher (`MiscPatches.zip`); o que não está no catálogo aparece como mudança sem nome. `python tools/retrato_exe.py original.exe outro.exe --catalogo MiscPatches.zip --nomes cm0102-function-map/map --saida retrato.md` |
