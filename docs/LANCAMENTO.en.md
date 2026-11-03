@@ -32,7 +32,7 @@ Each key's guide, for players: [GUIA_DAS_CHAVES.en.md](GUIA_DAS_CHAVES.en.md).
 
 ## Compatibility
 
-The rule is to do what is possible: each tweak checks its own place in the exe and, if it can't be used, only it stays out, with the reason in the log; the others turn on ([COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md)).
+The rule is to do what is possible: each tweak checks its own place in the exe and, if it can't be used, only it stays out, with the reason in the log; the others turn on ([COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md)). With a NickPatcher exe, compatibility is limited to the changes applied to it: the warning in [NICKPATCHER.en.md](NICKPATCHER.en.md) says, option by option, what works together, what is one or the other and what each choice causes.
 
 | Exe | Status |
 |---|---|

@@ -32,7 +32,7 @@ O guia de cada chave, para quem joga: [GUIA_DAS_CHAVES.md](GUIA_DAS_CHAVES.md).
 
 ## Compatibilidade
 
-A regra é fazer o possível: cada ajuste confere o próprio trecho do exe e, se não servir, só ele fica de fora, com o motivo no log; os outros ligam ([COMPATIBILIDADE.md](COMPATIBILIDADE.md)).
+A regra é fazer o possível: cada ajuste confere o próprio trecho do exe e, se não servir, só ele fica de fora, com o motivo no log; os outros ligam ([COMPATIBILIDADE.md](COMPATIBILIDADE.md)). Com um exe do NickPatcher, a compatibilidade é limitada às alterações aplicadas nele: o aviso [NICKPATCHER.md](NICKPATCHER.md) diz, opção por opção, o que convive, o que é uma ou outra e o que cada escolha causa.
 
 | Exe | Situação |
 |---|---|

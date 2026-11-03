@@ -39,6 +39,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `docs/CONFIGURADOR.md`, `docs/configurador_maquete.html` | O projeto do configurador e a maquete interativa (abre no navegador) |
 | `docs/GUIA_DAS_CHAVES.md` | **O guia das chaves para quem joga:** cada opção, o que faz, quando usar e o que acontece no jogo (gerado pelo configurador, `tweaks-config.exe --guia pt`) |
 | `docs/COMPATIBILIDADE.md` | O que cada ajuste faz com o Regen Tweak, o NickPatcher, a NickDLL e a LaMOHatesCD (✅ ⚠️ 🔁 ❓) e o inventário da NickDLL do CLZ 6.1 |
+| `docs/NICKPATCHER.md` | **Para quem usa o NickPatcher:** cada opção dele que mexe no mesmo lugar de um ajuste, o que convive e o que cada escolha causa |
 | `docs/TESTES.md` | Os testes no jogo e os resultados de cada execução (estabilidade, save, retrato, regens) |
 | `tweaks.cfg` | As opções, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
 | `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |

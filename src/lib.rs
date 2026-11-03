@@ -90,7 +90,7 @@ unsafe fn pode_ligar(p: &Parte, sobrescrever: bool) -> bool {
         return true;
     }
     // o Regen Tweak de xeno/Saturn (elenco 45 em 0x7ad1bd) é o caso conhecido; nomeá-lo ajuda quem lê o log
-    let conhecido = if p.nome == DISPUTA.nome && *(0x7ad1bf as *const u8) == 0x2d { " (the Regen Tweak by xeno/Saturn: squad limit 45)" } else { "" };
+    let conhecido = if p.nome == DISPUTA.nome && *(0x7ad1bf as *const u8) == 0x2d { " (Regen tweak 2 / Regen fixes: squad limit 45)" } else { "" };
     if sobrescrever {
         registro::linha(&format!("{}: this exe already changes this routine{} (signature {:016x}); overriding it (override_exe_changes = 1)", p.nome, conhecido, c));
         (*core::ptr::addr_of_mut!(LIGADAS)).push((p.nome, p.bordas));

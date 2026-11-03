@@ -4,6 +4,8 @@
 
 What each Tweaks setting does when the exe, or a DLL next to it, has already changed the same code. **The rule is to do what is possible:** each setting checks its own code on its own, and one that can't be used stays out, with the reason in `tweaks.log`. The other settings turn on normally, and the game is never stopped because of it. **[observed]** = seen in the code, the bytes or the log; **[inference]** = to be confirmed in the game.
 
+For NickPatcher users, the option-by-option warning is in [NICKPATCHER.en.md](NICKPATCHER.en.md).
+
 ## 1. The states
 
 The same ones the configurator will show ([CONFIGURADOR.en.md](CONFIGURADOR.en.md)):

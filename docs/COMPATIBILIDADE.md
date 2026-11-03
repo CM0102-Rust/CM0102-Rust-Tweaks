@@ -4,6 +4,8 @@
 
 O que cada ajuste do Tweaks faz quando o exe, ou uma DLL ao lado dele, já mudou o mesmo trecho. **A regra é fazer o possível:** cada ajuste confere o seu trecho sozinho, e o que não serve fica de fora com o motivo no `tweaks.log`. Os outros ajustes ligam normalmente, e o jogo nunca é interrompido por isso. **[observado]** = visto no código, nos bytes ou no log; **[inferência]** = a confirmar no jogo.
 
+Para quem usa o NickPatcher, o aviso opção por opção está em [NICKPATCHER.md](NICKPATCHER.md).
+
 ## 1. Os estados
 
 Os mesmos que o configurador vai mostrar ([CONFIGURADOR.md](CONFIGURADOR.md)):

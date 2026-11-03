@@ -71,7 +71,8 @@ def ler_catalogo(caminho):
                 continue
             bytes_ = []
             for linha in io.TextIOWrapper(z.open(n), encoding='latin1'):
-                m = re.match(r'\s*([0-9A-Fa-f]+)\s*:\s*([0-9A-Fa-f]{2})\s+([0-9A-Fa-f]{2})', linha)
+                # dois formatos no catálogo: "003A5806: 80 E9" e "0x3abeab 0xf 0xe9" (ou "0x124DED E1 66")
+                m = re.match(r'\s*(?:0x)?([0-9A-Fa-f]+)\s*:?\s+(?:0x)?([0-9A-Fa-f]{1,2})\s+(?:0x)?([0-9A-Fa-f]{1,2})\s*$', linha)
                 if m:
                     bytes_.append((int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16)))
             desc = ''

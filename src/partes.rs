@@ -81,12 +81,13 @@ pub const SEM_CLUBE: Parte = Parte {
     assinatura_do_corpo: 0xcbf29ce484222325,
 };
 
-/// Os casos que este projeto já identificou, pelo byte que cada um muda (os outros ficam com o endereço).
+/// Os casos que este projeto já identificou, pelo byte que cada um muda (os outros ficam com o endereço), com o nome do
+/// patch no catálogo do NickPatcher (MiscPatches.zip e as opções do Patcher.cs; `tools/nickpatcher_vs_tweaks.py`).
 pub const CONHECIDOS: [(&str, u32, &[u8]); 6] = [
-    ("Regen Tweak by xeno/Saturn (squad limit 45 in the regens' contest)", 0x7ad1bf, &[0x2d]),
-    ("NickPatcher: no retirement under 34 (RetirePatchV4)", 0x7a5806, &[0xe9]),
-    ("NickPatcher: AlwaysRegenToNewGoodCountry (a PA 120+ regen moves to a strong nation)", 0x7abcd7, &[0x8b, 0x46, 0x61]),
-    ("regen ages of nations not in the game: branch skipped (CLZ)", 0x7abeab, &[0xe9]),
-    ("regen ages: rare bands changed (14 to 17, CLZ)", 0x7ac5b1, &[0x0e]),
-    ("regen ages: rare bands changed (20 to 25, CLZ)", 0x7ac699, &[0x14]),
+    ("Regen tweak 2 (Saturn) / Regen fixes (NickPatcher): squad limit 45 in the regens' contest", 0x7ad1bf, &[0x2d]),
+    ("RetirePatchV4: no retirement under 34", 0x7a5806, &[0xe9]),
+    ("AlwaysRegenToNewGoodCountry: a PA 120+ regen moves to a strong nation", 0x7abcd7, &[0x8b, 0x46, 0x61]),
+    ("Younger Regens (Saturn) / Regen fixes (NickPatcher): the age draw of nations not in the game skipped", 0x7abeab, &[0xe9]),
+    ("Regen CA level reset (Saturn): regen age bands changed (14 to 17)", 0x7ac5b1, &[0x0e]),
+    ("Regen CA level reset (Saturn): regen age bands changed (20 to 25)", 0x7ac699, &[0x14]),
 ];

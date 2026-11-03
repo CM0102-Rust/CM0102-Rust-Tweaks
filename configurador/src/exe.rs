@@ -109,9 +109,9 @@ impl Exe {
     fn nome_da_mudanca(&self, p: &Parte) -> Option<&'static str> {
         let tem = |va: u32| self.conhecidos.iter().any(|c| CONHECIDOS.iter().any(|k| k.0 == *c && k.1 == va));
         match p.nome {
-            n if n == DISPUTA.nome && tem(0x7ad1bf) => Some("Regen Tweak (xeno/Saturn)"),
-            n if n == IDADE.nome && (tem(0x7ac5b1) || tem(0x7ac699)) => Some("NickPatcher: rare age bands"),
-            n if n == IDADE_FORA.nome && tem(0x7abeab) => Some("NickPatcher: branch skipped"),
+            n if n == DISPUTA.nome && tem(0x7ad1bf) => Some("Regen tweak 2 / Regen fixes"),
+            n if n == IDADE.nome && (tem(0x7ac5b1) || tem(0x7ac699)) => Some("Regen CA level reset"),
+            n if n == IDADE_FORA.nome && tem(0x7abeab) => Some("Younger Regens / Regen fixes"),
             _ => None,
         }
     }
