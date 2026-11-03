@@ -156,6 +156,36 @@ Com `log = 1`, o `tweaks.log` registra o que acontece, uma linha por evento: `ti
 
 **As caixas de mensagem do jogo** (`log = 1`): toda caixa vira uma linha `msgbox` com a data do jogo, o título e o texto, antes de aparecer, inclusive os erros com o arquivo de código e a linha (`Database..cpp 7784` na troca de idioma do banco de outubro de 2026, `friendly..cpp 4695` num save acima de 2 GB carregado sem `save_over_2gb`). A caixa é desenhada pelo jogo, e um teste com o jogo oculto não a via. O desvio da `gui_show_message_box` (0x5e8290) é posto depois das DLLs do exe: com a entrada original, os 9 bytes vão para um trampolim; com o salto de outra DLL ali (a LaMOHatesCD do CLZ), encadeia nele; com outra coisa, não mexe e diz isso no log.
 
+## De quem é cada regen (`regen_origins`): os arquivos, as provas e quando falta um arquivo
+
+**Os arquivos.** Com `regen_origins = 1`, a DLL escreve dois tipos de arquivo:
+- `regen_origins.csv`, ao lado do exe: uma linha por regen que nasce, com a vaga e a ficha de jogador que ele herdou (nome, idade, CA e PA de cada dono na aposentadoria), o clube, as datas do jogo e do computador e a carreira (o nome do save). Abre no Excel com dois cliques (UTF-8, ponto e vírgula; num Excel em inglês, Dados > De Texto/CSV). Se ele estiver aberto no Excel enquanto o jogo roda, as linhas esperam na memória e entram depois; se o jogo fechar antes, vão para `regen_origins_pending.txt` e entram na próxima abertura.
+- `X.regens`, ao lado de cada save `X.sav`, gravado a cada gravação do jogo: os donos das fichas que ainda estão na reserva (as que vão virar regen nas próximas semanas). Na carga, a DLL o lê e a carreira continua sabendo de quem é cada ficha. O save não muda.
+
+**As provas** (03/11/2026, detalhe em [docs/TESTES.md](docs/TESTES.md) §4.6). Um verificador, `tools/conferir_origens.py`, confere cada linha do CSV contra o save gravado depois: o regen tem de existir no save como regen, com o mesmo nome, a mesma nação e o mesmo PA, e o PA tem de ser o da ficha do dono registrado. Uma mutação proposital (um nome e um PA trocados) deu 3 erros: o verificador acusa.
+
+| Prova | Regens | Donos desconhecidos | Erros |
+|---|---|---|---|
+| Base de fábrica, carreira nova até 01/12/2001, gravada | 23 | 0 | 0 |
+| Carregada e jogada até 30/05/2002 | 550 | 0 | 0 |
+| Carregada e jogada até 29/07/2002 (511 fichas na reserva na gravação) | 265 | 0 | 0 |
+| Carregada **sem** o `.regens` | 450 | 168 | 0 |
+| Carregada **com** o `.regens` | 450 | 0 | 0 |
+| CLZ 6.1 (NickPatcher, a NickDLL mais nova, LaMOHatesCD): um save sem a Bélgica, 60 dias de jogo | 745 | 0 | 0 |
+| CLZ 6.1: carregado com o `.regens` dele | 318 fichas na reserva, 318 donos lidos do arquivo | 0 | — |
+| CLZ 6.1: carregado com o `.regens` de outro save, de propósito | o arquivo recusado | — | 0 |
+
+**Quando falta o `.regens`.** Ele falta se:
+- só o `.sav` foi copiado (mandado para alguém, backup, outro PC);
+- o save foi renomeado no Explorer (`X.sav` vira `Y.sav`, e o arquivo continua `X.regens`);
+- o save foi gravado com o registro desligado, antes de instalar a DLL, ou com outra `ddraw.dll`.
+
+Aí os primeiros regens depois da carga podem sair com o dono **desconhecido**, nunca errado: a linha diz "unknown: the save was loaded without its .regens file". A DLL ainda recupera parte deles pelo próprio jogo (o dono que a fila gravou, quando ele ainda aponta para a ficha: 326 de 511 na prova). Quando a reserva se renova (semanas de jogo), todos voltam a ter dono. O `tweaks.log` conta, na carga, quantos donos vieram do arquivo, quantos do jogo e quantos ficaram desconhecidos. **Copie o save e o `.regens` juntos.**
+
+**Quando o `.regens` é velho.** Se o save foi regravado com o registro desligado (ou por outra DLL), ou se um `.regens` de outro save foi posto ao lado dele, o arquivo não é daquela gravação. Como o jogo reaproveita o número da ficha quando um regen se aposenta, usá-lo daria donos errados. Por isso o `.regens` leva a lista das fichas da reserva na hora da gravação, e a DLL só o aceita se a reserva do save carregado for idêntica; senão, ignora o arquivo e avisa no log (e os donos ficam como no caso de faltar o arquivo).
+
+**Quando o registro não liga.** Se algum ponto do exe que ele usa difere do 3.9.68 (outro patch ali), o registro não liga, e o `tweaks.log` diz onde: um registro pela metade daria donos errados.
+
 ## A calibração (simulador, `TesteTelas.sav`, 200 temporadas)
 
 A configuração distribuída no `tweaks.cfg` (fechada com o Lucas em 01/11/2026):

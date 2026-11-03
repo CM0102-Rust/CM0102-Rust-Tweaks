@@ -156,6 +156,36 @@ With `log = 1`, `tweaks.log` records what happens, one line per event: `tick` (t
 
 **The game's message boxes** (`log = 1`): every box becomes a `msgbox` line with the game date, title and text, before it shows, including errors with the source file and line (`Database..cpp 7784` on the October 2026 database's language change, `friendly..cpp 4695` on a save above 2 GB loaded without `save_over_2gb`). The game draws the box itself, and a test with the game hidden couldn't see it. The hook on `gui_show_message_box` (0x5e8290) goes in after the exe's DLLs: with the original entry, its 9 bytes go to a trampoline; with another DLL's jump there (CLZ's LaMOHatesCD), it chains to it; with anything else, it leaves it alone and says so in the log.
 
+## Where each regen comes from (`regen_origins`): the files, the tests and when a file is missing
+
+**The files.** With `regen_origins = 1`, the DLL writes two kinds of file:
+- `regen_origins.csv`, next to the exe: one line per regen born, with the slot and the player record he inherited (each owner's name, age, CA and PA at retirement), the club, the game and computer dates and the career (the save's name). It opens in Excel with a double click (UTF-8, semicolons; in an English Excel, Data > From Text/CSV). If it's open in Excel while the game runs, the lines wait in memory and go in later; if the game closes first, they go to `regen_origins_pending.txt` and go in at the next start.
+- `X.regens`, next to each save `X.sav`, written every time the game saves: the owners of the records still in the pool (those that will become regens in the next weeks). On load, the DLL reads it and the career goes on knowing whose each record is. The save doesn't change.
+
+**The tests** (11/03/2026, detail in [docs/TESTES.en.md](docs/TESTES.en.md) §4.6). A checker, `tools/conferir_origens.py`, checks each CSV line against the save written later: the regen must exist in the save as a regen, with the same name, nation and PA, and the PA must be that of the recorded owner's record. A deliberate mutation (a name and a PA changed) gave 3 errors: the checker catches it.
+
+| Test | Regens | Unknown owners | Errors |
+|---|---|---|---|
+| Factory database, new career to 12/01/2001, saved | 23 | 0 | 0 |
+| Loaded and played to 05/30/2002 | 550 | 0 | 0 |
+| Loaded and played to 07/29/2002 (511 records in the pool at save time) | 265 | 0 | 0 |
+| Loaded **without** the `.regens` | 450 | 168 | 0 |
+| Loaded **with** the `.regens` | 450 | 0 | 0 |
+| CLZ 6.1 (NickPatcher, the newest NickDLL, LaMOHatesCD): a save without Belgium, 60 days of play | 745 | 0 | 0 |
+| CLZ 6.1: loaded with its `.regens` | 318 records in the pool, 318 owners read from the file | 0 | — |
+| CLZ 6.1: loaded with another save's `.regens`, on purpose | the file refused | — | 0 |
+
+**When the `.regens` is missing.** It's missing if:
+- only the `.sav` was copied (sent to someone, a backup, another PC);
+- the save was renamed in Explorer (`X.sav` becomes `Y.sav`, and the file stays `X.regens`);
+- the save was written with recording off, before installing the DLL, or with another `ddraw.dll`.
+
+Then the first regens after loading may show an **unknown** owner, never a wrong one: the line says "unknown: the save was loaded without its .regens file". The DLL still recovers part of them from the game itself (the owner the queue wrote, when he still points to the record: 326 of 511 in the test). Once the pool turns over (weeks of play), all have an owner again. On load, `tweaks.log` counts how many owners came from the file, how many from the game and how many stayed unknown. **Copy the save and the `.regens` together.**
+
+**When the `.regens` is stale.** If the save was re-saved with recording off (or by another DLL), or a `.regens` from another save was put next to it, the file isn't from that save. Since the game reuses a record's number when a regen retires, using it would give wrong owners. So the `.regens` carries the list of the pool's records at save time, and the DLL only accepts it if the loaded save's pool is identical; otherwise it ignores the file and says so in the log (and the owners stay as when the file is missing).
+
+**When recording doesn't turn on.** If any place in the exe it uses differs from 3.9.68 (another patch there), recording doesn't turn on, and `tweaks.log` says where: half a record would give wrong owners.
+
 ## Calibration (simulator, `TesteTelas.sav`, 200 seasons)
 
 The configuration shipped in `tweaks.cfg` (settled with Lucas on 11/01/2026):
