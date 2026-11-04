@@ -128,7 +128,7 @@ Depois da regra de fazer o possível (a lista da resolução completa o que o ex
 
 As cópias de teste são geradas por `resultados/misto.py` a partir do `cm0102.exe`, numa pasta de teste, e apagadas depois.
 
-Falta o teste com a tela: a janela, o Print Screen e o relatório de uma partida antiga em 1080.
+Com a tela, pelo Lucas (04/11/2026, pasta de teste da 1.1.0: 3.9.68 de fábrica com `video = window`, `resolution = 1080`, `no_cd = 1`, `multiple_instances`, `grey_players = squad` e `regen_names = own`): carreira nova jogada em janela até 01/01/2002 e gravada, "tudo funciona", nenhuma caixa de erro no `tweaks.log`, regens no `regen_origins.csv`. Não foram conferidos item a item o Print Screen e o relatório de uma partida antiga.
 
 ### 3.8 Vários jogos abertos (`multiple_instances`)
 
