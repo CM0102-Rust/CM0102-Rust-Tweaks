@@ -14,6 +14,7 @@ Tudo o que foi rodado para provar o CM0102-Rust-Tweaks, de 01/11 a 02/11/2026 (a
 | O retrato do exe e o aviso de dependência | ✅ reconhece o original, o Regen Tweak e o CLZ; acha os desvios da NickDLL e da LaMOHatesCD em tempo de execução |
 | As caixas de mensagem no log | ✅ três erros reais apanhados |
 | A distribuição dos regens | ✅ em cinco temporadas, com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (§4.3) |
+| A linha `ARSE` do `player_setup.cfg` | ✅ reconhecida na carreira nova e no save carregado; o `season_cap` deixa de contar pelo bit (§3.10) |
 | Jogadores cinzentos (`grey_players`) | ✅ no 3.9.68 (três carreiras até 14/09/2001) e no CLZ 6.1 com a NickDLL (um mês de jogo): nenhum CA negativo, nenhum clube abaixo do original, sem queda (§3.9) |
 | Nomes dos regens (`regen_names`) | ✅ no update de 2026 e no CLZ 6.1: as nações com 20 a 100 nomes passam a usar 100% os próprios; o defeito do grupo 0 sumiu (§4.7) |
 | Estabilidade nas carreiras longas | ✅ cinco carreiras de cinco temporadas, sem nenhuma queda, travamento ou caixa de erro |
@@ -168,6 +169,20 @@ Na execução 1, 73 clubes ficavam abaixo do original: os grandes de ligas não 
 | longa (20 min) | 02/01 a 02/02/2027 | 670.718 | 6.878 | −60,2; 589.255 (88%) | 67,6; 19–185 | 0 |
 
 Nenhuma queda e nenhuma caixa de erro. No CLZ, com muitas ligas de fundo, o original é ainda pior que no 3.9.68: 88% dos cinzentos saem com CA negativo.
+
+### 3.10 A linha `ARSE` do `player_setup.cfg`
+
+A linha liga o bit do regen (0x40 do +0xb do registro de 79 bytes) em todas as pessoas, no fim da criação da carreira (README, "Quando a base tem a linha ARSE"). A DLL reconhece a carreira por um técnico humano (classificação +0x5f = 0) com o bit e, nela, conta o `season_cap` só pela própria lista.
+
+[medido, 04/11/2026: base de fábrica, carreira automática de férias, `rule = new`, DLL de teste]
+
+| Carreira | O save | O `tweaks.log` |
+|---|---|---|
+| Nova, sem a linha | — | nenhuma linha `arse` até 2001-215 |
+| Nova, com `"ARSE" "" "" "" "" ""` no `player_setup.cfg` | gravado no primeiro dia (2001-194): as 26.781 pessoas com o bit, inclusive os 15 técnicos humanos | `arse` em todos os `tick` do jogo (2001-194, 215, 247) |
+| Esse save carregado, com o `player_setup.cfg` de fábrica de volta | — | `arse` no `tick` e no `season` desde a carga, até 2001-244, sem caixa de erro |
+
+O `tick` de 2001-194 da primeira carreira com a linha saiu antes de a criação terminar (a linha só age no fim dela): por isso a segunda carreira foi até 2001-247.
 
 ## 4. Os regens
 

@@ -348,8 +348,9 @@ fn iniciar_batida() {
             let mes = ((dia as u32 * 12) / 366) as u8;
             if ano > 1900 && (ano, mes) != ultimo {
                 ultimo = (ano, mes);
-                registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}", ano, dia, inicio.elapsed().as_secs(),
-                    JOVENS.load(Relaxed), NASCIDOS.load(Relaxed), APOSENTADOS.load(Relaxed)));
+                registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}{}", ano, dia, inicio.elapsed().as_secs(),
+                    JOVENS.load(Relaxed), NASCIDOS.load(Relaxed), APOSENTADOS.load(Relaxed),
+                    if unsafe { arse() } { "\tarse (player_setup.cfg)" } else { "" }));
                 if mes == 6 {
                     unsafe { registrar_temporada(format!("{}-{:03}", ano, dia)) };
                 }
@@ -423,9 +424,10 @@ unsafe fn registrar_temporada(data: String) {
             }
         }
     }
-    registro::linha(&format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} given by the contest, {} via the contest to another club)\tpa150 {} free {} big {} rep {}",
+    registro::linha(&(format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} given by the contest, {} via the contest to another club)\tpa150 {} free {} big {} rep {}",
         data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), dados, de_outro,
-        altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 }));
+        altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 })
+        + if arse() { "\tarse (player_setup.cfg): every person has the regen bit, so the regen counts mean nothing" } else { "" }));
 }
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
 unsafe fn conferir_desvios() {
@@ -759,6 +761,21 @@ fn destino(pessoa: usize) -> Option<usize> {
     (v != 0).then(|| v as usize - 1)
 }
 
+/// A carreira foi criada com a linha `ARSE` no `player_setup.cfg`? A linha (tipo 0x20 da 0x7a3a10, laço 0x7a3c0c) liga o
+/// bit 0x40 do regen em todas as pessoas no fim da `create_game` (0x5cc850, chamada em 0x829fd9, lê o arquivo com a
+/// máscara 0x203b em 0x5ccc9c), e nada desliga o bit. Os técnicos humanos (classificação +0x5f = 0, as últimas vagas da
+/// tabela) nunca viram regen (a 0x7abac0 grava +0x5f = 2): um deles com o bit só pode ser obra do ARSE. Vale para a
+/// carreira nova e para o save carregado, sem contar quantos têm o bit nem ler o .cfg de agora.
+unsafe fn arse() -> bool {
+    let (pessoas, n, t) = (d(0xae23bc), d(0xae2364), d(0xae2d0c));
+    if pessoas == 0 || t == 0 || n > 2_000_000 {
+        return false;
+    }
+    // ponytail: só as últimas 64 vagas, onde a criação põe os 16 técnicos humanos
+    (n.saturating_sub(64)..n).rev().map(|s| pessoas + 110 * s).find(|&p| *((p + 0x5f) as *const u8) == 0)
+        .is_some_and(|p| *((t + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0)
+}
+
 /// Os jovens que a disputa nova entregou: (id do clube, dia corrido = ano × 365 + dia).
 static mut ENTREGUES: Vec<(usize, i32)> = Vec::new();
 
@@ -769,11 +786,15 @@ unsafe fn hoje() -> i32 {
 /// Quantos jovens o clube recebeu nos últimos 365 dias: os que esta DLL entregou (mesmo que o clube já os tenha
 /// emprestado, vendido ou mandado para o time B; contar só o elenco deixava o teto vazar, 15 no Real Madrid em 4 anos)
 /// ou, se for maior, os regens (bit 0x40 do +0xb do registro de 79 bytes) do elenco (+0xd7) que entraram no clube
-/// (+0x3e dia, +0x40 ano) no período (o que vale logo depois de carregar um save, com a lista vazia).
+/// (+0x3e dia, +0x40 ano) no período (o que vale logo depois de carregar um save, com a lista vazia). Numa carreira
+/// criada com ARSE (`arse`), só a lista.
 /// ponytail: a lista não vai para o save; depois da carga, só a contagem pelo elenco até a lista encher de novo.
 unsafe fn recebidos_no_ano(clube: usize) -> i32 {
     let (id, agora) = (d(clube), hoje());
     let pela_lista = (*core::ptr::addr_of!(ENTREGUES)).iter().filter(|&&(c, t)| c == id && agora - t < 365).count() as i32;
+    if arse() {
+        return pela_lista; // com ARSE todo jogador tem o bit: o elenco não diz quem é regen
+    }
     let pelo_elenco = (0..50usize)
         .map(|k| d(clube + 0xd7 + 4 * k))
         .filter(|&p| p != 0 && *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0)

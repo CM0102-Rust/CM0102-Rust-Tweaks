@@ -161,7 +161,7 @@ Each club gets a **weight**, and the club is drawn **in proportion to its weight
 | Facilities | facilities_base + facilities_k × Training | `facilities_base`, `facilities_k` |
 | Staff | from staff_min to staff_max by the best "Working with Youngsters" among the manager and the 5 coaches. Same for AI and human | `staff_min`, `staff_max` |
 | Room | ((squad_limit − squad) / squad_limit) ^ squad_exp; with the squad at the limit, weight 0 | `squad_limit`, `squad_exp` |
-| Per-club cap | weight 0 if the club already got `season_cap` regens in the last 365 days: the DLL keeps every youngster it handed out, with the date, and counts even those the club has loaned out, sold or sent to its B team; after loading a save (the list doesn't go into the save), the count from the save itself applies: the regen bit and the date he joined the club | `season_cap` |
+| Per-club cap | weight 0 if the club already got `season_cap` regens in the last 365 days: the DLL keeps every youngster it handed out, with the date, and counts even those the club has loaned out, sold or sent to its B team; after loading a save (the list doesn't go into the save), the count from the save itself applies: the regen bit and the date he joined the club (on a database with the `ARSE` line, which marks everyone, only the list) | `season_cap` |
 | Outside the competitions | the weight of a club whose division doesn't run in the game (not even as a background league) is multiplied by `outside_competitions` (1 = the same as the others, the default; 0 = never). With few leagues loaded, most of a country's clubs are outside, and 1 may suit better; with many, a low value keeps the squads of the leagues you play fuller (TESTES §4.5). The surprise already leaves them out | `outside_competitions` |
 | Temperature | exponent: 1 proportional, higher more predictable, lower more random | `temperature` |
 
@@ -203,7 +203,9 @@ Then the first regens after loading may show an **unknown** owner, never a wrong
 - `regen_origins.csv` stays right: it records each regen when the game creates it, without looking at the bit;
 - `tools/conferir_origens.py` doesn't flag a regen missing from the save (to it, everyone is a regen);
 - the regen count in the `season` line of `tweaks.log` counts everyone;
-- `season_cap` (the cap of youngsters per club per year), **after loading a save**, counts as a regen every player who joined the club in the last 365 days: a club that signed 2 or more in the year leaves the contest until the DLL rebuilds its own list. To avoid that, use `season_cap = 0` on that database.
+- `season_cap` (the cap of youngsters per club per year) counts only the youngsters the DLL itself handed out: after loading a save, it doesn't see the ones from the year before the load (the DLL's list doesn't go into the save). Otherwise it would count as a regen every player who joined the club in the year.
+
+The DLL recognises that career by itself, without counting how many have the bit or reading the current `.cfg`: human managers (the last slots of the people table) never become regens, so a human manager with the bit can only be the work of `ARSE`. It works for a new career and for a loaded save. `tweaks.log` marks `arse (player_setup.cfg)` on the `tick` and `season` lines.
 
 Editors that filter "regens only" by the same bit are useless in that career too.
 

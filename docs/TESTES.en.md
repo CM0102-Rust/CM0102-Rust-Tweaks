@@ -14,6 +14,7 @@ Everything run to prove CM0102-Rust-Tweaks, from 11/01 to 11/02/2026 (the five-s
 | The exe snapshot and the dependency warning | ✅ recognises the original, the Regen Tweak and CLZ; finds NickDLL's and LaMOHatesCD's run-time hooks |
 | The message boxes in the log | ✅ three real errors caught |
 | Regen distribution | ✅ over five seasons, with 10 leagues (6 playable and 4 background), on the factory database and on CLZ (§4.3) |
+| The `ARSE` line in `player_setup.cfg` | ✅ recognised in a new career and in a loaded save; `season_cap` stops counting by the bit (§3.10) |
 | Grey players (`grey_players`) | ✅ on 3.9.68 (three careers to 14/09/2001) and on CLZ 6.1 with NickDLL (one game month): no negative CA, no club below the original, no crash (§3.9) |
 | Regen names (`regen_names`) | ✅ on the 2026 update and on CLZ 6.1: nations with 20 to 100 names use 100% their own; the group 0 bug is gone (§4.7) |
 | Stability in long careers | ✅ five careers of five seasons, with no crash, hang or error box |
@@ -168,6 +169,20 @@ In run 1, 73 clubs were below the original: the big clubs of leagues not loaded,
 | long (20 min) | 02/01 to 02/02/2027 | 670,718 | 6,878 | −60.2; 589,255 (88%) | 67.6; 19–185 | 0 |
 
 No crash and no error box. On CLZ, with many background leagues, the original is even worse than on 3.9.68: 88% of grey players get a negative CA.
+
+### 3.10 The `ARSE` line in `player_setup.cfg`
+
+The line sets the regen bit (0x40 of +0xb of the 79-byte record) on every person at the end of career creation (README, "When the database has the ARSE line"). The DLL recognises the career by a human manager (classification +0x5f = 0) with the bit and, in it, counts `season_cap` only from its own list.
+
+[measured, 11/04/2026: factory database, automatic holiday career, `rule = new`, test DLL]
+
+| Career | The save | `tweaks.log` |
+|---|---|---|
+| New, without the line | — | no `arse` line up to 2001-215 |
+| New, with `"ARSE" "" "" "" "" ""` in `player_setup.cfg` | saved on the first day (2001-194): all 26,781 people with the bit, the 15 human managers included | `arse` on every game `tick` (2001-194, 215, 247) |
+| That save loaded, with the factory `player_setup.cfg` back | — | `arse` on `tick` and `season` from the load, up to 2001-244, no error box |
+
+The 2001-194 `tick` of the first career with the line came before creation finished (the line only acts at its end): that's why the second career went to 2001-247.
 
 ## 4. Regens
 

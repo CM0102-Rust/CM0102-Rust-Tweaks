@@ -161,7 +161,7 @@ Cada clube recebe um **peso**, e o clube é sorteado **na proporção do peso**,
 | Instalações | facilities_base + facilities_k × Training | `facilities_base`, `facilities_k` |
 | Comissão | de staff_min a staff_max pelo melhor "Working with Youngsters" entre o técnico e os 5 treinadores. Vale para a IA e para o humano igual | `staff_min`, `staff_max` |
 | Vaga | ((squad_limit − elenco) / squad_limit) ^ squad_exp; com o elenco no teto, peso 0 | `squad_limit`, `squad_exp` |
-| Teto por clube | peso 0 se o clube já recebeu `season_cap` regens nos últimos 365 dias: a DLL guarda cada jovem que entregou, com a data, e conta mesmo os que o clube já emprestou, vendeu ou mandou ao time B; depois de carregar um save (a lista não vai para o save), vale a contagem pelo próprio save: o bit do regen e a data de entrada no clube | `season_cap` |
+| Teto por clube | peso 0 se o clube já recebeu `season_cap` regens nos últimos 365 dias: a DLL guarda cada jovem que entregou, com a data, e conta mesmo os que o clube já emprestou, vendeu ou mandou ao time B; depois de carregar um save (a lista não vai para o save), vale a contagem pelo próprio save: o bit do regen e a data de entrada no clube (numa base com a linha `ARSE`, que marca todo mundo, só a lista) | `season_cap` |
 | Fora das competições | o peso do clube cuja divisão não roda no jogo (nem como liga de fundo) é multiplicado por `outside_competitions` (1 = igual aos outros, o padrão; 0 = nunca). Com poucas ligas carregadas, a maioria dos clubes de um país fica fora, e 1 pode servir melhor; com muitas, um valor baixo mantém cheios os elencos das ligas jogadas (TESTES §4.5). Na surpresa eles já ficam de fora | `outside_competitions` |
 | Temperatura | expoente: 1 proporcional, maior mais previsível, menor mais aleatório | `temperature` |
 
@@ -203,7 +203,9 @@ Aí os primeiros regens depois da carga podem sair com o dono **desconhecido**, 
 - o `regen_origins.csv` continua certo: ele anota cada regen na hora em que o jogo o cria, sem olhar o bit;
 - o `tools/conferir_origens.py` não acusa um regen que falte no save (para ele, todos são regens);
 - a contagem de regens da linha `season` do `tweaks.log` conta todo mundo;
-- o `season_cap` (o teto de jovens por clube por ano), **depois de carregar um save**, conta como regen todo jogador que entrou no clube nos últimos 365 dias: um clube que contratou 2 ou mais no ano sai da disputa até a DLL refazer a própria lista. Para evitar, use `season_cap = 0` nessa base.
+- o `season_cap` (o teto de jovens por clube por ano) conta só os jovens que a própria DLL entregou: depois de carregar um save, ele não vê os do ano anterior à carga (a lista da DLL não vai para o save). Sem isso, contaria como regen todo jogador que entrou no clube no ano.
+
+A DLL reconhece essa carreira sozinha, sem contar quantos têm o bit nem ler o `.cfg` de agora: os técnicos humanos (as últimas vagas da tabela de pessoas) nunca viram regen, então um técnico humano com o bit só pode ser obra do `ARSE`. Vale para a carreira nova e para o save carregado. O `tweaks.log` marca `arse (player_setup.cfg)` nas linhas `tick` e `season`.
 
 Os editores que filtram "só regens" pelo mesmo bit também ficam inúteis nessa carreira.
 
