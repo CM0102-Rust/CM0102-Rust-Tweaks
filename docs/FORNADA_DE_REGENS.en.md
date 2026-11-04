@@ -15,7 +15,7 @@ Tags: **[observed]** in the code or the saves; **[inference]** from the flow, to
 | N guaranteed regens per club | **yes, medium** | the club comes from the quota, in the dispute hook Tweaks already has (0x7ad0e0) |
 | New player records (more regens than retirements) | **possible, but of little use** | extra rows in the player table at load, plus the two parallel tables; they only become regens while there are idle slots (§5) |
 | More regens per season | **yes** | more retirements, drawing on the ~13,000 without a club: slot and record together, with the same population (§5) |
-| New people (slots) | **no** | the 16 human managers are the last people in the table; and in a long career the slot is the limit (§5) |
+| New people (slots) | **yes** | in a long career the slot is the limit (§5); the feasibility study is in [PESSOAS_NOVAS.en.md](PESSOAS_NOVAS.en.md) |
 
 ## 2. Slot and record
 
@@ -144,7 +144,7 @@ The first version of this study said "the queue already has slots to spare", so 
 
 ### What's left for growing the population
 
-New people would mean changing the ~160 places that treat the last 16 people as human managers (or moving the humans), the 79-byte table (0x82849a) and Staff_Records. That's out of reach for now; the viable path is renewing the existing population faster.
+Feasible, in two ways: a stock of people created with the career (the game already creates extra people in the database trim; one hook gives K more) or growing the table in any save (~276 patches for the humans). See [PESSOAS_NOVAS.en.md](PESSOAS_NOVAS.en.md).
 
 ### The effect of the fixed day and of new records
 
@@ -171,7 +171,7 @@ New people would mean changing the ~160 places that treat the last 16 people as 
 1. **The fixed day** (4.1 and 4.2), adding nothing to the world: measures the cancellations, the cost of the day and the effect on clubs.
 2. **The per-club quota** (4.3) with the regens already being born: measures how many clubs fill their quota in each nation.
 3. **The retirement rate**, to reach the number of regens per season we want, drawing on those without a club.
-4. **New records** (4.4) only if idle slots are left over; new people only as a separate project.
+4. **New people with records** ([PESSOAS_NOVAS.en.md](PESSOAS_NOVAS.en.md)): first the stock created with the career, then growth in any save.
 
 Each step gets its own key in `tweaks.cfg`, off by default, and is proved on the test bench before the next one.
 

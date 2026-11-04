@@ -15,7 +15,7 @@ Marcas: **[observado]** no código ou nos saves; **[inferência]** pelo fluxo, a
 | N regens garantidos por clube | **sim, médio** | o clube vem da cota no desvio da disputa que o Tweaks já tem (0x7ad0e0) |
 | Fichas novas (mais regens que aposentadorias) | **dá, mas rende pouco** | linhas a mais na tabela de fichas na carga, mais as duas tabelas paralelas; só viram regens enquanto houver vaga parada (§5) |
 | Mais regens por temporada | **sim** | mais aposentadorias, a partir dos ~13.000 sem clube: vaga e ficha juntas, com a população igual (§5) |
-| Pessoas novas (vagas) | **não** | os 16 técnicos humanos são as últimas pessoas da tabela; e, numa carreira longa, a vaga é o limite (§5) |
+| Pessoas novas (vagas) | **sim** | numa carreira longa, a vaga é o limite (§5); o estudo de viabilidade está em [PESSOAS_NOVAS.md](PESSOAS_NOVAS.md) |
 
 ## 2. Vaga e ficha
 
@@ -144,7 +144,7 @@ A primeira versão deste estudo dizia que "a fila já tem vagas sobrando" e que,
 
 ### O que sobra para crescer a população
 
-Pessoas novas exigem mudar os ~160 lugares que tratam as 16 últimas pessoas como técnicos humanos (ou mover os humanos), a tabela de 79 bytes (0x82849a) e o Staff_Records. Fica fora do alcance agora; o caminho viável é renovar mais rápido a população que existe.
+Viável, de dois jeitos: um estoque de pessoas criado com a carreira (o jogo já cria pessoas a mais no corte do banco; um desvio dá K a mais) ou o crescimento da tabela em qualquer save (~276 patches nos humanos). Ver [PESSOAS_NOVAS.md](PESSOAS_NOVAS.md).
 
 ### O efeito do dia fixo e das fichas novas
 
@@ -171,7 +171,7 @@ Pessoas novas exigem mudar os ~160 lugares que tratam as 16 últimas pessoas com
 1. **O dia fixo** (4.1 e 4.2), sem nada novo no mundo: mede as desistências, o custo do dia e o efeito nos clubes.
 2. **A cota por clube** (4.3) com os regens que já nascem: mede quantos clubes fecham a cota em cada nação.
 3. **O ritmo das aposentadorias**, para chegar ao número de regens por temporada que se quer, a partir de quem está sem clube.
-4. **As fichas novas** (4.4) só se sobrar vaga parada; pessoas novas, só como projeto à parte.
+4. **Pessoas novas com ficha** ([PESSOAS_NOVAS.md](PESSOAS_NOVAS.md)): primeiro o estoque criado com a carreira, depois o crescimento em qualquer save.
 
 Cada passo com a sua chave no `tweaks.cfg`, desligado por padrão, e provado na bancada antes do seguinte.
 
