@@ -15,6 +15,7 @@ Tudo o que foi rodado para provar o CM0102-Rust-Tweaks, de 01/11 a 02/11/2026 (a
 | As caixas de mensagem no log | ✅ três erros reais apanhados |
 | A distribuição dos regens | ✅ em cinco temporadas, com 10 ligas (6 jogáveis e 4 de fundo), no banco de fábrica e no CLZ (§4.3) |
 | Jogadores cinzentos (`grey_players`) | ✅ no 3.9.68 (três carreiras até 14/09/2001) e no CLZ 6.1 com a NickDLL (um mês de jogo): nenhum CA negativo, nenhum clube abaixo do original, sem queda (§3.9) |
+| Nomes dos regens (`regen_names`) | ✅ no update de 2026 e no CLZ 6.1: as nações com 20 a 100 nomes passam a usar 100% os próprios; o defeito do grupo 0 sumiu (§4.7) |
 | Estabilidade nas carreiras longas | ✅ cinco carreiras de cinco temporadas, sem nenhuma queda, travamento ou caixa de erro |
 
 ## 2. O método
@@ -320,6 +321,30 @@ O que essas provas corrigiram, antes do lançamento:
 Como a DLL acha o dono da ficha (sem mudar nada no jogo nem no save): desvia as duas chamadas por onde a ficha de um jogador aposentado entra na reserva (a fila, 0x7a87d0 em 0x7a64c9 e 0x7a64e2, e o jogador que vira técnico, 0x7a8350 em 0x7a6335) e anota, numa tabela fixa da DLL indexada pela ficha, o nome, o id, a idade, o CA e o PA do dono **naquele momento**. Na criação (0x7abac0, chamada em 0x7a664f, a única), lê a vaga (A) antes da sobrescrita e a ficha da frente da reserva, que é a que o jogo usa sempre. A liberação do jogo (0x82ff40) zera a tabela: outra carreira começa limpa. Se qualquer um desses pontos difere do 3.9.68, o registro não liga, e o `tweaks.log` diz onde. A NickDLL do 6.1 aponta para as chamadas da carga; por isso a carga é desviada na entrada, por onde ela passa de qualquer jeito (provas 6 a 8).
 
 Um achado no caminho: o jovem que nasce **sem clube** e com menos de 20 anos tem a reputação cortada pelo jogo (0x7acf61..0x7acf94: atual e em casa no máximo 1250, mundial 1), e fica quase invisível para a IA. O PA não é mexido em nenhum caso, e a normalização dos atributos (0x538ec0, 0x538bc0) vale para todos, com ou sem clube.
+
+### 4.7 Os nomes dos regens (`regen_names`)
+
+Os nomes ficam no banco (first_names.dat e second_names.dat: o nome, a nação e um peso de quão comum ele é). A regra de quando a nação usa os próprios nomes está no exe: só acima de 100; com 100 ou menos, ela pega emprestado de outra nação do grupo de língua ou da tabela do mundo inteiro.
+
+**Os bancos** [medido nos arquivos, 03/11/2026]:
+
+| Banco | Nações | Primeiros nomes | Sobrenomes | Pegam emprestado (original) | Ainda pegam com mínimo 20 |
+|---|---|---|---|---|---|
+| Original de fábrica | 213 | 44.281 | 104.395 | 125 | — |
+| Update de outubro de 2026 | 231 | 61.960 | 115.831 | 100 | 15 |
+| CLZ 6.1 | 231 | 54.697 | 103.186 | 108 | 15 |
+
+As 11 nações sem nenhum nome (nos dois bancos novos) são extintas ou duplicadas: União Soviética, Iugoslávia, Zaire, Suazilândia, Antilhas Holandesas...
+
+**No jogo** [medido, 03/11/2026]: uma DLL de teste pede 200 primeiros nomes e 200 sobrenomes a cada uma das 231 nações pelas próprias rotinas do jogo (desviadas ou não), no primeiro dia, e confere a nação de cada nome devolvido.
+
+| Banco e regra | Primeiros nomes próprios (nações com 20 a 100) | Sobrenomes próprios (20 a 100) | Primeiro nome da tabela certa (todas) | Nações com mais de 100 |
+|---|---|---|---|---|
+| Update 2026, original | 234 de 16.000 (1,5%) | 352 de 16.000 (2,2%) | 44.400 de 46.200 (o grupo de língua 0 tira da tabela dos sobrenomes) | 100% próprios |
+| Update 2026, `regen_names = own` | 16.000 de 16.000 | 16.000 de 16.000 | 46.200 de 46.200 | 100% próprios |
+| CLZ 6.1 com a NickDLL, `own` (save carregado) | 16.800 de 16.800 | 17.000 de 17.000 | 46.200 de 46.200 | 100% próprios |
+
+Exemplos no update 2026 (primeiros e sobrenomes próprios em 200): Serra Leoa, Bahrein, Cuba, Andorra e Liechtenstein, de 0 e 0 para 200 e 200; Vietnã, de 200 e 26 para 200 e 200; Inglaterra e Brasil, 200 e 200 nos dois. As carreiras (criada no update 2026, carregada no CLZ 6.1) seguiram sem queda nem caixa de erro.
 
 ## 5. Limites e próximos testes
 

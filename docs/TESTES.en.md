@@ -15,6 +15,7 @@ Everything run to prove CM0102-Rust-Tweaks, from 11/01 to 11/02/2026 (the five-s
 | The message boxes in the log | ✅ three real errors caught |
 | Regen distribution | ✅ over five seasons, with 10 leagues (6 playable and 4 background), on the factory database and on CLZ (§4.3) |
 | Grey players (`grey_players`) | ✅ on 3.9.68 (three careers to 14/09/2001) and on CLZ 6.1 with NickDLL (one game month): no negative CA, no club below the original, no crash (§3.9) |
+| Regen names (`regen_names`) | ✅ on the 2026 update and on CLZ 6.1: nations with 20 to 100 names use 100% their own; the group 0 bug is gone (§4.7) |
 | Stability in long careers | ✅ five careers of five seasons, with no crash, hang or error box |
 
 ## 2. Method
@@ -320,6 +321,30 @@ What these tests fixed, before the release:
 How the DLL finds the record's owner (changing nothing in the game or the save): it hooks the two calls through which a retired player's record enters the pool (the queue, 0x7a87d0 at 0x7a64c9 and 0x7a64e2, and the player who becomes a coach, 0x7a8350 at 0x7a6335) and notes, in a fixed DLL table indexed by the record, the owner's name, id, age, CA and PA **at that moment**. At creation (0x7abac0, called at 0x7a664f, the only call), it reads the slot (A) before it's overwritten and the record at the front of the pool, which is always the one the game uses. Freeing the game (0x82ff40) clears the table: another career starts clean. If any of these points differs from 3.9.68, recording doesn't turn on, and `tweaks.log` says where. The 6.1 NickDLL points at the load calls; that's why loading is hooked at the entry, which it passes through anyway (tests 6 to 8).
 
 A finding on the way: a youngster born **without a club** and under 20 has his reputation cut by the game (0x7acf61..0x7acf94: current and home at most 1250, world 1), and is almost invisible to the AI. The PA is never touched, and the attribute normalisation (0x538ec0, 0x538bc0) applies to everyone, with or without a club.
+
+### 4.7 Regen names (`regen_names`)
+
+The names are in the database (first_names.dat and second_names.dat: the name, the nation and a weight for how common it is). The rule for when a nation uses its own names is in the exe: only above 100; with 100 or fewer, it borrows from another nation of its language group or from the whole world's table.
+
+**The databases** [measured in the files, 11/03/2026]:
+
+| Database | Nations | First names | Surnames | Borrow (original) | Still borrow with minimum 20 |
+|---|---|---|---|---|---|
+| Factory original | 213 | 44,281 | 104,395 | 125 | — |
+| October 2026 data update | 231 | 61,960 | 115,831 | 100 | 15 |
+| CLZ 6.1 | 231 | 54,697 | 103,186 | 108 | 15 |
+
+The 11 nations with no names at all (in both new databases) are defunct or duplicates: Soviet Union, Yugoslavia, Zaire, Swaziland, Netherlands Antilles...
+
+**In the game** [measured, 11/03/2026]: a test DLL asks for 200 first names and 200 surnames for each of the 231 nations through the game's own routines (hooked or not), on the first day, and checks the nation of each name returned.
+
+| Database and rule | Own first names (nations with 20 to 100) | Own surnames (20 to 100) | First name from the right table (all) | Nations with more than 100 |
+|---|---|---|---|---|
+| 2026 update, original | 234 of 16,000 (1.5%) | 352 of 16,000 (2.2%) | 44,400 of 46,200 (language group 0 takes it from the surnames table) | 100% own |
+| 2026 update, `regen_names = own` | 16,000 of 16,000 | 16,000 of 16,000 | 46,200 of 46,200 | 100% own |
+| CLZ 6.1 with NickDLL, `own` (loaded save) | 16,800 of 16,800 | 17,000 of 17,000 | 46,200 of 46,200 | 100% own |
+
+Examples in the 2026 update (own first names and surnames out of 200): Sierra Leone, Bahrain, Cuba, Andorra and Liechtenstein, from 0 and 0 to 200 and 200; Vietnam, from 200 and 26 to 200 and 200; England and Brazil, 200 and 200 in both. The careers (created on the 2026 update, loaded on CLZ 6.1) went on with no crash and no error box.
 
 ## 5. Limits and next tests
 

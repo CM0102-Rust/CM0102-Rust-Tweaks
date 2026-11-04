@@ -31,6 +31,7 @@ mod pasta;
 mod origem;
 mod apresentacao;
 mod cinzentos;
+mod nomes;
 mod reducao;
 mod trocas;
 mod video;
@@ -506,6 +507,9 @@ struct Regras {
     cinzentos: bool,
     /// grey_players_spread: a largura da faixa do CA do cinzento, centrada no nível.
     cinzentos_espalhar: i32,
+    /// regen_names = own: a nação usa os próprios nomes a partir de `nomes_minimo` (a original, só acima de 100).
+    nomes: bool,
+    nomes_minimo: i32,
 }
 
 // As três chaves de ligar começam desligadas: sem o tweaks.cfg (ou sem a linha), a DLL não muda nada no jogo.
@@ -555,6 +559,8 @@ const PADRAO: Regras = Regras {
     origens: false,
     cinzentos: false,
     cinzentos_espalhar: 10,
+    nomes: false,
+    nomes_minimo: 20,
 };
 
 static mut REGRAS: Regras = PADRAO;
@@ -626,6 +632,10 @@ fn ler_regras() -> Regras {
             r.origens = v == "1";
             continue;
         }
+        if k == "regen_names" {
+            r.nomes = v == "own"; // regen_names = original | own
+            continue;
+        }
         if k == "grey_players" {
             r.cinzentos = v == "squad"; // grey_players = original | squad
             continue;
@@ -665,6 +675,7 @@ fn ler_regras() -> Regras {
             "ca_cap_skip" => r.pular_teto = x,
             "younger_from_age" => r.mais_novo_a_partir = x as i32,
             "younger_by" => r.mais_novo_em = (x as i32).max(0),
+            "regen_names_min" => r.nomes_minimo = (x as i32).clamp(1, 101),
             "grey_players_spread" => r.cinzentos_espalhar = (x as i32).clamp(0, 100),
             _ => {}
         }
@@ -1182,6 +1193,16 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             // 0x7a5806 para a seção dele. A regra dos inativos continua ligada, mas quase não acha ninguém para avaliar
             if *(0x7a5806 as *const u8) == 0xe9 {
                 registro::linha("retire idle players: note: this exe skips retirements under 34 (a NickPatcher option), so this rule will rarely find anyone");
+            }
+        }
+        if !r.nomes {
+            registro::linha("regen names: original (a nation uses its own names only above 100; otherwise it borrows)");
+        } else if pode_ligar(&NOMES, s) {
+            nomes::MINIMO = r.nomes_minimo;
+            if nomes::instalar() {
+                registro::linha(&format!("regen names: own (a nation with {} or more names uses its own; fewer, the original's borrowing)", r.nomes_minimo));
+            } else {
+                registro::linha("regen names: could not allocate the code stub; nothing was changed");
             }
         }
         if !r.cinzentos {

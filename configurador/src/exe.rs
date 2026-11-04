@@ -196,6 +196,7 @@ impl Exe {
         }
         push("retire_idle_players", ligado("retire_idle_players"), idle);
         push("rule", ligado("rule"), self.parte(&DISPUTA, sobrescrever));
+        push("regen_names", ligado("regen_names"), self.parte(&NOMES, sobrescrever));
         push("grey_players", ligado("grey_players"), self.parte(&CINZENTOS, sobrescrever));
         push("log", ligado("log"), if self.lamo || self.nick {
             (Estado::Sobrescreve, ("a caixa de mensagem (0x5e8290) também é desviada pela LaMOHatesCD/NickDLL; o registro encadeia (a confirmar no jogo)".into(),

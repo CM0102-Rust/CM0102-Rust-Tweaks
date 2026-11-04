@@ -313,7 +313,7 @@ static mut LIBERAR_ORIGINAL: usize = 0;
 /// Desvia a entrada `entrada` para `novo` se ela começa com `esperado` (instruções inteiras, sem endereço relativo, 5
 /// bytes ou mais): o trampolim devolvido roda o começo original e volta para o resto da rotina. Na entrada, e não nas
 /// chamadas: outra DLL que desvie as chamadas (a NickDLL do CLZ 6.1 aponta para as da carga) chega aqui do mesmo jeito.
-unsafe fn trampolim(entrada: usize, esperado: &[u8], novo: usize) -> Option<usize> {
+pub(crate) unsafe fn trampolim(entrada: usize, esperado: &[u8], novo: usize) -> Option<usize> {
     if core::slice::from_raw_parts(entrada as *const u8, esperado.len()) != esperado {
         return None;
     }

@@ -27,6 +27,7 @@ pub enum Aba {
     Inativos,
     Disputa,
     Cinzentos,
+    Nomes,
     Registro,
     Cfg,
     Log,
@@ -34,11 +35,12 @@ pub enum Aba {
 
 /// O menu da esquerda, na ordem: (aba, nome pt, nome en, grupo pt, grupo en); o grupo vazio não tem título. Os grupos
 /// (03/11, Lucas): o que muda a carreira, o que só registra, a instalação e os arquivos.
-pub const ABAS: [(Aba, &str, &str, &str, &str); 9] = [
+pub const ABAS: [(Aba, &str, &str, &str, &str); 10] = [
     (Aba::Inicio, "Início", "Start", "", ""),
     (Aba::Idades, "Idades dos regens", "Regen ages", "Ajustes da carreira", "Career tweaks"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Ajustes da carreira", "Career tweaks"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Ajustes da carreira", "Career tweaks"),
+    (Aba::Nomes, "Nomes dos regens", "Regen names", "Ajustes da carreira", "Career tweaks"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Ajustes da carreira", "Career tweaks"),
     (Aba::Registro, "De quem é cada regen", "Regen origins", "Registro", "Records"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),
@@ -90,6 +92,8 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "surprise", aba: Aba::Disputa, tipo: num(0.0, 100.0, 0.0, 50.0, false), padrao: "15", rotulo: ("Surpresa (%)", "Surprise (%)") },
     Chave { nome: "outside_competitions", aba: Aba::Disputa, tipo: num(0.0, 1.0, 0.0, 1.0, false), padrao: "1", rotulo: ("Clubes de divisões que não rodam", "Clubs in divisions not running") },
     Chave { nome: "temperature", aba: Aba::Disputa, tipo: num(-INF, INF, 0.25, 3.0, false), padrao: "1", rotulo: ("Diferença entre os clubes (temperatura)", "Difference between clubs (temperature)") },
+    Chave { nome: "regen_names", aba: Aba::Nomes, tipo: Tipo::Escolha(&[("original", "Original (só acima de 100 nomes)", "Original (only above 100 names)"), ("own", "Os da própria nação", "The nation's own")]), padrao: "original", rotulo: ("Os nomes das pessoas novas", "New people's names") },
+    Chave { nome: "regen_names_min", aba: Aba::Nomes, tipo: num(1.0, 101.0, 1.0, 100.0, true), padrao: "20", rotulo: ("Nomes próprios a partir de", "Own names from") },
     Chave { nome: "grey_players", aba: Aba::Cinzentos, tipo: Tipo::Escolha(&[("original", "Original (a conta do jogo)", "Original (the game's formula)"), ("squad", "No nível do clube", "At the club's level")]), padrao: "original", rotulo: ("O nível dos cinzentos", "The grey players' level") },
     Chave { nome: "grey_players_spread", aba: Aba::Cinzentos, tipo: num(0.0, 100.0, 0.0, 50.0, true), padrao: "10", rotulo: ("Variação em volta do nível", "Variation around the level") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
@@ -121,8 +125,8 @@ pub fn ligado(nome: &str, valor: &str) -> bool {
 /// As predefinições (docs/CONFIGURADOR.md §4): (nome pt, nome en, valores). As chaves de instalação (pasta, marca,
 /// sobrescrever, log, vídeo, resolução, CD) ficam fora: dependem da instalação, não do gosto.
 pub const PREDEFINICOES: &[(&str, &str, &[(&str, &str)])] = &[
-    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original")]),
-    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original")]),
+    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original")]),
+    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original")]),
     ("Equilibrado", "Balanced", &[("ages", "custom"), ("younger_from_age", "22"), ("younger_by", "6"), ("ages_out_of_game", "original"), ("ca_cap_skip", "0.5"), ("contest_max_age", "18"), ("unattached", "original"),
         ("retire_idle_players", "1"), ("idle_days", "180"), ("idle_min_age", "28"), ("idle_rep", "1500"), ("idle_rep_per_year", "250"), ("protect_young_unemployed", "0"), ("rule", "new"),
         ("target_k", "50"), ("target_ca", "0"), ("sigma", "2500"), ("sigma_below", "1200"), ("level_floor", "0.002"), ("facilities_base", "0.4"), ("facilities_k", "0.06"), ("staff_min", "0.8"),

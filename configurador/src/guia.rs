@@ -156,6 +156,14 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "Acentua (maior que 1) ou suaviza (menor que 1) as diferenças de peso entre os clubes. 1 = o peso como calculado.",
             "Sharpens (above 1) or softens (below 1) the weight differences between clubs. 1 = the weight as calculated.",
         ),
+        "regen_names" => (
+            "Os da própria nação: os regens (e a comissão e os árbitros novos) ganham nomes do próprio país sempre que o banco tiver nomes suficientes dele (o mínimo abaixo). Original: o jogo só usa os nomes do país quando há mais de 100; com menos, pega emprestado de outro país da mesma língua ou de qualquer país do mundo, e daí vêm os regens com nomes de outras nações. No update de outubro de 2026, 100 das 231 nações ainda pegam emprestado. Vale para as pessoas criadas dali em diante, também num save em andamento. Os nomes vêm do banco: nada é acrescentado ao save.",
+            "The nation's own: regens (and new staff and referees) get names from their own country whenever the database has enough of them (the minimum below). Original: the game only uses a country's names when it has more than 100; with fewer, it borrows from another country of the same language or from any country in the world, which is where regens with names from other nations come from. In the October 2026 data update, 100 of 231 nations still borrow. It applies to people created from then on, in a career already under way too. The names come from the database: nothing is added to the save.",
+        ),
+        "regen_names_min" => (
+            "Quantos nomes do país o banco precisa ter para ele usar os próprios. Com 20, no update de outubro de 2026, 85 das 100 nações que pegavam emprestado passam a usar os próprios nomes; com 50, 67. Abaixo do mínimo fica o empréstimo do original. Vale separado para o primeiro nome e o sobrenome.",
+            "How many of a country's names the database needs for it to use its own. With 20, in the October 2026 data update, 85 of the 100 nations that borrowed start using their own names; with 50, 67. Below the minimum, the original's borrowing stays. It applies separately to first names and surnames.",
+        ),
         "grey_players" => (
             "No nível do clube: cada jogador cinzento (os virtuais que o jogo põe para completar o elenco antes da partida) tem o nível do próprio clube, com a variação escolhida abaixo. Original: a conta do jogo, que tira o nível da reputação e despenca nos clubes médios e pequenos (numa carreira de teste, 63% dos cinzentos saíram com CA negativo, o pior jogador possível). O mesmo clube continua recebendo os mesmos cinzentos: só o CA muda. Vale a partir da próxima partida, também num save em andamento.",
             "At the club's level: each grey player (the virtual ones the game adds to fill a squad before a match) gets the club's own level, within the variation chosen below. Original: the game's formula, which takes the level from the reputation and collapses at mid-sized and small clubs (in a test career, 63% of grey players got a negative CA, the weakest possible player). The same club still gets the same grey players: only the CA changes. It applies from the next match, in a career already under way too.",
@@ -207,6 +215,10 @@ pub fn intro(aba: Aba) -> (&'static str, &'static str) {
         Aba::Jogo => (
             "O save, a instalação, a tela e o CD. Estes ajustes não mudam as regras do jogo: só como ele grava, onde procura os arquivos e como desenha.",
             "The save, the install, the screen and the CD. These tweaks don't change the game's rules: only how it saves, where it looks for its files and how it draws.",
+        ),
+        Aba::Nomes => (
+            "Os nomes dos regens. Os nomes vêm do banco de dados (first_names.dat e second_names.dat, cada nome com a nação e o quanto é comum). A regra de quando o jogo usa os nomes do próprio país está no exe: só acima de 100 nomes. Com menos, ele pega emprestado de outro país, e o regen de Serra Leoa pode sair com nome de outro lugar. Aqui o país usa os próprios nomes a partir de um mínimo.",
+            "Regen names. Names come from the database (first_names.dat and second_names.dat, each name with its nation and how common it is). The rule for when the game uses the country's own names is in the exe: only above 100 names. With fewer, it borrows from another country, and a Sierra Leone regen may get a name from somewhere else. Here the country uses its own names from a minimum.",
         ),
         Aba::Cinzentos => (
             "Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.",
@@ -265,6 +277,11 @@ pub fn termos(aba: Aba) -> &'static [Termo] {
         Aba::Jogo => &[
             ("Sobrescrever as mudanças do exe", "Override the exe's changes", "quando o exe já tem uma alteração (do NickPatcher, do Regen Tweak) no mesmo ponto de um ajuste, o normal é ficar com a do exe. Ligado, vale a desta DLL, e aquela opção do exe deixa de valer.", "when the exe already has a change (from NickPatcher, the Regen Tweak) where a tweak hooks in, the exe's stays by default. On, this DLL's applies, and that exe option stops working."),
             ("SetupReg", "SetupReg", "o programa que grava no registro do Windows onde o jogo está instalado. Com a pasta portátil, o jogo não precisa dele.", "the program that writes in the Windows registry where the game is installed. With the portable folder, the game doesn't need it."),
+        ],
+        Aba::Nomes => &[
+            ("Empréstimo", "Borrowing", "quando o país tem poucos nomes no banco, o jogo sorteia o nome entre os de outro país do mesmo grupo de língua (uma tabela fixa no exe) ou, se não achar, entre os do mundo inteiro.", "when a country has few names in the database, the game draws the name from another country of the same language group (a fixed table in the exe) or, failing that, from the whole world's."),
+            ("Grupo de língua", "Language group", "a primeira língua da nação no banco (nation.dat). No grupo 0, o original ainda tira o primeiro nome da tabela dos sobrenomes, um defeito que a opção corrige.", "the nation's first language in the database (nation.dat). In group 0, the original even takes the first name from the surnames table, a bug the option fixes."),
+            ("Pessoas novas", "New people", "os regens, e também a comissão e os árbitros que o jogo cria: todos passam pela mesma regra de nomes.", "regens, and also the staff and referees the game creates: they all go through the same name rule."),
         ],
         Aba::Cinzentos => &[
             ("Jogador cinzento", "Grey player", "um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.", "a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again."),

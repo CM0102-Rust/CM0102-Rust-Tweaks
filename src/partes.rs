@@ -95,6 +95,16 @@ pub const CONHECIDOS: [(&str, u32, &[u8]); 6] = [
 /// Os jogadores cinzentos (`VIRTUAL_STAFF::create_virtual_player` 0x90e0a0): a entrada e o quadro da rotina (até a ficha
 /// guardada em [esp+0x50], 0x90e10a), o ponto do desvio (0x90e6d4, as duas leituras antes de gravar o CA), a seleção
 /// (0x53b900) e o `rand` da CRT; o corpo é a conta original do CA (0x90e5f9..0x90e6d4).
+/// Os nomes das pessoas novas: `database_pick_first_name_for_nation` 0x539c60 e `..._second_name_...` 0x53a1b0 (as
+/// entradas e o `rand` da CRT nas bordas; os dois corpos, com a tabela de salto dos grupos de língua, no corpo).
+pub const NOMES: Parte = Parte {
+    nome: "regen names",
+    bordas: &[(0x539c60, 16), (0x53a1b0, 16), (0x946a04, 32)],
+    assinatura_das_bordas: 0x3a98bdf1dee28ec9,
+    corpo: &[(0x539c60, 0x53a0e0 - 0x539c60), (0x53a1b0, 0x53a5b0 - 0x53a1b0)],
+    assinatura_do_corpo: 0x96b0ef04f998d223,
+};
+
 pub const CINZENTOS: Parte = Parte {
     nome: "grey players",
     bordas: &[(0x90e0a0, 0x70), (0x90e6d4, 8), (0x53b900, 32), (0x946a04, 32)],

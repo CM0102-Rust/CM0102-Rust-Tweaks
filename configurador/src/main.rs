@@ -385,6 +385,8 @@ impl App {
         let f = |pt: String, e: String| Some(if en { e } else { pt });
         let x = g(nome);
         match nome {
+            "regen_names_min" => f(format!("Um país com {:.0} nomes ou mais no banco usa os próprios; com menos, pega emprestado de outro (o original exige mais de 100).", x),
+                format!("A country with {:.0} or more names in the database uses its own; with fewer, it borrows from another (the original needs more than 100).", x)),
             "multiple_instances" => {
                 let mut s = if self.ligado(nome) {
                     (String::from("Ligado: cada pasta do jogo pode ter um jogo aberto (por exemplo, o 3.9.68 numa pasta e o CLZ em outra, ou duas carreiras em duas cópias). Dois jogos da mesma pasta continuam barrados."),
@@ -901,6 +903,31 @@ impl App {
         }
     }
 
+    fn aba_nomes(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Nomes);
+        self.controle(ui, "regen_names", true);
+        let ativo = self.ligado("regen_names");
+        self.controle(ui, "regen_names_min", ativo);
+        ui.add_space(8.0);
+        let en = self.en;
+        App::cartao(ui, &self.t("Quantas nações pegam nomes emprestados", "How many nations borrow names"), |ui| {
+            egui::Grid::new("nomes").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
+                for h in [t2(en, "Banco", "Database"), t2(en, "Nações", "Nations"), t2(en, "Pegam emprestado (original)", "Borrow (original)"), t2(en, "Com mínimo 20", "With minimum 20"), t2(en, "Com mínimo 50", "With minimum 50")] {
+                    ui.label(RichText::new(h).strong());
+                }
+                ui.end_row();
+                for (b, n, o, m20, m50) in [(t2(en, "Update de outubro de 2026", "October 2026 data update"), "231", "100", "15", "33"), ("CLZ 6.1", "231", "108", "15", "30")] {
+                    for c in [b, n, o, m20, m50] {
+                        ui.label(c);
+                    }
+                    ui.end_row();
+                }
+            });
+            ui.label(RichText::new(t2(en, "As que ainda emprestam com o mínimo são as que têm menos nomes no banco; 11 delas são nações extintas ou duplicadas, sem nome nenhum (União Soviética, Iugoslávia, Zaire...).",
+                "Those still borrowing with the minimum are the ones with the fewest names in the database; 11 of them are defunct or duplicate nations with no names at all (Soviet Union, Yugoslavia, Zaire...).")).size(11.5).color(CINZA));
+        });
+    }
+
     fn aba_cinzentos(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Cinzentos);
         self.controle(ui, "grey_players", true);
@@ -1282,6 +1309,7 @@ impl eframe::App for App {
                 Aba::Inativos => self.aba_inativos(ui),
                 Aba::Disputa => self.aba_disputa(ui),
                 Aba::Cinzentos => self.aba_cinzentos(ui),
+                Aba::Nomes => self.aba_nomes(ui),
                 Aba::Registro => self.aba_registro(ui),
                 Aba::Cfg => self.aba_cfg(ui),
                 Aba::Log => self.aba_log(ui),
