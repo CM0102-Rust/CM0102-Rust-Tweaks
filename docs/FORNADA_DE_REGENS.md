@@ -13,8 +13,9 @@ Marcas: **[observado]** no código ou nos saves; **[inferência]** pelo fluxo, a
 | Aposentadorias todas num dia | **sim, simples** | trocar a data na porta única das aposentadorias (0x7a8510) |
 | Regens todos num dia de promoção | **sim, simples** | segurar a fila (0x5cda7a) fora do dia |
 | N regens garantidos por clube | **sim, médio** | o clube vem da cota no desvio da disputa que o Tweaks já tem (0x7ad0e0) |
-| Fichas novas (mais regens que aposentadorias) | **sim, com condições** | linhas a mais na tabela de fichas na carga, mais as duas tabelas paralelas |
-| Pessoas novas (vagas) | **não, e nem precisa** | a fila já tem vagas sobrando |
+| Fichas novas (mais regens que aposentadorias) | **dá, mas rende pouco** | linhas a mais na tabela de fichas na carga, mais as duas tabelas paralelas; só viram regens enquanto houver vaga parada (§5) |
+| Mais regens por temporada | **sim** | mais aposentadorias, a partir dos ~13.000 sem clube: vaga e ficha juntas, com a população igual (§5) |
+| Pessoas novas (vagas) | **não** | os 16 técnicos humanos são as últimas pessoas da tabela; e, numa carreira longa, a vaga é o limite (§5) |
 
 ## 2. Vaga e ficha
 
@@ -23,7 +24,7 @@ Todo regen jogador precisa de duas peças:
 - **Vaga** é a **pessoa** aposentada (nome, nascimento, id, personalidade). O regen passa a ser essa pessoa, com nome e idade novos.
 - **Ficha** é a **ficha de jogador** (`player.dat`, 70 bytes): PA, posições, pés e atributos. Ela decide se o regen é bom.
 
-Hoje **sobra vaga e falta ficha**: a fila tinha 847 vagas paradas no `TesteCMRTE` e 1.260 no `TesteTelas`, com a reserva de fichas vazia [observado]. Por isso só a ficha decide quantos regens nascem.
+No começo da carreira **sobra vaga e falta ficha**: no `TesteCMRTE` (dez/2001), 845 vagas de não jogadores já vencidas esperavam ficha, com a reserva vazia [observado]. **Isso não dura:** no save de todas as ligas em 2063 não há vaga parada; a fila só tem vagas com data futura, quase todas de jogadores (§5).
 
 ## 3. O ciclo hoje
 
@@ -78,7 +79,7 @@ Números dos saves: 2.481 a 7.780 aposentadorias marcadas; da ordem de 2.000 a 4
 - A tabela de 79 bytes por pessoa (0xae2d0c) é criada com o tamanho exato (0x82849a); o Staff_Records segue a contagem de não jogadores [observado].
 - As 23.000 pessoas de reserva só existem durante a criação da carreira (consumidas por 0x527240 e pelo corte do banco); nos saves sobram 0 [observado].
 
-Como a fila já tem vagas sobrando, pessoas novas não são necessárias.
+A tabela de pessoas não cresce sem mexer nesses lugares. Isso limita as fichas novas (§5).
 
 #### Por que fichas sim
 
@@ -118,7 +119,38 @@ A 0x7abac0 sorteia o CA como fração do PA, pela posição (nação no jogo ou 
 
 Com teto pela idade: 80, 90, 100 e 110 entre 15 e 20 anos; cerca de 75% dos regens têm menos de 19. Na prática, PA 100 a 130 dá CA médio de 55 a 70, e PA 180 a 200 trava em 80 a 110 [inferência pelas fórmulas]. As nações fora do jogo com menos de 350 pessoas usam outras fórmulas e idades de 17 a 27.
 
-## 5. A população
+## 5. A conta (correção de 04/11, pergunta do Lucas)
+
+A primeira versão deste estudo dizia que "a fila já tem vagas sobrando" e que, por isso, bastavam fichas novas. Era uma leitura de saves do começo da carreira. A conta com o save de todas as ligas (`All Leagues - 3.9.68 - Compress.sav`, 2001 a 2063, 62 temporadas) mostra outra coisa [observado, `conta.py`, `hoje.py` e `np.py`, só leitura]:
+
+| | Todas as ligas, 2063 |
+|---|---|
+| Clubes no banco | 10.892 |
+| Clubes de nação com liga escolhida | 7.283 (3.889 de liga jogável) |
+| Clubes com alguém no elenco | 6.752 (média de 13 no elenco; 9 cheios) |
+| Pessoas (tabela fixa) | 158.790: 114.708 com ficha de jogador, 44.801 com ficha de não jogador |
+| Regens jogadores vivos por ano de nascimento (2036 a 2043) | 6.624 a 7.833 por ano |
+| Fila e reserva no save | 1.504 vagas, todas com data futura (1.428 de jogadores), e 1.913 fichas esperando essas datas |
+| Sem clube | 9.303 regens jogadores e 4.054 não jogadores |
+
+**O que a conta diz:**
+
+- **O ritmo natural é de uns 7.500 regens jogadores por temporada** com todas as ligas, um por aposentadoria de jogador.
+- **3 por clube** dá 11.667 por temporada só nos 3.889 clubes de liga jogável, e 20.256 nos 6.752 com elenco. Faltariam de 4.200 a 12.800 por temporada.
+- **A vaga é o limite numa carreira longa, não a ficha.** Cada regen precisa de uma pessoa, e a tabela de pessoas é fixa. As 845 a 1.260 vagas paradas dos saves do começo são um estoque que acaba (os não jogadores da base que se aposentam cedo). Em 2063 não há vaga parada.
+- **Logo, fichas novas sozinhas não dão regens a mais por muito tempo:** sem pessoas novas, elas só gastariam o estoque inicial de vagas e depois ficariam esperando na reserva.
+- **Com a população fixa, regens a mais por temporada só vêm de aposentadorias a mais.** Hoje, uns 7.500 de ~115.000 jogadores se renovam por temporada (carreira média de umas 15 temporadas). Para 11.700 por temporada, a carreira média cairia para umas 10.
+- **A reserva para isso já existe no mundo:** 9.303 regens jogadores e 4.054 não jogadores sem clube. Aposentar mais cedo quem está parado dá vaga e ficha juntas, sem tabela nova; é o `retire_idle_players`, numa dose maior.
+
+### O que sobra para crescer a população
+
+Pessoas novas exigem mudar os ~160 lugares que tratam as 16 últimas pessoas como técnicos humanos (ou mover os humanos), a tabela de 79 bytes (0x82849a) e o Staff_Records. Fica fora do alcance agora; o caminho viável é renovar mais rápido a população que existe.
+
+### O efeito do dia fixo e das fichas novas
+
+- **Só com o dia fixo** (4.1 a 4.3): ninguém novo. O número de regens é o mesmo, só concentrado.
+- **Com fichas novas** (4.4): regens a mais só enquanto houver vaga parada (o começo da carreira).
+- **Com aposentadorias a mais:** regens a mais em qualquer fase, com a população igual.
 
 - **Só com o dia fixo** (4.1 a 4.3): ninguém novo. O número de regens é o mesmo, só concentrado; a primeira temporada não tem mais aposentadorias, elas só se juntam.
 - **Com fichas novas** (4.4): cada ficha é um jogador a mais, para sempre. 3 por clube em 300 clubes = 900 por temporada. Mais jogadores dão mais aposentadorias anos depois, o que freia o crescimento; o equilíbrio tem de ser medido em carreiras longas.
@@ -137,8 +169,9 @@ Com teto pela idade: 80, 90, 100 e 110 entre 15 e 20 anos; cerca de 75% dos rege
 ## 7. A ordem proposta
 
 1. **O dia fixo** (4.1 e 4.2), sem nada novo no mundo: mede as desistências, o custo do dia e o efeito nos clubes.
-2. **A cota por clube** (4.3) com as fichas que já existem: mede quantos clubes fecham a cota em cada nação.
-3. **As fichas novas** (4.4) só em carreira nova, com as duas tabelas paralelas; depois, o caminho do save antigo.
+2. **A cota por clube** (4.3) com os regens que já nascem: mede quantos clubes fecham a cota em cada nação.
+3. **O ritmo das aposentadorias**, para chegar ao número de regens por temporada que se quer, a partir de quem está sem clube.
+4. **As fichas novas** (4.4) só se sobrar vaga parada; pessoas novas, só como projeto à parte.
 
 Cada passo com a sua chave no `tweaks.cfg`, desligado por padrão, e provado na bancada antes do seguinte.
 

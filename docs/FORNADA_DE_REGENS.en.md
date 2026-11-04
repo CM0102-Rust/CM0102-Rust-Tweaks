@@ -13,8 +13,9 @@ Tags: **[observed]** in the code or the saves; **[inference]** from the flow, to
 | Every retirement on one day | **yes, simple** | change the date at the single entry point for retirements (0x7a8510) |
 | Every regen on a promotion day | **yes, simple** | hold the queue (0x5cda7a) on the other days |
 | N guaranteed regens per club | **yes, medium** | the club comes from the quota, in the dispute hook Tweaks already has (0x7ad0e0) |
-| New player records (more regens than retirements) | **yes, with conditions** | extra rows in the player table at load, plus the two parallel tables |
-| New people (slots) | **no, and not needed** | the queue already has slots to spare |
+| New player records (more regens than retirements) | **possible, but of little use** | extra rows in the player table at load, plus the two parallel tables; they only become regens while there are idle slots (§5) |
+| More regens per season | **yes** | more retirements, drawing on the ~13,000 without a club: slot and record together, with the same population (§5) |
+| New people (slots) | **no** | the 16 human managers are the last people in the table; and in a long career the slot is the limit (§5) |
 
 ## 2. Slot and record
 
@@ -23,7 +24,7 @@ Every player regen needs two pieces:
 - The **slot** is the retired **person** (name, birth date, id, personality). The regen becomes that person, with a new name and age.
 - The **record** is the **player record** (`player.dat`, 70 bytes): PA, positions, feet and attributes. It decides whether the regen is any good.
 
-Today **slots are plentiful and records are scarce**: the queue had 847 idle slots in `TesteCMRTE` and 1,260 in `TesteTelas`, with the record pool empty [observed]. So the records alone decide how many regens are born.
+Early in a career **slots are plentiful and records are scarce**: in `TesteCMRTE` (Dec 2001), 845 non-player slots already due were waiting for a record, with the pool empty [observed]. **That doesn't last:** in the all-leagues save in 2063 there are no idle slots; the queue only has future-dated slots, almost all of them players (§5).
 
 ## 3. The cycle today
 
@@ -78,7 +79,7 @@ Numbers from the saves: 2,481 to 7,780 scheduled retirements, about 2,000 to 4,0
 - The 79-byte per-person table (0xae2d0c) is created at its exact size (0x82849a), and Staff_Records follows the non-player count [observed].
 - The 23,000 reserve people only exist while the career is being created (used up by 0x527240 and the database trim). None are left in the saves [observed].
 
-Since the queue already has slots to spare, new people aren't needed.
+The person table can't grow without changing those places. That limits new records (§5).
 
 #### Why records, yes
 
@@ -118,7 +119,38 @@ Consistency rules: absolute attributes from 1 to 20, one position = 20, one side
 
 There's also a cap by age: 80, 90, 100 and 110 between 15 and 20, and about 75% of regens are under 19. In practice, PA 100 to 130 gives an average CA of 55 to 70, and PA 180 to 200 tops out at 80 to 110 [inference from the formulas]. Nations outside the game with fewer than 350 people use other formulas and ages of 17 to 27.
 
-## 5. The population
+## 5. The numbers (correction of 11/04, Lucas's question)
+
+The first version of this study said "the queue already has slots to spare", so new records would be enough. That was a reading of early-career saves. The numbers from the all-leagues save (`All Leagues - 3.9.68 - Compress.sav`, 2001 to 2063, 62 seasons) show something else [observed, `conta.py`, `hoje.py` and `np.py`, read-only]:
+
+| | All leagues, 2063 |
+|---|---|
+| Clubs in the database | 10,892 |
+| Clubs in a nation with a selected league | 7,283 (3,889 in a playable league) |
+| Clubs with anyone in the squad | 6,752 (13 in the squad on average; 9 full) |
+| People (fixed table) | 158,790: 114,708 with a player record, 44,801 with a non-player record |
+| Living player regens per birth year (2036 to 2043) | 6,624 to 7,833 per year |
+| Queue and pool in the save | 1,504 slots, all future-dated (1,428 of them players), and 1,913 records waiting for those dates |
+| Without a club | 9,303 player regens and 4,054 non-players |
+
+**What the numbers say:**
+
+- **The natural rate is about 7,500 player regens per season** with all leagues, one per player retirement.
+- **3 per club** means 11,667 per season for the 3,889 clubs in playable leagues alone, and 20,256 for the 6,752 with a squad. That's 4,200 to 12,800 short per season.
+- **In a long career the slot is the limit, not the record.** Every regen needs a person, and the person table is fixed. The 845 to 1,260 idle slots in the early saves are a stock that runs out (the database's non-players retiring early). In 2063 there are no idle slots.
+- **So new records alone don't give extra regens for long:** without new people, they'd only use up the initial slot stock and then sit waiting in the pool.
+- **With a fixed population, extra regens per season can only come from extra retirements.** Today about 7,500 of ~115,000 players are renewed per season (an average career of about 15 seasons). For 11,700 per season, the average career would drop to about 10.
+- **The pool for that already exists in the world:** 9,303 player regens and 4,054 non-players without a club. Retiring the idle ones earlier frees a slot and a record together, with no new table; it's `retire_idle_players`, at a higher dose.
+
+### What's left for growing the population
+
+New people would mean changing the ~160 places that treat the last 16 people as human managers (or moving the humans), the 79-byte table (0x82849a) and Staff_Records. That's out of reach for now; the viable path is renewing the existing population faster.
+
+### The effect of the fixed day and of new records
+
+- **With the fixed day alone** (4.1 to 4.3), nobody is added. The number of regens stays the same, just bunched together.
+- **With new records** (4.4), extra regens only while there are idle slots (early in the career).
+- **With extra retirements**, extra regens at any stage, with the same population.
 
 - **With the fixed day alone** (4.1 to 4.3), nobody is added. The number of regens stays the same, just bunched together, and the first season has no extra retirements, only grouped ones.
 - **With new records** (4.4), each record is one more player, for good. 3 per club across 300 clubs = 900 per season. More players means more retirements years later, which slows the growth; the balance has to be measured in long careers.
@@ -137,8 +169,9 @@ There's also a cap by age: 80, 90, 100 and 110 between 15 and 20, and about 75% 
 ## 7. Proposed order
 
 1. **The fixed day** (4.1 and 4.2), adding nothing to the world: measures the cancellations, the cost of the day and the effect on clubs.
-2. **The per-club quota** (4.3) with the records that already exist: measures how many clubs fill their quota in each nation.
-3. **New records** (4.4), new careers only, with the two parallel tables; then the path for old saves.
+2. **The per-club quota** (4.3) with the regens already being born: measures how many clubs fill their quota in each nation.
+3. **The retirement rate**, to reach the number of regens per season we want, drawing on those without a club.
+4. **New records** (4.4) only if idle slots are left over; new people only as a separate project.
 
 Each step gets its own key in `tweaks.cfg`, off by default, and is proved on the test bench before the next one.
 
