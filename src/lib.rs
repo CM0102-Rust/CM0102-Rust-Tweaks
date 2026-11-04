@@ -31,6 +31,8 @@ mod pasta;
 mod origem;
 mod apresentacao;
 mod cinzentos;
+// A fornada de regens (experimental, branch fornada).
+mod fornada;
 mod nomes;
 mod reducao;
 mod trocas;
@@ -1237,6 +1239,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
                 registro::linha("grey players: could not allocate the code stub; nothing was changed");
             }
         }
+        // a fornada (experimental): depois da disputa, cujo call em 0x7acea2 ela encadeia; ver o fim do DllMain
         // depois da IDADE, que confere 0x7ace65..0x7ace6b antes de mexer no corte
         if !r.so_sem_vaga {
             registro::linha("unattached: original (under 19, 3 times in 4, go to the clubs' contest; the rest start without a club)");
@@ -1262,6 +1265,9 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             if instalar_observacao() {
                 registro::linha("regens 0.1: logging the exe's own picks (log = 1)");
             }
+        }
+        if !fornada::instalar() {
+            registro::linha("intake (EXPERIMENTAL): off (intake_stock = 0)");
         }
     }
     1
