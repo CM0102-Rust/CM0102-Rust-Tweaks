@@ -115,7 +115,6 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
   - a fazer: localizar o limite no código (a evolução dos atributos de não jogador), conferir a rotina e expor a idade no `.cfg` (`staff_development_age`), com o crédito a ele.
 - 💡 **Os que nascem sem clube** passarem pelo sorteio, só entre clubes de divisões inferiores. Depende da medição da fase 2.
 - 💡 **As instalações no PA**: na assinatura, PA + (Training − 10) × 0,5 ± 2. Desligado por padrão.
-- 🔬 **Criar fichas novas** para ter mais regens do que aposentadorias: aumentar `player.dat` e as tabelas por pessoa. É um projeto de pesquisa, com risco para o save; fora da primeira versão.
 
 ## Fase 5: a abertura ⏳
 
@@ -134,7 +133,7 @@ A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em v
 **As peças que o jogo já tem:** `regenerate_as_youth_player` (0x7abac0) transforma uma ficha num jovem; `player_regen_sign_for_club` (0x7a6f10) o põe numa vaga do elenco, com contrato. O que falta é a matéria-prima, fichas livres: as tabelas de pessoas têm tamanho fixo, alocado na carga.
 
 1. 🔬 **Prova de conceito**
-   - **A reserva de fichas na criação da carreira.** O jogo já fabrica pessoas a mais ao criar uma carreira: 1% (2% numa opção), por uma constante em 0x524dcf/0x524de1 (`database_trim_staff_tables` 0x524d70). A DLL sobe esse número e marca essas fichas como reserva da fornada; as tabelas nascem com folga, e o save grava as contagens. A prova: uma carreira com 10% de pessoas a mais nasce e roda estável na bancada (tempo por dia, memória, save).
+   - **O estudo (04/11/2026, pedido do Lucas): [docs/FORNADA_DE_REGENS.md](docs/FORNADA_DE_REGENS.md).** Substitui a ideia de subir a constante do corte do banco: as pessoas não podem crescer (os 16 técnicos humanos são as últimas contadas, e a tabela de 79 bytes nasce no tamanho exato), mas nem precisa, porque a fila já tem vagas sobrando. O que cresce são as **fichas de jogador**: linhas a mais na alocação da carga (0x529e0c) e do corte (0x526010), depois das 1.325 dos cinzentos, com o PlayerStats e o treino crescendo junto. A ordem proposta: as aposentadorias e os regens num dia fixo (sem nada novo no mundo), a cota por clube com as fichas que já existem, e só então as fichas novas.
    - **Um item próprio dentro do save.** A DLL controla o contêiner (as rotinas do save2gb); o jogo só lê os itens que conhece. A prova: gravar e ler um item da DLL (a reserva, as datas da fornada) e o jogo carregar o save normalmente, com e sem a DLL.
 2. ⏳ **A fornada:** numa data por nação, cada clube recebe N jovens da reserva, com N pelas instalações, pelo treinador de juniores e por um sorteio. O PA vem de uma distribuição própria (instalações 20 passam a gerar mais talento de verdade). Tudo no `.cfg`.
 3. ⏳ **O espaço no elenco:** a IA dispensa, empresta ou aposenta os excedentes; quem fica sem clube volta à reserva pela regra dos inativos. O humano recebe a fornada como notícia, e os jovens aparecem no elenco.
@@ -142,4 +141,4 @@ A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em v
 
 **Os impactos a medir:** mais pessoas (o processamento dos dias); save maior (já resolvido acima de 2 GB); talento demais no mundo (inflação de PA, seleções); mercado inundado de jovens (salários e preços); editores e ferramentas (contagens maiores, formato igual).
 
-**Limite:** vale para carreiras novas, porque a reserva nasce na criação. Num save antigo, a fornada só usaria fichas recicladas.
+**Limite:** as fichas novas valem primeiro para carreiras novas (a carga de um save antigo exige o `training.dat` com a contagem exata). O dia fixo e a cota por clube valem em qualquer save.
