@@ -223,7 +223,7 @@ Valores: de 0 a 126 (inteiro). Padrão: `0`.
 
 Os nomes dos regens. Os nomes vêm do banco de dados (first_names.dat e second_names.dat, cada nome com a nação e o quanto é comum). A regra de quando o jogo usa os nomes do próprio país está no exe: só acima de 100 nomes. Com menos, ele pega emprestado de outro país, e o regen de Serra Leoa pode sair com nome de outro lugar. Aqui o país usa os próprios nomes a partir de um mínimo.
 
-- **Pegar emprestado**: quando o país tem 100 nomes ou menos no banco, o jogo não usa os dele: tira o nome de um país de referência da mesma língua (por exemplo, da Espanha para os de língua espanhola). Alguns países não têm referência e sorteiam em qualquer país do mundo. A lista abaixo mostra, país por país, de onde vêm hoje.
+- **Pegar emprestado**: quando o país tem 100 nomes ou menos no banco, o jogo não usa os dele: tira o nome de um país de referência da mesma língua (por exemplo, da Espanha para os de língua espanhola). Alguns países não têm país de referência: o jogo sorteia 40 vezes entre todos os países atrás de um da mesma língua e, se não achar, fica com um país qualquer. A lista abaixo mostra, país por país, de onde vêm hoje.
 - **Pessoas novas**: os regens, e também a comissão e os árbitros que o jogo cria: todos passam pela mesma regra de nomes.
 
 ### Os nomes das pessoas novas — `regen_names`

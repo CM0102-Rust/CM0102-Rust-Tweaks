@@ -223,7 +223,7 @@ Values: from 0 to 126 (whole number). Default: `0`.
 
 Regen names. Names come from the database (first_names.dat and second_names.dat, each name with its nation and how common it is). The rule for when the game uses the country's own names is in the exe: only above 100 names. With fewer, it borrows from another country, and a Sierra Leone regen may get a name from somewhere else. Here the country uses its own names from a minimum.
 
-- **Borrowing**: when a country has 100 names or fewer in the database, the game doesn't use its own: it takes the name from a reference country of the same language (for example, from Spain for Spanish-speaking ones). Some countries have no reference and draw from any country in the world. The list below shows, country by country, where they come from today.
+- **Borrowing**: when a country has 100 names or fewer in the database, the game doesn't use its own: it takes the name from a reference country of the same language (for example, from Spain for Spanish-speaking ones). Some countries have no reference country: the game draws 40 times among all countries looking for one of the same language and, if it finds none, keeps any country. The list below shows, country by country, where they come from today.
 - **New people**: regens, and also the staff and referees the game creates: they all go through the same name rule.
 
 ### New people's names — `regen_names`

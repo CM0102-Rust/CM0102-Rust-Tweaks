@@ -939,7 +939,7 @@ impl App {
             ui.add_space(6.0);
             egui::ScrollArea::both().max_height(380.0).show(ui, |ui| {
                 egui::Grid::new("nomes").striped(true).spacing([12.0, 3.0]).show(ui, |ui| {
-                    for h in [t2(en, "País", "Country"), t2(en, "Nomes", "Names"), t2(en, "Sobrenomes", "Surnames"), t2(en, "Hoje vêm", "Today from"), t2(en, "Com a opção", "With the option")] {
+                    for h in [t2(en, "País", "Country"), t2(en, "Nomes", "Names"), t2(en, "Sobrenomes", "Surnames"), t2(en, "Com a opção", "With the option"), t2(en, "Hoje vêm", "Today from")] {
                         ui.label(RichText::new(h).strong());
                     }
                     ui.end_row();
@@ -948,7 +948,6 @@ impl App {
                         ui.label(&n.nome);
                         ui.label(n.primeiros.to_string());
                         ui.label(n.segundos.to_string());
-                        ui.label(RichText::new(nomes::de_onde(n, en)).color(AMARELO));
                         ui.label(if proprios {
                             RichText::new(t2(en, "os próprios", "its own")).color(if ativo { VERDE } else { CINZA })
                         } else if n.grupo == 0 {
@@ -956,6 +955,7 @@ impl App {
                         } else {
                             RichText::new(t2(en, "igual (poucos nomes)", "the same (too few names)")).color(CINZA)
                         });
+                        ui.label(RichText::new(nomes::de_onde(n, lista, en)).color(AMARELO));
                         ui.end_row();
                     }
                 });

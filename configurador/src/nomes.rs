@@ -21,13 +21,25 @@ pub struct Nacao {
     pub grupo: i8,
 }
 
-/// De onde a nação tira os nomes no original (com 100 ou menos): a nação de referência da língua, um sorteio entre as da
-/// mesma língua, ou a tabela do mundo inteiro.
-pub fn de_onde(n: &Nacao, en: bool) -> String {
+/// De onde a nação tira os nomes no original (com 100 ou menos): a nação de referência da língua (1 a 32), a tabela do
+/// mundo inteiro (0) ou, sem referência (acima de 32), 40 sorteios entre TODOS os países atrás de um da mesma língua com
+/// mais de 5 nomes; se nenhum sair, fica o último sorteado, de qualquer língua (0x539c60, `nacao_que_empresta_nomes`).
+pub fn de_onde(n: &Nacao, todas: &[Nacao], en: bool) -> String {
     match n.grupo {
         0 => if en { "any country (first name from the surnames)".into() } else { "qualquer país (primeiro nome dos sobrenomes)".into() },
         1..=32 => format!("{} {}", if en { "from" } else { "de" }, REFERENCIA[(n.grupo - 1) as usize]),
-        _ => if en { "drawn, same language".into() } else { "sorteado, mesma língua".into() },
+        _ => {
+            let mesmas: Vec<&str> = todas.iter().filter(|o| o.grupo == n.grupo && o.primeiros > 5).map(|o| o.nome.as_str()).collect();
+            let p = 1.0 - (1.0 - mesmas.len() as f64 / todas.len().max(1) as f64).powi(40);
+            let quem: Vec<&str> = mesmas.iter().map(|&o| if o == n.nome { if en { "itself" } else { "ele mesmo" } } else { o }).collect();
+            if quem.is_empty() {
+                if en { "any country".into() } else { "qualquer país".into() }
+            } else if en {
+                format!("{:.0}% {}; {:.0}% any country", 100.0 * p, quem.join(", "), 100.0 * (1.0 - p))
+            } else {
+                format!("{:.0}% {}; {:.0}% qualquer país", 100.0 * p, quem.join(", "), 100.0 * (1.0 - p))
+            }
+        }
     }
 }
 
