@@ -223,19 +223,18 @@ Valores: de 0 a 126 (inteiro). Padrão: `0`.
 
 Os nomes dos regens. Os nomes vêm do banco de dados (first_names.dat e second_names.dat, cada nome com a nação e o quanto é comum). A regra de quando o jogo usa os nomes do próprio país está no exe: só acima de 100 nomes. Com menos, ele pega emprestado de outro país, e o regen de Serra Leoa pode sair com nome de outro lugar. Aqui o país usa os próprios nomes a partir de um mínimo.
 
-- **Empréstimo**: quando o país tem poucos nomes no banco, o jogo sorteia o nome entre os de outro país do mesmo grupo de língua (uma tabela fixa no exe) ou, se não achar, entre os do mundo inteiro.
-- **Grupo de língua**: a primeira língua da nação no banco (nation.dat). No grupo 0, o original ainda tira o primeiro nome da tabela dos sobrenomes, um defeito que a opção corrige.
+- **Pegar emprestado**: quando o país tem 100 nomes ou menos no banco, o jogo não usa os dele: tira o nome de um país de referência da mesma língua (por exemplo, da Espanha para os de língua espanhola). Alguns países não têm referência e sorteiam em qualquer país do mundo. A lista abaixo mostra, país por país, de onde vêm hoje.
 - **Pessoas novas**: os regens, e também a comissão e os árbitros que o jogo cria: todos passam pela mesma regra de nomes.
 
 ### Os nomes das pessoas novas — `regen_names`
 
-Os da própria nação: os regens (e a comissão e os árbitros novos) ganham nomes do próprio país sempre que o banco tiver nomes suficientes dele (o mínimo abaixo). Original: o jogo só usa os nomes do país quando há mais de 100; com menos, pega emprestado de outro país da mesma língua ou de qualquer país do mundo, e daí vêm os regens com nomes de outras nações. No update de outubro de 2026, 100 das 231 nações ainda pegam emprestado. Vale para as pessoas criadas dali em diante, também num save em andamento. Os nomes vêm do banco: nada é acrescentado ao save.
+Os da própria nação: os regens (e a comissão e os árbitros novos) ganham nomes do próprio país sempre que o banco tiver nomes suficientes dele (o mínimo abaixo). Original: o jogo só usa os nomes do país quando há mais de 100; com menos, pega emprestado de outro país da mesma língua ou de qualquer país do mundo, e daí vêm os regens com nomes de outras nações. A aba mostra, país por país do seu banco, de onde vêm os nomes hoje e o que muda. Vale para as pessoas criadas dali em diante, também num save em andamento. Os nomes vêm do banco: nada é acrescentado ao save.
 
 Valores: `original` (Original (só acima de 100 nomes)), `own` (Os da própria nação). Padrão: `original`.
 
 ### Nomes próprios a partir de — `regen_names_min`
 
-Quantos nomes do país o banco precisa ter para ele usar os próprios. Com 20, no update de outubro de 2026, 85 das 100 nações que pegavam emprestado passam a usar os próprios nomes; com 50, 67. Abaixo do mínimo fica o empréstimo do original. Vale separado para o primeiro nome e o sobrenome.
+Quantos nomes do país o banco precisa ter para ele usar os próprios. Quanto menor, mais países usam os próprios nomes; a lista da aba mostra quais. Abaixo do mínimo fica o empréstimo do original. Vale separado para o primeiro nome e o sobrenome.
 
 Valores: de 1 a 101 (inteiro). Padrão: `20`.
 

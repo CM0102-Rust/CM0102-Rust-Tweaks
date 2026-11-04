@@ -223,19 +223,18 @@ Values: from 0 to 126 (whole number). Default: `0`.
 
 Regen names. Names come from the database (first_names.dat and second_names.dat, each name with its nation and how common it is). The rule for when the game uses the country's own names is in the exe: only above 100 names. With fewer, it borrows from another country, and a Sierra Leone regen may get a name from somewhere else. Here the country uses its own names from a minimum.
 
-- **Borrowing**: when a country has few names in the database, the game draws the name from another country of the same language group (a fixed table in the exe) or, failing that, from the whole world's.
-- **Language group**: the nation's first language in the database (nation.dat). In group 0, the original even takes the first name from the surnames table, a bug the option fixes.
+- **Borrowing**: when a country has 100 names or fewer in the database, the game doesn't use its own: it takes the name from a reference country of the same language (for example, from Spain for Spanish-speaking ones). Some countries have no reference and draw from any country in the world. The list below shows, country by country, where they come from today.
 - **New people**: regens, and also the staff and referees the game creates: they all go through the same name rule.
 
 ### New people's names — `regen_names`
 
-The nation's own: regens (and new staff and referees) get names from their own country whenever the database has enough of them (the minimum below). Original: the game only uses a country's names when it has more than 100; with fewer, it borrows from another country of the same language or from any country in the world, which is where regens with names from other nations come from. In the October 2026 data update, 100 of 231 nations still borrow. It applies to people created from then on, in a career already under way too. The names come from the database: nothing is added to the save.
+The nation's own: regens (and new staff and referees) get names from their own country whenever the database has enough of them (the minimum below). Original: the game only uses a country's names when it has more than 100; with fewer, it borrows from another country of the same language or from any country in the world, which is where regens with names from other nations come from. The tab shows, country by country in your database, where the names come from today and what changes. It applies to people created from then on, in a career already under way too. The names come from the database: nothing is added to the save.
 
 Values: `original` (Original (only above 100 names)), `own` (The nation's own). Default: `original`.
 
 ### Own names from — `regen_names_min`
 
-How many of a country's names the database needs for it to use its own. With 20, in the October 2026 data update, 85 of the 100 nations that borrowed start using their own names; with 50, 67. Below the minimum, the original's borrowing stays. It applies separately to first names and surnames.
+How many of a country's names the database needs for it to use its own. The lower it is, the more countries use their own names; the tab's list shows which. Below the minimum, the original's borrowing stays. It applies separately to first names and surnames.
 
 Values: from 1 to 101 (whole number). Default: `20`.
 

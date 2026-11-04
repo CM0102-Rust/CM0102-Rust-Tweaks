@@ -8,6 +8,7 @@ mod cfg;
 mod chaves;
 mod exe;
 mod guia;
+mod nomes;
 
 use cfg::Cfg;
 use chaves::{Aba, Tipo, ABAS, CHAVES, IDADES_PADRAO, PREDEFINICOES};
@@ -134,6 +135,8 @@ struct App {
     pendente: Option<(usize, Vec<(String, String, String)>)>,
     /// A busca no histórico de regens e a confirmação de limpar.
     busca: String,
+    /// Os nomes por nação do banco da pasta (aba Nomes dos regens).
+    nomes: Option<Vec<nomes::Nacao>>,
     limpar: bool,
 }
 
@@ -158,6 +161,7 @@ impl App {
             pendente: None,
             busca: String::new(),
             limpar: false,
+            nomes: None,
         };
         a.abrir_pasta();
         // só para as capturas de tela da documentação: a aba inicial e o idioma
@@ -200,6 +204,7 @@ impl App {
         let preferido = self.exes.iter().find(|p| p.file_name().is_some_and(|n| n.eq_ignore_ascii_case("cm0102.exe"))).or(self.exes.first()).cloned();
         self.exe = preferido.and_then(|p| Exe::abrir(&p));
         self.mensagem.clear();
+        self.nomes = nomes::ler(&self.pasta);
     }
 
     fn valor(&self, nome: &str) -> String {
@@ -910,21 +915,51 @@ impl App {
         self.controle(ui, "regen_names_min", ativo);
         ui.add_space(8.0);
         let en = self.en;
-        App::cartao(ui, &self.t("Quantas nações pegam nomes emprestados", "How many nations borrow names"), |ui| {
-            egui::Grid::new("nomes").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
-                for h in [t2(en, "Banco", "Database"), t2(en, "Nações", "Nations"), t2(en, "Pegam emprestado (original)", "Borrow (original)"), t2(en, "Com mínimo 20", "With minimum 20"), t2(en, "Com mínimo 50", "With minimum 50")] {
-                    ui.label(RichText::new(h).strong());
-                }
-                ui.end_row();
-                for (b, n, o, m20, m50) in [(t2(en, "Update de outubro de 2026", "October 2026 data update"), "231", "100", "15", "33"), ("CLZ 6.1", "231", "108", "15", "30")] {
-                    for c in [b, n, o, m20, m50] {
-                        ui.label(c);
+        let minimo = self.valor("regen_names_min").parse::<f64>().unwrap_or(20.0) as i32;
+        let Some(lista) = &self.nomes else {
+            App::cartao(ui, &self.t("Os países deste jogo", "This game's countries"), |ui| {
+                ui.label(t2(en, "Não achei o banco (a pasta Data com nation.dat, first_names.dat e second_names.dat) na pasta do jogo.",
+                    "I couldn't find the database (the Data folder with nation.dat, first_names.dat and second_names.dat) in the game folder."));
+            });
+            return;
+        };
+        // quem já usa os próprios (mais de 100 nos dois), quem passa a usar com o mínimo, quem continua emprestando
+        let afetadas: Vec<&nomes::Nacao> = lista.iter().filter(|n| n.primeiros <= 100 || n.segundos <= 100).collect();
+        let passam = afetadas.iter().filter(|n| n.primeiros >= minimo && n.segundos >= minimo).count();
+        let sem_nome = afetadas.iter().filter(|n| n.primeiros == 0 && n.segundos == 0).count();
+        let titulo = self.t("Os países deste jogo", "This game's countries");
+        App::cartao(ui, &titulo, |ui| {
+            ui.label(if en {
+                format!("This game's database has {} countries. {} have more than 100 names and already use their own. {} have 100 or fewer and borrow from another country; with the option and a minimum of {}, {} of them use their own. The rest keep borrowing ({} have no names at all).",
+                    lista.len(), lista.len() - afetadas.len(), afetadas.len(), minimo, passam, sem_nome)
+            } else {
+                format!("O banco deste jogo tem {} países. {} têm mais de 100 nomes e já usam os próprios. {} têm 100 ou menos e pegam nomes de outro país; com a opção e o mínimo de {}, {} delas passam a usar os próprios. As outras continuam pegando emprestado ({} não têm nome nenhum).",
+                    lista.len(), lista.len() - afetadas.len(), afetadas.len(), minimo, passam, sem_nome)
+            });
+            ui.add_space(6.0);
+            egui::ScrollArea::both().max_height(380.0).show(ui, |ui| {
+                egui::Grid::new("nomes").striped(true).spacing([12.0, 3.0]).show(ui, |ui| {
+                    for h in [t2(en, "País", "Country"), t2(en, "Nomes", "Names"), t2(en, "Sobrenomes", "Surnames"), t2(en, "Hoje vêm", "Today from"), t2(en, "Com a opção", "With the option")] {
+                        ui.label(RichText::new(h).strong());
                     }
                     ui.end_row();
-                }
+                    for n in &afetadas {
+                        let proprios = n.primeiros >= minimo && n.segundos >= minimo;
+                        ui.label(&n.nome);
+                        ui.label(n.primeiros.to_string());
+                        ui.label(n.segundos.to_string());
+                        ui.label(RichText::new(nomes::de_onde(n, en)).color(AMARELO));
+                        ui.label(if proprios {
+                            RichText::new(t2(en, "os próprios", "its own")).color(if ativo { VERDE } else { CINZA })
+                        } else if n.grupo == 0 {
+                            RichText::new(t2(en, "qualquer país (tabela certa)", "any country (right table)")).color(CINZA)
+                        } else {
+                            RichText::new(t2(en, "igual (poucos nomes)", "the same (too few names)")).color(CINZA)
+                        });
+                        ui.end_row();
+                    }
+                });
             });
-            ui.label(RichText::new(t2(en, "As que ainda emprestam com o mínimo são as que têm menos nomes no banco; 11 delas são nações extintas ou duplicadas, sem nome nenhum (União Soviética, Iugoslávia, Zaire...).",
-                "Those still borrowing with the minimum are the ones with the fewest names in the database; 11 of them are defunct or duplicate nations with no names at all (Soviet Union, Yugoslavia, Zaire...).")).size(11.5).color(CINZA));
         });
     }
 
