@@ -199,6 +199,14 @@ Aí os primeiros regens depois da carga podem sair com o dono **desconhecido**, 
 
 **Quando o `.regens` é velho.** Se o save foi regravado com o registro desligado (ou por outra DLL), ou se um `.regens` de outro save foi posto ao lado dele, o arquivo não é daquela gravação. Como o jogo reaproveita o número da ficha quando um regen se aposenta, usá-lo daria donos errados. Por isso o `.regens` leva a lista das fichas da reserva na hora da gravação, e a DLL só o aceita se a reserva do save carregado for idêntica; senão, ignora o arquivo e avisa no log (e os donos ficam como no caso de faltar o arquivo).
 
+**Quando a base tem a linha `ARSE` no `player_setup.cfg`.** O jogo marca o regen jogador com um bit no registro da pessoa (o bit 0x40 do byte +0xb, no general.dat do save), e normalmente só a rotina que cria o regen liga esse bit. A linha `ARSE` do `player_setup.cfg` liga esse bit em **todas** as pessoas, na criação da carreira, e ele fica gravado no save para sempre: todo mundo passa a parecer regen. Nem o `player_setup.cfg` de fábrica nem o do CLZ têm essa linha; só uma base modificada. Nessa carreira:
+- o `regen_origins.csv` continua certo: ele anota cada regen na hora em que o jogo o cria, sem olhar o bit;
+- o `tools/conferir_origens.py` não acusa um regen que falte no save (para ele, todos são regens);
+- a contagem de regens da linha `season` do `tweaks.log` conta todo mundo;
+- o `season_cap` (o teto de jovens por clube por ano), **depois de carregar um save**, conta como regen todo jogador que entrou no clube nos últimos 365 dias: um clube que contratou 2 ou mais no ano sai da disputa até a DLL refazer a própria lista. Para evitar, use `season_cap = 0` nessa base.
+
+Os editores que filtram "só regens" pelo mesmo bit também ficam inúteis nessa carreira.
+
 **Quando o registro não liga.** Se algum ponto do exe que ele usa difere do 3.9.68 (outro patch ali), o registro não liga, e o `tweaks.log` diz onde: um registro pela metade daria donos errados.
 
 ## A calibração (simulador, `TesteTelas.sav`, 200 temporadas)

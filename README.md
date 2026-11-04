@@ -199,6 +199,14 @@ Then the first regens after loading may show an **unknown** owner, never a wrong
 
 **When the `.regens` is stale.** If the save was re-saved with recording off (or by another DLL), or a `.regens` from another save was put next to it, the file isn't from that save. Since the game reuses a record's number when a regen retires, using it would give wrong owners. So the `.regens` carries the list of the pool's records at save time, and the DLL only accepts it if the loaded save's pool is identical; otherwise it ignores the file and says so in the log (and the owners stay as when the file is missing).
 
+**When the database has the `ARSE` line in `player_setup.cfg`.** The game marks a regen player with a bit in the person's record (bit 0x40 of byte +0xb, in the save's general.dat), and normally only the routine that creates the regen sets it. The `ARSE` line in `player_setup.cfg` sets that bit on **every** person when the career is created, and it stays in the save for good: everyone looks like a regen. Neither the factory `player_setup.cfg` nor CLZ's has that line; only a modified database does. In that career:
+- `regen_origins.csv` stays right: it records each regen when the game creates it, without looking at the bit;
+- `tools/conferir_origens.py` doesn't flag a regen missing from the save (to it, everyone is a regen);
+- the regen count in the `season` line of `tweaks.log` counts everyone;
+- `season_cap` (the cap of youngsters per club per year), **after loading a save**, counts as a regen every player who joined the club in the last 365 days: a club that signed 2 or more in the year leaves the contest until the DLL rebuilds its own list. To avoid that, use `season_cap = 0` on that database.
+
+Editors that filter "regens only" by the same bit are useless in that career too.
+
 **When recording doesn't turn on.** If any place in the exe it uses differs from 3.9.68 (another patch there), recording doesn't turn on, and `tweaks.log` says where: half a record would give wrong owners.
 
 ## Calibration (simulator, `TesteTelas.sav`, 200 seasons)
