@@ -89,6 +89,12 @@ unsafe fn nacoes_chave() -> Vec<usize> {
 unsafe extern "thiscall" fn fim_da_temporada(this: usize, entrada: usize) {
     let original: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59cdd0usize);
     original(this, entrada);
+    // a mesma conferência do começo da 0x59cdd0 (0x456770: a data de início, 8 bytes por valor, depois de hoje?): na
+    // preparação da carreira o laço passa por todas as nações, e o original não fecha temporada nenhuma
+    let depois_de_hoje: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x456770usize);
+    if depois_de_hoje(0xae2c90, d(0xdd6ec8), d(0xdd6ecc)) != 0 {
+        return;
+    }
     let nac = d(entrada);
     let pend = &mut *core::ptr::addr_of_mut!(PENDENTES);
     if nac != 0 && !pend.contains(&nac) {

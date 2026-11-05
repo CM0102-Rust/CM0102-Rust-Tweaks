@@ -177,11 +177,12 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
 - **Fixed:** in the first version the spread went past `intake_pa_max` (up to 185 with the maximum at 170); now the maximum is the cap.
 - **`intake_squad_max = 40`** (11/05): average squad ~37 instead of 40; 140 to 160 clubs skipped per year, ~400 regens given per intake. The key does what it says.
 - **`intake_clubs = selected` with a background league** (ARG, to 2004): the intake reached 323 clubs (the 278 playable ones plus Argentina's 45), ~850 per year, no crashes; the 3,000 stock ran out at the 3rd intake. Background clubs receive like the others.
-- **Long career with 20,000** (2001 → 2011, still running on the morning of 11/05): stable to 2007-337, ~780 regens per intake, 15,400 left; average squad 41, 9,500 cumulative regens, 463 with PA ≥ 150. Sleeping people count as free in the statistics (17,000 "free").
+- **Long career with 20,000** (2001 → 2011-201, 8,489 s, 11/05): no crashes, 10 intakes of 730 to 800, 12,400 left. With `intake_squad_max = 50` the average squad grows every year (41.2 in 2006, 44.7 in 2011), and regens with PA ≥ 150 go from 346 to 1,008: hence the suggested default of 40. Sleeping people count as free in the statistics (14,000 to 17,000 "free").
+- **`intake_day = season_end`** (11/05, to 2003): Brazil receives on day 10 (112 clubs, ~335 regens) and England and Italy on day 169 (166 clubs, ~330 to 430), each at the end of its own season. The first version gave an extra intake on the career's first day: during setup the loop goes through every nation; the DLL now makes the same date check as the start of 0x59cdd0 (0x456770) and ignores those passes.
 
 ### 8.4 To do
 
-- Finish the long career (to 2011) and measure time on an idle machine.
+- Measure time on an idle machine (the long career reached 2011 with no crashes).
 - Save and load with Lucas: the save must open with and without the DLL; check the editors.
 - ~~The intake date per nation~~: done (11/05), `intake_day = season_end`. Each key nation's season end goes through `end_season_for_nation` 0x59cdd0 (called at 0x5d5ea2, in the loop over the 35 key nations); the DLL notes the nation and releases it in the day's queue.
 - ~~The configurator tab~~: done (11/05), tab **Intake (experimental)** under Career tweaks, with the 8 keys and help in both languages.

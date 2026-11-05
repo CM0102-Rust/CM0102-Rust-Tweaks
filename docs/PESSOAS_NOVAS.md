@@ -177,11 +177,12 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
 - **Corrigido:** na 1ª versão o espalhamento passava do `intake_pa_max` (chegava a 185 com o máximo em 170); agora o máximo é o teto.
 - **`intake_squad_max = 40`** (05/11): elenco médio ~37 em vez de 40; de 140 a 160 clubes pulados por ano, ~400 regens dados por fornada. A chave faz o que promete.
 - **`intake_clubs = selected` com liga de fundo** (ARG, até 2004): a fornada chegou aos 323 clubes (os 278 das jogáveis e os 45 da Argentina), ~850 por ano, sem quedas; o estoque de 3.000 acabou na 3ª fornada. Os clubes de fundo recebem como os outros.
-- **Carreira longa com 20.000** (2001 → 2011, em curso na manhã de 05/11): estável até 2007-337, ~780 regens por fornada, sobravam 15.400; elenco médio 41, 9.500 regens acumulados, 463 com PA ≥ 150. As adormecidas contam como livres na estatística (17.000 "livres").
+- **Carreira longa com 20.000** (2001 → 2011-201, 8.489 s, 05/11): sem quedas, 10 fornadas de 730 a 800, sobraram 12.400. Com `intake_squad_max = 50` o elenco médio sobe todo ano (41,2 em 2006, 44,7 em 2011), e os regens com PA ≥ 150 vão de 346 a 1.008: por isso o padrão sugerido é 40. As adormecidas contam como livres na estatística (14.000 a 17.000 "livres").
+- **`intake_day = season_end`** (05/11, até 2003): o Brasil recebe no dia 10 (112 clubes, ~335 regens) e a Inglaterra e a Itália no dia 169 (166 clubes, ~330 a 430), cada uma no fim da própria temporada. A 1ª versão dava uma fornada a mais no 1º dia da carreira: na preparação, o laço passa por todas as nações; a DLL agora faz a mesma conferência de data do começo da 0x59cdd0 (0x456770) e ignora essas passagens.
 
 ### 8.4 A fazer
 
-- Fechar a carreira longa (até 2011) e medir o tempo com a máquina livre.
+- Medir o tempo com a máquina livre (a carreira longa chegou a 2011 sem quedas).
 - Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
 - ~~A data da fornada por nação~~: feita (05/11), `intake_day = season_end`. O fim da temporada de cada nação-chave passa pela `end_season_for_nation` 0x59cdd0 (chamada em 0x5d5ea2, no laço das 35 nações-chave); a DLL anota a nação e a solta na fila do dia.
 - ~~A aba do configurador~~: feita (05/11), aba **Fornada (experimental)** em Ajustes da carreira, com as 8 chaves e a ajuda nas duas línguas.
