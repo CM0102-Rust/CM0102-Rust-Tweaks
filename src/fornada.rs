@@ -483,12 +483,36 @@ static mut TESTE_FEITO: bool = false;
 
 /// O começo original de `NewsItem::write_text` (o trampolim).
 static mut ESCREVER: usize = 0;
+/// O começo original de `NewsItem::get_action_button` (o trampolim).
+static mut BOTAO: usize = 0;
+
+/// A notícia é a nossa (tipo 0x1388 com as duas marcas)?
+unsafe fn e_nossa(item: usize) -> bool {
+    let vaga = |k: usize| core::ptr::read_unaligned((item + 5 + 4 * k) as *const u32);
+    item != 0 && d(item) == 0x1388 && vaga(2) == MARCA && vaga(20) == MARCA2
+}
+
+/// { 0x782b70 } (thiscall, ret 0x10): `get_action_button(item, técnico, rótulo, tamanho, tela)`, 2 responder, 1 ver,
+/// 0 sem botão. A nossa notícia fica sem botão: o "Responder" da mensagem entre técnicos não tem a quem responder.
+unsafe extern "thiscall" fn botao(item: usize, tecnico: usize, rotulo: *mut u8, tamanho: i32, tela: *mut usize) -> u8 {
+    if e_nossa(item) {
+        if !rotulo.is_null() {
+            *rotulo = 0;
+        }
+        if !tela.is_null() {
+            *tela = 0;
+        }
+        return 0;
+    }
+    let original: unsafe extern "thiscall" fn(usize, usize, *mut u8, i32, *mut usize) -> u8 = core::mem::transmute(BOTAO);
+    original(item, tecnico, rotulo, tamanho, tela)
+}
 
 /// { 0x77bc80 } (thiscall, ret 0x10): `write_text(item, técnico, saída, texto_completo, marca)`. A nossa notícia (tipo
 /// 0x1388 com as duas marcas) ganha o texto completo; as outras seguem para a original.
 unsafe extern "thiscall" fn escrever(item: usize, tecnico: usize, saida: usize, completo: i32, marca: i32) -> i32 {
     let vaga = |k: usize| core::ptr::read_unaligned((item + 5 + 4 * k) as *const u32);
-    if item == 0 || saida == 0 || d(item) != 0x1388 || vaga(2) != MARCA || vaga(20) != MARCA2 {
+    if saida == 0 || !e_nossa(item) {
         let original: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32) -> i32 = core::mem::transmute(ESCREVER);
         return original(item, tecnico, saida, completo, marca);
     }
@@ -622,7 +646,14 @@ pub unsafe fn instalar() -> bool {
         // a mensagem: o escritor das notícias desviado na entrada (push -1; mov eax, fs:[0])
         if cfg().mensagem {
             match crate::origem::trampolim(0x77bc80, &[0x6a, 0xff, 0x64, 0xa1, 0, 0, 0, 0], escrever as *const () as usize) {
-                Some(t) => ESCREVER = t,
+                Some(t) => {
+                    ESCREVER = t;
+                    // o botão: mov eax, fs:[0]
+                    match crate::origem::trampolim(0x782b70, &[0x64, 0xa1, 0, 0, 0, 0], botao as *const () as usize) {
+                        Some(t) => BOTAO = t,
+                        None => registro::linha("intake: the news button routine at 0x782b70 isn't the 3.9.68 one; the message keeps the Reply button"),
+                    }
+                }
                 None => {
                     F.mensagem = false;
                     registro::linha("intake: the news writer at 0x77bc80 isn't the 3.9.68 one; no inbox message");
