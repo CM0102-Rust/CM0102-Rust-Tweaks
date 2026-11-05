@@ -1,6 +1,6 @@
 [package]
 name = "cm0102-rust-tweaks"
-version = "1.2.0"
+version = "1.3.0"
 edition = "2021"
 description = "CM0102-Rust-Tweaks: ajustes do CM 01/02 3.9.68 numa ddraw.dll repassadora (save acima de 2 GB, idade e distribuicao dos regens)"
 publish = false
