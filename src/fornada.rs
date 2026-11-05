@@ -17,6 +17,12 @@
 //!    nascimentos (0x7a65f0..0x7a66b7) não anda e a outra metade da 0x7a65d0 (a reposição dos não jogadores, +0x1c/+0x20)
 //!    segue normal. Os jogadores aposentados que esperam na fila, com a ficha ainda na reserva, viram estoque da fornada
 //!    (usados antes do estoque criado): saem da fila e a ficha sai da reserva, para ninguém mais herdar a mesma ficha.
+//! 6. **A mensagem** (`intake_news = 1`): o clube de técnico humano recebe na caixa de entrada uma notícia do próprio jogo
+//!    com os jovens que chegaram e o parecer de cada um (o nível de agora comparado com o elenco e o potencial, em faixas;
+//!    os números só com `intake_news_numbers = 1`). É uma mensagem entre técnicos (tipo 0x1388, a do jogo em rede): sem a
+//!    DLL, o jogo mostra o texto curto guardado nas vagas dela (a partir da vaga 3); com a DLL, o escritor das notícias
+//!    (`NewsItem::write_text` 0x77bc80, desviado na entrada) escreve o texto completo na língua do jogo (português,
+//!    espanhol, senão inglês). Os dados ficam nas vagas da notícia, que o save já guarda (news.dat).
 
 use crate::{d, registro, sorteio, w};
 
@@ -34,9 +40,13 @@ pub struct Fornada {
     pub elenco_max: i32,
     /// `intake_only = 1`: os regens jogadores só nascem na fornada (a fila do jogo para de criá-los)
     pub so_fornada: bool,
+    /// `intake_news`: a mensagem na caixa de entrada do técnico humano
+    pub mensagem: bool,
+    /// `intake_news_numbers`: o CA e o PA na mensagem, além das faixas
+    pub numeros: bool,
 }
 
-pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true };
+pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true, mensagem: true, numeros: false };
 
 unsafe fn cfg() -> &'static Fornada {
     &*core::ptr::addr_of!(F)
@@ -44,7 +54,7 @@ unsafe fn cfg() -> &'static Fornada {
 
 /// As chaves `intake_*` do tweaks.cfg.
 pub fn ler() -> Fornada {
-    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true };
+    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true, mensagem: true, numeros: false };
     let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return f };
     for linha in texto.lines() {
@@ -69,6 +79,8 @@ pub fn ler() -> Fornada {
             "intake_pa_spread" => f.pa_espalhar = x.clamp(0, 200),
             "intake_squad_max" => f.elenco_max = x.clamp(1, 50),
             "intake_only" => f.so_fornada = x != 0,
+            "intake_news" => f.mensagem = x != 0,
+            "intake_news_numbers" => f.numeros = x != 0,
             _ => {}
         }
     }
@@ -224,6 +236,7 @@ unsafe fn elenco(clube: usize) -> usize {
 }
 
 unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
+    TESTE_FEITO = false;
     let mut estoque = adormecidos(this);
     let (pessoas, n) = (d(0xae23bc), d(0xae2364));
     // os moldes: jogadores reais (com ficha, não aposentados, não humanos) por nação
@@ -244,18 +257,24 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         })
         .collect();
     let (mut dados, mut cheios, mut sem_molde, mut falhas, mut da_fila) = (0, 0, 0, 0, 0);
-    'clubes: for &c in &clubes {
+    for &c in &clubes {
+        let nivel = nivel_do_elenco(c);
+        let mut chegaram = Vec::new();
+        let mut acabou = false;
         for _ in 0..cfg().por_clube {
             if elenco(c) >= cfg().elenco_max as usize {
                 cheios += 1;
-                continue 'clubes;
+                break;
             }
-            let Some(p) = estoque.pop() else { break 'clubes };
+            let Some(p) = estoque.pop() else {
+                acabou = true;
+                break;
+            };
             let nac = d(c + 0x53);
             let Some(lista) = moldes.get(&nac).filter(|l| !l.is_empty()) else {
                 sem_molde += 1;
                 estoque.push(p);
-                continue 'clubes;
+                break;
             };
             let molde = d(lista[sorteio(lista.len() as i32) as usize] + 0x61);
             let ficha = d(p + 0x61);
@@ -286,6 +305,7 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             }
             if d(p + 0x39) == c {
                 dados += 1;
+                chegaram.push(p);
             } else {
                 falhas += 1;
             }
@@ -294,12 +314,242 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             registro::linha(&format!("intake-regen	{}	{}	{}	{}	{}/{}/{}/{}	{}", crate::data_do_jogo(), crate::b(p + 0x18), w(f + 7), w(f + 5),
                 crate::b(f + 0xf), crate::b(f + 0x11), crate::b(f + 0x13), crate::b(f + 0x15), if d(p + 0x39) != 0 { crate::nome(d(p + 0x39)) } else { String::new() }));
         }
+        if cfg().mensagem && !chegaram.is_empty() {
+            avisar(c, nivel, &chegaram);
+        }
+        if acabou {
+            break;
+        }
     }
     if clubes.is_empty() {
         return;
     }
     registro::linha(&format!("intake\t{}\tclubs {}\tgiven {}\tfull {}\tno template {}\tleft without the club {}\tstock left {}\tfrom the queue {}",
         crate::data_do_jogo(), clubes.len(), dados, cheios, sem_molde, falhas, estoque.len(), da_fila));
+}
+
+// ---- A mensagem na caixa de entrada ----
+
+/// Vaga 2 da notícia (a resposta citada na mensagem entre técnicos; nenhuma notícia tem esse id) e vaga 20: a marca.
+const MARCA: u32 = 0x4e524f46; // "FORN"
+const MARCA2: u32 = 0x4b544e49; // "INTK"
+/// Vagas da notícia: 3..19 o texto curto (sem a DLL), 20 a marca, 21 quantos, 22.. dois por jovem (id e o parecer).
+const MAX_NA_MENSAGEM: usize = 14;
+
+/// O nível do elenco: a média do CA dos 11 melhores (ponteiros em +0xd7, 50 vagas; a ficha em +0x61, CA em +5).
+unsafe fn nivel_do_elenco(clube: usize) -> i32 {
+    let mut cas: Vec<i32> = (0..50).map(|k| d(clube + 0xd7 + 4 * k)).filter(|&p| p != 0 && d(p + 0x61) != 0)
+        .map(|p| w(d(p + 0x61) + 5) as i16 as i32).collect();
+    cas.sort_unstable_by(|a, b| b.cmp(a));
+    cas.truncate(11);
+    if cas.is_empty() { 0 } else { cas.iter().sum::<i32>() / cas.len() as i32 }
+}
+
+/// Faixa do nível de agora (0 pronto .. 3 cru), pela distância à média do elenco.
+fn faixa_ca(ca: i32, nivel: i32) -> u32 {
+    match ca - nivel {
+        x if x >= -5 => 0,
+        x if x >= -20 => 1,
+        x if x >= -40 => 2,
+        _ => 3,
+    }
+}
+
+/// Faixa do potencial (0 dos melhores do mundo .. 4 divisões de baixo).
+fn faixa_pa(pa: i32) -> u32 {
+    match pa {
+        x if x >= 170 => 0,
+        x if x >= 150 => 1,
+        x if x >= 130 => 2,
+        x if x >= 100 => 3,
+        _ => 4,
+    }
+}
+
+/// 0 inglês, 1 português, 2 espanhol: a língua do jogo (`langlib`, [0x9eb2dc]; os códigos em 0x9eb244).
+unsafe fn lingua() -> usize {
+    let i = d(0x9eb2dc) as i32;
+    if !(0..19).contains(&i) {
+        return 0;
+    }
+    let p = d(0x9eb244 + 4 * i as usize);
+    let c: Vec<u8> = (0..8).map(|k| *((p + k) as *const u8)).take_while(|&c| c != 0).collect();
+    match &c[..] {
+        b"POR" | b"POR_BRA" => 1,
+        b"ESP" | b"ESP_MEX" => 2,
+        _ => 0,
+    }
+}
+
+/// Texto em Latin-1 (o do jogo).
+fn latin1(s: &str) -> Vec<u8> {
+    s.chars().map(|c| if (c as u32) < 256 { c as u8 } else { b'?' }).collect()
+}
+
+/// O nome da pessoa como o jogo escreve (`database_format_staff_name` 0x53dba0, estilo 1).
+unsafe fn nome_da_pessoa(p: usize) -> Vec<u8> {
+    let mut buf = [0u8; 128];
+    let f: unsafe extern "C" fn(usize, *mut u8, i16, i8) = core::mem::transmute(0x53dba0usize);
+    f(p, buf.as_mut_ptr(), 120, 1);
+    buf.iter().copied().take_while(|&c| c != 0).collect()
+}
+
+/// A posição pela ficha (goleiro +0xf, defesa +0x11, meia +0x13, atacante +0x15; a maior).
+unsafe fn posicao(p: usize) -> usize {
+    let f = d(p + 0x61);
+    [0xf, 0x11, 0x13, 0x15].iter().enumerate().max_by_key(|&(_, &o)| crate::b(f + o)).map(|(i, _)| i).unwrap_or(2)
+}
+
+const POSICOES: [[&str; 4]; 3] = [["goalkeeper", "defender", "midfielder", "forward"], ["goleiro", "zagueiro", "meio-campista", "atacante"], ["portero", "defensa", "centrocampista", "delantero"]];
+const FAIXAS_CA: [[&str; 4]; 3] = [
+    ["is already ready for the first team", "could get chances in the first team soon", "needs a year or two in the youth team", "is still very raw and will take time"],
+    ["já está pronto para o time principal", "pode ganhar chances no time principal em breve", "precisa de um ou dois anos na base", "ainda está muito cru, vai levar tempo"],
+    ["ya está listo para el primer equipo", "puede tener oportunidades en el primer equipo pronto", "necesita uno o dos años en las inferiores", "todavía está muy verde, llevará tiempo"],
+];
+const FAIXAS_PA: [[&str; 5]; 3] = [
+    ["could become one of the best in the world", "has the potential to play for his country", "could be a regular at a big club", "should make a career in the top flight", "is unlikely to go beyond the lower divisions"],
+    ["pode virar um dos melhores do mundo", "tem potencial para a seleção", "pode ser titular de um clube grande", "deve fazer carreira na primeira divisão", "dificilmente passará das divisões de baixo"],
+    ["puede llegar a ser uno de los mejores del mundo", "tiene potencial para la selección", "puede ser titular en un club grande", "debería hacer carrera en primera división", "difícilmente pasará de las divisiones inferiores"],
+];
+
+/// O texto curto, guardado na notícia na língua do dia (o que o jogo mostra sem a DLL; até 67 bytes).
+fn texto_curto(l: usize, n: usize) -> String {
+    match l {
+        1 => format!("Fornada: {} jovens chegaram da base.", n),
+        2 => format!("Hornada: {} juveniles llegaron de la cantera.", n),
+        _ => format!("Youth intake: {} youngsters joined from the youth team.", n),
+    }
+}
+
+/// Posta a notícia: `NewsItem::NewsItem` 0x77bbe0 (tipo 0x1388, importante), as vagas, e
+/// `News::send_to_club_manager` 0x7861e0, que só entrega a técnico humano.
+unsafe fn avisar(clube: usize, nivel: i32, jovens: &[usize]) {
+    let mut tecnico = d(clube + 0xcf);
+    let humano = |t: usize| t != 0 && d(t) >= d(0xae2364).saturating_sub(16);
+    // teste na bancada (TWEAKS_INTAKE_NEWS_TEST=1, carreira automática sem clube): a 1ª mensagem de cada fornada vai
+    // para o técnico humano da tela ([0xb74c26]) e o texto escrito pelo desvio vai para o registro
+    let teste = !humano(tecnico) && std::env::var("TWEAKS_INTAKE_NEWS_TEST").is_ok() && !TESTE_FEITO && humano(d(0xb74c26));
+    if teste {
+        tecnico = d(0xb74c26);
+        TESTE_FEITO = true;
+    }
+    if !humano(tecnico) || d(0xb7431c) == 0 {
+        return;
+    }
+    let mut item = [0u8; 0xe0];
+    let item_p = item.as_mut_ptr() as usize;
+    let novo: unsafe extern "thiscall" fn(usize, i32, i32) -> usize = core::mem::transmute(0x77bbe0usize);
+    novo(item_p, 0x1388, 1);
+    let vaga = |k: usize, v: u32| core::ptr::write_unaligned((item_p + 5 + 4 * k) as *mut u32, v);
+    vaga(0, d(tecnico) as u32); // quem manda: o próprio técnico (o título sem a DLL)
+    vaga(1, 1); // particular
+    vaga(2, MARCA);
+    let mut curto = latin1(&texto_curto(lingua(), jovens.len()));
+    curto.truncate(67);
+    core::ptr::copy_nonoverlapping(curto.as_ptr(), (item_p + 5 + 4 * 3) as *mut u8, curto.len());
+    vaga(20, MARCA2);
+    let n = jovens.len().min(MAX_NA_MENSAGEM);
+    vaga(21, n as u32);
+    for (i, &p) in jovens.iter().take(n).enumerate() {
+        let f = d(p + 0x61);
+        let (ca, pa) = (w(f + 5) as i16 as i32, w(f + 7) as i16 as i32);
+        vaga(22 + 2 * i, d(p) as u32);
+        vaga(23 + 2 * i, (ca.clamp(0, 255) as u32) | ((pa.clamp(0, 255) as u32) << 8) | (faixa_ca(ca, nivel) << 16) | (faixa_pa(pa) << 24));
+    }
+    if teste {
+        let entregar: unsafe extern "thiscall" fn(usize, usize, usize, i32) -> i32 = core::mem::transmute(0x785d40usize);
+        let r = entregar(d(0xb7431c), item_p, tecnico, 0);
+        for completo in [0, 1] {
+            let mut t = [0usize; 8];
+            let texto: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4ae590usize);
+            texto(t.as_mut_ptr() as usize, 0);
+            let escrever_texto: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32) -> i32 = core::mem::transmute(0x77bc80usize);
+            escrever_texto(item_p, tecnico, t.as_mut_ptr() as usize, completo, 1);
+            let c = t[0];
+            let lido: String = if c == 0 { String::new() } else { (0..4000).map(|k| *((c + k) as *const u8)).take_while(|&x| x != 0).map(|x| if x == b'\n' { '|' } else { x as char }).collect() };
+            registro::linha(&format!("intake-news-test	delivered {}	{}	{}", r, if completo == 0 { "title" } else { "body" }, lido));
+            let limpar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4afa40usize);
+            limpar(t.as_mut_ptr() as usize);
+        }
+    } else {
+        let enviar: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x7861e0usize);
+        enviar(d(0xb7431c), item_p, clube);
+    }
+    registro::linha(&format!("intake-news	{}	{}	{} youngsters", crate::data_do_jogo(), crate::nome(clube), jovens.len()));
+}
+
+/// O teste da mensagem já rodou nesta fornada.
+static mut TESTE_FEITO: bool = false;
+
+/// O começo original de `NewsItem::write_text` (o trampolim).
+static mut ESCREVER: usize = 0;
+
+/// { 0x77bc80 } (thiscall, ret 0x10): `write_text(item, técnico, saída, texto_completo, marca)`. A nossa notícia (tipo
+/// 0x1388 com as duas marcas) ganha o texto completo; as outras seguem para a original.
+unsafe extern "thiscall" fn escrever(item: usize, tecnico: usize, saida: usize, completo: i32, marca: i32) -> i32 {
+    let vaga = |k: usize| core::ptr::read_unaligned((item + 5 + 4 * k) as *const u32);
+    if item == 0 || saida == 0 || d(item) != 0x1388 || vaga(2) != MARCA || vaga(20) != MARCA2 {
+        let original: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32) -> i32 = core::mem::transmute(ESCREVER);
+        return original(item, tecnico, saida, completo, marca);
+    }
+    let l = lingua();
+    let n = (vaga(21) as usize).min(MAX_NA_MENSAGEM);
+    let (pessoas, total) = (d(0xae23bc), d(0xae2364));
+    let mut s: Vec<u8> = Vec::new();
+    let mut links: Vec<(Vec<u8>, usize)> = Vec::new();
+    if completo == 0 {
+        s = latin1(&match l {
+            1 => format!("Fornada da base: {} jovens chegaram", n),
+            2 => format!("Hornada de juveniles: llegaron {} jóvenes", n),
+            _ => format!("Youth intake: {} youngsters have arrived", n),
+        });
+    } else {
+        s.extend(latin1(match l {
+            1 => "O treinador da base apresentou os jovens que sobem para o elenco nesta fornada:",
+            2 => "El entrenador de las inferiores presentó a los jóvenes que suben a la plantilla en esta hornada:",
+            _ => "The youth coach has presented the youngsters joining the squad in this intake:",
+        }));
+        for i in 0..n {
+            let id = vaga(22 + 2 * i) as usize;
+            let parecer = vaga(23 + 2 * i);
+            if id >= total {
+                continue;
+            }
+            let p = pessoas + 110 * id;
+            let nome = nome_da_pessoa(p);
+            s.extend(b"\n\n");
+            s.extend(&nome);
+            let idade = crate::b(p + 0x18);
+            s.extend(latin1(&match l {
+                1 => format!(" ({} anos, {}): ", idade, POSICOES[1][posicao(p)]),
+                2 => format!(" ({} años, {}): ", idade, POSICOES[2][posicao(p)]),
+                _ => format!(" ({}, {}): ", idade, POSICOES[0][posicao(p)]),
+            }));
+            let (fca, fpa) = (((parecer >> 16) & 0xff).min(3) as usize, ((parecer >> 24) & 0xff).min(4) as usize);
+            let junta = match l { 1 => " e ", 2 => " y ", _ => " and " };
+            s.extend(latin1(FAIXAS_CA[l][fca]));
+            s.extend(latin1(junta));
+            s.extend(latin1(FAIXAS_PA[l][fpa]));
+            s.push(b'.');
+            if cfg().numeros {
+                s.extend(latin1(&format!(" (CA {}, PA {})", parecer & 0xff, (parecer >> 8) & 0xff)));
+            }
+            if !nome.is_empty() {
+                links.push((nome, p));
+            }
+        }
+    }
+    s.push(0);
+    let limpar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4afa40usize);
+    let por_texto: unsafe extern "thiscall" fn(usize, *const u8) -> i32 = core::mem::transmute(0x4ae660usize);
+    let ligar: unsafe extern "thiscall" fn(usize, *const u8, i32, usize) -> i32 = core::mem::transmute(0x4ae8a0usize);
+    limpar(saida);
+    por_texto(saida, s.as_ptr());
+    for (mut nome, p) in links {
+        nome.push(0);
+        ligar(saida, nome.as_ptr(), 0x7d8, p); // 0x7d8: o link de pessoa, como nas notícias de contrato
+    }
+    1
 }
 
 /// A entrada {ficha, nação, 0, −1} na frente da reserva de fichas (+0x3c ponteiro, +0x40 quantidade, +0x44 capacidade),
@@ -368,6 +618,16 @@ pub unsafe fn instalar() -> bool {
         trocar_call(0x7acea2, disputa as *const () as usize);
         if cfg().por_temporada {
             trocar_call(0x5d5ea2, fim_da_temporada as *const () as usize);
+        }
+        // a mensagem: o escritor das notícias desviado na entrada (push -1; mov eax, fs:[0])
+        if cfg().mensagem {
+            match crate::origem::trampolim(0x77bc80, &[0x6a, 0xff, 0x64, 0xa1, 0, 0, 0, 0], escrever as *const () as usize) {
+                Some(t) => ESCREVER = t,
+                None => {
+                    F.mensagem = false;
+                    registro::linha("intake: the news writer at 0x77bc80 isn't the 3.9.68 one; no inbox message");
+                }
+            }
         }
     }
     if ok {

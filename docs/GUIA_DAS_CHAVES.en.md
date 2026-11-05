@@ -320,6 +320,18 @@ Only from the intake: the game stops creating youth regens through the season; t
 
 Values: `1` (Only from the intake), `0` (Intake plus the game's regens). Default: `1`.
 
+### Intake message — `intake_news`
+
+On intake day your club gets an inbox message from the youth coach with the youngsters who arrived and his view of each one: whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language (Portuguese, Spanish; English for the others). Without the DLL the save still opens and the message shows as one short line.
+
+Values: `1` (Inbox message), `0` (No message). Default: `1`.
+
+### In the message — `intake_news_numbers`
+
+Also show each youngster's CA and PA in the message. Off, there's only the coach's view, and the fun is finding out about the player.
+
+Values: `0` (Only the coach's view), `1` (View, CA and PA). Default: `0`.
+
 ## Regen origins
 
 Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.

@@ -320,6 +320,18 @@ Só pela fornada: o jogo para de criar regens jogadores ao longo da temporada; e
 
 Valores: `1` (Só pela fornada), `0` (Fornada e os regens do jogo). Padrão: `1`.
 
+### Mensagem da fornada — `intake_news`
+
+No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com os jovens que chegaram e o parecer sobre cada um: se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo (português, espanhol; nas outras, inglês). Sem a DLL, o save continua abrindo e a mensagem aparece numa linha curta.
+
+Valores: `1` (Mensagem na caixa de entrada), `0` (Sem mensagem). Padrão: `1`.
+
+### Na mensagem — `intake_news_numbers`
+
+Mostrar também o CA e o PA de cada jovem na mensagem. Desligado, fica só o parecer do treinador, e a graça é descobrir o jogador.
+
+Valores: `0` (Só o parecer do treinador), `1` (Parecer, CA e PA). Padrão: `0`.
+
 ## De quem é cada regen
 
 De quem é cada regen. O jogo não guarda isso em lugar nenhum: com a opção ligada, a DLL anota cada regen que nasce, de quem ele herdou a vaga e de quem herdou a ficha de jogador, num arquivo regen_origins.csv ao lado do exe. Aqui você busca nesse histórico.
