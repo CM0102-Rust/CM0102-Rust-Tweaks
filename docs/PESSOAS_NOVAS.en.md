@@ -136,6 +136,7 @@ The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the r
 | `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
 | `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
+| `intake_squad_max` | 50 | a club with this many in the squad is skipped in that year's intake |
 
 ### 8.2 How it works
 
@@ -166,13 +167,19 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
   - 15 to 20 years old (mode 17);
   - median PA 102, median CA 54;
   - positions: M 37%, D 31%, A 23%, GK 8%.
-- **No time cost:** 3,000 more people didn't change the career's time. A first comparison showed the intake 75% slower, but the control had run later, on an idle machine; in parallel, the time is the same.
+- **No measurable time cost:** 3,000 more people didn't change the career's time. A first comparison showed the intake 75% slower, but the control had run later, on an idle machine; in parallel, the time is the same.
+- **A stock of 20,000** (two careers to 2006, 11/05):
+  - created in full (headroom of 120,400 people) and put to sleep;
+  - 5 intakes of ~750, no crashes, and 16,200 left;
+  - 39,300 players against the control's 19,300.
+- **Bench time is noise:** with the other sessions' batches running alongside, the same setup ranged from 2,692 to 3,523 s (control) and from 3,043 to 4,484 s (20,000). No cost stands out from that noise.
+- **Taking the record away from the dormant person until the release** (`+0x61 = 0`, an experiment to keep it out of the free-player scans) gained no time and was dropped: it would mean rebuilding the person ↔ record pair on every load.
 - **Fixed:** in the first version the spread went past `intake_pa_max` (up to 185 with the maximum at 170); now the maximum is the cap.
 
 ### 8.4 To do
 
-- A large stock (20,000) and a long career: headroom, stability, time.
+- A long career (10 seasons or more) with a large stock; time measured on an idle machine.
 - Save and load with Lucas: the save must open with and without the DLL; check the editors.
 - The intake date per nation (each league's season end) instead of a fixed day.
 - The configurator tab for the `intake_*` keys.
-- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. Consider whether the intake should release players or skip clubs above a configurable limit.
+- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` skips clubs above the limit; its effect is still to be measured.

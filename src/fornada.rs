@@ -21,9 +21,11 @@ pub struct Fornada {
     pub pa_min: i32,
     pub pa_max: i32,
     pub pa_espalhar: i32,
+    /// clube com este tanto no elenco fica de fora da fornada (o elenco tem 50 vagas)
+    pub elenco_max: i32,
 }
 
-pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30 };
+pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
 
 unsafe fn cfg() -> &'static Fornada {
     &*core::ptr::addr_of!(F)
@@ -31,7 +33,7 @@ unsafe fn cfg() -> &'static Fornada {
 
 /// As chaves `intake_*` do tweaks.cfg.
 pub fn ler() -> Fornada {
-    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30 };
+    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
     let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return f };
     for linha in texto.lines() {
@@ -50,6 +52,7 @@ pub fn ler() -> Fornada {
             "intake_pa_min" => f.pa_min = x.clamp(1, 200),
             "intake_pa_max" => f.pa_max = x.clamp(1, 200),
             "intake_pa_spread" => f.pa_espalhar = x.clamp(0, 200),
+            "intake_squad_max" => f.elenco_max = x.clamp(1, 50),
             _ => {}
         }
     }
@@ -162,7 +165,7 @@ unsafe fn soltar(this: usize) {
     let (mut dados, mut cheios, mut sem_molde, mut falhas) = (0, 0, 0, 0);
     'clubes: for &c in &clubes {
         for _ in 0..cfg().por_clube {
-            if elenco(c) >= 50 {
+            if elenco(c) >= cfg().elenco_max as usize {
                 cheios += 1;
                 continue 'clubes;
             }
@@ -275,8 +278,8 @@ pub unsafe fn instalar() -> bool {
         trocar_call(0x7acea2, disputa as *const () as usize);
     }
     if ok {
-        registro::linha(&format!("intake (EXPERIMENTAL): on (stock {}, {} per club on day {}, {} clubs, PA {}..{} by reputation, spread {})",
-            cfg().estoque, cfg().por_clube, cfg().dia, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }, cfg().pa_min, cfg().pa_max, cfg().pa_espalhar));
+        registro::linha(&format!("intake (EXPERIMENTAL): on (stock {}, {} per club on day {}, {} clubs, PA {}..{} by reputation, spread {}, squads up to {})",
+            cfg().estoque, cfg().por_clube, cfg().dia, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }, cfg().pa_min, cfg().pa_max, cfg().pa_espalhar, cfg().elenco_max));
     }
     ok
 }

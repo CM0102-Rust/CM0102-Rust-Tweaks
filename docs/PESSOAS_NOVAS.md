@@ -136,6 +136,7 @@ O código está na branch `fornada` (`src/fornada.rs`), fora do `main` e da vers
 | `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo |
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | o PA vai do mínimo (clube de reputação 0) ao máximo (reputação 10.000) |
 | `intake_pa_spread` | 30 | sorteio em volta do PA do clube; o resultado fica entre o mínimo e o máximo |
+| `intake_squad_max` | 50 | clube com esse tanto no elenco fica de fora da fornada daquele ano |
 
 ### 8.2 Como funciona
 
@@ -166,13 +167,19 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
   - 15 a 20 anos (moda 17);
   - PA mediano 102, CA mediano 54;
   - posições: M 37%, D 31%, A 23%, G 8%.
-- **Sem custo de tempo:** 3.000 pessoas a mais não mudaram o tempo da carreira. Uma 1ª comparação mostrou a fornada 75% mais lenta, mas o controle tinha rodado depois, com a máquina livre; em paralelo, o tempo é o mesmo.
+- **Sem custo de tempo mensurável:** 3.000 pessoas a mais não mudaram o tempo da carreira. Uma 1ª comparação mostrou a fornada 75% mais lenta, mas o controle tinha rodado depois, com a máquina livre; em paralelo, o tempo é o mesmo.
+- **Estoque de 20.000** (duas carreiras até 2006, 05/11):
+  - criado inteiro (folga de 120.400 pessoas) e adormecido;
+  - 5 fornadas de ~750, sem quedas, e sobraram 16.200;
+  - 39.300 jogadores contra 19.300 do controle.
+- **O tempo na bancada é ruído:** com as levas das outras sessões rodando ao lado, a mesma configuração variou de 2.692 a 3.523 s (controle) e de 3.043 a 4.484 s (20.000). Não há custo que se destaque desse ruído.
+- **Tirar a ficha da adormecida até a soltura** (`+0x61 = 0`, experimento para tirá-la das varreduras de jogadores livres) não ganhou tempo e foi descartado: exigiria refazer o par pessoa ↔ ficha a cada carga.
 - **Corrigido:** na 1ª versão o espalhamento passava do `intake_pa_max` (chegava a 185 com o máximo em 170); agora o máximo é o teto.
 
 ### 8.4 A fazer
 
-- Estoque grande (20 mil) e carreira longa: folga, estabilidade, tempo.
+- Carreira longa (10 temporadas ou mais) com estoque grande; o tempo medido com a máquina livre.
 - Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
 - A data da fornada por nação (fim da temporada de cada liga), em vez de um dia fixo.
 - A aba do configurador para as chaves `intake_*`.
-- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. Avaliar se a fornada deve dispensar ou pular quem passa de um limite configurável.
+- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` pula quem passa do limite; falta medir o efeito.
