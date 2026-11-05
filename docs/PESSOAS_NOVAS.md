@@ -175,11 +175,14 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
 - **O tempo na bancada é ruído:** com as levas das outras sessões rodando ao lado, a mesma configuração variou de 2.692 a 3.523 s (controle) e de 3.043 a 4.484 s (20.000). Não há custo que se destaque desse ruído.
 - **Tirar a ficha da adormecida até a soltura** (`+0x61 = 0`, experimento para tirá-la das varreduras de jogadores livres) não ganhou tempo e foi descartado: exigiria refazer o par pessoa ↔ ficha a cada carga.
 - **Corrigido:** na 1ª versão o espalhamento passava do `intake_pa_max` (chegava a 185 com o máximo em 170); agora o máximo é o teto.
+- **`intake_squad_max = 40`** (05/11): elenco médio ~37 em vez de 40; de 140 a 160 clubes pulados por ano, ~400 regens dados por fornada. A chave faz o que promete.
+- **`intake_clubs = selected` com liga de fundo** (ARG, até 2004): a fornada chegou aos 323 clubes (os 278 das jogáveis e os 45 da Argentina), ~850 por ano, sem quedas; o estoque de 3.000 acabou na 3ª fornada. Os clubes de fundo recebem como os outros.
+- **Carreira longa com 20.000** (2001 → 2011, em curso na manhã de 05/11): estável até 2007-337, ~780 regens por fornada, sobravam 15.400; elenco médio 41, 9.500 regens acumulados, 463 com PA ≥ 150. As adormecidas contam como livres na estatística (17.000 "livres").
 
 ### 8.4 A fazer
 
-- Carreira longa (10 temporadas ou mais) com estoque grande; o tempo medido com a máquina livre.
+- Fechar a carreira longa (até 2011) e medir o tempo com a máquina livre.
 - Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
 - A data da fornada por nação (fim da temporada de cada liga), em vez de um dia fixo.
 - A aba do configurador para as chaves `intake_*`.
-- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` pula quem passa do limite; falta medir o efeito.
+- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` resolve (40 → ~37 médio); falta escolher o padrão.

@@ -175,11 +175,14 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
 - **Bench time is noise:** with the other sessions' batches running alongside, the same setup ranged from 2,692 to 3,523 s (control) and from 3,043 to 4,484 s (20,000). No cost stands out from that noise.
 - **Taking the record away from the dormant person until the release** (`+0x61 = 0`, an experiment to keep it out of the free-player scans) gained no time and was dropped: it would mean rebuilding the person ↔ record pair on every load.
 - **Fixed:** in the first version the spread went past `intake_pa_max` (up to 185 with the maximum at 170); now the maximum is the cap.
+- **`intake_squad_max = 40`** (11/05): average squad ~37 instead of 40; 140 to 160 clubs skipped per year, ~400 regens given per intake. The key does what it says.
+- **`intake_clubs = selected` with a background league** (ARG, to 2004): the intake reached 323 clubs (the 278 playable ones plus Argentina's 45), ~850 per year, no crashes; the 3,000 stock ran out at the 3rd intake. Background clubs receive like the others.
+- **Long career with 20,000** (2001 → 2011, still running on the morning of 11/05): stable to 2007-337, ~780 regens per intake, 15,400 left; average squad 41, 9,500 cumulative regens, 463 with PA ≥ 150. Sleeping people count as free in the statistics (17,000 "free").
 
 ### 8.4 To do
 
-- A long career (10 seasons or more) with a large stock; time measured on an idle machine.
+- Finish the long career (to 2011) and measure time on an idle machine.
 - Save and load with Lucas: the save must open with and without the DLL; check the editors.
 - The intake date per nation (each league's season end) instead of a fixed day.
 - The configurator tab for the `intake_*` keys.
-- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` skips clubs above the limit; its effect is still to be measured.
+- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` handles it (40 → ~37 average); the default is still to be chosen.
