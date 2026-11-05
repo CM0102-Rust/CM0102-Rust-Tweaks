@@ -132,7 +132,7 @@ The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the r
 |---|---|---|
 | `intake_stock` | 0 (off) | people created with the career (the stock) |
 | `intake_per_club` | 3 | regens per club in the intake |
-| `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07) |
+| `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07), or `season_end`: each nation at the end of its own season (the 35 of the key-nation table 0xb63d60; the others on day 181) |
 | `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
 | `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
@@ -183,6 +183,7 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
 
 - Finish the long career (to 2011) and measure time on an idle machine.
 - Save and load with Lucas: the save must open with and without the DLL; check the editors.
-- The intake date per nation (each league's season end) instead of a fixed day.
-- The configurator tab for the `intake_*` keys.
+- ~~The intake date per nation~~: done (11/05), `intake_day = season_end`. Each key nation's season end goes through `end_season_for_nation` 0x59cdd0 (called at 0x5d5ea2, in the loop over the 35 key nations); the DLL notes the nation and releases it in the day's queue.
+- ~~The configurator tab~~: done (11/05), tab **Intake (experimental)** under Career tweaks, with the 8 keys and help in both languages.
+- Positions: regens come out with the positions of the copied real player (G 8%, D 31%, M 37%, A 23%), the nation's own picture; no adjustment for now.
 - Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` handles it (40 → ~37 average); the default is still to be chosen.

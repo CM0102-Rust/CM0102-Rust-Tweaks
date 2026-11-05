@@ -132,7 +132,7 @@ O código está na branch `fornada` (`src/fornada.rs`), fora do `main` e da vers
 |---|---|---|
 | `intake_stock` | 0 (desligado) | pessoas criadas com a carreira (o estoque) |
 | `intake_per_club` | 3 | regens por clube na fornada |
-| `intake_day` | 181 | dia do ano da fornada (181 = 30/06 ou 01/07) |
+| `intake_day` | 181 | dia do ano da fornada (181 = 30/06 ou 01/07), ou `season_end`: cada nação no fim da própria temporada (as 35 da tabela de nações-chave 0xb63d60; as outras no dia 181) |
 | `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo |
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | o PA vai do mínimo (clube de reputação 0) ao máximo (reputação 10.000) |
 | `intake_pa_spread` | 30 | sorteio em volta do PA do clube; o resultado fica entre o mínimo e o máximo |
@@ -183,6 +183,7 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
 
 - Fechar a carreira longa (até 2011) e medir o tempo com a máquina livre.
 - Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
-- A data da fornada por nação (fim da temporada de cada liga), em vez de um dia fixo.
-- A aba do configurador para as chaves `intake_*`.
+- ~~A data da fornada por nação~~: feita (05/11), `intake_day = season_end`. O fim da temporada de cada nação-chave passa pela `end_season_for_nation` 0x59cdd0 (chamada em 0x5d5ea2, no laço das 35 nações-chave); a DLL anota a nação e a solta na fila do dia.
+- ~~A aba do configurador~~: feita (05/11), aba **Fornada (experimental)** em Ajustes da carreira, com as 8 chaves e a ajuda nas duas línguas.
+- Posições: os regens saem com as posições do jogador real copiado (G 8%, D 31%, M 37%, A 23%), o retrato da nação; sem ajuste por ora.
 - Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` resolve (40 → ~37 médio); falta escolher o padrão.

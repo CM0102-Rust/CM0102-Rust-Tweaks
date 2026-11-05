@@ -259,6 +259,61 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
+## Intake (experimental)
+
+EXPERIMENTAL. The regen intake: instead of being born one by one through the year, youngsters arrive all at once, on one day of the year, at every club. The DLL creates a stock of people with a new career and keeps them asleep; on intake day each club gets a few youngsters, each a copy of a real player of the club's country, with a PA from the club's reputation. The game's normal regens keep being born. It only works in a NEW career.
+
+- **Stock**: the extra people the DLL creates with a new career, asleep until the intake. Each intake uses about 750 (3 per club, 278 clubs); with the stock empty, the intake stops and the game goes on as normal.
+- **Season end**: the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December.
+
+### Stock (people created with the career) — `intake_stock`
+
+How many people the DLL creates with a new career for the intakes (0 turns it off). Each intake uses about 750; 3,000 last four years, 20,000 over ten. The limit is the room in the game's tables (about 120,000). It only works in a new career: in a save under way it creates nothing.
+
+Values: from 0 to 100000 (whole number). Default: `0`.
+
+### Youngsters per club — `intake_per_club`
+
+How many youngsters each club gets in each intake. 3 roughly doubles the career's regens. 0 turns the intake off (the stock stays asleep).
+
+Values: from 0 to 20 (whole number). Default: `3`.
+
+### Intake day — `intake_day`
+
+When the intake comes. On a fixed day, every club receives at once. At season end, each nation receives when its season ends (England mid-year, Brazil at the end); clubs of nations outside the game's table receive on 1 July.
+
+Values: `181` (1 July (day 181)), `season_end` (Each nation's season end), `0` (1 January (day 0)). Default: `181`.
+
+### Clubs that receive — `intake_clubs`
+
+Which clubs receive: those of the playable leagues, or also those of the background leagues you chose when creating the career.
+
+Values: `playable` (Playable leagues), `selected` (Background leagues too). Default: `playable`.
+
+### PA: reputation-0 club — `intake_pa_min`
+
+The PA of a youngster at a reputation-0 club. Between 0 and 10000, the PA rises in a straight line to the maximum.
+
+Values: from 1 to 200 (whole number). Default: `60`.
+
+### PA: reputation-10000 club (cap) — `intake_pa_max`
+
+The PA of a youngster at a reputation-10000 club, and the cap: no intake youngster goes above it.
+
+Values: from 1 to 200 (whole number). Default: `170`.
+
+### PA: draw around it — `intake_pa_spread`
+
+A draw around the club's PA: 30 goes from 15 below to 15 above. Always between the minimum and the maximum. 0: every youngster at the club has the same PA.
+
+Values: from 0 to 200 (whole number). Default: `30`.
+
+### Squad: a club with this many is skipped — `intake_squad_max`
+
+A club with this many players in the squad (of 50 places) is skipped that year. With the intake, squads swell (from 33 to 40 on average); 40 keeps them around 37.
+
+Values: from 1 to 50 (whole number). Default: `50`.
+
 ## Regen origins
 
 Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.

@@ -172,6 +172,38 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com ± 5, num clube de nível 82 os cinzentos vêm de 77 a 87. ± 0 deixa todos iguais ao nível; mais variação, cinzentos mais diferentes entre si. No tweaks.cfg fica a largura total (± 5 = 10).",
             "How far each grey player's CA can be above or below the club's level. With ± 5, at a level-82 club the grey players come from 77 to 87. ± 0 makes them all equal to the level; more variation, grey players more different from each other. tweaks.cfg keeps the full width (± 5 = 10).",
         ),
+        "intake_stock" => (
+            "Quantas pessoas a DLL cria com a carreira nova para as fornadas (0 desliga). Cada fornada gasta umas 750; 3.000 dão quatro anos, 20.000 passam de dez. O limite é a folga das tabelas do jogo (umas 120.000). Só vale numa carreira nova: num save em andamento não cria nada.",
+            "How many people the DLL creates with a new career for the intakes (0 turns it off). Each intake uses about 750; 3,000 last four years, 20,000 over ten. The limit is the room in the game's tables (about 120,000). It only works in a new career: in a save under way it creates nothing.",
+        ),
+        "intake_per_club" => (
+            "Quantos jovens cada clube recebe em cada fornada. 3 dobra, mais ou menos, os regens da carreira. 0 desliga a fornada (o estoque fica adormecido).",
+            "How many youngsters each club gets in each intake. 3 roughly doubles the career's regens. 0 turns the intake off (the stock stays asleep).",
+        ),
+        "intake_day" => (
+            "Quando a fornada sai. Num dia fixo, todos os clubes recebem juntos. No fim da temporada, cada nação recebe quando a temporada dela acaba (Inglaterra no meio do ano, Brasil no fim); clubes de nações fora da tabela do jogo recebem em 1º de julho.",
+            "When the intake comes. On a fixed day, every club receives at once. At season end, each nation receives when its season ends (England mid-year, Brazil at the end); clubs of nations outside the game's table receive on 1 July.",
+        ),
+        "intake_clubs" => (
+            "Que clubes recebem: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira.",
+            "Which clubs receive: those of the playable leagues, or also those of the background leagues you chose when creating the career.",
+        ),
+        "intake_pa_min" => (
+            "O PA do jovem de um clube de reputação 0. Entre 0 e 10000, o PA sobe em linha reta até o máximo.",
+            "The PA of a youngster at a reputation-0 club. Between 0 and 10000, the PA rises in a straight line to the maximum.",
+        ),
+        "intake_pa_max" => (
+            "O PA do jovem de um clube de reputação 10000, e o teto: nenhum jovem da fornada passa dele.",
+            "The PA of a youngster at a reputation-10000 club, and the cap: no intake youngster goes above it.",
+        ),
+        "intake_pa_spread" => (
+            "Um sorteio em volta do PA do clube: 30 vai de 15 abaixo a 15 acima. Sempre entre o mínimo e o máximo. 0: todo jovem do clube vem com o mesmo PA.",
+            "A draw around the club's PA: 30 goes from 15 below to 15 above. Always between the minimum and the maximum. 0: every youngster at the club has the same PA.",
+        ),
+        "intake_squad_max" => (
+            "O clube com esse tanto de jogadores no elenco (de 50 vagas) fica de fora da fornada daquele ano. Com a fornada, os elencos incham (de 33 para 40 em média); 40 segura em uns 37.",
+            "A club with this many players in the squad (of 50 places) is skipped that year. With the intake, squads swell (from 33 to 40 on average); 40 keeps them around 37.",
+        ),
         "regen_origins" => (
             "Grava no regen_origins.csv, ao lado do exe, cada regen que nasce: o nome, a idade, a posição, o PA, o CA e o clube que ganhou a disputa (ou \"sem clube\"), e de quem ele herdou: a vaga (o id e a personalidade) e a ficha de jogador (o PA, as posições e os atributos), com o nome, a idade, o CA e o PA do dono no momento da aposentadoria. Cada linha leva a data do jogo, a data do computador e a carreira (o save). Assim você acha \"o regen do Ronaldo\". O jogo não guarda isso em lugar nenhum: só os regens criados com esta opção ligada ficam registrados. O arquivo abre no Excel com dois cliques (UTF-8, colunas separadas por ponto e vírgula; num Excel em inglês, use Dados > De Texto/CSV). Ao gravar o jogo, a DLL grava ao lado do save um X.regens com os donos das fichas que ainda vão virar regen; ao carregar, ela o lê. Copie os dois juntos: sem o .regens, alguns dos primeiros regens depois da carga podem sair com o dono desconhecido.",
             "Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or \"no club\"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find \"Ronaldo's regen\". The game keeps this nowhere: only regens created with this option on are recorded. The file opens in Excel with a double click (UTF-8, columns separated by semicolons; in an English Excel, use Data > From Text/CSV). When you save the game, the DLL writes an X.regens next to the save with the owners of the records still waiting to become regens; when you load, it reads it. Copy both together: without the .regens, some of the first regens after loading may show an unknown owner.",
@@ -223,6 +255,10 @@ pub fn intro(aba: Aba) -> (&'static str, &'static str) {
         Aba::Cinzentos => (
             "Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.",
             "Grey players. Before every match (and when you open a squad), the game fills short squads with virtual players, shown in grey, whom nobody can sign. The original gives them an ability taken from the club's reputation, by a formula that collapses: at mid-sized and small clubs it comes out negative, and the match engine treats that as the weakest possible player. Here they can come at the club's own level.",
+        ),
+        Aba::Fornada => (
+            "EXPERIMENTAL. A fornada de regens: em vez de nascerem um a um ao longo do ano, os jovens chegam todos de uma vez, num dia do ano, a cada clube. A DLL cria um estoque de pessoas junto com a carreira nova e as deixa adormecidas; no dia da fornada, cada clube recebe alguns jovens, cada um a cópia de um jogador real do país do clube, com o PA pela reputação do clube. Os regens normais do jogo continuam nascendo. Só vale numa carreira NOVA.",
+            "EXPERIMENTAL. The regen intake: instead of being born one by one through the year, youngsters arrive all at once, on one day of the year, at every club. The DLL creates a stock of people with a new career and keeps them asleep; on intake day each club gets a few youngsters, each a copy of a real player of the club's country, with a PA from the club's reputation. The game's normal regens keep being born. It only works in a NEW career.",
         ),
         Aba::Cfg => (
             "O tweaks.cfg como vai ficar quando você clicar em Gravar. Em amarelo, as linhas mudadas ou acrescentadas. Nenhuma linha é apagada: o que você escreveu à mão, e os comentários, ficam.",
@@ -287,6 +323,10 @@ pub fn termos(aba: Aba) -> &'static [Termo] {
             ("CA", "CA", "Current Ability, a habilidade atual (1 a 200): o quanto o jogador joga hoje.", "Current Ability (1 to 200): how well the player plays today."),
             ("Nível do clube", "Club's level", "o maior entre dois valores: a média de CA dos 16 melhores jogadores de verdade do elenco (com pelo menos 5), e uma conta pela reputação que sobe com ela e nunca fica negativa (reputação × 0,016 + 20; seleção, reputação / 100 + 40). A reputação segura o clube grande de uma liga que você não carregou, que tem poucos jogadores no banco.", "the higher of two values: the average CA of the squad's 16 best real players (with at least 5), and a formula from the reputation that rises with it and is never negative (reputation × 0.016 + 20; national team, reputation / 100 + 40). The reputation keeps a big club from a league you didn't load strong, since it has few players in the database."),
             ("Variação", "Variation", "quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube, sorteado para cada um.", "how far each grey player's CA can be above or below the club's level, drawn for each one."),
+        ],
+        Aba::Fornada => &[
+            ("Estoque", "Stock", "as pessoas a mais que a DLL cria com a carreira nova, adormecidas até a fornada. Cada fornada gasta umas 750 (3 por clube, 278 clubes); com o estoque vazio, a fornada para e o jogo segue normal.", "the extra people the DLL creates with a new career, asleep until the intake. Each intake uses about 750 (3 per club, 278 clubs); with the stock empty, the intake stops and the game goes on as normal."),
+            ("Fim da temporada", "Season end", "o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.", "the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December."),
         ],
         Aba::Cfg | Aba::Log => &[],
     }

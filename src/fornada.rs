@@ -10,6 +10,9 @@
 //!    clube recebe `intake_per_club` jovens: a ficha da pessoa vira a cópia de um jogador real da nação do clube, com o PA
 //!    da fornada, vai para a frente da reserva de fichas, e `regenerate_as_youth_player` 0x7abac0 faz o regen. A disputa
 //!    (chamada em 0x7acea2) devolve o clube da fornada; se o regen sair sem clube, `player_regen_sign_for_club` 0x7a6f10.
+//! 4. **No fim da temporada** (`intake_day = season_end`): o laço das 35 nações-chave (tabela 0xb63d60, 72 bytes, +0 a
+//!    nação, +0x15 o dia do fim) chama `end_season_for_nation` 0x59cdd0 em 0x5d5ea2; a nação fica pendente e os clubes
+//!    dela recebem na fila do dia seguinte. Clube de nação fora da tabela recebe no dia 181.
 
 use crate::{d, registro, sorteio, w};
 
@@ -17,6 +20,8 @@ pub struct Fornada {
     pub estoque: i32,
     pub por_clube: i32,
     pub dia: i32,
+    /// `intake_day = season_end`: cada nação-chave no fim da própria temporada
+    pub por_temporada: bool,
     pub so_jogaveis: bool,
     pub pa_min: i32,
     pub pa_max: i32,
@@ -25,7 +30,7 @@ pub struct Fornada {
     pub elenco_max: i32,
 }
 
-pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
+pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
 
 unsafe fn cfg() -> &'static Fornada {
     &*core::ptr::addr_of!(F)
@@ -33,7 +38,7 @@ unsafe fn cfg() -> &'static Fornada {
 
 /// As chaves `intake_*` do tweaks.cfg.
 pub fn ler() -> Fornada {
-    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
+    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50 };
     let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return f };
     for linha in texto.lines() {
@@ -42,6 +47,10 @@ pub fn ler() -> Fornada {
         let (k, v) = (k.trim(), v.trim());
         if k == "intake_clubs" {
             f.so_jogaveis = v != "selected"; // playable | selected
+            continue;
+        }
+        if k == "intake_day" && v == "season_end" {
+            f.por_temporada = true;
             continue;
         }
         let Ok(x) = v.parse::<i32>() else { continue };
@@ -67,6 +76,25 @@ static mut FORCADO: usize = 0;
 static mut ULTIMO_ANO: i32 = -1;
 /// A disputa que estava no `call` de 0x7acea2 (a original ou a do Tweaks).
 static mut DISPUTA: usize = 0x7ad0e0;
+/// As nações cuja temporada acabou e ainda não receberam (modo `season_end`).
+static mut PENDENTES: Vec<usize> = Vec::new();
+
+/// As nações da tabela das nações-chave (35 entradas de 72 bytes em 0xb63d60, +0 a nação).
+unsafe fn nacoes_chave() -> Vec<usize> {
+    (0..0x23).map(|i| d(0xb63d60 + 72 * i)).filter(|&n| n != 0).collect()
+}
+
+/// No lugar da chamada de `end_season_for_nation` 0x59cdd0 em 0x5d5ea2 (thiscall, ret 4; o argumento é a entrada da
+/// nação-chave): a nação fica pendente para a fila do dia.
+unsafe extern "thiscall" fn fim_da_temporada(this: usize, entrada: usize) {
+    let original: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59cdd0usize);
+    original(this, entrada);
+    let nac = d(entrada);
+    let pend = &mut *core::ptr::addr_of_mut!(PENDENTES);
+    if nac != 0 && !pend.contains(&nac) {
+        pend.push(nac);
+    }
+}
 
 /// Depois do `ftol` do corte (cdecl): o extra do jogo, as pessoas, fichas e preferências mantidas. Devolve o extra novo,
 /// dentro da folga: pessoas `mantidas + extra + 0x52d ≤ N_antes` (o teto da 0x525f9b, que com defeito soma em vez de
@@ -119,10 +147,24 @@ unsafe extern "thiscall" fn disputa(this: usize, jogador: usize) -> usize {
 unsafe extern "thiscall" fn fila_do_dia(this: usize) {
     let original: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7a65d0usize);
     original(this);
+    if cfg().por_clube <= 0 {
+        return;
+    }
     let (dia, ano) = (w(0xae2c90) as i32, w(0xae2c92) as i32);
-    if dia == cfg().dia && ano != ULTIMO_ANO && cfg().por_clube > 0 {
+    if cfg().por_temporada {
+        let pend = core::mem::take(&mut *core::ptr::addr_of_mut!(PENDENTES));
+        if !pend.is_empty() {
+            soltar(this, &|n| pend.contains(&n));
+        }
+        // as nações fora da tabela das nações-chave: no dia 181
+        if dia == 181 && ano != ULTIMO_ANO {
+            ULTIMO_ANO = ano;
+            let chave = nacoes_chave();
+            soltar(this, &|n| !chave.contains(&n));
+        }
+    } else if dia == cfg().dia && ano != ULTIMO_ANO {
         ULTIMO_ANO = ano;
-        soltar(this);
+        soltar(this, &|_| true);
     }
 }
 
@@ -142,7 +184,7 @@ unsafe fn elenco(clube: usize) -> usize {
     (0..50).filter(|&k| d(clube + 0xd7 + 4 * k) != 0).count()
 }
 
-unsafe fn soltar(this: usize) {
+unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     let mut estoque = adormecidos(this);
     let (pessoas, n) = (d(0xae23bc), d(0xae2364));
     // os moldes: jogadores reais (com ficha, não aposentados, não humanos) por nação
@@ -159,7 +201,7 @@ unsafe fn soltar(this: usize) {
         .map(|i| base + 0x245 * i)
         .filter(|&c| {
             let nac = d(c + 0x53);
-            nac != 0 && crate::em_competicao(c) && if cfg().so_jogaveis { *((nac + 0x11c) as *const u8) == 2 } else { *((nac + 0x11c) as *const u8) != 0 }
+            nac != 0 && da_nacao(nac) && crate::em_competicao(c) && if cfg().so_jogaveis { *((nac + 0x11c) as *const u8) == 2 } else { *((nac + 0x11c) as *const u8) != 0 }
         })
         .collect();
     let (mut dados, mut cheios, mut sem_molde, mut falhas) = (0, 0, 0, 0);
@@ -208,6 +250,9 @@ unsafe fn soltar(this: usize) {
             registro::linha(&format!("intake-regen	{}	{}	{}	{}	{}/{}/{}/{}	{}", crate::data_do_jogo(), crate::b(p + 0x18), w(f + 7), w(f + 5),
                 crate::b(f + 0xf), crate::b(f + 0x11), crate::b(f + 0x13), crate::b(f + 0x15), if d(p + 0x39) != 0 { crate::nome(d(p + 0x39)) } else { String::new() }));
         }
+    }
+    if clubes.is_empty() {
+        return;
     }
     registro::linha(&format!("intake\t{}\tclubs {}\tgiven {}\tfull {}\tno template {}\tleft without the club {}\tstock left {}",
         crate::data_do_jogo(), clubes.len(), dados, cheios, sem_molde, falhas, estoque.len()));
@@ -269,17 +314,20 @@ pub unsafe fn instalar() -> bool {
     core::ptr::write_unaligned(c.as_mut_ptr().add(19) as *mut i32, (extra_do_corte as *const () as usize).wrapping_sub(base + 23) as i32);
     core::ptr::copy_nonoverlapping(c.as_ptr(), t, c.len());
     // a disputa: o call de 0x7acea2 pode já apontar para a 0x7ad0e0 desviada (rule = new); o alvo atual fica guardado
-    let ok = e_call(0x525f8c, 0x945640) && e_call(0x829fd9, 0x5cc850) && e_call(0x5cda7a, 0x7a65d0) && *(0x7acea2 as *const u8) == 0xe8;
+    let ok = e_call(0x525f8c, 0x945640) && e_call(0x829fd9, 0x5cc850) && e_call(0x5cda7a, 0x7a65d0) && e_call(0x5d5ea2, 0x59cdd0) && *(0x7acea2 as *const u8) == 0xe8;
     if ok {
         DISPUTA = (core::ptr::read_unaligned(0x7acea3 as *const i32) as usize).wrapping_add(0x7acea7);
         trocar_call(0x525f8c, base);
         trocar_call(0x829fd9, antes_de_rodar as *const () as usize);
         trocar_call(0x5cda7a, fila_do_dia as *const () as usize);
         trocar_call(0x7acea2, disputa as *const () as usize);
+        if cfg().por_temporada {
+            trocar_call(0x5d5ea2, fim_da_temporada as *const () as usize);
+        }
     }
     if ok {
-        registro::linha(&format!("intake (EXPERIMENTAL): on (stock {}, {} per club on day {}, {} clubs, PA {}..{} by reputation, spread {}, squads up to {})",
-            cfg().estoque, cfg().por_clube, cfg().dia, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }, cfg().pa_min, cfg().pa_max, cfg().pa_espalhar, cfg().elenco_max));
+        registro::linha(&format!("intake (EXPERIMENTAL): on (stock {}, {} per club on {}, {} clubs, PA {}..{} by reputation, spread {}, squads up to {})",
+            cfg().estoque, cfg().por_clube, if cfg().por_temporada { "each nation's season end".to_string() } else { format!("day {}", cfg().dia) }, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }, cfg().pa_min, cfg().pa_max, cfg().pa_espalhar, cfg().elenco_max));
     }
     ok
 }
