@@ -31,7 +31,7 @@ mod pasta;
 mod origem;
 mod apresentacao;
 mod cinzentos;
-// A fornada de regens (experimental, branch fornada).
+// A fornada de regens (experimental, desde a 1.2).
 mod fornada;
 mod nomes;
 mod reducao;

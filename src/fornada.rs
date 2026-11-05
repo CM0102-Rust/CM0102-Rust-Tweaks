@@ -1,4 +1,4 @@
-//! A fornada de regens (EXPERIMENTAL, branch `fornada`; ver docs/PESSOAS_NOVAS.md, caminho 1, e docs/FORNADA_DE_REGENS.md).
+//! A fornada de regens (EXPERIMENTAL, desde a 1.2; ver docs/PESSOAS_NOVAS.md, caminho 1, e docs/FORNADA_DE_REGENS.md).
 //!
 //! 1. **Criar:** o corte do banco (`database_trim_staff_tables` 0x524d70) já cria pessoas a mais na carreira nova
 //!    (`extra = ftol(mantidas × 1% ou 2%)`, 0x525f8c), com ficha e preferências, antes dos 16 humanos. O `call` do `ftol`

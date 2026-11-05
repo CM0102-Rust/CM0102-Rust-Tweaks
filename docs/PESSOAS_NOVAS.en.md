@@ -126,7 +126,7 @@ The full reports and lists (the 1,155 uses, one per line) stayed in the session'
 
 **The name:** "fornada" comes from Football Manager's European Portuguese translation. In English FM it's the *Youth Intake* (the day, *Youth Intake Day*), and the keys follow that name (`intake_*`); in Spanish FM, *hornada de juveniles*.
 
-The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the release. It only goes into a release once it's proven stable and Lucas approves it. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
+The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
 
 ### 8.1 The keys
 

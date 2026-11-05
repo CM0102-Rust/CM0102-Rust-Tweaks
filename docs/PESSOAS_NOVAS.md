@@ -126,7 +126,7 @@ Os relatórios completos e as listas (os 1.155 usos, um por linha) ficaram no ra
 
 **O nome:** "fornada" vem da tradução do Football Manager em português de Portugal. No FM em inglês é *Youth Intake* (o dia, *Youth Intake Day*), e as chaves seguem esse nome (`intake_*`); no FM em espanhol, *hornada de juveniles*.
 
-O código está na branch `fornada` (`src/fornada.rs`), fora do `main` e da versão: só entra numa versão depois de provado estável e com o ok do Lucas. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
+O código está em `src/fornada.rs`. Saiu na versão 1.2 (05/11/2026, com o ok do Lucas), ainda experimental. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
 
 ### 8.1 As chaves
 

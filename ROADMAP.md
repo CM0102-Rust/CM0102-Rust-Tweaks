@@ -124,7 +124,7 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
 - ⏳ Forum post, with the draft approved by Lucas first.
 - ⏳ Credits: xeno and Saturn (the Regen Tweak), petermf23 (younger regens and staff development), Nick (NickPatcher, the references), and the champman0102 community.
 
-## Phase 6: the youth intake 🔬
+## Phase 6: the youth intake 🔨
 
 FM's "youth intake": a batch of youngsters joins every club's academy each year, instead of one regen per retirement. It's the big goal of this repository, and it's ours alone: it means creating people, controlling the save and balancing the population. Decided with Lucas on 11/01/2026.
 
@@ -140,5 +140,12 @@ FM's "youth intake": a batch of youngsters joins every club's academy each year,
 4. ⏳ **Population balance:** intake, retirement and recycling into the pool, so the career doesn't swell decade after decade; measured in the simulator and in long careers on the test bench.
 
 **Impacts to measure:** more people (day processing); bigger saves (already solved above 2 GB); too much talent in the world (PA inflation, national teams); a market flooded with youngsters (wages and fees); editors and tools (bigger counts, same format).
+
+**Released in 1.2 (11/05/2026, experimental, the `intake_*` keys):** the stock created with a new career (the database trim), asleep and released on the intake day (a fixed day or each nation's season end); each youngster a copy of a real player of the club's nation, with a PA from the club's reputation; regens only from the intake by default (the retirement queue feeds it); the inbox message from the youth coach, in bands, in the game's language. Details and tests: [docs/PESSOAS_NOVAS.en.md](docs/PESSOAS_NOVAS.en.md) §8.
+
+**Next, for the intake:**
+- 💡 **The intake day per country** (Lucas, 11/05): today it's one choice for every country (a fixed day, or each nation's season end as the game has it). A line per country in `tweaks.cfg` (e.g. `intake_day_BRA = 10`) over the general rule, and a list on the configurator tab.
+- ⏳ Save and load with Lucas, with and without the DLL, and in the editors.
+- 💡 The default `intake_squad_max` (40 holds the squads back), and the PA from facilities and the youth coach (step 2 above).
 
 **Limit:** new records apply to new careers first (loading an old save requires `training.dat` with the exact count). The fixed day and the per-club quota work in any save.
