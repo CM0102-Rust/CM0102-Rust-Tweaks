@@ -1,0 +1,409 @@
+# CM0102 Rust Tweaks: the phrases of the youth intake message (intake_news = 1).
+# Keep this file next to cm0102.exe. Edit any phrase, or translate a language: the message is written when it is
+# shown, in the language the game is set to (Game Options > Language), so changes apply to messages already in the
+# inbox too. Without this file, or without a phrase, the DLL uses its own English, Portuguese and Spanish ones.
+#
+# One section per game language, [CODE], with the game's own codes:
+#   ENG_UK, ENG_US, FRA, DEU, ITA, ESP, DAN, NED, NOR, POR, SVE, JAP, KOR, POL, RUS, CHI_SIM, CHI_TRA, POR_BRA, ESP_MEX
+# Lines are "key = phrase". The words in braces are filled in by the DLL:
+#   {n}          how many youngsters arrived (title, short)
+#   {name}       the youngster's name (player)
+#   {age}        his age (player)
+#   {position}   goalkeeper, defender, midfielder or forward, from the phrases below (player)
+#   {now}        the coach's view of his current level, now_0 to now_3 (player)
+#   {potential}  the coach's view of his potential, potential_0 to potential_4 (player)
+#   {ca} {pa}    his current ability and potential, only with intake_news_numbers = 1 (numbers)
+# title: the headline. intro: the first line of the body. player: one paragraph per youngster. numbers: added to the end
+# of the paragraph with intake_news_numbers = 1. short: the line stored inside the message, shown if the save is opened
+# without the DLL (up to 67 characters; it's stored in the language of the intake day).
+# now_0: up to 5 points below the average current ability (CA) of the club's best 11; now_1: 6 to 20 below;
+# now_2: 21 to 40 below; now_3: more than 40 below.
+# potential_0: PA 170 or more; potential_1: 150 to 169; potential_2: 130 to 149; potential_3: 100 to 129;
+# potential_4: below 100.
+# The game shows Western European letters (Latin-1); a letter outside it shows as "?".
+#
+# Este arquivo traz as frases da mensagem da fornada. Edite ou traduza à vontade; a seção usada é a da língua do jogo.
+
+[ENG_UK]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[ENG_US]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+# Português do Brasil. Para o português de Portugal, troque por: Fornada de juniores, plantel, equipa principal,
+# guarda-redes, defesa, médio, avançado.
+[POR]
+title = Fornada da base: {n} jovens chegaram
+intro = O treinador da base apresentou os jovens que sobem para o elenco nesta fornada:
+player = {name} ({age} anos, {position}): {now} e {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Fornada: {n} jovens chegaram da base.
+goalkeeper = goleiro
+defender = zagueiro
+midfielder = meio-campista
+forward = atacante
+now_0 = já está pronto para o time principal
+now_1 = pode ganhar chances no time principal em breve
+now_2 = precisa de um ou dois anos na base
+now_3 = ainda está muito cru, vai levar tempo
+potential_0 = pode virar um dos melhores do mundo
+potential_1 = tem potencial para a seleção
+potential_2 = pode ser titular de um clube grande
+potential_3 = deve fazer carreira na primeira divisão
+potential_4 = dificilmente passará das divisões de baixo
+
+[POR_BRA]
+title = Fornada da base: {n} jovens chegaram
+intro = O treinador da base apresentou os jovens que sobem para o elenco nesta fornada:
+player = {name} ({age} anos, {position}): {now} e {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Fornada: {n} jovens chegaram da base.
+goalkeeper = goleiro
+defender = zagueiro
+midfielder = meio-campista
+forward = atacante
+now_0 = já está pronto para o time principal
+now_1 = pode ganhar chances no time principal em breve
+now_2 = precisa de um ou dois anos na base
+now_3 = ainda está muito cru, vai levar tempo
+potential_0 = pode virar um dos melhores do mundo
+potential_1 = tem potencial para a seleção
+potential_2 = pode ser titular de um clube grande
+potential_3 = deve fazer carreira na primeira divisão
+potential_4 = dificilmente passará das divisões de baixo
+
+[ESP]
+title = Hornada de juveniles: llegaron {n} jóvenes
+intro = El entrenador de las inferiores presentó a los jóvenes que suben a la plantilla en esta hornada:
+player = {name} ({age} años, {position}): {now} y {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Hornada: {n} juveniles llegaron de la cantera.
+goalkeeper = portero
+defender = defensa
+midfielder = centrocampista
+forward = delantero
+now_0 = ya está listo para el primer equipo
+now_1 = puede tener oportunidades en el primer equipo pronto
+now_2 = necesita uno o dos años en las inferiores
+now_3 = todavía está muy verde, llevará tiempo
+potential_0 = puede llegar a ser uno de los mejores del mundo
+potential_1 = tiene potencial para la selección
+potential_2 = puede ser titular en un club grande
+potential_3 = debería hacer carrera en primera división
+potential_4 = difícilmente pasará de las divisiones inferiores
+
+[ESP_MEX]
+title = Hornada de juveniles: llegaron {n} jóvenes
+intro = El entrenador de las fuerzas básicas presentó a los jóvenes que suben al plantel en esta hornada:
+player = {name} ({age} años, {position}): {now} y {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Hornada: {n} juveniles llegaron de las fuerzas básicas.
+goalkeeper = portero
+defender = defensa
+midfielder = mediocampista
+forward = delantero
+now_0 = ya está listo para el primer equipo
+now_1 = puede tener oportunidades en el primer equipo pronto
+now_2 = necesita uno o dos años en las fuerzas básicas
+now_3 = todavía está muy verde, llevará tiempo
+potential_0 = puede llegar a ser uno de los mejores del mundo
+potential_1 = tiene potencial para la selección
+potential_2 = puede ser titular en un club grande
+potential_3 = debería hacer carrera en primera división
+potential_4 = difícilmente pasará de las divisiones inferiores
+
+[FRA]
+title = Promotion des jeunes : {n} jeunes sont arrivés
+intro = L'entraîneur du centre de formation a présenté les jeunes qui rejoignent l'effectif cette saison :
+player = {name} ({age} ans, {position}) : {now} et {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Promotion : {n} jeunes arrivent du centre de formation.
+goalkeeper = gardien
+defender = défenseur
+midfielder = milieu
+forward = attaquant
+now_0 = est déjà prêt pour l'équipe première
+now_1 = pourrait avoir sa chance en équipe première bientôt
+now_2 = a besoin d'un ou deux ans en équipe de jeunes
+now_3 = est encore très tendre, il faudra du temps
+potential_0 = pourrait devenir l'un des meilleurs du monde
+potential_1 = a le potentiel pour jouer en sélection
+potential_2 = pourrait être titulaire dans un grand club
+potential_3 = devrait faire carrière en première division
+potential_4 = dépassera difficilement les divisions inférieures
+
+[DEU]
+title = Jugendjahrgang: {n} Talente sind angekommen
+intro = Der Jugendtrainer hat die Talente vorgestellt, die in diesem Jahrgang zum Kader stoßen:
+player = {name} ({age} Jahre, {position}): {now} und {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Jugendjahrgang: {n} Talente aus der Jugend aufgerückt.
+goalkeeper = Torwart
+defender = Verteidiger
+midfielder = Mittelfeldspieler
+forward = Stürmer
+now_0 = ist schon bereit für die erste Mannschaft
+now_1 = könnte bald Chancen in der ersten Mannschaft bekommen
+now_2 = braucht noch ein oder zwei Jahre in der Jugend
+now_3 = ist noch sehr roh und braucht Zeit
+potential_0 = könnte einer der Besten der Welt werden
+potential_1 = hat das Potenzial für die Nationalmannschaft
+potential_2 = könnte Stammspieler bei einem großen Verein werden
+potential_3 = sollte eine Karriere in der ersten Liga machen
+potential_4 = wird kaum über die unteren Ligen hinauskommen
+
+[ITA]
+title = Leva giovanile: sono arrivati {n} giovani
+intro = L'allenatore delle giovanili ha presentato i giovani che entrano in rosa con questa leva:
+player = {name} ({age} anni, {position}): {now} e {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Leva giovanile: {n} giovani arrivati dal settore giovanile.
+goalkeeper = portiere
+defender = difensore
+midfielder = centrocampista
+forward = attaccante
+now_0 = è già pronto per la prima squadra
+now_1 = potrebbe trovare spazio in prima squadra presto
+now_2 = ha bisogno di uno o due anni nelle giovanili
+now_3 = è ancora molto acerbo, ci vorrà tempo
+potential_0 = potrebbe diventare uno dei migliori al mondo
+potential_1 = ha il potenziale per la nazionale
+potential_2 = potrebbe essere titolare in un grande club
+potential_3 = dovrebbe fare carriera in prima divisione
+potential_4 = difficilmente andrà oltre le serie minori
+
+[NED]
+title = Jeugdlichting: {n} talenten zijn gearriveerd
+intro = De jeugdtrainer heeft de talenten voorgesteld die met deze lichting bij de selectie komen:
+player = {name} ({age} jaar, {position}): {now} en {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Jeugdlichting: {n} talenten doorgestroomd uit de jeugd.
+goalkeeper = keeper
+defender = verdediger
+midfielder = middenvelder
+forward = aanvaller
+now_0 = is al klaar voor het eerste elftal
+now_1 = kan binnenkort kansen krijgen in het eerste elftal
+now_2 = heeft nog een of twee jaar in de jeugd nodig
+now_3 = is nog erg ruw en heeft tijd nodig
+potential_0 = kan een van de besten ter wereld worden
+potential_1 = heeft de potentie voor het nationale team
+potential_2 = kan basisspeler worden bij een grote club
+potential_3 = zou carrière moeten maken in de hoogste divisie
+potential_4 = komt waarschijnlijk niet verder dan de lagere divisies
+
+[DAN]
+title = Ungdomsårgang: {n} talenter er ankommet
+intro = Ungdomstræneren har præsenteret de talenter, der kommer i truppen med denne årgang:
+player = {name} ({age} år, {position}): {now} og {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Ungdomsårgang: {n} talenter rykket op fra ungdomsholdet.
+goalkeeper = målmand
+defender = forsvarsspiller
+midfielder = midtbanespiller
+forward = angriber
+now_0 = er allerede klar til førsteholdet
+now_1 = kan snart få chancer på førsteholdet
+now_2 = har brug for et eller to år på ungdomsholdet
+now_3 = er stadig meget rå og skal have tid
+potential_0 = kan blive en af de bedste i verden
+potential_1 = har potentialet til landsholdet
+potential_2 = kan blive fast mand i en stor klub
+potential_3 = bør lave en karriere i den bedste række
+potential_4 = kommer næppe længere end de lavere rækker
+
+[NOR]
+title = Ungdomskull: {n} talenter har kommet
+intro = Ungdomstreneren har presentert talentene som kommer inn i troppen med dette kullet:
+player = {name} ({age} år, {position}): {now} og {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Ungdomskull: {n} talenter rykket opp fra ungdomslaget.
+goalkeeper = keeper
+defender = forsvarsspiller
+midfielder = midtbanespiller
+forward = angriper
+now_0 = er allerede klar for A-laget
+now_1 = kan snart få sjanser på A-laget
+now_2 = trenger et eller to år på ungdomslaget
+now_3 = er fortsatt veldig rå og trenger tid
+potential_0 = kan bli en av de beste i verden
+potential_1 = har potensial for landslaget
+potential_2 = kan bli fast spiller i en stor klubb
+potential_3 = bør gjøre karriere i øverste divisjon
+potential_4 = kommer neppe lenger enn de lavere divisjonene
+
+[SVE]
+title = Ungdomskull: {n} talanger har anlänt
+intro = Ungdomstränaren har presenterat talangerna som kommer till truppen med denna kull:
+player = {name} ({age} år, {position}): {now} och {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Ungdomskull: {n} talanger flyttades upp från ungdomslaget.
+goalkeeper = målvakt
+defender = försvarare
+midfielder = mittfältare
+forward = anfallare
+now_0 = är redan redo för A-laget
+now_1 = kan snart få chanser i A-laget
+now_2 = behöver ett eller två år i ungdomslaget
+now_3 = är fortfarande väldigt rå och behöver tid
+potential_0 = kan bli en av de bästa i världen
+potential_1 = har potential för landslaget
+potential_2 = kan bli ordinarie i en stor klubb
+potential_3 = borde göra karriär i högsta serien
+potential_4 = kommer knappast längre än de lägre divisionerna
+
+# Not translated yet (help welcome): Polish, Russian, Japanese, Korean and Chinese. The game in these languages uses
+# its own character set; text in Latin-1 letters shows as written.
+[POL]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[RUS]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[JAP]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[KOR]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[CHI_SIM]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions
+
+[CHI_TRA]
+title = Youth intake: {n} youngsters have arrived
+intro = The youth coach has presented the youngsters joining the squad in this intake:
+player = {name} ({age}, {position}): {now} and {potential}.
+numbers = (CA {ca}, PA {pa})
+short = Youth intake: {n} youngsters joined from the youth team.
+goalkeeper = goalkeeper
+defender = defender
+midfielder = midfielder
+forward = forward
+now_0 = is already ready for the first team
+now_1 = could get chances in the first team soon
+now_2 = needs a year or two in the youth team
+now_3 = is still very raw and will take time
+potential_0 = could become one of the best in the world
+potential_1 = has the potential to play for his country
+potential_2 = could be a regular at a big club
+potential_3 = should make a career in the top flight
+potential_4 = is unlikely to go beyond the lower divisions

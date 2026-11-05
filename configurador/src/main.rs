@@ -832,6 +832,10 @@ impl App {
         if !ativo {
             ui.colored_label(CINZA, self.t("O jogo usa a disputa do 3.9.68.", "The game uses 3.9.68's contest."));
         }
+        if self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0 && self.valor("intake_only") != "0" {
+            ui.colored_label(AZUL, self.t("Com a fornada ligada, esta disputa continua decidindo o clube de cada regen do jogo. O que muda é a data: todos nascem no dia da fornada (aba Fornada).",
+                "With the intake on, this contest still picks each game regen's club. What changes is the date: they're all born on intake day (Intake tab)."));
+        }
         let rotulo = self.t("Jovem de exemplo: PA", "Example youngster: PA");
         let (a_jovem, a_pa, a_ca) = (self.termo(Aba::Disputa, "Jovem de exemplo"), self.termo(Aba::Idades, "PA"), self.termo(Aba::Idades, "CA"));
         ui.horizontal(|ui| {
@@ -1120,7 +1124,31 @@ impl App {
         self.cabecalho(ui, Aba::Fornada);
         self.controle(ui, "intake_stock", true);
         let ativo = self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0;
-        for nome in ["intake_per_club", "intake_day", "intake_clubs", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_squad_max", "intake_only", "intake_news", "intake_news_numbers"] {
+        let so = self.valor("intake_only") != "0";
+        if ativo {
+            ui.colored_label(AZUL, if so {
+                self.t("Ligada: os regens do jogo nascem todos no dia da fornada, pela disputa da aba Regens (só a data muda); depois, o estoque completa cada clube até o mínimo garantido.",
+                    "On: the game's regens are all born on intake day, through the Regens tab's contest (only the date changes); then the stock tops each club up to the guaranteed minimum.")
+            } else {
+                self.t("Ligada: os regens do jogo nascem ao longo da temporada, como sempre; no dia da fornada, cada clube recebe o mínimo garantido do estoque, por cima.",
+                    "On: the game's regens are born through the season, as always; on intake day every club gets the guaranteed minimum from the stock, on top.")
+            });
+        }
+        ui.add_space(6.0);
+        ui.strong(self.t("Quando", "When"));
+        self.controle(ui, "intake_day", ativo);
+        self.controle(ui, "retire_day", true);
+        ui.add_space(6.0);
+        ui.strong(self.t("Os regens do jogo", "The game's regens"));
+        self.controle(ui, "intake_only", ativo);
+        ui.add_space(6.0);
+        ui.strong(self.t("A garantia (os jovens do estoque)", "The guarantee (stock youngsters)"));
+        for nome in ["intake_per_club", "intake_clubs", "intake_squad_max", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_surprise"] {
+            self.controle(ui, nome, ativo);
+        }
+        ui.add_space(6.0);
+        ui.strong(self.t("A mensagem", "The message"));
+        for nome in ["intake_news", "intake_news_numbers"] {
             self.controle(ui, nome, ativo);
         }
     }

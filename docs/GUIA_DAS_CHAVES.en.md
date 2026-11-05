@@ -261,68 +261,80 @@ Values: from 0 to 100 (whole number). Default: `10`.
 
 ## Intake (experimental)
 
-EXPERIMENTAL. The regen intake (Football Manager's Youth Intake): instead of being born one by one through the year, youngsters arrive all at once, on one day of the year, at every club. The DLL creates a stock of people with a new career and keeps them asleep; on intake day each club gets a few youngsters, each a copy of a real player of the club's country, with a PA from the club's reputation. By default youth regens then come only from the intake. It only works in a NEW career.
+EXPERIMENTAL. The regen intake (Football Manager's Youth Intake): regens arrive all at once, on one day of the year, instead of being born one by one through the season. Only the date changes: each game regen still goes through the clubs' contest, with the whole curve of the Regens tab, and still goes into regen_origins. On top of that, the guarantee: every club with squad room ends with at least intake_per_club youngsters, topped up from a stock of people created with the career. And your club gets a message from the youth coach. It only works in a NEW career.
 
 - **Stock**: the extra people the DLL creates with a new career, asleep until the intake. Each intake uses about 750 (3 per club, 278 clubs); with the stock empty, the intake stops and the game goes on as normal.
 - **Season end**: the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December.
 
 ### Stock (people created with the career) — `intake_stock`
 
-How many people the DLL creates with a new career for the intakes (0 turns it off). Each intake uses about 750; 3,000 last four years, 20,000 over ten. The limit is the room in the game's tables (about 120,000). It only works in a new career: in a save under way it creates nothing.
+Turns the intake on (0 = off). It's the stock for the guarantee: how many people the DLL creates with a new career, kept asleep, to top up the clubs the contest left with fewer youngsters than the minimum. The game's own regens don't come from here: they come from retirements. With 3,000, about 2,650 are left after three intakes; the maximum is the room in the game's tables, about 120,000. It only works in a new career.
 
 Values: from 0 to 100000 (whole number). Default: `0`.
 
-### Youngsters per club — `intake_per_club`
+### Guaranteed minimum per club — `intake_per_club`
 
-How many youngsters each club gets in each intake. 3 roughly doubles the career's regens. 0 turns the intake off (the stock stays asleep).
+The minimum each club is guaranteed per intake. First the game's regens are born, through the contest (the Regens tab's curve picks each one's club); then every club with squad room that ended below this number is topped up from the stock. A club that got 5 from the contest keeps 5; one that got 1 gets 2 more from the stock. 0 = no guarantee.
 
 Values: from 0 to 20 (whole number). Default: `3`.
 
 ### Intake day — `intake_day`
 
-When the intake comes. On a fixed day, every club receives at once. At season end, each nation receives when its season ends (England mid-year, Brazil at the end); clubs of nations outside the game's table receive on 1 July.
+The day the youngsters arrive. On a fixed day (counted from 0 = 1 January; 181 = 1 July), every country at once. At season end, each country when its season ends (Brazil early in the year, England and Italy mid-year); countries outside the game's list of 35 main ones receive on day 181. In tweaks.cfg any day from 0 to 365 works.
 
 Values: `181` (1 July (day 181)), `season_end` (Each nation's season end), `0` (1 January (day 0)). Default: `181`.
 
-### Clubs that receive — `intake_clubs`
+### Clubs with the guarantee — `intake_clubs`
 
-Which clubs receive: those of the playable leagues, or also those of the background leagues you chose when creating the career.
+Which clubs get the guaranteed minimum: those of the playable leagues, or also those of the background leagues you chose when creating the career. The game's regens still go wherever the contest sends them.
 
 Values: `playable` (Playable leagues), `selected` (Background leagues too). Default: `playable`.
 
 ### PA: reputation-0 club — `intake_pa_min`
 
-The PA of a youngster at a reputation-0 club. Between 0 and 10000, the PA rises in a straight line to the maximum.
+Only for stock youngsters (the guarantee). The PA of a reputation-0 club, on the game's 1 to 200 scale. Between reputation 0 and 10,000 the PA rises in a straight line to the maximum: with 60 and 170, a club of reputation 5,000 gets 115. The game's regens have the retired player's record PA, as always.
 
 Values: from 1 to 200 (whole number). Default: `60`.
 
 ### PA: reputation-10000 club (cap) — `intake_pa_max`
 
-The PA of a youngster at a reputation-10000 club, and the cap: no intake youngster goes above it.
+Only for stock youngsters. The PA of a reputation-10,000 club, and the cap: no stock youngster goes above it, not with the spread nor with the surprise.
 
 Values: from 1 to 200 (whole number). Default: `170`.
 
 ### PA: draw around it — `intake_pa_spread`
 
-A draw around the club's PA: 30 goes from 15 below to 15 above. Always between the minimum and the maximum. 0: every youngster at the club has the same PA.
+Only for stock youngsters. The random variation around the club's PA: 30 goes from 15 below to 15 above. 0 = every stock youngster at the club with the same PA. The result always stays between the minimum and the maximum.
 
 Values: from 0 to 200 (whole number). Default: `30`.
 
+### Surprise (% of stock youngsters) — `intake_surprise`
+
+Only for stock youngsters. The chance, in %, of one of them being the surprise: the PA drawn between the club's and the cap (intake_pa_max), instead of the usual spread. It's the gem that turns up at a small club. 10 = 1 in 10. 0 = never.
+
+Values: from 0 to 100 (whole number). Default: `10`.
+
+### Retirement day — `retire_day`
+
+The day of the year for player retirements. In the original game each one retires on a date of its own (usually the country's season end). With a day (counted from 0 = 1 January), every retirement set from then on happens on it; a little before the intake, whoever retires is born in the next intake. Works with or without the intake. In tweaks.cfg any day from 0 to 365 works.
+
+Values: `original` (The game's own dates), `174` (24 June (day 174, a week before 1 July)), `358` (24 December (day 358)). Default: `original`.
+
 ### Squad: a club with this many is skipped — `intake_squad_max`
 
-A club with this many players in the squad (of 50 places) is skipped that year. With the intake, squads swell (from 33 to 40 on average); 40 keeps them around 37.
+A club with this many players in the squad (the squad has 50 places) gets no stock youngsters that year. With 50, only a full squad is left out. The game's regens follow the squad room of the Regens tab.
 
 Values: from 1 to 50 (whole number). Default: `50`.
 
-### Youth regens — `intake_only`
+### The game's regens — `intake_only`
 
-Only from the intake: the game stops creating youth regens through the season; they all arrive on intake day. Players who retire become intake material (before the created stock), so it renews itself. Non-players (coaches, scouts) keep arriving as in the game. With the game's regens: they keep being born, and the intake comes on top. Only from the intake, the clubs' contest (the Regens keys) and regen_origins no longer come into play.
+1 = the game's regens are only born on intake day: through the season, whoever retires waits in the game's queue, and on intake day they are all born at once, each through the contest, with everything on the Regens tab (level, facilities, staff, room, cap, surprise, temperature), the ages and the names, and they go into regen_origins. Only the date changes. 0 = the game's regens are born through the season, as always, and the stock gives every club intake_per_club on top.
 
-Values: `1` (Only from the intake), `0` (Intake plus the game's regens). Default: `1`.
+Values: `1` (All born on intake day), `0` (Through the season, as always). Default: `1`.
 
 ### Intake message — `intake_news`
 
-On intake day your club gets an inbox message from the youth coach with the youngsters who arrived and his view of each one: whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language (Portuguese, Spanish; English for the others). Without the DLL the save still opens and the message shows as one short line.
+On intake day your club gets an inbox message from the youth coach with every youngster who arrived (from the contest and from the stock) and his view of each one: whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language. The phrases are in intake_news.txt, next to the exe, one section for each of the game's 19 languages: you can edit or translate them (Portuguese, Spanish, English, French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated). Without the DLL the message shows as one short line.
 
 Values: `1` (Inbox message), `0` (No message). Default: `1`.
 

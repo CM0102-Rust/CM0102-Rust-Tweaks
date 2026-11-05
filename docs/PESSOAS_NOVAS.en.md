@@ -128,12 +128,21 @@ The full reports and lists (the 1,155 uses, one per line) stayed in the session'
 
 The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
 
+**The current design (11/05, Lucas's request: "only the arrival date changes; the idea is to lose nothing").** In 1.2 the intake youngsters all came from the stock, with the record replaced by a copy of a real player, and didn't go through the contest: the Regens tab's curve (level, facilities, staff, room, cap, surprise, temperature), the retired player's record PA and `regen_origins` no longer applied. Now, on intake day:
+1. **The game's regens** (`intake_only = 1`): whoever retired since the last intake waited in the game's queue; the whole queue is born, each youngster through the same queue call (0x7a664f, the `regen_origins` one) and through the contest, with the whole curve. The PA is the retired player's record PA, as always. Only the date changes.
+2. **The guarantee:** every club with squad room that ended below `intake_per_club` is topped up from the stock (record copied from a real player of the club's nation, PA from reputation, the spread and the surprise `intake_surprise`: now and then the PA drawn between the club's and the cap).
+3. **The message** lists the youngsters from both sources.
+4. **The message phrases** live in `intake_news.txt`, next to the exe (Lucas's request, 11/05): one `[CODE]` section for each of the game's 19 languages, with the game's own codes (the table at 0x9eb244; the current language at [0x9eb2dc]), and `key = phrase` lines (title, opening, each youngster's paragraph with `{name}`, `{age}`, `{position}`, `{now}`, `{potential}`, the positions and the 9 bands). English, Portuguese (POR and POR_BRA, in Brazilian Portuguese), Spanish (ESP and ESP_MEX), French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated; Polish, Russian, Japanese, Korean and Chinese stay in English for the community to translate. Without the file, or without a phrase, the built-in ones apply (English, Portuguese, Spanish).
+5. **The retirement day** (`retire_day`): the single gate of retirements (`add_retirement` 0x7a8510) is hooked at its entry and writes the retirement date (+0x10 day, +0x12 year of the 26-byte record) on the chosen day; the game retires once today is past the date (0x7a5a57), so it writes the day before. Works with or without the intake. With the intake on 1 July and retirements on 24 June, whoever retires is born a week later.
+
+In `season_end` mode the queue is born per country: the pool records of that day's nations (+4 of the 16-byte entry, the nation id, as 0x7a8ab0 writes it) go to the front, and only those are born. With `intake_only = 0`, none of this: the game's regens are born through the season, and the stock gives every club `intake_per_club` on top, as in 1.2.
+
 ### 8.1 The keys
 
 | Key | Default | What it does |
 |---|---|---|
 | `intake_stock` | 0 (off) | people created with the career (the stock) |
-| `intake_per_club` | 3 | regens per club in the intake |
+| `intake_per_club` | 3 | the guaranteed minimum per club per intake: the contest's regens count, and the stock tops up the rest |
 | `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07), or `season_end`: each nation at the end of its own season (the 35 of the key-nation table 0xb63d60; the others on day 181) |
 | `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
@@ -141,7 +150,9 @@ The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas
 | `intake_squad_max` | 50 | a club with this many in the squad is skipped in that year's intake |
 | `intake_news` | 1 | the inbox message for a human-managed club (see step 6) |
 | `intake_news_numbers` | 0 | 1: the message also shows CA and PA |
-| `intake_only` | 1 | 1: youth regens are born only in the intake (see step 5 below); 0: the game's own keep coming and the intake comes on top |
+| `intake_only` | 1 | 1: the game's regens wait in the queue and are all born on intake day, through the contest and the curve; 0: they're born through the season, and the stock comes on top |
+| `intake_surprise` | 10 | % of stock youngsters with the PA drawn between the club's and the cap (the gem at a small club) |
+| `retire_day` | `original` | the day of the year (0 to 365) for every player retirement, or `original` (the game's dates) |
 
 ### 8.2 How it works
 

@@ -50,6 +50,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | `src/conteiner.rs` | O contêiner do save acima de 2 GB (cópia do `rust/src/conteiner.rs` do projeto CM0102; estável desde o save2gb) |
 | `src/partes.rs` | As partes, as assinaturas e os casos conhecidos (usados também pelo configurador) |
 | `src/pasta.rs` | `portable_folder` e `clear_admin_flag` |
+| `src/fornada.rs`, `intake_news.txt` | A fornada (`intake_*`, `retire_day`) e as frases da mensagem dela na caixa de entrada, uma seção por língua do jogo, editáveis ao lado do exe |
 | `src/cinzentos.rs` | `grey_players`: o CA dos jogadores cinzentos pelo nível do clube |
 | `src/nomes.rs` | `regen_names`: os nomes das pessoas novas do próprio país |
 | `src/video.rs`, `src/apresentacao.rs`, `src/reducao.rs`, `src/win.rs` | A camada de vídeo de `video = window` (cópias dos arquivos do projeto CM0102: mudar lá e copiar para cá) |

@@ -1269,6 +1269,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         if !fornada::instalar() {
             registro::linha("intake (EXPERIMENTAL): off (intake_stock = 0)");
         }
+        fornada::instalar_aposentadoria();
     }
     1
 }

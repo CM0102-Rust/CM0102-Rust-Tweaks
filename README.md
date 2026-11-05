@@ -50,6 +50,7 @@ The plan is in [ROADMAP.md](ROADMAP.md).
 | `src/conteiner.rs` | The saves above 2 GB container (a copy of `rust/src/conteiner.rs` from the CM0102 project; stable since save2gb) |
 | `src/partes.rs` | The parts, the signatures and the known cases (also used by the configurator) |
 | `src/pasta.rs` | `portable_folder` and `clear_admin_flag` |
+| `src/fornada.rs`, `intake_news.txt` | The youth intake (`intake_*`, `retire_day`) and the phrases of its inbox message, one section per game language, editable next to the exe |
 | `src/cinzentos.rs` | `grey_players`: the grey players' CA from the club's level |
 | `src/nomes.rs` | `regen_names`: new people's names from their own country |
 | `src/video.rs`, `src/apresentacao.rs`, `src/reducao.rs`, `src/win.rs` | The `video = window` video layer (copies of the CM0102 project's files: change them there and copy here) |
