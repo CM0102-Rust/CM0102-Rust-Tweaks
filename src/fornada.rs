@@ -183,7 +183,9 @@ unsafe fn soltar(this: usize) {
             let rep = w(c + 0x80) as i32;
             let meio = cfg().pa_min + (cfg().pa_max - cfg().pa_min) * rep.clamp(0, 10000) / 10000;
             let pa = if cfg().pa_espalhar > 0 { meio + sorteio(cfg().pa_espalhar + 1) - cfg().pa_espalhar / 2 } else { meio };
-            *((ficha + 7) as *mut i16) = pa.clamp(cfg().pa_min.min(cfg().pa_max), 200) as i16;
+            // intake_pa_max é o teto de verdade: o espalhamento não passa dele (na 1ª versão ia até 200)
+            let (lo, hi) = (cfg().pa_min.min(cfg().pa_max), cfg().pa_min.max(cfg().pa_max));
+            *((ficha + 7) as *mut i16) = pa.clamp(lo, hi) as i16;
             por_na_frente_da_reserva(this, id_ficha, d(nac));
             FORCADO = c;
             let regen: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7abac0usize);

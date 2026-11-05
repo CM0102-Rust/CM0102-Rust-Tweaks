@@ -121,3 +121,58 @@ Não podem mudar de lugar: há ponteiros para pessoas nos elencos, nas preferên
 - O significado dos valores do "tamanho do banco" no `general.dat`.
 
 Os relatórios completos e as listas (os 1.155 usos, um por linha) ficaram no rascunho da sessão; entram no repositório quando o código começar.
+
+## 8. O caminho 1 na bancada (04/11/2026, experimental)
+
+O código está na branch `fornada` (`src/fornada.rs`), fora do `main` e da versão: só entra numa versão depois de provado estável e com o ok do Lucas. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
+
+### 8.1 As chaves
+
+| Chave | Padrão | O que faz |
+|---|---|---|
+| `intake_stock` | 0 (desligado) | pessoas criadas com a carreira (o estoque) |
+| `intake_per_club` | 3 | regens por clube na fornada |
+| `intake_day` | 181 | dia do ano da fornada (181 = 30/06 ou 01/07) |
+| `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo |
+| `intake_pa_min`, `intake_pa_max` | 60, 170 | o PA vai do mínimo (clube de reputação 0) ao máximo (reputação 10.000) |
+| `intake_pa_spread` | 30 | sorteio em volta do PA do clube; o resultado fica entre o mínimo e o máximo |
+
+### 8.2 Como funciona
+
+1. **Criar:** um desvio no `ftol` do corte do banco (0x525f8c) pede K pessoas a mais ao próprio jogo, dentro da folga (pessoas, fichas e preferências), e corrige o teto com defeito (0x525f9b).
+2. **Adormecer:** antes de `game_run_to_start_date` (chamada em 0x829fd9), as K pessoas ficam aposentadas (bits 0x30 = 0x20 do registro de 79 bytes), sem clube e fora da fila dos regens.
+3. **Soltar:** no `intake_day`, depois da fila do dia (chamada em 0x5cda7a), cada clube recebe até `intake_per_club` adormecidas (clube com 50 no elenco fica de fora):
+   - a ficha vira a cópia de um jogador real da nação do clube, com o PA da fornada;
+   - ela vai para a frente da reserva de fichas, e `regenerate_as_youth_player` 0x7abac0 faz o regen;
+   - a disputa dos clubes (0x7acea2) é forçada para o clube da fornada; se ele ainda ficar sem clube, entra a assinatura 0x7a6f10.
+4. **Gravar:** nada a fazer. A adormecida é uma aposentada que não está na fila, um estado que o save já guarda.
+
+### 8.3 Os resultados (carreira automática de férias, 278 clubes, 2001 → 2006-200)
+
+Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga [observado]:
+
+| | Controle (sem fornada) | Fornada |
+|---|---|---|
+| Tempo até 2006-200 | 3.523 s | 3.423 s |
+| Jogadores (temporada 2002 → 2006) | 19.346 → 19.293 | 22.255 → 22.191 |
+| Elenco médio (2003 / 2005 / 2006) | 33,9 / 33,3 / 31,8 | 38,4 / 40,4 / 37,5 |
+| Regens acumulados até 2006 | 3.554 | 6.730 |
+| Regens com PA ≥ 150 (2006) | 197 | 318 |
+| Quedas, caixas de erro | nenhuma | nenhuma |
+
+- **A fornada de cada ano:** ~740 regens nos 278 clubes (de 40 a 50 clubes cheios, de 8 a 13 regens que ficaram sem o clube). O estoque de 3.000 acabou na 4ª fornada (2005), como previsto.
+- **As adormecidas ficaram inertes:** um ano antes da 1ª fornada e quatro antes da última. Nenhuma entrou na fila nem num clube antes da hora.
+- **Os regens da fornada:**
+  - 15 a 20 anos (moda 17);
+  - PA mediano 102, CA mediano 54;
+  - posições: M 37%, D 31%, A 23%, G 8%.
+- **Sem custo de tempo:** 3.000 pessoas a mais não mudaram o tempo da carreira. Uma 1ª comparação mostrou a fornada 75% mais lenta, mas o controle tinha rodado depois, com a máquina livre; em paralelo, o tempo é o mesmo.
+- **Corrigido:** na 1ª versão o espalhamento passava do `intake_pa_max` (chegava a 185 com o máximo em 170); agora o máximo é o teto.
+
+### 8.4 A fazer
+
+- Estoque grande (20 mil) e carreira longa: folga, estabilidade, tempo.
+- Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
+- A data da fornada por nação (fim da temporada de cada liga), em vez de um dia fixo.
+- A aba do configurador para as chaves `intake_*`.
+- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. Avaliar se a fornada deve dispensar ou pular quem passa de um limite configurável.

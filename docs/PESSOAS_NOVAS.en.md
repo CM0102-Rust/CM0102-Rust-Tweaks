@@ -121,3 +121,58 @@ They can't move: there are pointers to people in the squads, the preferences, HU
 - What the "database size" values in `general.dat` mean.
 
 The full reports and lists (the 1,155 uses, one per line) stayed in the session's scratch folder; they'll go into the repository when the code starts.
+
+## 8. Path 1 on the test bench (11/04/2026, experimental)
+
+The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the release. It only goes into a release once it's proven stable and Lucas approves it. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
+
+### 8.1 The keys
+
+| Key | Default | What it does |
+|---|---|---|
+| `intake_stock` | 0 (off) | people created with the career (the stock) |
+| `intake_per_club` | 3 | regens per club in the intake |
+| `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07) |
+| `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
+| `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
+| `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
+
+### 8.2 How it works
+
+1. **Create:** a hook on the database trim's `ftol` (0x525f8c) asks the game itself for K more people, within the headroom (people, records and preferences), and fixes the buggy cap (0x525f9b).
+2. **Put to sleep:** before `game_run_to_start_date` (called at 0x829fd9), the K people are marked retired (bits 0x30 = 0x20 of the 79-byte record), with no club and outside the regen queue.
+3. **Release:** on `intake_day`, after the day's queue (called at 0x5cda7a), each club gets up to `intake_per_club` dormant people (a club with 50 in the squad is skipped):
+   - the record becomes a copy of a real player from the club's nation, with the intake PA;
+   - it goes to the front of the record pool, and `regenerate_as_youth_player` 0x7abac0 makes the regen;
+   - the clubs' contest (0x7acea2) is forced to the intake club; if the regen still has no club, the signing 0x7a6f10 runs.
+4. **Save:** nothing to do. A dormant person is a retired person outside the queue, a state the save already keeps.
+
+### 8.3 The results (automatic holiday career, 278 clubs, 2001 → 2006-200)
+
+Stock of 3,000, 3 per club, both careers in parallel, under the same load [observed]:
+
+| | Control (no intake) | Intake |
+|---|---|---|
+| Time to 2006-200 | 3,523 s | 3,423 s |
+| Players (season 2002 → 2006) | 19,346 → 19,293 | 22,255 → 22,191 |
+| Average squad (2003 / 2005 / 2006) | 33.9 / 33.3 / 31.8 | 38.4 / 40.4 / 37.5 |
+| Cumulative regens to 2006 | 3,554 | 6,730 |
+| Regens with PA ≥ 150 (2006) | 197 | 318 |
+| Crashes, error boxes | none | none |
+
+- **Each year's intake:** ~740 regens across the 278 clubs (40 to 50 full clubs, 8 to 13 regens left without the club). The 3,000 stock ran out at the 4th intake (2005), as expected.
+- **The dormant people stayed inert:** a year before the 1st intake and four years before the last one. None entered the queue or a club ahead of time.
+- **The intake regens:**
+  - 15 to 20 years old (mode 17);
+  - median PA 102, median CA 54;
+  - positions: M 37%, D 31%, A 23%, GK 8%.
+- **No time cost:** 3,000 more people didn't change the career's time. A first comparison showed the intake 75% slower, but the control had run later, on an idle machine; in parallel, the time is the same.
+- **Fixed:** in the first version the spread went past `intake_pa_max` (up to 185 with the maximum at 170); now the maximum is the cap.
+
+### 8.4 To do
+
+- A large stock (20,000) and a long career: headroom, stability, time.
+- Save and load with Lucas: the save must open with and without the DLL; check the editors.
+- The intake date per nation (each league's season end) instead of a fixed day.
+- The configurator tab for the `intake_*` keys.
+- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. Consider whether the intake should release players or skip clubs above a configurable limit.
