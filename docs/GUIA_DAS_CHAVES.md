@@ -274,7 +274,7 @@ Valores: de 0 a 100000 (inteiro). Padrão: `0`.
 
 ### Mínimo garantido por clube — `intake_per_club`
 
-O mínimo garantido por clube em cada fornada. Primeiro nascem os regens do jogo, pela disputa (a curva da aba Regens decide o clube de cada um); depois, todo clube com espaço no elenco que ficou abaixo desse número é completado com o estoque. Um clube que recebeu 5 pela disputa fica com 5; um que recebeu 1 ganha mais 2 do estoque. 0 = sem garantia.
+O mínimo garantido por clube em cada fornada. Primeiro nascem os regens do jogo, pela disputa (a curva da aba Regens decide o clube de cada um); depois, todo clube com espaço no elenco que ficou abaixo desse número é completado: primeiro com os regens do jogo que a disputa deixou sem clube (até 21 anos, do país do clube), e só o que faltar com o estoque. Um clube que recebeu 5 pela disputa fica com 5; um que recebeu 1 ganha mais 2 do estoque. 0 = sem garantia.
 
 Valores: de 0 a 20 (inteiro). Padrão: `3`.
 

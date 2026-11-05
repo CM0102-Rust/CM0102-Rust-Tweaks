@@ -274,7 +274,7 @@ Values: from 0 to 100000 (whole number). Default: `0`.
 
 ### Guaranteed minimum per club — `intake_per_club`
 
-The minimum each club is guaranteed per intake. First the game's regens are born, through the contest (the Regens tab's curve picks each one's club); then every club with squad room that ended below this number is topped up from the stock. A club that got 5 from the contest keeps 5; one that got 1 gets 2 more from the stock. 0 = no guarantee.
+The minimum each club is guaranteed per intake. First the game's regens are born, through the contest (the Regens tab's curve picks each one's club); then every club with squad room that ended below this number is topped up: first with the game's regens the contest left without a club (up to 21, from the club's country), and only the rest from the stock. A club that got 5 from the contest keeps 5; one that got 1 gets 2 more from the stock. 0 = no guarantee.
 
 Values: from 0 to 20 (whole number). Default: `3`.
 

@@ -261,13 +261,13 @@ unsafe fn fichas_na_frente(this: usize, da_nacao: &dyn Fn(usize) -> bool) -> usi
 /// O passo 3a: os regens do jogo guardados na fila nascem agora, `n` fichas da frente da reserva, cada um pela chamada da
 /// fila (0x7a664f: a 0x7abac0 ou o registro do `regen_origins` por cima dela) e pela disputa, com a curva. Como a
 /// 0x7a65d0: a vaga da cabeça da fila, a ficha da frente da reserva, e a cabeça sai da fila. Sem olhar a data da fila:
-/// quem se aposentou até hoje nasce nesta fornada. Devolve os jovens com clube, por clube, e quantos ficaram sem clube.
-unsafe fn nascer_da_fila(this: usize, n: usize, chegaram: &mut std::collections::HashMap<usize, Vec<usize>>) -> (usize, usize) {
+/// quem se aposentou até hoje nasce nesta fornada. Devolve os jovens com clube, por clube, e os que ficaram sem clube.
+unsafe fn nascer_da_fila(this: usize, n: usize, chegaram: &mut std::collections::HashMap<usize, Vec<usize>>) -> (usize, Vec<usize>) {
     let (pessoas, total) = (d(0xae23bc), d(0xae2364));
     let alvo = (core::ptr::read_unaligned(0x7a6650 as *const i32) as usize).wrapping_add(0x7a6654);
     let criar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(alvo);
     let meta = d(this + 0x40).saturating_sub(n);
-    let (mut nascidos, mut sem_clube) = (0, 0);
+    let (mut nascidos, mut sem_clube) = (0, Vec::new());
     while d(this + 0x14) > 0 && d(this + 0x40) > meta {
         let id = d(d(this + 0x10));
         if id < total {
@@ -277,7 +277,7 @@ unsafe fn nascer_da_fila(this: usize, n: usize, chegaram: &mut std::collections:
             if d(this + 0x40) < antes {
                 nascidos += 1;
                 match d(p + 0x39) {
-                    0 => sem_clube += 1,
+                    0 => sem_clube.push(p),
                     c => chegaram.entry(c).or_default().push(p),
                 }
             }
@@ -321,10 +321,37 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     let nivel: std::collections::HashMap<usize, i32> = clubes.iter().map(|&c| (c, nivel_do_elenco(c))).collect();
     let mut chegaram: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
     // a. os regens do jogo, pela disputa e pela curva
-    let (mut da_fila, mut fila_sem_clube) = (0, 0);
+    let (mut da_fila, mut livres) = (0, Vec::new());
     if cfg().so_fornada {
         let k = fichas_na_frente(this, da_nacao);
-        (da_fila, fila_sem_clube) = nascer_da_fila(this, k, &mut chegaram);
+        (da_fila, livres) = nascer_da_fila(this, k, &mut chegaram);
+    }
+    let fila_sem_clube = livres.len();
+    // a garantia usa primeiro os regens do jogo que ficaram sem clube: até 21 anos, da nação do clube (+0x1a da pessoa e
+    // +0x53 do clube, os dois o ponteiro da nação), assinados pela 0x7a6f10; só o que faltar vem do estoque
+    let mut livres_por_nacao: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
+    for &p in livres.iter().rev() {
+        if crate::b(p + 0x18) <= 21 && d(p + 0x1a) != 0 {
+            livres_por_nacao.entry(d(p + 0x1a)).or_default().push(p);
+        }
+    }
+    let assinar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
+    let mut dos_livres = 0;
+    for &c in &clubes {
+        let ja = chegaram.get(&c).map_or(0, |v| v.len()) as i32;
+        let mut faltam = if cfg().so_fornada { (cfg().por_clube - ja).max(0) } else { 0 };
+        while faltam > 0 && elenco(c) < cfg().elenco_max as usize {
+            let Some(p) = livres_por_nacao.get_mut(&d(c + 0x53)).and_then(|v| v.pop()) else { break };
+            if d(p + 0x39) != 0 {
+                continue;
+            }
+            assinar(this, p, c);
+            if d(p + 0x39) == c {
+                chegaram.entry(c).or_default().push(p);
+                dos_livres += 1;
+                faltam -= 1;
+            }
+        }
     }
     // b. a garantia, com o estoque
     let mut estoque = adormecidos(this);
@@ -385,8 +412,7 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             regen(this, p);
             FORCADO = 0;
             if d(p + 0x39) == 0 {
-                let assinar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
-                assinar(this, p, c);
+                    assinar(this, p, c);
             }
             if d(p + 0x39) == c {
                 dados += 1;
@@ -412,8 +438,8 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         return;
     }
     let com_3 = clubes.iter().filter(|c| chegaram.get(c).map_or(0, |v| v.len()) as i32 >= cfg().por_clube).count();
-    registro::linha(&format!("intake\t{}\tclubs {}\tgame regens {} (without a club {})\tfrom the stock {} (surprises {})\tclubs with {} or more {}\tfull {}\tno template {}\tleft without the club {}\tstock left {}",
-        crate::data_do_jogo(), clubes.len(), da_fila, fila_sem_clube, dados, surpresas, cfg().por_clube, com_3, cheios, sem_molde, falhas, estoque.len()));
+    registro::linha(&format!("intake\t{}\tclubs {}\tgame regens {} (without a club {}, then given to clubs below the minimum {})\tfrom the stock {} (surprises {})\tclubs with {} or more {}\tfull {}\tno template {}\tleft without the club {}\tstock left {}",
+        crate::data_do_jogo(), clubes.len(), da_fila, fila_sem_clube, dos_livres, dados, surpresas, cfg().por_clube, com_3, cheios, sem_molde, falhas, estoque.len()));
 }
 
 // ---- A mensagem na caixa de entrada ----
