@@ -428,7 +428,8 @@ unsafe fn avisar(clube: usize, nivel: i32, jovens: &[usize]) {
     let humano = |t: usize| t != 0 && d(t) >= d(0xae2364).saturating_sub(16);
     // teste na bancada (TWEAKS_INTAKE_NEWS_TEST=1, carreira automática sem clube): a 1ª mensagem de cada fornada vai
     // para o técnico humano da tela ([0xb74c26]) e o texto escrito pelo desvio vai para o registro
-    let teste = !humano(tecnico) && std::env::var("TWEAKS_INTAKE_NEWS_TEST").is_ok() && !TESTE_FEITO && humano(d(0xb74c26));
+    // só com o técnico humano sem clube: com clube, ele já recebe a mensagem do clube dele (eram duas na caixa)
+    let teste = !humano(tecnico) && std::env::var("TWEAKS_INTAKE_NEWS_TEST").is_ok() && !TESTE_FEITO && humano(d(0xb74c26)) && d(d(0xb74c26) + 0x39) == 0;
     if teste {
         tecnico = d(0xb74c26);
         TESTE_FEITO = true;
