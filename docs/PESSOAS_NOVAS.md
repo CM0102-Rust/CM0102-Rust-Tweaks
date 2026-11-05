@@ -200,7 +200,20 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
 - **Carreira longa com 20.000** (2001 → 2011-201, 8.489 s, 05/11): sem quedas, 10 fornadas de 730 a 800, sobraram 12.400. Com `intake_squad_max = 50` o elenco médio sobe todo ano (41,2 em 2006, 44,7 em 2011), e os regens com PA ≥ 150 vão de 346 a 1.008: por isso o padrão sugerido é 40. As adormecidas contam como livres na estatística (14.000 a 17.000 "livres").
 - **`intake_day = season_end`** (05/11, até 2003): o Brasil recebe no dia 10 (112 clubes, ~335 regens) e a Inglaterra e a Itália no dia 169 (166 clubes, ~330 a 430), cada uma no fim da própria temporada. A 1ª versão dava uma fornada a mais no 1º dia da carreira: na preparação, o laço passa por todas as nações; a DLL agora faz a mesma conferência de data do começo da 0x59cdd0 (0x456770) e ignora essas passagens.
 - **`intake_only = 1`** (05/11, até 2004-216, 2.322 s, sem quedas): nenhum nascimento nem disputa ao longo das temporadas (`births 0`, `contest 0` em todos os registros); três fornadas de ~750 (278 clubes), 767, 677 e 516 delas vindas da fila de aposentados, e o estoque criado caiu só de 3.000 para ~2.650. Jogadores de 22.287 para 22.105 em três anos (−0,8%); elenco médio 35,3 → 37,8; 16 a 21 jovens por fornada ficam sem o clube (saem como livres). O "stock left" do registro conta junto os aposentados da fila que sobraram (por isso passa de 3.000 na 1ª).
-- **A fornada com a curva** (05/11, carreira curta com o `tweaks.cfg` do repositório: `rule = new`, `ages = custom`, `season_cap = 2`, `surprise = 15`, `regen_origins = 1`; aposentadorias no dia 240 e fornada no 250 de 2001): no dia da fornada nasceram 508 regens do jogo pela disputa (198 sem clube, o caminho normal para os de países fora da carreira), todos os 508 no `regen_origins.csv`; o estoque completou 640 (49 surpresas); 237 dos 278 clubes ficaram com 3 ou mais (31 de elenco cheio); a mensagem chegou. Sem quedas. A carreira de 10 anos está em [8.3, a preencher].
+- **A fornada com a curva** (05/11, carreira curta com o `tweaks.cfg` do repositório: `rule = new`, `ages = custom`, `season_cap = 2`, `surprise = 15`, `regen_origins = 1`; aposentadorias no dia 240 e fornada no 250 de 2001): no dia da fornada nasceram 508 regens do jogo pela disputa (198 sem clube, o caminho normal para os de países fora da carreira), todos os 508 no `regen_origins.csv`; o estoque completou 640 (49 surpresas); 237 dos 278 clubes ficaram com 3 ou mais (31 de elenco cheio); a mensagem chegou. Sem quedas. 
+- **As duas carreiras de 10 anos com a curva** (05/11, 2001 → 2011-185, `tweaks.cfg` do repositório com estoque de 20.000, fornada no dia 181 e aposentadorias no 174; sem quedas, save gravado no dia da última fornada e carregado de novo): A = a garantia só com o estoque (7.019 s); B = a garantia primeiro com os regens do jogo sem clube (até 21 anos, da nação do clube), depois o estoque (5.737 s).
+
+| Em 2011 | A | B |
+|---|---|---|
+| estoque gasto em 10 fornadas | 6.490 | 2.946 |
+| regens sem clube que completaram clubes (por fornada) | — | 186 a 464 |
+| clubes com 3 ou mais na fornada (de 278) | 264 | 278 |
+| elenco médio | 40,3 (subindo) | 37,2 (estável de 36,4 a 38,0 desde 2004) |
+| regens livres (sem clube) no mundo | 1.168 | 463 |
+| regens com PA ≥ 150 acumulados | 1.373 | 1.081 |
+| o maior acumulado de regens num elenco ("clube depósito") | 44 (Bangu) | 39 (Corinthians de Caicó) |
+
+O B fica: gasta menos da metade do estoque, completa todos os clubes, segura o elenco e deixa menos regens perdidos como livres. A pendência dos dois é o clube depósito, que cresce ano a ano (de 5 a 39 no B), concentrado em clubes pequenos do Brasil.
 
 ### 8.4 A fazer
 
