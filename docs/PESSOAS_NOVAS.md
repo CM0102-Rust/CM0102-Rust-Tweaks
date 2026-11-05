@@ -121,3 +121,81 @@ Não podem mudar de lugar: há ponteiros para pessoas nos elencos, nas preferên
 - O significado dos valores do "tamanho do banco" no `general.dat`.
 
 Os relatórios completos e as listas (os 1.155 usos, um por linha) ficaram no rascunho da sessão; entram no repositório quando o código começar.
+
+## 8. O caminho 1 na bancada (04/11/2026, experimental)
+
+**O nome:** "fornada" vem da tradução do Football Manager em português de Portugal. No FM em inglês é *Youth Intake* (o dia, *Youth Intake Day*), e as chaves seguem esse nome (`intake_*`); no FM em espanhol, *hornada de juveniles*.
+
+O código está em `src/fornada.rs`. Saiu na versão 1.2 (05/11/2026, com o ok do Lucas), ainda experimental. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
+
+### 8.1 As chaves
+
+| Chave | Padrão | O que faz |
+|---|---|---|
+| `intake_stock` | 0 (desligado) | pessoas criadas com a carreira (o estoque) |
+| `intake_per_club` | 3 | regens por clube na fornada |
+| `intake_day` | 181 | dia do ano da fornada (181 = 30/06 ou 01/07), ou `season_end`: cada nação no fim da própria temporada (as 35 da tabela de nações-chave 0xb63d60; as outras no dia 181) |
+| `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo |
+| `intake_pa_min`, `intake_pa_max` | 60, 170 | o PA vai do mínimo (clube de reputação 0) ao máximo (reputação 10.000) |
+| `intake_pa_spread` | 30 | sorteio em volta do PA do clube; o resultado fica entre o mínimo e o máximo |
+| `intake_squad_max` | 50 | clube com esse tanto no elenco fica de fora da fornada daquele ano |
+| `intake_news` | 1 | a mensagem na caixa de entrada do clube de técnico humano (ver o passo 6) |
+| `intake_news_numbers` | 0 | 1: a mensagem mostra também o CA e o PA |
+| `intake_only` | 1 | 1: os regens jogadores só nascem na fornada (ver o passo 5 abaixo); 0: os do jogo continuam e a fornada vem por cima |
+
+### 8.2 Como funciona
+
+1. **Criar:** um desvio no `ftol` do corte do banco (0x525f8c) pede K pessoas a mais ao próprio jogo, dentro da folga (pessoas, fichas e preferências), e corrige o teto com defeito (0x525f9b).
+2. **Adormecer:** antes de `game_run_to_start_date` (chamada em 0x829fd9), as K pessoas ficam aposentadas (bits 0x30 = 0x20 do registro de 79 bytes), sem clube e fora da fila dos regens.
+3. **Soltar:** no `intake_day`, depois da fila do dia (chamada em 0x5cda7a), cada clube recebe até `intake_per_club` adormecidas (clube com 50 no elenco fica de fora):
+   - a ficha vira a cópia de um jogador real da nação do clube, com o PA da fornada;
+   - ela vai para a frente da reserva de fichas, e `regenerate_as_youth_player` 0x7abac0 faz o regen;
+   - a disputa dos clubes (0x7acea2) é forçada para o clube da fornada; se ele ainda ficar sem clube, entra a assinatura 0x7a6f10.
+4. **Gravar:** nada a fazer. A adormecida é uma aposentada que não está na fila, um estado que o save já guarda.
+5. **Só a fornada** (`intake_only = 1`, 05/11): a `process_regen_queue` 0x7a65d0 tem duas metades: o laço dos nascimentos (0x7a65f0..0x7a66b7, a fila em +0x10/+0x14 e a reserva de fichas em +0x3c/+0x40) e a reposição dos não jogadores (+0x1c/+0x20, de 0x7a66bd em diante), que não toca na fila. A DLL chama a rotina com a contagem da fila zerada (e a devolve depois): o laço não anda e a outra metade segue. Na fornada, os jogadores aposentados que esperam na fila, com a ficha ainda na reserva, entram como estoque, antes dos criados; cada um sai da fila (como a 0x7a65d0 tira a cabeça: as de trás sobem, a última vaga fica −1) e a ficha dele sai da reserva, para nenhum outro regen herdar a mesma ficha depois. Assim a fornada se renova com as aposentadorias. Os não jogadores da fila ficam aposentados nela. Com isso, a disputa dos clubes (`rule = new`, `season_cap`...) e o `regen_origins` não entram mais: a fornada já escolhe o clube, e o `regen_origins` fica na chamada de dentro da fila (0x7a664f). As idades (`ages`) e os nomes (`regen_names`) continuam valendo, porque ficam dentro da 0x7abac0.
+6. **A mensagem** (`intake_news = 1`, 05/11): o clube de técnico humano recebe uma notícia do próprio jogo com os jovens da fornada e o parecer do treinador da base sobre cada um. O caminho é o mesmo que a NickDLL do CLZ usa nas mensagens dela: montar um `NewsItem` (0x77bbe0), entregar pelo `News` (`send_to_club_manager` 0x7861e0, que só entrega a técnico humano) e escrever o texto na hora de mostrar. Ela usa o tipo 6009 (as finanças da diretoria) com um código que o jogo não conhece, e sem a DLL o escritor original mostraria a memória da pilha sem inicializar. Aqui o tipo é o 0x1388, a mensagem entre técnicos do jogo em rede: o texto dele fica nas próprias vagas da notícia (a partir da vaga 3), então **sem a DLL a notícia aparece com uma linha curta** guardada na língua do dia ("Fornada: 3 jovens chegaram da base."). Com a DLL, `NewsItem::write_text` 0x77bc80 é desviado na entrada e, para a notícia com as marcas (vaga 2 "FORN", vaga 20 "INTK"), escreve o título e o corpo na língua do jogo na hora (`langlib`, [0x9eb2dc], códigos em 0x9eb244: POR e POR_BRA → português, ESP e ESP_MEX → espanhol, o resto inglês), com os nomes clicáveis (link 0x7d8, o de pessoa). A mensagem entre técnicos vem com o botão "Responder"; `NewsItem::get_action_button` 0x782b70 também é desviado na entrada e devolve "sem botão" para a nossa notícia. Visto no jogo (05/11): aparece na aba Mensagens, sem botão, e ao trocar a língua nas opções a mesma notícia passa a sair em inglês. As vagas 22.. guardam, para até 14 jovens, o id e o parecer (CA, PA e as duas faixas), calculados no dia: o save leva tudo no news.dat.
+   - **Nível de agora:** o CA comparado com a média dos 11 melhores do elenco: até 5 abaixo, "já está pronto para o time principal"; até 20, "pode ganhar chances em breve"; até 40, "precisa de um ou dois anos na base"; abaixo, "ainda está muito cru".
+   - **Potencial:** pelo PA: 170+, "pode virar um dos melhores do mundo"; 150+, "tem potencial para a seleção"; 130+, "pode ser titular de um clube grande"; 100+, "deve fazer carreira na primeira divisão"; abaixo, "dificilmente passará das divisões de baixo".
+
+### 8.3 Os resultados (carreira automática de férias, 278 clubes, 2001 → 2006-200)
+
+Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga [observado]:
+
+| | Controle (sem fornada) | Fornada |
+|---|---|---|
+| Tempo até 2006-200 | 3.523 s | 3.423 s |
+| Jogadores (temporada 2002 → 2006) | 19.346 → 19.293 | 22.255 → 22.191 |
+| Elenco médio (2003 / 2005 / 2006) | 33,9 / 33,3 / 31,8 | 38,4 / 40,4 / 37,5 |
+| Regens acumulados até 2006 | 3.554 | 6.730 |
+| Regens com PA ≥ 150 (2006) | 197 | 318 |
+| Quedas, caixas de erro | nenhuma | nenhuma |
+
+- **A fornada de cada ano:** ~740 regens nos 278 clubes (de 40 a 50 clubes cheios, de 8 a 13 regens que ficaram sem o clube). O estoque de 3.000 acabou na 4ª fornada (2005), como previsto.
+- **As adormecidas ficaram inertes:** um ano antes da 1ª fornada e quatro antes da última. Nenhuma entrou na fila nem num clube antes da hora.
+- **Os regens da fornada:**
+  - 15 a 20 anos (moda 17);
+  - PA mediano 102, CA mediano 54;
+  - posições: M 37%, D 31%, A 23%, G 8%.
+- **Sem custo de tempo mensurável:** 3.000 pessoas a mais não mudaram o tempo da carreira. Uma 1ª comparação mostrou a fornada 75% mais lenta, mas o controle tinha rodado depois, com a máquina livre; em paralelo, o tempo é o mesmo.
+- **Estoque de 20.000** (duas carreiras até 2006, 05/11):
+  - criado inteiro (folga de 120.400 pessoas) e adormecido;
+  - 5 fornadas de ~750, sem quedas, e sobraram 16.200;
+  - 39.300 jogadores contra 19.300 do controle.
+- **O tempo na bancada é ruído:** com as levas das outras sessões rodando ao lado, a mesma configuração variou de 2.692 a 3.523 s (controle) e de 3.043 a 4.484 s (20.000). Não há custo que se destaque desse ruído.
+- **Tirar a ficha da adormecida até a soltura** (`+0x61 = 0`, experimento para tirá-la das varreduras de jogadores livres) não ganhou tempo e foi descartado: exigiria refazer o par pessoa ↔ ficha a cada carga.
+- **Corrigido:** na 1ª versão o espalhamento passava do `intake_pa_max` (chegava a 185 com o máximo em 170); agora o máximo é o teto.
+- **`intake_squad_max = 40`** (05/11): elenco médio ~37 em vez de 40; de 140 a 160 clubes pulados por ano, ~400 regens dados por fornada. A chave faz o que promete.
+- **`intake_clubs = selected` com liga de fundo** (ARG, até 2004): a fornada chegou aos 323 clubes (os 278 das jogáveis e os 45 da Argentina), ~850 por ano, sem quedas; o estoque de 3.000 acabou na 3ª fornada. Os clubes de fundo recebem como os outros.
+- **Carreira longa com 20.000** (2001 → 2011-201, 8.489 s, 05/11): sem quedas, 10 fornadas de 730 a 800, sobraram 12.400. Com `intake_squad_max = 50` o elenco médio sobe todo ano (41,2 em 2006, 44,7 em 2011), e os regens com PA ≥ 150 vão de 346 a 1.008: por isso o padrão sugerido é 40. As adormecidas contam como livres na estatística (14.000 a 17.000 "livres").
+- **`intake_day = season_end`** (05/11, até 2003): o Brasil recebe no dia 10 (112 clubes, ~335 regens) e a Inglaterra e a Itália no dia 169 (166 clubes, ~330 a 430), cada uma no fim da própria temporada. A 1ª versão dava uma fornada a mais no 1º dia da carreira: na preparação, o laço passa por todas as nações; a DLL agora faz a mesma conferência de data do começo da 0x59cdd0 (0x456770) e ignora essas passagens.
+- **`intake_only = 1`** (05/11, até 2004-216, 2.322 s, sem quedas): nenhum nascimento nem disputa ao longo das temporadas (`births 0`, `contest 0` em todos os registros); três fornadas de ~750 (278 clubes), 767, 677 e 516 delas vindas da fila de aposentados, e o estoque criado caiu só de 3.000 para ~2.650. Jogadores de 22.287 para 22.105 em três anos (−0,8%); elenco médio 35,3 → 37,8; 16 a 21 jovens por fornada ficam sem o clube (saem como livres). O "stock left" do registro conta junto os aposentados da fila que sobraram (por isso passa de 3.000 na 1ª).
+
+### 8.4 A fazer
+
+- ~~**Mensagem na caixa de entrada**~~: feita e vista no jogo (05/11), passo 6 acima. O pedido: no dia da fornada, cada clube de técnico humano recebe uma notícia com os jovens que chegaram (nome, idade, posição) o nível de agora (CA) e o potencial (PA), os dois **em faixas**, como o parecer de um treinador da base ("já pode treinar com o time principal", "pode virar um jogador de nível internacional"); a faixa do CA comparada com o elenco do próprio clube (o mesmo jovem pode estar pronto num clube pequeno e longe disso num grande); os números exatos só com uma chave. Pelo sistema de notícias do próprio exe (`g_news` 0xb7431c, o texto em `NewsItem::write_text` 0x77bc80), sem a NickDLL. O texto vem da DLL: inglês, português e espanhol embutidos, pela língua do jogo (sem tradução, inglês), e um arquivo de frases ao lado da DLL para outras línguas.
+- Medir o tempo com a máquina livre (a carreira longa chegou a 2011 sem quedas).
+- Gravar e carregar com o Lucas: o save tem de abrir com e sem a DLL; conferir nos editores.
+- ~~A data da fornada por nação~~: feita (05/11), `intake_day = season_end`. O fim da temporada de cada nação-chave passa pela `end_season_for_nation` 0x59cdd0 (chamada em 0x5d5ea2, no laço das 35 nações-chave); a DLL anota a nação e a solta na fila do dia.
+- ~~A aba do configurador~~: feita (05/11), aba **Fornada (experimental)** em Ajustes da carreira, com as 8 chaves e a ajuda nas duas línguas.
+- Posições: os regens saem com as posições do jogador real copiado (G 8%, D 31%, M 37%, A 23%), o retrato da nação; sem ajuste por ora.
+- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` resolve (40 → ~37 médio); falta escolher o padrão.

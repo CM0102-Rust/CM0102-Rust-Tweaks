@@ -27,6 +27,7 @@ pub enum Aba {
     Inativos,
     Disputa,
     Cinzentos,
+    Fornada,
     Nomes,
     Registro,
     Cfg,
@@ -35,13 +36,14 @@ pub enum Aba {
 
 /// O menu da esquerda, na ordem: (aba, nome pt, nome en, grupo pt, grupo en); o grupo vazio não tem título. Os grupos
 /// (03/11, Lucas): o que muda a carreira, o que só registra, a instalação e os arquivos.
-pub const ABAS: [(Aba, &str, &str, &str, &str); 10] = [
+pub const ABAS: [(Aba, &str, &str, &str, &str); 11] = [
     (Aba::Inicio, "Início", "Start", "", ""),
     (Aba::Idades, "Idades dos regens", "Regen ages", "Ajustes da carreira", "Career tweaks"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Ajustes da carreira", "Career tweaks"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Ajustes da carreira", "Career tweaks"),
     (Aba::Nomes, "Nomes dos regens", "Regen names", "Ajustes da carreira", "Career tweaks"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Ajustes da carreira", "Career tweaks"),
+    (Aba::Fornada, "Fornada (experimental)", "Intake (experimental)", "Ajustes da carreira", "Career tweaks"),
     (Aba::Registro, "De quem é cada regen", "Regen origins", "Registro", "Records"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),
     (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos", "Files"),
@@ -96,6 +98,17 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "regen_names_min", aba: Aba::Nomes, tipo: num(1.0, 101.0, 1.0, 100.0, true), padrao: "20", rotulo: ("Nomes próprios a partir de", "Own names from") },
     Chave { nome: "grey_players", aba: Aba::Cinzentos, tipo: Tipo::Escolha(&[("original", "Original (a conta do jogo)", "Original (the game's formula)"), ("squad", "No nível do clube", "At the club's level")]), padrao: "original", rotulo: ("O nível dos cinzentos", "The grey players' level") },
     Chave { nome: "grey_players_spread", aba: Aba::Cinzentos, tipo: num(0.0, 100.0, 0.0, 50.0, true), padrao: "10", rotulo: ("Variação em volta do nível", "Variation around the level") },
+    Chave { nome: "intake_stock", aba: Aba::Fornada, tipo: num(0.0, 100000.0, 0.0, 30000.0, true), padrao: "0", rotulo: ("Estoque (pessoas criadas com a carreira)", "Stock (people created with the career)") },
+    Chave { nome: "intake_per_club", aba: Aba::Fornada, tipo: num(0.0, 20.0, 0.0, 10.0, true), padrao: "3", rotulo: ("Jovens por clube", "Youngsters per club") },
+    Chave { nome: "intake_day", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("181", "1º de julho (dia 181)", "1 July (day 181)"), ("season_end", "Fim da temporada de cada nação", "Each nation's season end"), ("0", "1º de janeiro (dia 0)", "1 January (day 0)")]), padrao: "181", rotulo: ("Dia da fornada", "Intake day") },
+    Chave { nome: "intake_clubs", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("playable", "Ligas jogáveis", "Playable leagues"), ("selected", "Também as ligas de fundo", "Background leagues too")]), padrao: "playable", rotulo: ("Clubes que recebem", "Clubs that receive") },
+    Chave { nome: "intake_pa_min", aba: Aba::Fornada, tipo: num(1.0, 200.0, 1.0, 200.0, true), padrao: "60", rotulo: ("PA: clube de reputação 0", "PA: reputation-0 club") },
+    Chave { nome: "intake_pa_max", aba: Aba::Fornada, tipo: num(1.0, 200.0, 1.0, 200.0, true), padrao: "170", rotulo: ("PA: clube de reputação 10000 (teto)", "PA: reputation-10000 club (cap)") },
+    Chave { nome: "intake_pa_spread", aba: Aba::Fornada, tipo: num(0.0, 200.0, 0.0, 60.0, true), padrao: "30", rotulo: ("PA: sorteio em volta", "PA: draw around it") },
+    Chave { nome: "intake_squad_max", aba: Aba::Fornada, tipo: num(1.0, 50.0, 20.0, 50.0, true), padrao: "50", rotulo: ("Elenco: clube com esse tanto fica de fora", "Squad: a club with this many is skipped") },
+    Chave { nome: "intake_only", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("1", "Só pela fornada", "Only from the intake"), ("0", "Fornada e os regens do jogo", "Intake plus the game's regens")]), padrao: "1", rotulo: ("Regens jogadores", "Youth regens") },
+    Chave { nome: "intake_news", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("1", "Mensagem na caixa de entrada", "Inbox message"), ("0", "Sem mensagem", "No message")]), padrao: "1", rotulo: ("Mensagem da fornada", "Intake message") },
+    Chave { nome: "intake_news_numbers", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("0", "Só o parecer do treinador", "Only the coach's view"), ("1", "Parecer, CA e PA", "View, CA and PA")]), padrao: "0", rotulo: ("Na mensagem", "In the message") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
     Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];

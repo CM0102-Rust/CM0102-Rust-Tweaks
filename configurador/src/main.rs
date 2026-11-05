@@ -1116,6 +1116,15 @@ impl App {
         }
     }
 
+    fn aba_fornada(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Fornada);
+        self.controle(ui, "intake_stock", true);
+        let ativo = self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0;
+        for nome in ["intake_per_club", "intake_day", "intake_clubs", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_squad_max", "intake_only", "intake_news", "intake_news_numbers"] {
+            self.controle(ui, nome, ativo);
+        }
+    }
+
     fn aba_registro(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Registro);
         self.historico(ui);
@@ -1345,6 +1354,7 @@ impl eframe::App for App {
                 Aba::Disputa => self.aba_disputa(ui),
                 Aba::Cinzentos => self.aba_cinzentos(ui),
                 Aba::Nomes => self.aba_nomes(ui),
+                Aba::Fornada => self.aba_fornada(ui),
                 Aba::Registro => self.aba_registro(ui),
                 Aba::Cfg => self.aba_cfg(ui),
                 Aba::Log => self.aba_log(ui),

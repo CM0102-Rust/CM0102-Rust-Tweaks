@@ -121,3 +121,81 @@ They can't move: there are pointers to people in the squads, the preferences, HU
 - What the "database size" values in `general.dat` mean.
 
 The full reports and lists (the 1,155 uses, one per line) stayed in the session's scratch folder; they'll go into the repository when the code starts.
+
+## 8. Path 1 on the test bench (11/04/2026, experimental)
+
+**The name:** "fornada" comes from Football Manager's European Portuguese translation. In English FM it's the *Youth Intake* (the day, *Youth Intake Day*), and the keys follow that name (`intake_*`); in Spanish FM, *hornada de juveniles*.
+
+The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
+
+### 8.1 The keys
+
+| Key | Default | What it does |
+|---|---|---|
+| `intake_stock` | 0 (off) | people created with the career (the stock) |
+| `intake_per_club` | 3 | regens per club in the intake |
+| `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07), or `season_end`: each nation at the end of its own season (the 35 of the key-nation table 0xb63d60; the others on day 181) |
+| `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
+| `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
+| `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
+| `intake_squad_max` | 50 | a club with this many in the squad is skipped in that year's intake |
+| `intake_news` | 1 | the inbox message for a human-managed club (see step 6) |
+| `intake_news_numbers` | 0 | 1: the message also shows CA and PA |
+| `intake_only` | 1 | 1: youth regens are born only in the intake (see step 5 below); 0: the game's own keep coming and the intake comes on top |
+
+### 8.2 How it works
+
+1. **Create:** a hook on the database trim's `ftol` (0x525f8c) asks the game itself for K more people, within the headroom (people, records and preferences), and fixes the buggy cap (0x525f9b).
+2. **Put to sleep:** before `game_run_to_start_date` (called at 0x829fd9), the K people are marked retired (bits 0x30 = 0x20 of the 79-byte record), with no club and outside the regen queue.
+3. **Release:** on `intake_day`, after the day's queue (called at 0x5cda7a), each club gets up to `intake_per_club` dormant people (a club with 50 in the squad is skipped):
+   - the record becomes a copy of a real player from the club's nation, with the intake PA;
+   - it goes to the front of the record pool, and `regenerate_as_youth_player` 0x7abac0 makes the regen;
+   - the clubs' contest (0x7acea2) is forced to the intake club; if the regen still has no club, the signing 0x7a6f10 runs.
+4. **Save:** nothing to do. A dormant person is a retired person outside the queue, a state the save already keeps.
+5. **Intake only** (`intake_only = 1`, 11/05): `process_regen_queue` 0x7a65d0 has two halves: the birth loop (0x7a65f0..0x7a66b7, the queue at +0x10/+0x14 and the record pool at +0x3c/+0x40) and the non-player refill (+0x1c/+0x20, from 0x7a66bd on), which doesn't touch the queue. The DLL calls the routine with the queue count set to zero (and puts it back afterwards): the loop doesn't run and the other half goes on. In the intake, retired players waiting in the queue whose record is still in the pool join the stock, ahead of the created ones; each leaves the queue (as 0x7a65d0 removes the head: the ones behind move up, the last slot gets -1) and his record leaves the pool, so no other regen inherits the same record later. So the intake renews itself with retirements. Non-players in the queue stay retired there. With this, the clubs' contest (`rule = new`, `season_cap`...) and `regen_origins` no longer come in: the intake already picks the club, and `regen_origins` sits on the call inside the queue (0x7a664f). Ages (`ages`) and names (`regen_names`) still apply, since they live inside 0x7abac0.
+6. **The message** (`intake_news = 1`, 11/05): a human-managed club gets a news item of the game's own with the intake youngsters and the youth coach's view of each. The path is the same the CLZ NickDLL uses for its messages: build a `NewsItem` (0x77bbe0), deliver it through `News` (`send_to_club_manager` 0x7861e0, which only delivers to a human manager) and write the text when it's shown. It uses type 6009 (board finances) with a code the game doesn't know, and without the DLL the original writer would show uninitialised stack memory. Here the type is 0x1388, the manager-to-manager message of network games: its text lives in the item's own slots (from slot 3), so **without the DLL the item shows a short line** stored in the language of the day ("Youth intake: 3 youngsters joined from the youth team."). With the DLL, `NewsItem::write_text` 0x77bc80 is hooked at its entry and, for the item with the marks (slot 2 "FORN", slot 20 "INTK"), writes the title and body in the game's language at display time (`langlib`, [0x9eb2dc], codes at 0x9eb244: POR and POR_BRA → Portuguese, ESP and ESP_MEX → Spanish, the rest English), with clickable names (link 0x7d8, the person link). The manager-to-manager message comes with a "Respond" button; `NewsItem::get_action_button` 0x782b70 is also hooked at its entry and returns "no button" for our item. Seen in the game (11/05): it shows under Messages, with no button, and after switching the language in the options the same item comes out in English. Slots 22.. keep, for up to 14 youngsters, the id and the view (CA, PA and both bands), worked out on the day: the save carries it all in news.dat.
+   - **Current level:** CA against the average of the squad's best 11: up to 5 below, "is already ready for the first team"; up to 20, "could get chances soon"; up to 40, "needs a year or two in the youth team"; below that, "is still very raw".
+   - **Potential:** by PA: 170+, "could become one of the best in the world"; 150+, "has the potential to play for his country"; 130+, "could be a regular at a big club"; 100+, "should make a career in the top flight"; below, "is unlikely to go beyond the lower divisions".
+
+### 8.3 The results (automatic holiday career, 278 clubs, 2001 → 2006-200)
+
+Stock of 3,000, 3 per club, both careers in parallel, under the same load [observed]:
+
+| | Control (no intake) | Intake |
+|---|---|---|
+| Time to 2006-200 | 3,523 s | 3,423 s |
+| Players (season 2002 → 2006) | 19,346 → 19,293 | 22,255 → 22,191 |
+| Average squad (2003 / 2005 / 2006) | 33.9 / 33.3 / 31.8 | 38.4 / 40.4 / 37.5 |
+| Cumulative regens to 2006 | 3,554 | 6,730 |
+| Regens with PA ≥ 150 (2006) | 197 | 318 |
+| Crashes, error boxes | none | none |
+
+- **Each year's intake:** ~740 regens across the 278 clubs (40 to 50 full clubs, 8 to 13 regens left without the club). The 3,000 stock ran out at the 4th intake (2005), as expected.
+- **The dormant people stayed inert:** a year before the 1st intake and four years before the last one. None entered the queue or a club ahead of time.
+- **The intake regens:**
+  - 15 to 20 years old (mode 17);
+  - median PA 102, median CA 54;
+  - positions: M 37%, D 31%, A 23%, GK 8%.
+- **No measurable time cost:** 3,000 more people didn't change the career's time. A first comparison showed the intake 75% slower, but the control had run later, on an idle machine; in parallel, the time is the same.
+- **A stock of 20,000** (two careers to 2006, 11/05):
+  - created in full (headroom of 120,400 people) and put to sleep;
+  - 5 intakes of ~750, no crashes, and 16,200 left;
+  - 39,300 players against the control's 19,300.
+- **Bench time is noise:** with the other sessions' batches running alongside, the same setup ranged from 2,692 to 3,523 s (control) and from 3,043 to 4,484 s (20,000). No cost stands out from that noise.
+- **Taking the record away from the dormant person until the release** (`+0x61 = 0`, an experiment to keep it out of the free-player scans) gained no time and was dropped: it would mean rebuilding the person ↔ record pair on every load.
+- **Fixed:** in the first version the spread went past `intake_pa_max` (up to 185 with the maximum at 170); now the maximum is the cap.
+- **`intake_squad_max = 40`** (11/05): average squad ~37 instead of 40; 140 to 160 clubs skipped per year, ~400 regens given per intake. The key does what it says.
+- **`intake_clubs = selected` with a background league** (ARG, to 2004): the intake reached 323 clubs (the 278 playable ones plus Argentina's 45), ~850 per year, no crashes; the 3,000 stock ran out at the 3rd intake. Background clubs receive like the others.
+- **Long career with 20,000** (2001 → 2011-201, 8,489 s, 11/05): no crashes, 10 intakes of 730 to 800, 12,400 left. With `intake_squad_max = 50` the average squad grows every year (41.2 in 2006, 44.7 in 2011), and regens with PA ≥ 150 go from 346 to 1,008: hence the suggested default of 40. Sleeping people count as free in the statistics (14,000 to 17,000 "free").
+- **`intake_day = season_end`** (11/05, to 2003): Brazil receives on day 10 (112 clubs, ~335 regens) and England and Italy on day 169 (166 clubs, ~330 to 430), each at the end of its own season. The first version gave an extra intake on the career's first day: during setup the loop goes through every nation; the DLL now makes the same date check as the start of 0x59cdd0 (0x456770) and ignores those passes.
+- **`intake_only = 1`** (11/05, to 2004-216, 2,322 s, no crashes): no births and no contest through the seasons (`births 0`, `contest 0` in every line); three intakes of ~750 (278 clubs), 767, 677 and 516 of them from the queue of retired players, and the created stock only fell from 3,000 to ~2,650. Players from 22,287 to 22,105 in three years (−0.8%); average squad 35.3 → 37.8; 16 to 21 youngsters per intake end up without the club (they become free agents). The log's "stock left" also counts the retired players left in the queue (hence above 3,000 in the first one).
+
+### 8.4 To do
+
+- ~~**Inbox message**~~: done and seen in the game (11/05), step 6 above. The request: on intake day, each human-managed club gets a news item with the youngsters who arrived (name, age, position) their current level (CA) and potential (PA), both **in bands**, like a youth coach's assessment ("can already train with the first team", "could become an international player"); the CA band compared with the club's own squad (the same youngster may be ready at a small club and far from it at a big one); the exact numbers only with a key. Through the exe's own news system (`g_news` 0xb7431c, the text in `NewsItem::write_text` 0x77bc80), without NickDLL. The text comes from the DLL: English, Portuguese and Spanish built in, by the game's language (English when there's no translation), and a phrase file next to the DLL for other languages.
+- Measure time on an idle machine (the long career reached 2011 with no crashes).
+- Save and load with Lucas: the save must open with and without the DLL; check the editors.
+- ~~The intake date per nation~~: done (11/05), `intake_day = season_end`. Each key nation's season end goes through `end_season_for_nation` 0x59cdd0 (called at 0x5d5ea2, in the loop over the 35 key nations); the DLL notes the nation and releases it in the day's queue.
+- ~~The configurator tab~~: done (11/05), tab **Intake (experimental)** under Career tweaks, with the 8 keys and help in both languages.
+- Positions: regens come out with the positions of the copied real player (G 8%, D 31%, M 37%, A 23%), the nation's own picture; no adjustment for now.
+- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` handles it (40 → ~37 average); the default is still to be chosen.

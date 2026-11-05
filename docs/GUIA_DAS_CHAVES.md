@@ -259,6 +259,79 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
+## Fornada (experimental)
+
+EXPERIMENTAL. A fornada de regens (Youth Intake no Football Manager em inglês, hornada no espanhol): em vez de nascerem um a um ao longo do ano, os jovens chegam todos de uma vez, num dia do ano, a cada clube. A DLL cria um estoque de pessoas junto com a carreira nova e as deixa adormecidas; no dia da fornada, cada clube recebe alguns jovens, cada um a cópia de um jogador real do país do clube, com o PA pela reputação do clube. Por padrão os regens jogadores passam a vir só da fornada. Só vale numa carreira NOVA.
+
+- **Estoque**: as pessoas a mais que a DLL cria com a carreira nova, adormecidas até a fornada. Cada fornada gasta umas 750 (3 por clube, 278 clubes); com o estoque vazio, a fornada para e o jogo segue normal.
+- **Fim da temporada**: o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.
+
+### Estoque (pessoas criadas com a carreira) — `intake_stock`
+
+Quantas pessoas a DLL cria com a carreira nova para as fornadas (0 desliga). Cada fornada gasta umas 750; 3.000 dão quatro anos, 20.000 passam de dez. O limite é a folga das tabelas do jogo (umas 120.000). Só vale numa carreira nova: num save em andamento não cria nada.
+
+Valores: de 0 a 100000 (inteiro). Padrão: `0`.
+
+### Jovens por clube — `intake_per_club`
+
+Quantos jovens cada clube recebe em cada fornada. 3 dobra, mais ou menos, os regens da carreira. 0 desliga a fornada (o estoque fica adormecido).
+
+Valores: de 0 a 20 (inteiro). Padrão: `3`.
+
+### Dia da fornada — `intake_day`
+
+Quando a fornada sai. Num dia fixo, todos os clubes recebem juntos. No fim da temporada, cada nação recebe quando a temporada dela acaba (Inglaterra no meio do ano, Brasil no fim); clubes de nações fora da tabela do jogo recebem em 1º de julho.
+
+Valores: `181` (1º de julho (dia 181)), `season_end` (Fim da temporada de cada nação), `0` (1º de janeiro (dia 0)). Padrão: `181`.
+
+### Clubes que recebem — `intake_clubs`
+
+Que clubes recebem: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira.
+
+Valores: `playable` (Ligas jogáveis), `selected` (Também as ligas de fundo). Padrão: `playable`.
+
+### PA: clube de reputação 0 — `intake_pa_min`
+
+O PA do jovem de um clube de reputação 0. Entre 0 e 10000, o PA sobe em linha reta até o máximo.
+
+Valores: de 1 a 200 (inteiro). Padrão: `60`.
+
+### PA: clube de reputação 10000 (teto) — `intake_pa_max`
+
+O PA do jovem de um clube de reputação 10000, e o teto: nenhum jovem da fornada passa dele.
+
+Valores: de 1 a 200 (inteiro). Padrão: `170`.
+
+### PA: sorteio em volta — `intake_pa_spread`
+
+Um sorteio em volta do PA do clube: 30 vai de 15 abaixo a 15 acima. Sempre entre o mínimo e o máximo. 0: todo jovem do clube vem com o mesmo PA.
+
+Valores: de 0 a 200 (inteiro). Padrão: `30`.
+
+### Elenco: clube com esse tanto fica de fora — `intake_squad_max`
+
+O clube com esse tanto de jogadores no elenco (de 50 vagas) fica de fora da fornada daquele ano. Com a fornada, os elencos incham (de 33 para 40 em média); 40 segura em uns 37.
+
+Valores: de 1 a 50 (inteiro). Padrão: `50`.
+
+### Regens jogadores — `intake_only`
+
+Só pela fornada: o jogo para de criar regens jogadores ao longo da temporada; eles chegam todos no dia da fornada. Os jogadores que se aposentam viram material da fornada (antes do estoque criado), então ela se renova. Os não jogadores (técnicos, olheiros) continuam chegando como no jogo. Com os regens do jogo: eles seguem nascendo, e a fornada vem por cima. Só pela fornada, a disputa dos clubes (as chaves de Regens) e o regen_origins não entram mais em jogo.
+
+Valores: `1` (Só pela fornada), `0` (Fornada e os regens do jogo). Padrão: `1`.
+
+### Mensagem da fornada — `intake_news`
+
+No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com os jovens que chegaram e o parecer sobre cada um: se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo (português, espanhol; nas outras, inglês). Sem a DLL, o save continua abrindo e a mensagem aparece numa linha curta.
+
+Valores: `1` (Mensagem na caixa de entrada), `0` (Sem mensagem). Padrão: `1`.
+
+### Na mensagem — `intake_news_numbers`
+
+Mostrar também o CA e o PA de cada jovem na mensagem. Desligado, fica só o parecer do treinador, e a graça é descobrir o jogador.
+
+Valores: `0` (Só o parecer do treinador), `1` (Parecer, CA e PA). Padrão: `0`.
+
 ## De quem é cada regen
 
 De quem é cada regen. O jogo não guarda isso em lugar nenhum: com a opção ligada, a DLL anota cada regen que nasce, de quem ele herdou a vaga e de quem herdou a ficha de jogador, num arquivo regen_origins.csv ao lado do exe. Aqui você busca nesse histórico.

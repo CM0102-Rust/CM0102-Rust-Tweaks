@@ -124,7 +124,7 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
 - ⏳ Postagem no fórum, com o rascunho aprovado pelo Lucas antes.
 - ⏳ Créditos: xeno e Saturn (o Regen Tweak), petermf23 (regens mais novos e a evolução da comissão), Nick (NickPatcher, as referências), e a comunidade do champman0102.
 
-## Fase 6: a fornada de jovens 🔬
+## Fase 6: a fornada de jovens 🔨
 
 A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em vez de um regen por aposentadoria. É o objetivo grande deste repositório, e é só nosso: exige criar gente, controlar o save e equilibrar a população. Decidido com o Lucas em 01/11/2026.
 
@@ -140,5 +140,12 @@ A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em v
 4. ⏳ **O equilíbrio da população:** fornada, aposentadoria e reciclagem na reserva, para a carreira não inchar década após década; medido no simulador e em carreiras longas na bancada.
 
 **Os impactos a medir:** mais pessoas (o processamento dos dias); save maior (já resolvido acima de 2 GB); talento demais no mundo (inflação de PA, seleções); mercado inundado de jovens (salários e preços); editores e ferramentas (contagens maiores, formato igual).
+
+**Saiu na 1.2 (05/11/2026, experimental, as chaves `intake_*`):** o estoque criado com a carreira nova (o corte do banco), adormecido e solto no dia da fornada (um dia fixo ou o fim da temporada de cada nação); cada jovem a cópia de um jogador real da nação do clube, com o PA pela reputação do clube; os regens só pela fornada por padrão (a fila de aposentados a alimenta); a mensagem do treinador da base na caixa de entrada, em faixas, na língua do jogo. Detalhes e testes: [docs/PESSOAS_NOVAS.md](docs/PESSOAS_NOVAS.md) §8.
+
+**Próximos, na fornada:**
+- 💡 **O dia da fornada por país** (Lucas, 05/11): hoje é uma escolha só para todos os países (um dia fixo, ou o fim da temporada de cada nação como o jogo tem). Uma linha por país no `tweaks.cfg` (ex.: `intake_day_BRA = 10`) por cima da regra geral, e uma lista na aba do configurador.
+- ⏳ Gravar e carregar com o Lucas, com e sem a DLL, e nos editores.
+- 💡 O padrão do `intake_squad_max` (40 segura os elencos), e o PA pelas instalações e pelo treinador de juniores (o passo 2 acima).
 
 **Limite:** as fichas novas valem primeiro para carreiras novas (a carga de um save antigo exige o `training.dat` com a contagem exata). O dia fixo e a cota por clube valem em qualquer save.
