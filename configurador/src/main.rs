@@ -1120,7 +1120,7 @@ impl App {
         self.cabecalho(ui, Aba::Fornada);
         self.controle(ui, "intake_stock", true);
         let ativo = self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0;
-        for nome in ["intake_per_club", "intake_day", "intake_clubs", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_squad_max"] {
+        for nome in ["intake_per_club", "intake_day", "intake_clubs", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_squad_max", "intake_only"] {
             self.controle(ui, nome, ativo);
         }
     }

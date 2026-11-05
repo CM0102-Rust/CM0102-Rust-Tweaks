@@ -261,7 +261,7 @@ Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ## Fornada (experimental)
 
-EXPERIMENTAL. A fornada de regens: em vez de nascerem um a um ao longo do ano, os jovens chegam todos de uma vez, num dia do ano, a cada clube. A DLL cria um estoque de pessoas junto com a carreira nova e as deixa adormecidas; no dia da fornada, cada clube recebe alguns jovens, cada um a cópia de um jogador real do país do clube, com o PA pela reputação do clube. Os regens normais do jogo continuam nascendo. Só vale numa carreira NOVA.
+EXPERIMENTAL. A fornada de regens (Youth Intake no Football Manager em inglês, hornada no espanhol): em vez de nascerem um a um ao longo do ano, os jovens chegam todos de uma vez, num dia do ano, a cada clube. A DLL cria um estoque de pessoas junto com a carreira nova e as deixa adormecidas; no dia da fornada, cada clube recebe alguns jovens, cada um a cópia de um jogador real do país do clube, com o PA pela reputação do clube. Por padrão os regens jogadores passam a vir só da fornada. Só vale numa carreira NOVA.
 
 - **Estoque**: as pessoas a mais que a DLL cria com a carreira nova, adormecidas até a fornada. Cada fornada gasta umas 750 (3 por clube, 278 clubes); com o estoque vazio, a fornada para e o jogo segue normal.
 - **Fim da temporada**: o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.
@@ -313,6 +313,12 @@ Valores: de 0 a 200 (inteiro). Padrão: `30`.
 O clube com esse tanto de jogadores no elenco (de 50 vagas) fica de fora da fornada daquele ano. Com a fornada, os elencos incham (de 33 para 40 em média); 40 segura em uns 37.
 
 Valores: de 1 a 50 (inteiro). Padrão: `50`.
+
+### Regens jogadores — `intake_only`
+
+Só pela fornada: o jogo para de criar regens jogadores ao longo da temporada; eles chegam todos no dia da fornada. Os jogadores que se aposentam viram material da fornada (antes do estoque criado), então ela se renova. Os não jogadores (técnicos, olheiros) continuam chegando como no jogo. Com os regens do jogo: eles seguem nascendo, e a fornada vem por cima. Só pela fornada, a disputa dos clubes (as chaves de Regens) e o regen_origins não entram mais em jogo.
+
+Valores: `1` (Só pela fornada), `0` (Fornada e os regens do jogo). Padrão: `1`.
 
 ## De quem é cada regen
 

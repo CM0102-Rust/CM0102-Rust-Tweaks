@@ -124,6 +124,8 @@ The full reports and lists (the 1,155 uses, one per line) stayed in the session'
 
 ## 8. Path 1 on the test bench (11/04/2026, experimental)
 
+**The name:** "fornada" comes from Football Manager's European Portuguese translation. In English FM it's the *Youth Intake* (the day, *Youth Intake Day*), and the keys follow that name (`intake_*`); in Spanish FM, *hornada de juveniles*.
+
 The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the release. It only goes into a release once it's proven stable and Lucas approves it. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
 
 ### 8.1 The keys
@@ -137,6 +139,7 @@ The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the r
 | `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
 | `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
 | `intake_squad_max` | 50 | a club with this many in the squad is skipped in that year's intake |
+| `intake_only` | 1 | 1: youth regens are born only in the intake (see step 5 below); 0: the game's own keep coming and the intake comes on top |
 
 ### 8.2 How it works
 
@@ -147,6 +150,7 @@ The code is on the `fornada` branch (`src/fornada.rs`), outside `main` and the r
    - it goes to the front of the record pool, and `regenerate_as_youth_player` 0x7abac0 makes the regen;
    - the clubs' contest (0x7acea2) is forced to the intake club; if the regen still has no club, the signing 0x7a6f10 runs.
 4. **Save:** nothing to do. A dormant person is a retired person outside the queue, a state the save already keeps.
+5. **Intake only** (`intake_only = 1`, 11/05): `process_regen_queue` 0x7a65d0 has two halves: the birth loop (0x7a65f0..0x7a66b7, the queue at +0x10/+0x14 and the record pool at +0x3c/+0x40) and the non-player refill (+0x1c/+0x20, from 0x7a66bd on), which doesn't touch the queue. The DLL calls the routine with the queue count set to zero (and puts it back afterwards): the loop doesn't run and the other half goes on. In the intake, retired players waiting in the queue whose record is still in the pool join the stock, ahead of the created ones; each leaves the queue (as 0x7a65d0 removes the head: the ones behind move up, the last slot gets -1) and his record leaves the pool, so no other regen inherits the same record later. So the intake renews itself with retirements. Non-players in the queue stay retired there. With this, the clubs' contest (`rule = new`, `season_cap`...) and `regen_origins` no longer come in: the intake already picks the club, and `regen_origins` sits on the call inside the queue (0x7a664f). Ages (`ages`) and names (`regen_names`) still apply, since they live inside 0x7abac0.
 
 ### 8.3 The results (automatic holiday career, 278 clubs, 2001 → 2006-200)
 
@@ -179,9 +183,11 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
 - **`intake_clubs = selected` with a background league** (ARG, to 2004): the intake reached 323 clubs (the 278 playable ones plus Argentina's 45), ~850 per year, no crashes; the 3,000 stock ran out at the 3rd intake. Background clubs receive like the others.
 - **Long career with 20,000** (2001 → 2011-201, 8,489 s, 11/05): no crashes, 10 intakes of 730 to 800, 12,400 left. With `intake_squad_max = 50` the average squad grows every year (41.2 in 2006, 44.7 in 2011), and regens with PA ≥ 150 go from 346 to 1,008: hence the suggested default of 40. Sleeping people count as free in the statistics (14,000 to 17,000 "free").
 - **`intake_day = season_end`** (11/05, to 2003): Brazil receives on day 10 (112 clubs, ~335 regens) and England and Italy on day 169 (166 clubs, ~330 to 430), each at the end of its own season. The first version gave an extra intake on the career's first day: during setup the loop goes through every nation; the DLL now makes the same date check as the start of 0x59cdd0 (0x456770) and ignores those passes.
+- **`intake_only = 1`** (11/05, to 2004-216, 2,322 s, no crashes): no births and no contest through the seasons (`births 0`, `contest 0` in every line); three intakes of ~750 (278 clubs), 767, 677 and 516 of them from the queue of retired players, and the created stock only fell from 3,000 to ~2,650. Players from 22,287 to 22,105 in three years (−0.8%); average squad 35.3 → 37.8; 16 to 21 youngsters per intake end up without the club (they become free agents). The log's "stock left" also counts the retired players left in the queue (hence above 3,000 in the first one).
 
 ### 8.4 To do
 
+- **Inbox message** (Lucas's request, 11/05; once intake-only mode is stable): on intake day, each human-managed club gets a news item with the youngsters who arrived (name, age, position) their current level (CA) and potential (PA), both **in bands**, like a youth coach's assessment ("can already train with the first team", "could become an international player"); the CA band compared with the club's own squad (the same youngster may be ready at a small club and far from it at a big one); the exact numbers only with a key. Through the exe's own news system (`g_news` 0xb7431c, the text in `NewsItem::write_text` 0x77bc80), without NickDLL. The text comes from the DLL: English, Portuguese and Spanish built in, by the game's language (English when there's no translation), and a phrase file next to the DLL for other languages.
 - Measure time on an idle machine (the long career reached 2011 with no crashes).
 - Save and load with Lucas: the save must open with and without the DLL; check the editors.
 - ~~The intake date per nation~~: done (11/05), `intake_day = season_end`. Each key nation's season end goes through `end_season_for_nation` 0x59cdd0 (called at 0x5d5ea2, in the loop over the 35 key nations); the DLL notes the nation and releases it in the day's queue.

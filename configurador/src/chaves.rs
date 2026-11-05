@@ -106,6 +106,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "intake_pa_max", aba: Aba::Fornada, tipo: num(1.0, 200.0, 1.0, 200.0, true), padrao: "170", rotulo: ("PA: clube de reputação 10000 (teto)", "PA: reputation-10000 club (cap)") },
     Chave { nome: "intake_pa_spread", aba: Aba::Fornada, tipo: num(0.0, 200.0, 0.0, 60.0, true), padrao: "30", rotulo: ("PA: sorteio em volta", "PA: draw around it") },
     Chave { nome: "intake_squad_max", aba: Aba::Fornada, tipo: num(1.0, 50.0, 20.0, 50.0, true), padrao: "50", rotulo: ("Elenco: clube com esse tanto fica de fora", "Squad: a club with this many is skipped") },
+    Chave { nome: "intake_only", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("1", "Só pela fornada", "Only from the intake"), ("0", "Fornada e os regens do jogo", "Intake plus the game's regens")]), padrao: "1", rotulo: ("Regens jogadores", "Youth regens") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
     Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];

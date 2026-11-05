@@ -261,7 +261,7 @@ Values: from 0 to 100 (whole number). Default: `10`.
 
 ## Intake (experimental)
 
-EXPERIMENTAL. The regen intake: instead of being born one by one through the year, youngsters arrive all at once, on one day of the year, at every club. The DLL creates a stock of people with a new career and keeps them asleep; on intake day each club gets a few youngsters, each a copy of a real player of the club's country, with a PA from the club's reputation. The game's normal regens keep being born. It only works in a NEW career.
+EXPERIMENTAL. The regen intake (Football Manager's Youth Intake): instead of being born one by one through the year, youngsters arrive all at once, on one day of the year, at every club. The DLL creates a stock of people with a new career and keeps them asleep; on intake day each club gets a few youngsters, each a copy of a real player of the club's country, with a PA from the club's reputation. By default youth regens then come only from the intake. It only works in a NEW career.
 
 - **Stock**: the extra people the DLL creates with a new career, asleep until the intake. Each intake uses about 750 (3 per club, 278 clubs); with the stock empty, the intake stops and the game goes on as normal.
 - **Season end**: the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December.
@@ -313,6 +313,12 @@ Values: from 0 to 200 (whole number). Default: `30`.
 A club with this many players in the squad (of 50 places) is skipped that year. With the intake, squads swell (from 33 to 40 on average); 40 keeps them around 37.
 
 Values: from 1 to 50 (whole number). Default: `50`.
+
+### Youth regens — `intake_only`
+
+Only from the intake: the game stops creating youth regens through the season; they all arrive on intake day. Players who retire become intake material (before the created stock), so it renews itself. Non-players (coaches, scouts) keep arriving as in the game. With the game's regens: they keep being born, and the intake comes on top. Only from the intake, the clubs' contest (the Regens keys) and regen_origins no longer come into play.
+
+Values: `1` (Only from the intake), `0` (Intake plus the game's regens). Default: `1`.
 
 ## Regen origins
 
