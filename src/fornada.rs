@@ -98,6 +98,10 @@ pub fn ler() -> Fornada {
 static mut CRIADOS: (usize, usize) = (0, 0);
 /// Durante a soltura: a disputa não escolhe clube para os regens das nações da garantia (a distribuição vem depois).
 static mut SEGURAR: bool = false;
+static mut FALHA_CRIAR: i32 = 0; // diagnóstico da criação da reserva, por fornada
+static mut FALHA_LIVRE: i32 = 0;
+static mut OUTRA_NACAO: i32 = 0;
+static mut BASCOS: i32 = 0;
 /// O ano da última soltura nesta sessão.
 static mut ULTIMO_ANO: i32 = -1;
 /// A disputa que estava no `call` de 0x7acea2 (a original ou a do Tweaks).
@@ -448,14 +452,27 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             sem_pais += falta.max(0);
             continue;
         };
-        for _ in 0..falta.max(0) {
+        // ponytail: até 3 tentativas por vaga; a criação pode falhar ou sair de outra nação (diagnóstico na linha intake)
+        let (mut feitos, mut tentativas) = (0, 0);
+        while feitos < falta && tentativas < 3 * falta {
+            tentativas += 1;
             let Some(p) = reserva.pop() else {
                 acabou = true;
                 break;
             };
             let a = lista[sorteio(lista.len() as i32) as usize];
             let mesma = por_posicao.get(&(nac, posicao(a))).map(|v| v.as_slice()).unwrap_or(&[]);
-            if criar_regen(this, p, nac, a, mesma) && livre(p) {
+            let ok = criar_regen(this, p, nac, a, mesma);
+            if !ok {
+                FALHA_CRIAR += 1;
+            } else if !livre(p) {
+                FALHA_LIVRE += 1;
+            } else if d(p + 0x1a) != nac {
+                OUTRA_NACAO += 1;
+            } else {
+                feitos += 1;
+            }
+            if ok && livre(p) {
                 criados += 1;
                 if let Some(g) = grupo.get_mut(&d(p + 0x1a)) {
                     g.push(p);
@@ -469,19 +486,54 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     // 4. a distribuição: do maior PA para o menor, cada um pela curva entre os clubes da nação que ainda têm cota
     let assinar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
     let (mut dados, mut sobras_com_clube, mut sobras_sem_clube) = (0, 0, 0);
+    // diagnóstico das cotas que faltam: o motivo de cada recusa, medido antes de os jovens terem contrato
+    let mut recusas: HashMap<usize, std::collections::BTreeMap<String, i32>> = HashMap::new();
+    for &c in &clubes {
+        let m = recusas.entry(c).or_default();
+        for &p in grupo.get(&d(c + 0x53)).map(|v| v.as_slice()).unwrap_or(&[]) {
+            *m.entry(crate::motivo_recusa(p, c)).or_default() += 1;
+        }
+    }
+    let mut falhou_assinar: HashMap<usize, i32> = HashMap::new();
     for (nac, mut g) in grupo {
         g.sort_by_key(|&p| core::cmp::Reverse(w(d(p + 0x61) + 7) as i16));
         let Some(cs) = por_nacao.get(&nac) else { continue };
         for p in g {
             let abertos: Vec<usize> = cs.iter().copied().filter(|c| cota[c] > 0).collect();
-            if let Some(c) = if abertos.is_empty() { None } else { sortear_clube(p, &abertos) } {
+            let escolhido = if abertos.is_empty() { None } else { sortear_clube(p, &abertos) };
+            if let Some(c) = escolhido {
                 assinar(this, p, c);
+                if d(p + 0x39) != c {
+                    *falhou_assinar.entry(c).or_default() += 1;
+                }
                 if d(p + 0x39) == c {
                     crate::marcar_fornada(d(p), d(c), false);
                     *cota.get_mut(&c).unwrap() -= 1;
                     chegaram.entry(c).or_default().push(p);
                     dados += 1;
                     continue;
+                }
+            }
+            // os clubes bascos (Athletic e Eibar só contratam bascos, 0x53d7f0; a Real Sociedad, espanhol só basco): quando
+            // só eles ainda têm cota, o jovem espanhol ganha a segunda nacionalidade basca (0x9cf424) e vai para um deles
+            let abertos: Vec<usize> = cs.iter().copied().filter(|c| cota[c] > 0).collect();
+            if !abertos.is_empty() && d(nac) == d(0x9cf488) && livre(p) {
+                let antiga = d(p + 0x1e); // a segunda nacionalidade de um regen recém-criado vira a basca
+                *((p + 0x1e) as *mut usize) = d(0xae23a8) + 0x122 * d(0x9cf424);
+                match sortear_clube(p, &abertos) {
+                    Some(c) => {
+                        assinar(this, p, c);
+                        if d(p + 0x39) == c {
+                            crate::marcar_fornada(d(p), d(c), false);
+                            *cota.get_mut(&c).unwrap() -= 1;
+                            chegaram.entry(c).or_default().push(p);
+                            dados += 1;
+                            BASCOS += 1;
+                            continue;
+                        }
+                        *((p + 0x1e) as *mut usize) = antiga;
+                    }
+                    None => *((p + 0x1e) as *mut usize) = antiga,
                 }
             }
             // 5. as sobras do dia: a disputa normal da nação, entre os clubes com vaga (qualquer divisão)
@@ -522,10 +574,24 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         crate::data_do_jogo(), clubes.len(), da_fila, livres_antes, criados, dados, completos, faltou, sem_vaga.len(), sobras_com_clube, sobras_sem_clube, sem_pais, reserva.len(),
         if acabou { "\treserve ran out" } else { "" }
     ));
+    registro::linha(&format!(
+        "intake-diag\t{}\tcreation failed {}\tcreated with a club {}\tcreated in another nation {}\tmade Basque {}",
+        crate::data_do_jogo(), { FALHA_CRIAR }, { FALHA_LIVRE }, { OUTRA_NACAO }, { BASCOS }
+    ));
+    (FALHA_CRIAR, FALHA_LIVRE, OUTRA_NACAO, BASCOS) = (0, 0, 0, 0);
     // ponytail: só os 20 primeiros, para o diagnóstico
     let faltando: Vec<String> = clubes.iter().filter(|c| cota[c] > 0).take(20).map(|&c| format!("{} ({})", crate::nome(c), cota[&c])).collect();
     if !faltando.is_empty() {
         registro::linha(&format!("intake-missing\t{}\t{}", crate::data_do_jogo(), faltando.join(", ")));
+    }
+    // por clube: os jovens da nação no dia e o motivo de cada recusa (diagnóstico)
+    for &c in clubes.iter().filter(|c| cota[c] > 0) {
+        let m: Vec<String> = recusas[&c].iter().map(|(k, v)| format!("{} {}", k, v)).collect();
+        registro::linha(&format!(
+            "intake-why\t{}\t{}\tmissing {}\tsquad {}\trep {}\tyoungsters of the nation: {}\tsigning failed {}",
+            crate::data_do_jogo(), crate::nome(c), cota[&c], elenco(c), w(c + 0x80) as i16, m.join(", "),
+            falhou_assinar.get(&c).copied().unwrap_or(0)
+        ));
     }
 }
 

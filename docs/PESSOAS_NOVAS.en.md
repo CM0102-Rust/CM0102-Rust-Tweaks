@@ -181,7 +181,13 @@ What went (parallel rules, for stock youngsters only, that make no sense once a 
 - Regens with PA 150 or more at each season end: from 20 (2002) to 1,008 (2011).
 - Two long stalls (over 60 s on one date, at 2001-194 and 2010-169), which the game got past on its own.
 - **Save and load:** the 2011 save (on intake day) loaded with the reserve intact (42,372), and the next intake matched the continuous career's [observed, `resultados/todas10anos_carga.log`].
-- **Missing** are clubs with room that didn't get their whole quota: 35 to 80 of 1,134 a year, nearly all from nations with a nationality rule (Athletic Bilbao only signs Basques) or big clubs. B teams (the partner via 0x540a50) left the quota on 11/06; the next short career gave 57 and 51, against 66 and 80 before.
+- **Missing** were clubs with room that didn't get their whole quota: 35 to 80 of 1,134 a year. The DLL now logs each one's reason (`intake-why` line) and, in a short all-leagues career (intake on day 200 of 2001), there were 119 places, for four reasons [measured, `resultados/porque_falta*.log`]:
+  1. **B teams** (the partner via 0x540a50): the curve sends them no regens. They left the quota.
+  2. **Creating from the reserve lost regens:** ~80 per intake came out of creation already at a club (the game placed them) and the place stayed empty. The DLL now tries again, up to 3 times per place. The `intake-diag` line counts the cases.
+  3. **The squad counted with the B team's:** the game's squad count (0x53c590) adds the A team and the B team. In Spain, Portugal and Germany, A + B goes past 50, and Real Madrid, Porto and Bayern looked full. In the intake the limit is now the club's own 50 places.
+  4. **The Basque clubs:** Athletic Bilbao and Eibar only sign Basques (0x53d7f0, reason 0x19 of 0x8ce990); Real Sociedad signs no Spaniard who isn't Basque (reason 0x1a). When only they still have a quota, the Spanish youngster gets Basque as second nationality (nation 0x9cf424) and goes to one of them. Eibar needed one more change: the Basque-regen veto the DLL copies from the game's distribution (0x7ad0e0) only lets him go to 5 clubs, and Eibar isn't one of them. In the intake, a club that only signs Basques is exempt from that veto; the normal contest keeps the original rule.
+
+  With the four fixes: all 1,134 clubs with their whole quota, 0 missing, 9 youngsters made Basque. At season end (the real intake, to July 2002, `resultados/fim_temporada.log`): the 9 intakes with 0 missing; day 169's, 788 clubs, 9 made Basque. History checks out: Athletic has fielded only Basques since 1912; Real Sociedad dropped the rule in 1989 (Aldridge) but only signed a non-Basque Spaniard in 2001 (Boris); for Eibar there's no firm source, and the DLL follows what the game says about it.
 - **The sink club** (Guiseley with 41 regens in 2003) doesn't come from the intake: see `TESTES.en.md` §4.5.
 
 ### 8.1 The keys

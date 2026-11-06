@@ -738,11 +738,13 @@ unsafe fn vetado(jogador: usize, clube: usize) -> bool {
 
 /// Os filtros da 0x7ad0e0: não estrangeiro (0x53d980), não é o time B (0x540a50), não vetado, pode chegar ao jogador
 /// (0x8ce990). Devolve o elenco (0x53c590) do clube elegível.
-unsafe fn elegivel(jogador: usize, clube: usize) -> Option<i32> {
+unsafe fn elegivel(jogador: usize, clube: usize, fornada: bool) -> Option<i32> {
     let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, *mut i16, u32) -> u32 = core::mem::transmute(0x8ce990usize);
-    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 || time_b(clube) || vetado(jogador, clube) {
+    // na fornada, o clube que só contrata bascos (0x53d7f0, o Eibar) não fica de fora pelo veto do regen basco
+    let so_bascos: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d7f0usize);
+    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 || time_b(clube) || (vetado(jogador, clube) && !(fornada && so_bascos(clube) != 0)) {
         return None;
     }
     let mut motivo = 0i16;
@@ -750,6 +752,23 @@ unsafe fn elegivel(jogador: usize, clube: usize) -> Option<i32> {
         return None;
     }
     Some(elenco_de(clube, 0, 0) as i8 as i32)
+}
+
+/// Diagnóstico da fornada: por que o clube não pode receber o jovem ("ok" se pode). `bid N` = o motivo da 0x8ce990.
+pub(crate) unsafe fn motivo_recusa(jogador: usize, clube: usize) -> String {
+    let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
+    let pode: unsafe extern "thiscall" fn(usize, usize, usize, *mut i16, u32) -> u32 = core::mem::transmute(0x8ce990usize);
+    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 {
+        return "foreign".into();
+    }
+    if vetado(jogador, clube) {
+        return "vetoed".into();
+    }
+    let mut motivo = 0i16;
+    if pode(d(0xde1f54), jogador, clube, &mut motivo, 0) == 0 {
+        return format!("bid {}", motivo);
+    }
+    "ok".into()
 }
 
 /// O time B de outro clube (0x540a50: tem par e não é o time A); a disputa não manda jovem para ele.
@@ -882,7 +901,9 @@ unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa
 /// (a cota da fornada já é o limite; elenco cheio, 50, fica de fora). `None`: o clube não pode recebê-lo (os filtros
 /// da disputa: estrangeiro, time B, vetado).
 pub(crate) unsafe fn peso_na_fornada(jogador: usize, clube: usize, surpresa: bool) -> Option<f64> {
-    let elenco = elegivel(jogador, clube)?;
+    elegivel(jogador, clube, true)?;
+    // as 50 vagas do próprio clube; a 0x53c590 soma o time B (na Espanha, em Portugal e na Alemanha, A + B passa de 50)
+    let elenco = (0..50).filter(|&k| d(clube + 0xd7 + 4 * k) != 0).count() as i32;
     if elenco >= 50 {
         return None;
     }
@@ -925,7 +946,7 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
         pesos.clear();
         for i in 0..total_de_clubes.max(0) as usize {
             let clube = base + 0x245 * i;
-            if let Some(elenco) = elegivel(jogador, clube) {
+            if let Some(elenco) = elegivel(jogador, clube, false) {
                 let p = peso(&r, pa, ca, clube, elenco, surpresa);
                 if p > 0.0 {
                     pesos.push((clube, p));

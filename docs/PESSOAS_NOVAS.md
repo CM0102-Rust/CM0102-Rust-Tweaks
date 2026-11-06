@@ -181,7 +181,13 @@ O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem s
 - Regens com PA 150 ou mais no fim de cada temporada: de 20 (2002) a 1.008 (2011).
 - Duas paradas longas (mais de 60 s numa data, em 2001-194 e 2010-169), que o jogo venceu sozinho.
 - **Gravar e carregar:** o save de 2011 (no dia da fornada) carregou com a reserva intacta (42.372), e a fornada seguinte bateu com a da carreira contínua [observado, `resultados/todas10anos_carga.log`].
-- **Faltando** são clubes com vaga que não receberam a cota inteira: 35 a 80 de 1.134 por ano, quase todos de nações com regra de nacionalidade (o Athletic Bilbao só contrata bascos) ou de clubes grandes. Os times B (o parceiro pela 0x540a50) saíram da cota em 06/11; a carreira curta seguinte deu 57 e 51, contra 66 e 80 antes.
+- **Faltando** eram clubes com vaga que não receberam a cota inteira: 35 a 80 de 1.134 por ano. A DLL passou a anotar o motivo de cada um (linha `intake-why`) e, numa carreira curta com todas as ligas (fornada no dia 200 de 2001), eram 119 vagas, por quatro causas [medido, `resultados/porque_falta*.log`]:
+  1. **Os times B** (o parceiro pela 0x540a50): a curva não manda regen para eles. Saíram da cota.
+  2. **A criação da reserva perdia regens:** ~80 por fornada saíam da criação já com um clube (o jogo os colocou) e a vaga ficava sem ninguém. Agora a DLL tenta de novo, até 3 vezes por vaga. A linha `intake-diag` conta os casos.
+  3. **O elenco somado ao do time B:** a rotina do jogo que conta o elenco (0x53c590) soma o time A com o B. Na Espanha, em Portugal e na Alemanha, A + B passa de 50, e o Real Madrid, o Porto e o Bayern pareciam cheios. Na fornada, o limite agora são as 50 vagas do próprio clube.
+  4. **Os clubes bascos:** o Athletic Bilbao e o Eibar só contratam bascos (0x53d7f0, motivo 0x19 da 0x8ce990); a Real Sociedad não contrata espanhol que não seja basco (motivo 0x1a). Quando só eles ainda têm cota, o jovem espanhol ganha a segunda nacionalidade basca (a nação 0x9cf424) e vai para um deles. O Eibar precisou de mais um ajuste: o veto do regen basco que a DLL copia da distribuição do jogo (0x7ad0e0) só o deixa ir para 5 clubes, e o Eibar não é um deles. Na fornada, o clube que só contrata bascos fica fora desse veto; a disputa normal segue a regra original.
+
+  Com as quatro correções: os 1.134 clubes com a cota inteira, 0 faltando, 9 jovens feitos bascos. No fim da temporada (a fornada de verdade, até julho de 2002, `resultados/fim_temporada.log`): as 9 fornadas com 0 faltando; a do dia 169, 788 clubes, 9 feitos bascos. A história confere: o Athletic só escala bascos desde 1912; a Real Sociedad largou a regra em 1989 (Aldridge) mas só contratou espanhol não basco em 2001 (Boris); do Eibar não há fonte firme, e a DLL segue o que o jogo diz dele.
 - **O clube depósito** (o Guiseley com 41 regens em 2003) não vem da fornada: ver `TESTES.md` §4.5.
 
 ### 8.1 As chaves
