@@ -20,6 +20,7 @@
 # now_2: 21 to 40 below; now_3: more than 40 below.
 # potential_0: PA 170 or more; potential_1: 150 to 169; potential_2: 130 to 149; potential_3: 100 to 129;
 # potential_4: below 100.
+# no_room_title, no_room: the title and the body of the message when the squad is full (50) and nobody could arrive.
 # The game shows Western European letters (Latin-1); a letter outside it shows as "?".
 #
 # Este arquivo traz as frases da mensagem da fornada. Edite ou traduza à vontade; a seção usada é a da língua do jogo.
@@ -43,6 +44,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [ENG_US]
 title = Youth intake: {n} youngsters have arrived
@@ -63,6 +66,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 # Português do Brasil. Para o português de Portugal, troque por: Fornada de juniores, plantel, equipa principal,
 # guarda-redes, defesa, médio, avançado.
@@ -85,6 +90,8 @@ potential_1 = tem potencial para a seleção
 potential_2 = pode ser titular de um clube grande
 potential_3 = deve fazer carreira na primeira divisão
 potential_4 = dificilmente passará das divisões de baixo
+no_room_title = Fornada da base: nenhum jovem este ano
+no_room = O treinador da base tinha jovens prontos para subir, mas o elenco está cheio (50 jogadores), e nenhum pôde chegar nesta fornada. Libere vagas antes da próxima.
 
 [POR_BRA]
 title = Fornada da base: {n} jovens chegaram
@@ -105,6 +112,8 @@ potential_1 = tem potencial para a seleção
 potential_2 = pode ser titular de um clube grande
 potential_3 = deve fazer carreira na primeira divisão
 potential_4 = dificilmente passará das divisões de baixo
+no_room_title = Fornada da base: nenhum jovem este ano
+no_room = O treinador da base tinha jovens prontos para subir, mas o elenco está cheio (50 jogadores), e nenhum pôde chegar nesta fornada. Libere vagas antes da próxima.
 
 [ESP]
 title = Hornada de juveniles: llegaron {n} jóvenes
@@ -125,6 +134,8 @@ potential_1 = tiene potencial para la selección
 potential_2 = puede ser titular en un club grande
 potential_3 = debería hacer carrera en primera división
 potential_4 = difícilmente pasará de las divisiones inferiores
+no_room_title = Hornada de juveniles: ningún juvenil este año
+no_room = El entrenador de las inferiores tenía juveniles listos para subir, pero la plantilla está llena (50 jugadores) y ninguno pudo llegar en esta hornada. Libera plazas antes de la próxima.
 
 [ESP_MEX]
 title = Hornada de juveniles: llegaron {n} jóvenes
@@ -145,6 +156,8 @@ potential_1 = tiene potencial para la selección
 potential_2 = puede ser titular en un club grande
 potential_3 = debería hacer carrera en primera división
 potential_4 = difícilmente pasará de las divisiones inferiores
+no_room_title = Hornada de juveniles: ningún juvenil este año
+no_room = El entrenador de fuerzas básicas tenía juveniles listos para subir, pero la plantilla está llena (50 jugadores) y ninguno pudo llegar en esta hornada. Libera lugares antes de la próxima.
 
 [FRA]
 title = Promotion des jeunes : {n} jeunes sont arrivés
@@ -165,6 +178,8 @@ potential_1 = a le potentiel pour jouer en sélection
 potential_2 = pourrait être titulaire dans un grand club
 potential_3 = devrait faire carrière en première division
 potential_4 = dépassera difficilement les divisions inférieures
+no_room_title = Promotion : aucun jeune cette année
+no_room = L'entraîneur des jeunes avait des joueurs prêts à monter, mais l'effectif est complet (50 joueurs) : aucun n'a pu arriver cette fois. Libérez des places avant la prochaine promotion.
 
 [DEU]
 title = Jugendjahrgang: {n} Talente sind angekommen
@@ -185,6 +200,8 @@ potential_1 = hat das Potenzial für die Nationalmannschaft
 potential_2 = könnte Stammspieler bei einem großen Verein werden
 potential_3 = sollte eine Karriere in der ersten Liga machen
 potential_4 = wird kaum über die unteren Ligen hinauskommen
+no_room_title = Jugendjahrgang: dieses Jahr keine Talente
+no_room = Der Jugendtrainer hatte Talente bereit, aber der Kader ist voll (50 Spieler), deshalb konnte diesmal keiner aufrücken. Schaffen Sie vor dem nächsten Jahrgang Platz.
 
 [ITA]
 title = Leva giovanile: sono arrivati {n} giovani
@@ -205,6 +222,8 @@ potential_1 = ha il potenziale per la nazionale
 potential_2 = potrebbe essere titolare in un grande club
 potential_3 = dovrebbe fare carriera in prima divisione
 potential_4 = difficilmente andrà oltre le serie minori
+no_room_title = Leva giovanile: nessun giovane quest'anno
+no_room = L'allenatore delle giovanili aveva ragazzi pronti a salire, ma la rosa è al completo (50 giocatori) e nessuno è potuto arrivare in questa leva. Libera dei posti prima della prossima.
 
 [NED]
 title = Jeugdlichting: {n} talenten zijn gearriveerd
@@ -225,6 +244,8 @@ potential_1 = heeft de potentie voor het nationale team
 potential_2 = kan basisspeler worden bij een grote club
 potential_3 = zou carrière moeten maken in de hoogste divisie
 potential_4 = komt waarschijnlijk niet verder dan de lagere divisies
+no_room_title = Jeugdlichting: dit jaar geen talenten
+no_room = De jeugdtrainer had talenten klaar om door te stromen, maar de selectie is vol (50 spelers), dus niemand kon deze keer aansluiten. Maak plaats vóór de volgende lichting.
 
 [DAN]
 title = Ungdomsårgang: {n} talenter er ankommet
@@ -245,6 +266,8 @@ potential_1 = har potentialet til landsholdet
 potential_2 = kan blive fast mand i en stor klub
 potential_3 = bør lave en karriere i den bedste række
 potential_4 = kommer næppe længere end de lavere rækker
+no_room_title = Ungdomsårgang: ingen talenter i år
+no_room = Ungdomstræneren havde talenter klar, men truppen er fuld (50 spillere), så ingen kunne rykke op denne gang. Gør plads før den næste årgang.
 
 [NOR]
 title = Ungdomskull: {n} talenter har kommet
@@ -265,6 +288,8 @@ potential_1 = har potensial for landslaget
 potential_2 = kan bli fast spiller i en stor klubb
 potential_3 = bør gjøre karriere i øverste divisjon
 potential_4 = kommer neppe lenger enn de lavere divisjonene
+no_room_title = Ungdomskull: ingen talenter i år
+no_room = Ungdomstreneren hadde talenter klare, men stallen er full (50 spillere), så ingen kunne rykke opp denne gangen. Lag plass før neste kull.
 
 [SVE]
 title = Ungdomskull: {n} talanger har anlänt
@@ -285,6 +310,8 @@ potential_1 = har potential för landslaget
 potential_2 = kan bli ordinarie i en stor klubb
 potential_3 = borde göra karriär i högsta serien
 potential_4 = kommer knappast längre än de lägre divisionerna
+no_room_title = Ungdomskull: inga talanger i år
+no_room = Ungdomstränaren hade talanger redo, men truppen är full (50 spelare), så ingen kunde flyttas upp den här gången. Gör plats före nästa kull.
 
 # Not translated yet (help welcome): Polish, Russian, Japanese, Korean and Chinese. The game in these languages uses
 # its own character set; text in Latin-1 letters shows as written.
@@ -307,6 +334,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [RUS]
 title = Youth intake: {n} youngsters have arrived
@@ -327,6 +356,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [JAP]
 title = Youth intake: {n} youngsters have arrived
@@ -347,6 +378,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [KOR]
 title = Youth intake: {n} youngsters have arrived
@@ -367,6 +400,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [CHI_SIM]
 title = Youth intake: {n} youngsters have arrived
@@ -387,6 +422,8 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.
 
 [CHI_TRA]
 title = Youth intake: {n} youngsters have arrived
@@ -407,3 +444,5 @@ potential_1 = has the potential to play for his country
 potential_2 = could be a regular at a big club
 potential_3 = should make a career in the top flight
 potential_4 = is unlikely to go beyond the lower divisions
+no_room_title = Youth intake: no youngsters this year
+no_room = The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.

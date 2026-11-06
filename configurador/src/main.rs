@@ -832,9 +832,10 @@ impl App {
         if !ativo {
             ui.colored_label(CINZA, self.t("O jogo usa a disputa do 3.9.68.", "The game uses 3.9.68's contest."));
         }
-        if self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0 && self.valor("intake_only") != "0" {
-            ui.colored_label(AZUL, self.t("Com a fornada ligada, esta disputa continua decidindo o clube de cada regen do jogo. O que muda é a data: todos nascem no dia da fornada (aba Fornada).",
-                "With the intake on, this contest still picks each game regen's club. What changes is the date: they're all born on intake day (Intake tab)."));
+        let fornada = self.fornada_ligada();
+        if fornada {
+            ui.colored_label(AZUL, self.t("A fornada está ligada: esta curva decide para qual clube vai cada regen, mas o número de regens por clube é o da fornada. O máximo por ano e o teto do elenco não valem (aba Fornada).",
+                "The intake is on: this curve decides which club each regen goes to, but the number of regens per club is the intake's. The yearly maximum and the squad limit don't apply (Intake tab)."));
         }
         let rotulo = self.t("Jovem de exemplo: PA", "Example youngster: PA");
         let (a_jovem, a_pa, a_ca) = (self.termo(Aba::Disputa, "Jovem de exemplo"), self.termo(Aba::Idades, "PA"), self.termo(Aba::Idades, "CA"));
@@ -896,7 +897,8 @@ impl App {
             }
         });
         for k in ["target_k", "target_ca", "squad_limit", "season_cap", "surprise", "outside_competitions"] {
-            self.controle(ui, k, ativo);
+            // a fornada anula os dois tetos: a cota dela é o limite
+            self.controle(ui, k, ativo && !(fornada && (k == "squad_limit" || k == "season_cap")));
         }
         ui.add_space(6.0);
         // o ajuste fino fica fechado: a predefinição Equilibrado já o deixa certo (03/11, Lucas)
@@ -1120,30 +1122,32 @@ impl App {
         }
     }
 
+    /// A fornada ligada: `intake = 1`; sem a linha `intake` (um cfg da 1.2), o `intake_stock` > 0.
+    fn fornada_ligada(&self) -> bool {
+        match self.cfg.valor("intake") {
+            Some(v) => v.trim() == "1",
+            None => self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0,
+        }
+    }
+
     fn aba_fornada(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Fornada);
-        self.controle(ui, "intake_stock", true);
-        let ativo = self.valor("intake_stock").parse::<f64>().unwrap_or(0.0) > 0.0;
-        let so = self.valor("intake_only") != "0";
-        if ativo {
-            ui.colored_label(AZUL, if so {
-                self.t("Ligada: os regens do jogo nascem todos no dia da fornada, pela disputa da aba Regens (só a data muda); depois, o estoque completa cada clube até o mínimo garantido.",
-                    "On: the game's regens are all born on intake day, through the Regens tab's contest (only the date changes); then the stock tops each club up to the guaranteed minimum.")
-            } else {
-                self.t("Ligada: os regens do jogo nascem ao longo da temporada, como sempre; no dia da fornada, cada clube recebe o mínimo garantido do estoque, por cima.",
-                    "On: the game's regens are born through the season, as always; on intake day every club gets the guaranteed minimum from the stock, on top.")
-            });
-        }
+        self.controle(ui, "intake", true);
+        let ativo = self.fornada_ligada();
+        ui.colored_label(if ativo { AZUL } else { CINZA }, if ativo {
+            self.t("Ligada. Regen é regen: os regens só nascem no dia da fornada, e cada clube com vaga recebe o número abaixo. Para qual clube vai cada um, quem decide é a curva da aba Regens. O máximo por ano e o teto do elenco da aba Regens não valem.",
+                "On. A regen is a regen: regens are only born on intake day, and every club with room gets the number below. Which club each one goes to is up to the Regens tab's curve. The Regens tab's yearly maximum and squad limit don't apply.")
+        } else {
+            self.t("Desligada: os regens nascem ao longo da temporada, como no jogo original, pelas regras da aba Regens.",
+                "Off: regens are born through the season, as in the original game, by the Regens tab's rules.")
+        });
         ui.add_space(6.0);
         ui.strong(self.t("Quando", "When"));
         self.controle(ui, "intake_day", ativo);
         self.controle(ui, "retire_day", true);
         ui.add_space(6.0);
-        ui.strong(self.t("Os regens do jogo", "The game's regens"));
-        self.controle(ui, "intake_only", ativo);
-        ui.add_space(6.0);
-        ui.strong(self.t("A garantia (os jovens do estoque)", "The guarantee (stock youngsters)"));
-        for nome in ["intake_per_club", "intake_clubs", "intake_squad_max", "intake_pa_min", "intake_pa_max", "intake_pa_spread", "intake_surprise"] {
+        ui.strong(self.t("Quantos", "How many"));
+        for nome in ["intake_per_club", "intake_clubs"] {
             self.controle(ui, nome, ativo);
         }
         ui.add_space(6.0);

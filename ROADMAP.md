@@ -146,6 +146,7 @@ FM's "youth intake": a batch of youngsters joins every club's academy each year,
 **Next, for the intake:**
 - 💡 **The intake day per country** (Lucas, 11/05): today it's one choice for every country (a fixed day, or each nation's season end as the game has it). A line per country in `tweaks.cfg` (e.g. `intake_day_BRA = 10`) over the general rule, and a list on the configurator tab.
 - ⏳ Save and load with Lucas, with and without the DLL, and in the editors.
-- 💡 The default `intake_squad_max` (40 holds the squads back), and the PA from facilities and the youth coach (step 2 above).
+- 🔨 **The final design (11/05, evening, settled with Lucas): a regen is a regen.** The intake changes only the date and the number (`intake_per_club` per club with room); the regens the retirements don't cover are created (a record mixed from two retired players of the same position) and everything goes to the clubs by the Regens curve, with quotas. The stock's own PA keys, `intake_only` and `intake_squad_max` are gone. In the tests: [docs/PESSOAS_NOVAS.en.md](docs/PESSOAS_NOVAS.en.md) §8.
+- 💡 The reserve with every league chosen: raise the allocation (0x529bfe, 0x529b39) if a career with every league runs short.
 
 **Limit:** new records apply to new careers first (loading an old save requires `training.dat` with the exact count). The fixed day and the per-club quota work in any save.

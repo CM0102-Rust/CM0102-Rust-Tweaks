@@ -836,6 +836,27 @@ unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa
     if r.fora_competicao < 1.0 && !surpresa && !em_competicao(clube) { p * r.fora_competicao } else { p }
 }
 
+/// A fornada: o peso do clube para o jovem pela curva da aba Regens, sem o teto por temporada e sem o espaço no elenco
+/// (a cota da fornada já é o limite; elenco cheio, 50, fica de fora). `None`: o clube não pode recebê-lo (os filtros
+/// da disputa: estrangeiro, time B, vetado).
+pub(crate) unsafe fn peso_na_fornada(jogador: usize, clube: usize, surpresa: bool) -> Option<f64> {
+    let elenco = elegivel(jogador, clube)?;
+    if elenco >= 50 {
+        return None;
+    }
+    let mut r = REGRAS;
+    r.elenco_teto = 50.0;
+    r.elenco_exp = 0.0;
+    r.teto_temporada = 0.0;
+    let ficha = d(jogador + 0x61);
+    Some(peso(&r, w(ficha + 7) as f64, w(ficha + 5) as f64, clube, elenco, surpresa))
+}
+
+/// A surpresa da aba Regens (`surprise`, %) para um jovem.
+pub(crate) unsafe fn sorteia_surpresa() -> bool {
+    REGRAS.surpresa > 0.0 && (sorteio(10000) as f64) < REGRAS.surpresa * 100.0
+}
+
 /// Um número uniforme em [0, 1) com dois sorteios do jogo (30 bits).
 unsafe fn uniforme() -> f64 {
     ((sorteio(0x8000) as u32) << 15 | sorteio(0x8000) as u32) as f64 / (1u32 << 30) as f64
@@ -1267,7 +1288,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             }
         }
         if !fornada::instalar() {
-            registro::linha("intake (EXPERIMENTAL): off (intake_stock = 0)");
+            registro::linha("intake (EXPERIMENTAL): off (intake = 0)");
         }
         fornada::instalar_aposentadoria();
     }

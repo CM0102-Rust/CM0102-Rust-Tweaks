@@ -128,31 +128,59 @@ Os relatórios completos e as listas (os 1.155 usos, um por linha) ficaram no ra
 
 O código está em `src/fornada.rs`. Saiu na versão 1.2 (05/11/2026, com o ok do Lucas), ainda experimental. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
 
-**O desenho de agora (05/11, pedido do Lucas: "o que muda é só a data de chegada; a ideia é não perder nada").** Na 1.2, os jovens da fornada saíam todos do estoque, com a ficha trocada pela cópia de um jogador real, e não passavam pela disputa: a curva da aba Regens (nível, instalações, comissão, espaço, teto, surpresa, temperatura), o PA da ficha do aposentado e o `regen_origins` deixavam de valer. Agora, no dia da fornada:
-1. **Os regens do jogo** (`intake_only = 1`): quem se aposentou desde a última fornada esperava na fila do jogo; a fila nasce inteira, cada jovem pela mesma chamada da fila (0x7a664f, a do `regen_origins`) e pela disputa, com toda a curva. O PA é o da ficha do aposentado, como sempre. Só a data muda.
-2. **A garantia:** todo clube com espaço no elenco que ficou com menos de `intake_per_club` é completado primeiro com os regens do jogo que a disputa deixou sem clube (até 21 anos, da nação do clube, assinados pela 0x7a6f10; na carreira curta, 180 de 184), e só o que faltar com o estoque (a ficha copiada de um jogador real da nação do clube, PA pela reputação, a variação e a surpresa `intake_surprise`: de vez em quando o PA sorteado entre o do clube e o teto).
-3. **A mensagem** lista os jovens das duas origens.
-4. **As frases da mensagem** ficam no `intake_news.txt`, ao lado do exe (pedido do Lucas, 05/11): uma seção `[CÓDIGO]` para cada uma das 19 línguas do jogo, com os códigos do próprio jogo (a tabela em 0x9eb244; a língua atual em [0x9eb2dc]), e linhas `chave = frase` (título, abertura, o parágrafo de cada jovem com `{name}`, `{age}`, `{position}`, `{now}`, `{potential}`, as posições e as 9 faixas). Vêm traduzidas inglês, português (POR e POR_BRA, em português do Brasil), espanhol (ESP e ESP_MEX), francês, alemão, italiano, holandês, dinamarquês, norueguês e sueco; polonês, russo, japonês, coreano e chinês ficam em inglês para a comunidade traduzir. Sem o arquivo, ou sem a frase, valem as embutidas (inglês, português, espanhol).
-5. **O dia das aposentadorias** (`retire_day`): a porta única das aposentadorias (`add_retirement` 0x7a8510) é desviada na entrada e grava a data da aposentadoria (+0x10 dia, +0x12 ano do registro de 26 bytes) no dia escolhido; o jogo aposenta quando hoje passa da data (0x7a5a57), então grava o dia anterior. Vale com ou sem a fornada. Com a fornada em 1º de julho e as aposentadorias em 24 de junho, quem se aposenta nasce uma semana depois.
+**O desenho final (05/11, noite; decidido com o Lucas ponto a ponto). Substitui o de 05/11 à tarde.** O princípio: **regen é regen**. De onde ele vem não importa, e o programa não trata regens de origens diferentes de jeitos diferentes. A fornada muda duas coisas: a data (os regens só chegam no dia da fornada) e a quantidade (todo clube com vaga recebe `intake_per_club`, 3 por padrão). O resto é a aba Regens.
 
-No modo `season_end`, a fila nasce por país: as fichas da reserva das nações daquele dia (+4 da entrada de 16 bytes, o id da nação, como a 0x7a8ab0 grava) vão para a frente, e nascem só essas. Com `intake_only = 0`, nada disso: os regens do jogo nascem ao longo da temporada, e o estoque dá `intake_per_club` a cada clube por cima, como na 1.2.
+1. **A data.** Com a fornada ligada, quem se aposenta espera na fila do jogo, e os regens só nascem no dia da fornada. O padrão é o fim da temporada de cada país (`season_end`); o dia fixo é opção. As aposentadorias podem ir para um dia só (`retire_day`).
+2. **A cota.** No dia, cada clube das ligas jogáveis (as de fundo, com `intake_clubs = selected`) tem a cota de `intake_per_club`, limitada às vagas do elenco (50): com 2 vagas, 2; sem vaga, nenhum, e o técnico humano recebe a mensagem de falta de vaga. A vaga é contada no dia: quem libera jogadores até a véspera recebe. O clube humano recebe pela mesma regra.
+3. **Os regens do dia.** Os aposentados das nações do dia nascem todos pela rotina do jogo (`regenerate_as_youth_player` 0x7abac0: o PA, as posições, os pés e o perfil técnico e mental da ficha herdada; o CA, o físico, a idade, o nome e as línguas sorteados), sem ir à disputa ainda. Entram também os regens livres de até 21 anos da nação (os que sobraram de fornadas anteriores).
+4. **Os que faltam.** Os aposentados não bastam para 3 por clube (na carreira de 10 anos faltaram de 136 a 419 por ano com 278 clubes; com todas as ligas, uns 4.200 por ano). Os que faltam nascem do mesmo jeito: a pessoa vem da reserva criada com a carreira (oculta, 50 mil pedidas; o jogo dá o que couber na folga do corte do banco, 120 mil com Brasil e Inglaterra); a ficha é a mistura de duas fichas de aposentados da nação **da mesma posição** (goleiro com goleiro, zagueiro com zagueiro, meia com meia, atacante com atacante): as posições e os pés de uma, cada atributo de uma das duas, e o PA sorteado entre os PAs das duas. Os pais são os regens que acabaram de nascer de aposentados (a ficha deles é a do aposentado), então os criados seguem a distribuição de PA e de posições de quem se aposenta: os da própria nação; com menos de 50 no dia, também os das outras nações do dia (a nação do regen continua a do clube); com menos ainda, os jogadores de 30 anos ou mais da nação. Depois, a mesma 0x7abac0. Misturar evita os clones: copiar uma ficha repetiria o PA, as posições, os pés e o perfil técnico e mental. (Nos testes, jogadores em atividade como pais deram criados fortes demais, PA mediano 112 a 118 contra 70 a 80 dos aposentados; com os pais de agora, 71.)
+5. **A distribuição.** O grupo inteiro da nação (os do dia, os livres e os criados) é distribuído de uma vez, do maior PA para o menor, cada um sorteado pela curva da aba Regens (nível, instalações, comissão, surpresa, temperatura) entre os clubes que ainda têm cota. Cada clube termina com a sua cota; a curva decide **quais** regens vão para cada um. Com a fornada ligada, o teto por temporada (`season_cap`) e o espaço no elenco (`squad_limit`) não entram: a cota já é o limite.
+6. **As sobras.** Regens do dia que sobram depois das cotas cheias vão para a disputa normal da nação, entre os clubes com vaga; sem clube com vaga, ficam sem clube, como no original.
+7. **Fora da garantia.** As nações não escolhidas (e as de fundo, no padrão) seguem o caminho original do jogo.
+8. **A mensagem.** O clube do técnico humano recebe a lista dos que chegaram, com o parecer; sem vaga, a mensagem diz que não chegou ninguém por falta de vaga. As frases estão no `intake_news.txt`.
+
+O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem sentido com regen é regen): `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`, `intake_only` e `intake_stock` (a reserva é fixa e oculta). A chave que liga é `intake = 1`.
+
+**Limite conhecido:** a reserva cabe na folga do corte do banco (as pessoas e as fichas das nações que ficam de fora da carreira). Com todas as ligas escolhidas, sobra pouca folga de fichas; aumentar a alocação (0x529bfe, fichas; 0x529b39, pessoas) fica para quando uma carreira com todas as ligas mostrar a falta.
+
+**O resultado do desenho final (05/11, noite).** Carreira automática de férias, Brasil, Inglaterra e Itália (278 clubes), fornada no fim da temporada de cada país (o padrão), de 2001 a 29/03/2008 (parou numa caixa de fechar janela, não da DLL; seis anos e meio bastaram) [observado, `resultados/final5longa.log`]:
+
+| Fornada | Clubes | Nascidos da fila | Criados | Entregues | Sem vaga | Sobras assinadas | Reserva restante |
+|---|---|---|---|---|---|---|---|
+| 2002 (BRA, dia 10) | 112 | 1 | 335 | 336 | 0 | 0 | 49.665 |
+| 2002 (ING/ITA, dia 169) | 166 | 413 | 117 | 436 | 11 | 42 | 49.548 |
+| 2003 BRA | 112 | 168 | 168 | 336 | 0 | 0 | 49.379 |
+| 2003 ING/ITA | 166 | 749 | 0 | 404 | 18 | 298 | 49.379 |
+| 2004 BRA | 112 | 135 | 201 | 336 | 0 | 0 | 49.178 |
+| 2004 ING/ITA | 166 | 442 | 105 | 403 | 13 | 91 | 49.073 |
+| 2005 BRA | 112 | 130 | 206 | 336 | 0 | 0 | 48.867 |
+| 2005 ING/ITA | 166 | 534 | 93 | 446 | 9 | 97 | 48.774 |
+| 2006 BRA | 112 | 153 | 180 | 336 | 0 | 0 | 48.593 |
+| 2006 ING/ITA | 166 | 697 | 0 | 492 | 1 | 148 | 48.593 |
+| 2007 BRA | 112 | 193 | 140 | 336 | 0 | 0 | 48.452 |
+| 2007 ING/ITA | 166 | 840 | 33 | 498 | 0 | 244 | 48.419 |
+| 2008 BRA | 112 | 216 | 114 | 336 | 0 | 0 | 48.305 |
+
+- Todo clube com vaga recebeu a cota em todas as fornadas: nenhuma cota faltando, nenhuma nação sem pais. A reserva de 50.000 foi criada inteira (folga de 120.467); em seis anos e meio gastou 1.695, uns 200 anos no mesmo ritmo.
+- Os criados só entram quando os aposentados não bastam: no Brasil, metade ou mais da fornada; na Inglaterra e na Itália, de nenhum a 117.
+- As sobras são da Inglaterra e da Itália, onde se aposentam mais do que as cotas somam; vão para a disputa normal, como combinado. Por isso um clube passa de 3 por ano: o máximo de regens num clube foi de 5 (2002) a 27 (Varese, 2007).
+- Elenco médio de 35 a 38 (mínimo 5 a 10, máximo 50 ou 51); regens com PA 150 ou mais no fim de cada temporada: 25, 42, 96, 165, 236, 339.
 
 ### 8.1 As chaves
 
+Desde o desenho final (05/11, noite). As chaves do estoque (`intake_stock`, `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`) e o `intake_only` saíram; um cfg da 1.2 com `intake_stock` > 0 e sem a linha `intake` liga a fornada.
+
 | Chave | Padrão | O que faz |
 |---|---|---|
-| `intake_stock` | 0 (desligado) | pessoas criadas com a carreira (o estoque) |
-| `intake_per_club` | 3 | o mínimo garantido por clube em cada fornada: os regens da disputa contam, e o estoque completa o que faltar |
-| `intake_day` | 181 | dia do ano da fornada (181 = 30/06 ou 01/07), ou `season_end`: cada nação no fim da própria temporada (as 35 da tabela de nações-chave 0xb63d60; as outras no dia 181) |
-| `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo |
-| `intake_pa_min`, `intake_pa_max` | 60, 170 | o PA vai do mínimo (clube de reputação 0) ao máximo (reputação 10.000) |
-| `intake_pa_spread` | 30 | sorteio em volta do PA do clube; o resultado fica entre o mínimo e o máximo |
-| `intake_squad_max` | 50 | clube com esse tanto no elenco fica de fora da fornada daquele ano |
-| `intake_news` | 1 | a mensagem na caixa de entrada do clube de técnico humano (ver o passo 6) |
+| `intake` | 0 (desligada) | 1: a fornada ligada (só numa carreira nova) |
+| `intake_per_club` | 3 | regens por clube em cada fornada, limitados às vagas do elenco (50) |
+| `intake_day` | `season_end` | cada nação no fim da própria temporada (as 35 da tabela de nações-chave 0xb63d60; as outras no dia 181), ou um dia do ano para todos (0 a 365; 181 = 30/06 ou 01/07) |
+| `intake_clubs` | `playable` | `playable`: clubes das ligas jogáveis; `selected`: também as ligas de fundo; as nações de fora seguem o caminho original |
+| `intake_news` | 1 | a mensagem na caixa de entrada do clube de técnico humano, ou o aviso de falta de vaga |
 | `intake_news_numbers` | 0 | 1: a mensagem mostra também o CA e o PA |
-| `intake_only` | 1 | 1: os regens do jogo ficam guardados na fila e nascem todos no dia da fornada, pela disputa e pela curva; 0: nascem ao longo da temporada, e o estoque vem por cima |
-| `intake_surprise` | 10 | % dos jovens do estoque com o PA sorteado entre o do clube e o teto (o craque do clube pequeno) |
 | `retire_day` | `original` | o dia do ano (0 a 365) de todas as aposentadorias de jogadores, ou `original` (as datas do jogo) |
+
+Com a fornada ligada, o `season_cap` e o `squad_limit` da aba Regens não valem: a cota é o limite.
 
 ### 8.2 Como funciona
 
@@ -223,4 +251,4 @@ O B fica: gasta menos da metade do estoque, completa todos os clubes, segura o e
 - ~~A data da fornada por nação~~: feita (05/11), `intake_day = season_end`. O fim da temporada de cada nação-chave passa pela `end_season_for_nation` 0x59cdd0 (chamada em 0x5d5ea2, no laço das 35 nações-chave); a DLL anota a nação e a solta na fila do dia.
 - ~~A aba do configurador~~: feita (05/11), aba **Fornada (experimental)** em Ajustes da carreira, com as 8 chaves e a ajuda nas duas línguas.
 - Posições: os regens saem com as posições do jogador real copiado (G 8%, D 31%, M 37%, A 23%), o retrato da nação; sem ajuste por ora.
-- Elencos cheios: os clubes não dispensam na mesma proporção, e o elenco médio sobe de 33 para 40. O `intake_squad_max` resolve (40 → ~37 médio); falta escolher o padrão.
+- ~~Elencos cheios~~: o `intake_squad_max` saiu no desenho final; o limite é a cota até 50 vagas (elenco médio de 35 a 38 na carreira de 05/11, noite).

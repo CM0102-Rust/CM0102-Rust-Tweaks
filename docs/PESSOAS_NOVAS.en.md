@@ -128,31 +128,59 @@ The full reports and lists (the 1,155 uses, one per line) stayed in the session'
 
 The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
 
-**The current design (11/05, Lucas's request: "only the arrival date changes; the idea is to lose nothing").** In 1.2 the intake youngsters all came from the stock, with the record replaced by a copy of a real player, and didn't go through the contest: the Regens tab's curve (level, facilities, staff, room, cap, surprise, temperature), the retired player's record PA and `regen_origins` no longer applied. Now, on intake day:
-1. **The game's regens** (`intake_only = 1`): whoever retired since the last intake waited in the game's queue; the whole queue is born, each youngster through the same queue call (0x7a664f, the `regen_origins` one) and through the contest, with the whole curve. The PA is the retired player's record PA, as always. Only the date changes.
-2. **The guarantee:** every club with squad room that ended below `intake_per_club` is topped up first with the game's regens the contest left without a club (up to 21, from the club's nation, signed through 0x7a6f10; in the short career, 180 of 184), and only the rest from the stock (record copied from a real player of the club's nation, PA from reputation, the spread and the surprise `intake_surprise`: now and then the PA drawn between the club's and the cap).
-3. **The message** lists the youngsters from both sources.
-4. **The message phrases** live in `intake_news.txt`, next to the exe (Lucas's request, 11/05): one `[CODE]` section for each of the game's 19 languages, with the game's own codes (the table at 0x9eb244; the current language at [0x9eb2dc]), and `key = phrase` lines (title, opening, each youngster's paragraph with `{name}`, `{age}`, `{position}`, `{now}`, `{potential}`, the positions and the 9 bands). English, Portuguese (POR and POR_BRA, in Brazilian Portuguese), Spanish (ESP and ESP_MEX), French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated; Polish, Russian, Japanese, Korean and Chinese stay in English for the community to translate. Without the file, or without a phrase, the built-in ones apply (English, Portuguese, Spanish).
-5. **The retirement day** (`retire_day`): the single gate of retirements (`add_retirement` 0x7a8510) is hooked at its entry and writes the retirement date (+0x10 day, +0x12 year of the 26-byte record) on the chosen day; the game retires once today is past the date (0x7a5a57), so it writes the day before. Works with or without the intake. With the intake on 1 July and retirements on 24 June, whoever retires is born a week later.
+**The final design (11/05, evening; settled with Lucas point by point). It replaces the 11/05 afternoon one.** The principle: **a regen is a regen**. Where it comes from doesn't matter, and the program doesn't treat regens from different sources differently. The intake changes two things: the date (regens only arrive on intake day) and the number (every club with room gets `intake_per_club`, 3 by default). Everything else is the Regens tab.
 
-In `season_end` mode the queue is born per country: the pool records of that day's nations (+4 of the 16-byte entry, the nation id, as 0x7a8ab0 writes it) go to the front, and only those are born. With `intake_only = 0`, none of this: the game's regens are born through the season, and the stock gives every club `intake_per_club` on top, as in 1.2.
+1. **The date.** With the intake on, whoever retires waits in the game's queue, and regens are only born on intake day. The default is each country's season end (`season_end`); a fixed day is an option. Retirements can go to a single day (`retire_day`).
+2. **The quota.** On the day, every club of the playable leagues (the background ones too, with `intake_clubs = selected`) has a quota of `intake_per_club`, limited to the squad room (50): with 2 places, 2; with none, none, and the human manager gets the no-room message. Room is counted on the day: whoever releases players up to the day before gets them. The human club gets them by the same rule.
+3. **The day's regens.** The retired players of the day's nations are all born through the game's routine (`regenerate_as_youth_player` 0x7abac0: the inherited record's PA, positions, feet and technical and mental profile; CA, physicals, age, name and languages drawn), without going to the contest yet. The nation's free regens up to 21 (left over from earlier intakes) join them.
+4. **The missing ones.** Retirements aren't enough for 3 per club (in the 10-year career 136 to 419 a year were missing with 278 clubs; with all leagues, about 4,200 a year). The missing ones are born the same way: the person comes from the reserve created with the career (hidden, 50 thousand asked; the game gives what fits in the database trim's room, 120 thousand with Brazil and England); the record is a mix of two records of the nation's retired players **of the same position** (goalkeeper with goalkeeper, defender with defender, midfielder with midfielder, forward with forward): positions and feet from one, each attribute from one of the two, and the PA drawn between the two PAs. The parents are the regens just born from retired players (their record is the retired player's), so the created ones follow the PA and position distribution of those who retire: the nation's own; with fewer than 50 that day, the other nations' of the day too (the regen's nation stays the club's); with fewer still, the nation's players aged 30 or more. Then the same 0x7abac0. Mixing avoids clones: copying one record would repeat the PA, positions, feet and technical and mental profile. (In the tests, active players as parents made the created ones too strong, median PA 112 to 118 against 70 to 80 for the retired; with the parents now, 71.)
+5. **The distribution.** The nation's whole group (the day's, the free ones and the created ones) is handed out at once, from the highest PA down, each drawn by the Regens tab's curve (level, facilities, staff, surprise, temperature) among the clubs that still have quota. Every club ends with its quota; the curve decides **which** regens go to each. With the intake on, the season cap (`season_cap`) and squad room (`squad_limit`) don't apply: the quota is already the limit.
+6. **The leftovers.** The day's regens left once every quota is full go to the nation's normal contest, among the clubs with room; with no club with room, they stay without a club, as in the original.
+7. **Outside the guarantee.** Nations not chosen (and the background ones, by default) follow the game's original path.
+8. **The message.** The human manager's club gets the list of who arrived, with the coach's view; with no room, the message says nobody arrived for lack of room. The phrases are in `intake_news.txt`.
+
+What went (parallel rules, for stock youngsters only, that make no sense once a regen is a regen): `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`, `intake_only` and `intake_stock` (the reserve is fixed and hidden). The key that turns it on is `intake = 1`.
+
+**Known limit:** the reserve fits in the database trim's room (the people and records of the nations left out of the career). With every league chosen there's little record room left; raising the allocation (0x529bfe, records; 0x529b39, people) waits until a career with every league shows the shortfall.
+
+**The final design's result (11/05, evening).** Automatic holiday career, Brazil, England and Italy (278 clubs), intake at each country's season end (the default), from 2001 to 29/03/2008 (it stopped on a close-window box, not the DLL's; six and a half years were enough) [observed, `resultados/final5longa.log`]:
+
+| Intake | Clubs | Born from the queue | Created | Given | No room | Leftovers signed | Reserve left |
+|---|---|---|---|---|---|---|---|
+| 2002 (BRA, day 10) | 112 | 1 | 335 | 336 | 0 | 0 | 49,665 |
+| 2002 (ENG/ITA, day 169) | 166 | 413 | 117 | 436 | 11 | 42 | 49,548 |
+| 2003 BRA | 112 | 168 | 168 | 336 | 0 | 0 | 49,379 |
+| 2003 ENG/ITA | 166 | 749 | 0 | 404 | 18 | 298 | 49,379 |
+| 2004 BRA | 112 | 135 | 201 | 336 | 0 | 0 | 49,178 |
+| 2004 ENG/ITA | 166 | 442 | 105 | 403 | 13 | 91 | 49,073 |
+| 2005 BRA | 112 | 130 | 206 | 336 | 0 | 0 | 48,867 |
+| 2005 ENG/ITA | 166 | 534 | 93 | 446 | 9 | 97 | 48,774 |
+| 2006 BRA | 112 | 153 | 180 | 336 | 0 | 0 | 48,593 |
+| 2006 ENG/ITA | 166 | 697 | 0 | 492 | 1 | 148 | 48,593 |
+| 2007 BRA | 112 | 193 | 140 | 336 | 0 | 0 | 48,452 |
+| 2007 ENG/ITA | 166 | 840 | 33 | 498 | 0 | 244 | 48,419 |
+| 2008 BRA | 112 | 216 | 114 | 336 | 0 | 0 | 48,305 |
+
+- Every club with room got its quota in every intake: no quota missing, no nation without parents. The 50,000 reserve was created in full (room 120,467); six and a half years used 1,695, about 200 years at the same pace.
+- Created regens only come in when the retired players aren't enough: in Brazil, half the intake or more; in England and Italy, none to 117.
+- The leftovers are England's and Italy's, where more retire than the quotas add up to; they go to the normal contest, as agreed. That's why a club goes past 3 a year: the most regens at one club went from 5 (2002) to 27 (Varese, 2007).
+- Average squad 35 to 38 (minimum 5 to 10, maximum 50 or 51); regens with PA 150 or more at each season end: 25, 42, 96, 165, 236, 339.
 
 ### 8.1 The keys
 
+Since the final design (11/05, evening). The stock keys (`intake_stock`, `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`) and `intake_only` are gone; a 1.2 cfg with `intake_stock` > 0 and no `intake` line turns the intake on.
+
 | Key | Default | What it does |
 |---|---|---|
-| `intake_stock` | 0 (off) | people created with the career (the stock) |
-| `intake_per_club` | 3 | the guaranteed minimum per club per intake: the contest's regens count, and the stock tops up the rest |
-| `intake_day` | 181 | day of the year of the intake (181 = 30/06 or 01/07), or `season_end`: each nation at the end of its own season (the 35 of the key-nation table 0xb63d60; the others on day 181) |
-| `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: background leagues too |
-| `intake_pa_min`, `intake_pa_max` | 60, 170 | the PA goes from the minimum (reputation 0 club) to the maximum (reputation 10,000) |
-| `intake_pa_spread` | 30 | a random spread around the club's PA; the result stays between the minimum and the maximum |
-| `intake_squad_max` | 50 | a club with this many in the squad is skipped in that year's intake |
-| `intake_news` | 1 | the inbox message for a human-managed club (see step 6) |
+| `intake` | 0 (off) | 1: the intake on (new career only) |
+| `intake_per_club` | 3 | regens per club per intake, limited to the squad room (50) |
+| `intake_day` | `season_end` | each nation at the end of its own season (the 35 of the key-nation table 0xb63d60; the others on day 181), or one day of the year for everyone (0 to 365; 181 = 30/06 or 01/07) |
+| `intake_clubs` | `playable` | `playable`: clubs of the playable leagues; `selected`: the background leagues too; the nations left out follow the original path |
+| `intake_news` | 1 | the inbox message for the human manager's club, or the no-room notice |
 | `intake_news_numbers` | 0 | 1: the message also shows CA and PA |
-| `intake_only` | 1 | 1: the game's regens wait in the queue and are all born on intake day, through the contest and the curve; 0: they're born through the season, and the stock comes on top |
-| `intake_surprise` | 10 | % of stock youngsters with the PA drawn between the club's and the cap (the gem at a small club) |
 | `retire_day` | `original` | the day of the year (0 to 365) for every player retirement, or `original` (the game's dates) |
+
+With the intake on, the Regens tab's `season_cap` and `squad_limit` don't apply: the quota is the limit.
 
 ### 8.2 How it works
 
@@ -210,4 +238,4 @@ Stock of 3,000, 3 per club, both careers in parallel, under the same load [obser
 - ~~The intake date per nation~~: done (11/05), `intake_day = season_end`. Each key nation's season end goes through `end_season_for_nation` 0x59cdd0 (called at 0x5d5ea2, in the loop over the 35 key nations); the DLL notes the nation and releases it in the day's queue.
 - ~~The configurator tab~~: done (11/05), tab **Intake (experimental)** under Career tweaks, with the 8 keys and help in both languages.
 - Positions: regens come out with the positions of the copied real player (G 8%, D 31%, M 37%, A 23%), the nation's own picture; no adjustment for now.
-- Full squads: clubs don't release players at the same rate, and the average squad goes from 33 to 40. `intake_squad_max` handles it (40 → ~37 average); the default is still to be chosen.
+- ~~Full squads~~: `intake_squad_max` left in the final design; the limit is the quota up to 50 places (average squad 35 to 38 in the 11/05 evening career).

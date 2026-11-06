@@ -146,6 +146,7 @@ A "fornada" do FM: uma leva de jovens chega à base de cada clube todo ano, em v
 **Próximos, na fornada:**
 - 💡 **O dia da fornada por país** (Lucas, 05/11): hoje é uma escolha só para todos os países (um dia fixo, ou o fim da temporada de cada nação como o jogo tem). Uma linha por país no `tweaks.cfg` (ex.: `intake_day_BRA = 10`) por cima da regra geral, e uma lista na aba do configurador.
 - ⏳ Gravar e carregar com o Lucas, com e sem a DLL, e nos editores.
-- 💡 O padrão do `intake_squad_max` (40 segura os elencos), e o PA pelas instalações e pelo treinador de juniores (o passo 2 acima).
+- 🔨 **O desenho final (05/11, noite, fechado com o Lucas): regen é regen.** A fornada muda só a data e a quantidade (`intake_per_club` por clube com vaga); os regens que as aposentadorias não cobrem são criados (a ficha misturada de dois aposentados da mesma posição) e todos vão para os clubes pela curva da aba Regens, com cotas. Saíram as chaves de PA do estoque, o `intake_only` e o `intake_squad_max`. Nos testes: [docs/PESSOAS_NOVAS.md](docs/PESSOAS_NOVAS.md) §8.
+- 💡 A reserva com todas as ligas: aumentar a alocação (0x529bfe, 0x529b39) se uma carreira com todas as ligas ficar curta.
 
 **Limite:** as fichas novas valem primeiro para carreiras novas (a carga de um save antigo exige o `training.dat` com a contagem exata). O dia fixo e a cota por clube valem em qualquer save.

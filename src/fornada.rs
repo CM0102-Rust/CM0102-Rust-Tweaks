@@ -1,115 +1,103 @@
-//! A fornada de regens (EXPERIMENTAL, desde a 1.2; ver docs/PESSOAS_NOVAS.md, caminho 1, e docs/FORNADA_DE_REGENS.md).
+//! A fornada de regens (EXPERIMENTAL; o desenho em docs/PESSOAS_NOVAS.md, "O desenho final"). Regen é regen: a fornada
+//! muda a data (os regens só nascem no dia da fornada) e a quantidade (`intake_per_club` por clube com vaga); o resto é
+//! a aba Regens.
 //!
-//! 1. **Criar:** o corte do banco (`database_trim_staff_tables` 0x524d70) já cria pessoas a mais na carreira nova
-//!    (`extra = ftol(mantidas × 1% ou 2%)`, 0x525f8c), com ficha e preferências, antes dos 16 humanos. O `call` do `ftol`
-//!    vai para um trecho que soma `intake_stock`, dentro da folga das tabelas (o `realloc` do corte só pode encolher).
-//! 2. **Adormecer:** antes de `game_run_to_start_date` 0x5cc850 (chamada em 0x829fd9), as pessoas do estoque ficam
-//!    aposentadas (bits 0x30 = 0x20 do +0xb do registro de 79 bytes), sem clube, fora da fila. Nos saves, todo aposentado
-//!    está na fila; aposentado fora da fila é, então, o estoque (sem arquivo ao lado do save).
-//! 3. **Soltar:** no dia `intake_day`, depois da fila do dia (`process_regen_queue` 0x7a65d0, chamada em 0x5cda7a):
-//!    a. **os regens do jogo** (`intake_only = 1`): a fila de aposentados guardada desde a última fornada nasce inteira, um
-//!       por ficha da reserva, pela mesma chamada da fila (0x7a664f, a do `regen_origins`), cada um pela disputa dos clubes
-//!       com toda a curva da aba Regens (nível, instalações, comissão, espaço, teto, surpresa, temperatura), as idades e os
-//!       nomes. O PA é o da ficha do aposentado, como sempre.
-//!    b. **a garantia:** todo clube com espaço no elenco que ficou com menos de `intake_per_club` jovens na fornada é
-//!       completado com o estoque: a ficha da pessoa vira a cópia de um jogador real da nação do clube, com o PA pela
-//!       reputação do clube (mais a variação e, de vez em quando, a surpresa `intake_surprise`), vai para a frente da
-//!       reserva, e `regenerate_as_youth_player` 0x7abac0 faz o regen. A disputa (chamada em 0x7acea2) devolve o clube;
-//!       se o regen sair sem clube, `player_regen_sign_for_club` 0x7a6f10. Com `intake_only = 0`, cada clube recebe
-//!       `intake_per_club` do estoque por cima dos regens do jogo, que seguem nascendo ao longo da temporada.
-//! 4. **No fim da temporada** (`intake_day = season_end`): o laço das 35 nações-chave (tabela 0xb63d60, 72 bytes, +0 a
-//!    nação, +0x15 o dia do fim) chama `end_season_for_nation` 0x59cdd0 em 0x5d5ea2; a nação fica pendente e os clubes
-//!    dela recebem na fila do dia seguinte. Clube de nação fora da tabela recebe no dia 181.
-//! 5. **Só a fornada** (`intake_only = 1`, o padrão): a fila do dia roda com a contagem da fila zerada, então o laço dos
-//!    nascimentos (0x7a65f0..0x7a66b7) não anda e a outra metade da 0x7a65d0 (a reposição dos não jogadores, +0x1c/+0x20)
-//!    segue normal. A fila e a reserva guardam os regens até a fornada (o passo 3a).
-//! 7. **O dia das aposentadorias** (`retire_day`): `add_retirement` 0x7a8510, a porta única das aposentadorias, é
-//!    desviada na entrada; a data da aposentadoria do registro de 26 bytes (+0x10 dia, +0x12 ano) passa a ser o dia
-//!    escolhido (o jogo aposenta quando hoje passa da data, então grava o dia anterior). Vale sem a fornada também.
-//! 6. **A mensagem** (`intake_news = 1`): o clube de técnico humano recebe na caixa de entrada uma notícia do próprio jogo
-//!    com os jovens que chegaram e o parecer de cada um (o nível de agora comparado com o elenco e o potencial, em faixas;
-//!    os números só com `intake_news_numbers = 1`). É uma mensagem entre técnicos (tipo 0x1388, a do jogo em rede): sem a
-//!    DLL, o jogo mostra o texto curto guardado nas vagas dela (a partir da vaga 3); com a DLL, o escritor das notícias
-//!    (`NewsItem::write_text` 0x77bc80, desviado na entrada) escreve o texto completo na língua do jogo (português,
-//!    espanhol, senão inglês). Os dados ficam nas vagas da notícia, que o save já guarda (news.dat).
+//! 1. **A reserva de pessoas:** o corte do banco (`database_trim_staff_tables` 0x524d70) já cria pessoas a mais na
+//!    carreira nova (`extra = ftol(mantidas × 1% ou 2%)`, 0x525f8c); o `call` do `ftol` vai para um trecho que soma
+//!    `RESERVA`, dentro da folga das tabelas (o `realloc` do corte só pode encolher). Antes de `game_run_to_start_date`
+//!    0x5cc850 (chamada em 0x829fd9) elas ficam aposentadas (bits 0x30 = 0x20 do +0xb do registro de 79 bytes), sem
+//!    clube, fora da fila: aposentado fora da fila é a reserva (sem arquivo ao lado do save).
+//! 2. **A fila guardada:** a fila do dia (`process_regen_queue` 0x7a65d0, chamada em 0x5cda7a) roda com a contagem da
+//!    fila zerada; o laço dos nascimentos não anda e a reposição dos não jogadores segue normal.
+//! 3. **O dia da fornada** (`intake_day`; no padrão `season_end`, cada nação-chave no fim da própria temporada, pelo laço
+//!    de `end_season_for_nation` 0x59cdd0 em 0x5d5ea2, e as outras no dia 181), em `soltar`:
+//!    a. a cota de cada clube de competição das nações da garantia: `intake_per_club`, limitada às vagas (50);
+//!    b. a fila das nações do dia nasce inteira, pela chamada da fila (0x7a664f: a 0x7abac0 e o `regen_origins`), com a
+//!       disputa (chamada em 0x7acea2) segurada para as nações da garantia; juntam-se os regens livres de até 21 anos;
+//!    c. os que faltam nascem de pessoas da reserva, com a ficha misturada de dois jogadores da nação na mesma posição;
+//!    d. a distribuição: do maior PA para o menor, cada um sorteado pela curva da aba Regens entre os clubes da nação
+//!       com cota (`crate::peso_na_fornada`, sem `season_cap` e sem `squad_limit`), assinado pela 0x7a6f10; as sobras do
+//!       dia vão à disputa normal da nação entre os clubes com vaga, ou ficam sem clube.
+//! 4. **O dia das aposentadorias** (`retire_day`): `add_retirement` 0x7a8510, a porta única das aposentadorias, é
+//!    desviada na entrada; a data da aposentadoria (+0x10 dia, +0x12 ano do registro de 26 bytes) vira o dia escolhido
+//!    (o jogo aposenta quando hoje passa da data, então grava o dia anterior). Vale sem a fornada também.
+//! 5. **A mensagem** (`intake_news = 1`): o clube de técnico humano recebe uma notícia do próprio jogo com os jovens que
+//!    chegaram e o parecer de cada um (faixas; os números com `intake_news_numbers = 1`), ou o aviso de falta de vaga. É
+//!    a mensagem entre técnicos (tipo 0x1388): sem a DLL, o jogo mostra o texto curto das vagas dela (a partir da 3); com
+//!    a DLL, `NewsItem::write_text` 0x77bc80 (desviado na entrada) escreve o texto completo na língua do jogo, pelas
+//!    frases do intake_news.txt; `get_action_button` 0x782b70 tira o botão Responder.
 
 use crate::{d, registro, sorteio, w};
 
 pub struct Fornada {
-    pub estoque: i32,
+    /// `intake = 1` (ou o `intake_stock` > 0 da 1.2): a fornada ligada
+    pub ligada: bool,
     pub por_clube: i32,
     pub dia: i32,
-    /// `intake_day = season_end`: cada nação-chave no fim da própria temporada
+    /// `intake_day = season_end` (o padrão): cada nação-chave no fim da própria temporada
     pub por_temporada: bool,
     pub so_jogaveis: bool,
-    pub pa_min: i32,
-    pub pa_max: i32,
-    pub pa_espalhar: i32,
-    /// clube com este tanto no elenco fica de fora da fornada (o elenco tem 50 vagas)
-    pub elenco_max: i32,
-    /// `intake_only = 1`: os regens jogadores só nascem na fornada (a fila do jogo para de criá-los)
-    pub so_fornada: bool,
     /// `intake_news`: a mensagem na caixa de entrada do técnico humano
     pub mensagem: bool,
     /// `intake_news_numbers`: o CA e o PA na mensagem, além das faixas
     pub numeros: bool,
-    /// `intake_surprise`: % dos jovens do estoque com o PA sorteado acima da faixa do clube, até o teto
-    pub surpresa: i32,
     /// `retire_day`: o dia do ano das aposentadorias (−1 = o do jogo)
     pub dia_aposentar: i32,
 }
 
-pub static mut F: Fornada = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true, mensagem: true, numeros: false, surpresa: 10, dia_aposentar: -1 };
+/// A reserva de pessoas pedida na criação da carreira (oculta). O jogo dá o que couber na folga do corte do banco.
+/// ponytail: número fixo nosso, pelos testes (a ideia é não acabar nem numa carreira de 100 anos); com todas as ligas a
+/// folga das fichas encolhe, e aí o caminho é aumentar a alocação em 0x529bfe/0x529b39.
+const RESERVA: i32 = 50_000;
+
+const PADRAO: Fornada = Fornada { ligada: false, por_clube: 3, dia: 181, por_temporada: true, so_jogaveis: true, mensagem: true, numeros: false, dia_aposentar: -1 };
+
+pub static mut F: Fornada = PADRAO;
 
 unsafe fn cfg() -> &'static Fornada {
     &*core::ptr::addr_of!(F)
 }
 
-/// As chaves `intake_*` do tweaks.cfg.
+/// As chaves `intake*` e `retire_day` do tweaks.cfg.
 pub fn ler() -> Fornada {
-    let mut f = Fornada { estoque: 0, por_clube: 3, dia: 181, por_temporada: false, so_jogaveis: true, pa_min: 60, pa_max: 170, pa_espalhar: 30, elenco_max: 50, so_fornada: true, mensagem: true, numeros: false, surpresa: 10, dia_aposentar: -1 };
+    let mut f = PADRAO;
     let caminho = std::env::current_exe().map(|p| p.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return f };
+    let (mut intake, mut estoque_12) = (None, false);
     for linha in texto.lines() {
         let linha = linha.split('#').next().unwrap_or("");
         let Some((k, v)) = linha.split_once('=') else { continue };
         let (k, v) = (k.trim(), v.trim());
-        if k == "intake_clubs" {
-            f.so_jogaveis = v != "selected"; // playable | selected
-            continue;
-        }
-        if k == "retire_day" && v == "original" {
-            f.dia_aposentar = -1;
-            continue;
-        }
-        if k == "intake_day" && v == "season_end" {
-            f.por_temporada = true;
-            continue;
-        }
-        let Ok(x) = v.parse::<i32>() else { continue };
-        match k {
-            "intake_stock" => f.estoque = x.clamp(0, 100_000),
-            "intake_per_club" => f.por_clube = x.clamp(0, 20),
-            "intake_day" => f.dia = x.clamp(0, 365),
-            "intake_pa_min" => f.pa_min = x.clamp(1, 200),
-            "intake_pa_max" => f.pa_max = x.clamp(1, 200),
-            "intake_pa_spread" => f.pa_espalhar = x.clamp(0, 200),
-            "intake_squad_max" => f.elenco_max = x.clamp(1, 50),
-            "intake_only" => f.so_fornada = x != 0,
-            "intake_news" => f.mensagem = x != 0,
-            "intake_news_numbers" => f.numeros = x != 0,
-            "intake_surprise" => f.surpresa = x.clamp(0, 100),
-            "retire_day" => f.dia_aposentar = x.clamp(0, 365),
-            _ => {}
+        match (k, v) {
+            ("intake_clubs", _) => f.so_jogaveis = v != "selected", // playable | selected
+            ("retire_day", "original") => f.dia_aposentar = -1,
+            ("intake_day", "season_end") => f.por_temporada = true,
+            _ => {
+                let Ok(x) = v.parse::<i32>() else { continue };
+                match k {
+                    "intake" => intake = Some(x != 0),
+                    "intake_stock" => estoque_12 = x > 0, // o cfg da 1.2, sem a linha intake
+                    "intake_per_club" => f.por_clube = x.clamp(0, 20),
+                    "intake_day" => {
+                        f.dia = x.clamp(0, 365);
+                        f.por_temporada = false;
+                    }
+                    "intake_news" => f.mensagem = x != 0,
+                    "intake_news_numbers" => f.numeros = x != 0,
+                    "retire_day" => f.dia_aposentar = x.clamp(0, 365),
+                    _ => {}
+                }
+            }
         }
     }
+    f.ligada = intake.unwrap_or(estoque_12);
     f
 }
 
 /// O estoque criado nesta sessão (carreira nova): ids [inicio, fim).
 static mut CRIADOS: (usize, usize) = (0, 0);
-/// O clube que a disputa devolve durante a soltura (0: a disputa normal).
-static mut FORCADO: usize = 0;
+/// Durante a soltura: a disputa não escolhe clube para os regens das nações da garantia (a distribuição vem depois).
+static mut SEGURAR: bool = false;
 /// O ano da última soltura nesta sessão.
 static mut ULTIMO_ANO: i32 = -1;
 /// A disputa que estava no `call` de 0x7acea2 (a original ou a do Tweaks).
@@ -146,12 +134,12 @@ unsafe extern "thiscall" fn fim_da_temporada(this: usize, entrada: usize) {
 unsafe extern "C" fn extra_do_corte(extra: i32, pessoas: i32, fichas: i32, prefs: i32) -> i32 {
     let (n, f, p) = (d(0xae2364) as i32, d(0xae236c) as i32, d(0xae2370) as i32);
     let folga = (n - pessoas - 0x52d - extra).min(f - fichas - extra).min(p - prefs - extra).max(0);
-    let k = cfg().estoque.min(folga);
+    let k = RESERVA.min(folga);
     let total = extra + k;
     let fim = (pessoas + total - 16) as usize; // as extras ficam em N−17−i; as K primeiras (i < K) são o estoque
     CRIADOS = (fim - k as usize, fim);
-    registro::linha(&format!("intake: stock {} people created with the career (asked {}, room {}; the game's own extra {}; ids {}..{})",
-        k, cfg().estoque, folga, extra, fim - k as usize, fim));
+    registro::linha(&format!("intake: reserve of {} people created with the career (asked {}, room {}; the game's own extra {}; ids {}..{})",
+        k, RESERVA, folga, extra, fim - k as usize, fim));
     total
 }
 
@@ -180,8 +168,8 @@ unsafe extern "C" fn antes_de_rodar() -> u32 {
 
 /// A disputa no `call` de 0x7acea2 (thiscall, ret 4).
 unsafe extern "thiscall" fn disputa(this: usize, jogador: usize) -> usize {
-    if FORCADO != 0 {
-        return FORCADO;
+    if SEGURAR && na_garantia(d(jogador + 0x1a)) {
+        return 0;
     }
     let original: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(DISPUTA);
     original(this, jogador)
@@ -190,15 +178,11 @@ unsafe extern "thiscall" fn disputa(this: usize, jogador: usize) -> usize {
 /// No lugar da chamada de `process_regen_queue` em 0x5cda7a (thiscall): a fila do dia e, no dia da fornada, a soltura.
 unsafe extern "thiscall" fn fila_do_dia(this: usize) {
     let original: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7a65d0usize);
-    if cfg().so_fornada {
-        // a contagem da fila zerada só durante a chamada: o laço dos nascimentos não anda, o resto da rotina sim
-        let n = d(this + 0x14);
-        *((this + 0x14) as *mut usize) = 0;
-        original(this);
-        *((this + 0x14) as *mut usize) = n;
-    } else {
-        original(this);
-    }
+    // a contagem da fila zerada só durante a chamada: o laço dos nascimentos não anda, o resto da rotina sim
+    let n = d(this + 0x14);
+    *((this + 0x14) as *mut usize) = 0;
+    original(this);
+    *((this + 0x14) as *mut usize) = n;
     let (dia, ano) = (w(0xae2c90) as i32, w(0xae2c92) as i32);
     if cfg().por_temporada {
         let pend = core::mem::take(&mut *core::ptr::addr_of_mut!(PENDENTES));
@@ -210,6 +194,7 @@ unsafe extern "thiscall" fn fila_do_dia(this: usize) {
             ULTIMO_ANO = ano;
             let chave = nacoes_chave();
             soltar(this, &|id| !chave.contains(&id));
+            gravar_teste(ano);
         }
     } else if dia == cfg().dia && ano != ULTIMO_ANO {
         ULTIMO_ANO = ano;
@@ -304,142 +289,234 @@ unsafe fn elenco(clube: usize) -> usize {
     (0..50).filter(|&k| d(clube + 0xd7 + 4 * k) != 0).count()
 }
 
-/// A fornada das nações escolhidas (`da_nacao`, pelo id da nação).
+/// A nação (ponteiro) está na garantia: liga jogável (+0x11c = 2) ou, com `intake_clubs = selected`, também de fundo.
+unsafe fn na_garantia(nac: usize) -> bool {
+    nac != 0 && if cfg().so_jogaveis { crate::b(nac + 0x11c) == 2 } else { crate::b(nac + 0x11c) != 0 }
+}
+
+/// O jovem: pessoa com ficha, sem clube.
+unsafe fn livre(p: usize) -> bool {
+    d(p + 0x39) == 0 && d(p + 0x61) != 0
+}
+
+/// Um regen novo da nação `nac` (ponteiro): a pessoa `p` da reserva e a ficha dela virando a mistura de duas fichas da
+/// mesma posição, `a` e uma de `mesma_posicao`: as posições e os pés de `a`, cada atributo de uma das duas, o PA sorteado
+/// entre os dois; a ficha vai para a frente da reserva de fichas e a chamada da fila (0x7a664f: a 0x7abac0, e o
+/// `regen_origins` por cima) faz o regen, como qualquer outro.
+unsafe fn criar_regen(this: usize, p: usize, nac: usize, a: usize, mesma_posicao: &[usize]) -> bool {
+    let b = d(if mesma_posicao.is_empty() { a } else { mesma_posicao[sorteio(mesma_posicao.len() as i32) as usize] } + 0x61);
+    let a = d(a + 0x61);
+    let ficha = d(p + 0x61);
+    let id_ficha = d(ficha);
+    core::ptr::copy_nonoverlapping(a as *const u8, ficha as *mut u8, 70);
+    *(ficha as *mut usize) = id_ficha;
+    *((ficha + 4) as *mut u8) = 0; // número
+    *((ficha + 0x45) as *mut u8) = 10; // moral
+    for o in 0x1b..=0x44usize {
+        // os pés (+0x30 esquerdo, +0x3b direito) ficam os da primeira, como as posições
+        if o != 0x30 && o != 0x3b && sorteio(2) == 1 {
+            *((ficha + o) as *mut u8) = *((b + o) as *const u8);
+        }
+    }
+    let (pa_a, pa_b) = ((w(a + 7) as i16 as i32).clamp(1, 200), (w(b + 7) as i16 as i32).clamp(1, 200));
+    let (lo, hi) = (pa_a.min(pa_b), pa_a.max(pa_b));
+    *((ficha + 7) as *mut i16) = (lo + sorteio(hi - lo + 1)) as i16;
+    por_na_frente_da_reserva(this, id_ficha, d(nac));
+    let alvo = (core::ptr::read_unaligned(0x7a6650 as *const i32) as usize).wrapping_add(0x7a6654);
+    let criar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(alvo);
+    let antes = d(this + 0x40);
+    criar(this, p);
+    d(this + 0x40) < antes
+}
+
+/// Sorteia um clube pelo peso da curva (`crate::peso_na_fornada`); nenhum peso positivo entre os elegíveis: um deles
+/// por igual. `None`: nenhum pode recebê-lo.
+unsafe fn sortear_clube(p: usize, clubes: &[usize]) -> Option<usize> {
+    let surpresa = crate::sorteia_surpresa();
+    let mut pesos: Vec<(usize, f64)> = clubes.iter().filter_map(|&c| crate::peso_na_fornada(p, c, surpresa).map(|x| (c, x))).collect();
+    if pesos.is_empty() {
+        return None;
+    }
+    let soma: f64 = pesos.iter().map(|x| x.1).sum();
+    if soma <= 0.0 {
+        return Some(pesos[sorteio(pesos.len() as i32) as usize].0);
+    }
+    let mut x = crate::uniforme() * soma;
+    let ultimo = pesos.pop().map(|x| x.0);
+    for (c, peso) in pesos {
+        x -= peso;
+        if x < 0.0 {
+            return Some(c);
+        }
+    }
+    ultimo
+}
+
+/// A fornada das nações escolhidas (`da_nacao`, pelo id da nação). Ver docs/PESSOAS_NOVAS.md, "O desenho final".
 unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
+    use std::collections::{HashMap, HashSet};
     TESTE_FEITO = false;
     let (pessoas, n) = (d(0xae23bc), d(0xae2364));
     let total = (d(0xae235c) as i32 - 2 * d(0xae2350) as i32).max(0) as usize;
     let base = d(0xae23b4);
-    let clubes: Vec<usize> = (0..total)
-        .map(|i| base + 0x245 * i)
+    let todos: Vec<usize> = (0..total).map(|i| base + 0x245 * i).collect();
+    // 1. a cota: os clubes de competição das nações da garantia; intake_per_club, limitado às vagas (50)
+    let clubes: Vec<usize> = todos
+        .iter()
+        .copied()
         .filter(|&c| {
             let nac = d(c + 0x53);
-            nac != 0 && da_nacao(d(nac)) && crate::em_competicao(c) && if cfg().so_jogaveis { *((nac + 0x11c) as *const u8) == 2 } else { *((nac + 0x11c) as *const u8) != 0 }
+            nac != 0 && da_nacao(d(nac)) && na_garantia(nac) && crate::em_competicao(c)
         })
         .collect();
-    // o nível de cada elenco antes da fornada (para o parecer do treinador na mensagem)
-    let nivel: std::collections::HashMap<usize, i32> = clubes.iter().map(|&c| (c, nivel_do_elenco(c))).collect();
-    let mut chegaram: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
-    // a. os regens do jogo, pela disputa e pela curva
-    let (mut da_fila, mut livres) = (0, Vec::new());
-    if cfg().so_fornada {
-        let k = fichas_na_frente(this, da_nacao);
-        (da_fila, livres) = nascer_da_fila(this, k, &mut chegaram);
-    }
-    let fila_sem_clube = livres.len();
-    // a garantia usa primeiro os regens do jogo que ficaram sem clube: até 21 anos, da nação do clube (+0x1a da pessoa e
-    // +0x53 do clube, os dois o ponteiro da nação), assinados pela 0x7a6f10; só o que faltar vem do estoque
-    let mut livres_por_nacao: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
-    for &p in livres.iter().rev() {
-        if crate::b(p + 0x18) <= 21 && d(p + 0x1a) != 0 {
-            livres_por_nacao.entry(d(p + 0x1a)).or_default().push(p);
-        }
-    }
-    let assinar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
-    let mut dos_livres = 0;
+    let nivel: HashMap<usize, i32> = clubes.iter().map(|&c| (c, nivel_do_elenco(c))).collect();
+    let mut cota: HashMap<usize, i32> = clubes.iter().map(|&c| (c, cfg().por_clube.min(50 - elenco(c) as i32).max(0))).collect();
+    let sem_vaga: Vec<usize> = clubes.iter().copied().filter(|c| cota[c] == 0 && cfg().por_clube > 0).collect();
+    let mut por_nacao: HashMap<usize, Vec<usize>> = HashMap::new();
     for &c in &clubes {
-        let ja = chegaram.get(&c).map_or(0, |v| v.len()) as i32;
-        let mut faltam = if cfg().so_fornada { (cfg().por_clube - ja).max(0) } else { 0 };
-        while faltam > 0 && elenco(c) < cfg().elenco_max as usize {
-            let Some(p) = livres_por_nacao.get_mut(&d(c + 0x53)).and_then(|v| v.pop()) else { break };
-            if d(p + 0x39) != 0 {
-                continue;
-            }
-            assinar(this, p, c);
-            if d(p + 0x39) == c {
-                chegaram.entry(c).or_default().push(p);
-                dos_livres += 1;
-                faltam -= 1;
-            }
+        por_nacao.entry(d(c + 0x53)).or_default().push(c);
+    }
+    // 2. os regens do dia: a fila das nações do dia nasce inteira; a disputa não escolhe clube para os da garantia
+    let mut chegaram: HashMap<usize, Vec<usize>> = HashMap::new();
+    SEGURAR = true;
+    let k = fichas_na_frente(this, da_nacao);
+    let (da_fila, nascidos) = nascer_da_fila(this, k, &mut chegaram);
+    let do_dia: HashSet<usize> = nascidos.iter().copied().collect();
+    // o grupo de cada nação: os do dia e os regens livres de até 21 anos que sobraram de fornadas anteriores
+    let mut grupo: HashMap<usize, Vec<usize>> = HashMap::new();
+    for &p in &nascidos {
+        if livre(p) && por_nacao.contains_key(&d(p + 0x1a)) {
+            grupo.entry(d(p + 0x1a)).or_default().push(p);
         }
     }
-    // b. a garantia, com o estoque
-    let mut estoque = adormecidos(this);
-    let mut moldes: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
+    let mut livres_antes = 0;
     for id in 0..n.saturating_sub(16) {
         let p = pessoas + 110 * id;
-        if d(p + 0x61) != 0 && d(p + 0x1a) != 0 && (*registro79(id) & 0x30) == 0 {
-            moldes.entry(d(p + 0x1a)).or_default().push(p);
+        // regen (bit 0x40), não aposentado (bits 0x30)
+        if !do_dia.contains(&p) && livre(p) && crate::b(p + 0x18) <= 21 && (*registro79(id) & 0x70) == 0x40 && por_nacao.contains_key(&d(p + 0x1a)) {
+            grupo.entry(d(p + 0x1a)).or_default().push(p);
+            livres_antes += 1;
         }
     }
-    let (mut dados, mut cheios, mut sem_molde, mut falhas, mut surpresas, mut acabou) = (0, 0, 0, 0, 0, false);
-    for &c in &clubes {
-        if acabou {
-            break;
+    // 3. os que faltam: pessoas da reserva com a ficha misturada de duas fichas da mesma posição. Os pais são os regens
+    // que acabaram de nascer de aposentados (a ficha deles é a do aposentado: o PA, as posições, o perfil), para os
+    // criados seguirem a distribuição de quem se aposenta: os da própria nação; com menos de `MIN_PAIS`, também os das
+    // outras nações do dia (a nação do regen continua a do clube); com menos ainda, os jogadores de 30 anos ou mais da
+    // nação. Poucos pais dariam quase clones; jogadores em atividade como pais dariam PA alto demais (no teste, mediana
+    // 112 a 118 contra 72 a 80 dos aposentados). O primeiro pai é sorteado do grupo inteiro: as posições saem na
+    // proporção dele.
+    const MIN_PAIS: usize = 50;
+    let mut reserva = adormecidos(this);
+    let todos_do_dia: Vec<usize> = nascidos.iter().copied().filter(|&p| d(p + 0x61) != 0).collect();
+    let mut pais: HashMap<usize, Vec<usize>> = HashMap::new();
+    for &p in &todos_do_dia {
+        if por_nacao.contains_key(&d(p + 0x1a)) {
+            pais.entry(d(p + 0x1a)).or_default().push(p);
         }
-        let ja = chegaram.get(&c).map_or(0, |v| v.len()) as i32;
-        // só fornada: completa até intake_per_club; com os regens do jogo ao longo da temporada: intake_per_club por cima
-        let faltam = if cfg().so_fornada { (cfg().por_clube - ja).max(0) } else { cfg().por_clube };
-        for _ in 0..faltam {
-            if elenco(c) >= cfg().elenco_max as usize {
-                cheios += 1;
-                break;
+    }
+    let mut curtas: HashSet<usize> = HashSet::new();
+    for &nac in por_nacao.keys() {
+        let proprios = pais.entry(nac).or_default();
+        if proprios.len() < MIN_PAIS {
+            let ja: HashSet<usize> = proprios.iter().copied().collect();
+            proprios.extend(todos_do_dia.iter().copied().filter(|p| !ja.contains(p)));
+            if proprios.len() < MIN_PAIS {
+                curtas.insert(nac);
             }
-            let Some(p) = estoque.pop() else {
+        }
+    }
+    if !curtas.is_empty() {
+        for id in 0..n.saturating_sub(16) {
+            let p = pessoas + 110 * id;
+            let nac = d(p + 0x1a);
+            if curtas.contains(&nac) && d(p + 0x61) != 0 && (*registro79(id) & 0x30) == 0 && crate::b(p + 0x18) >= 30 && !do_dia.contains(&p) {
+                pais.entry(nac).or_default().push(p);
+            }
+        }
+    }
+    let mut por_posicao: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
+    for (&nac, l) in &pais {
+        for &p in l {
+            por_posicao.entry((nac, posicao(p))).or_default().push(p);
+        }
+    }
+    let (mut criados, mut sem_pais, mut acabou) = (0, 0, false);
+    for (&nac, cs) in &por_nacao {
+        let falta = cs.iter().map(|c| cota[c]).sum::<i32>() - grupo.get(&nac).map_or(0, |g| g.len()) as i32;
+        let Some(lista) = pais.get(&nac).filter(|x| !x.is_empty()) else {
+            sem_pais += falta.max(0);
+            continue;
+        };
+        for _ in 0..falta.max(0) {
+            let Some(p) = reserva.pop() else {
                 acabou = true;
                 break;
             };
-            let nac = d(c + 0x53);
-            let Some(lista) = moldes.get(&nac).filter(|l| !l.is_empty()) else {
-                sem_molde += 1;
-                estoque.push(p);
-                break;
-            };
-            let molde = d(lista[sorteio(lista.len() as i32) as usize] + 0x61);
-            let ficha = d(p + 0x61);
-            let id_ficha = d(ficha);
-            core::ptr::copy_nonoverlapping(molde as *const u8, ficha as *mut u8, 70);
-            *(ficha as *mut usize) = id_ficha;
-            *((ficha + 4) as *mut u8) = 0;
-            *((ficha + 0x45) as *mut u8) = 10;
-            let (lo, hi) = (cfg().pa_min.min(cfg().pa_max), cfg().pa_min.max(cfg().pa_max));
-            let rep = w(c + 0x80) as i32;
-            let meio = cfg().pa_min + (cfg().pa_max - cfg().pa_min) * rep.clamp(0, 10000) / 10000;
-            let pa = if cfg().surpresa > 0 && sorteio(100) < cfg().surpresa && hi > meio {
-                // a surpresa: o PA sorteado entre o do clube e o teto (o craque do clube pequeno)
-                surpresas += 1;
-                meio + 1 + sorteio(hi - meio)
-            } else if cfg().pa_espalhar > 0 {
-                meio + sorteio(cfg().pa_espalhar + 1) - cfg().pa_espalhar / 2
-            } else {
-                meio
-            };
-            // intake_pa_max é o teto de verdade: nem a variação nem a surpresa passam dele
-            *((ficha + 7) as *mut i16) = pa.clamp(lo, hi) as i16;
-            por_na_frente_da_reserva(this, id_ficha, d(nac));
-            FORCADO = c;
-            let regen: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7abac0usize);
-            regen(this, p);
-            FORCADO = 0;
-            if d(p + 0x39) == 0 {
-                    assinar(this, p, c);
+            let a = lista[sorteio(lista.len() as i32) as usize];
+            let mesma = por_posicao.get(&(nac, posicao(a))).map(|v| v.as_slice()).unwrap_or(&[]);
+            if criar_regen(this, p, nac, a, mesma) && livre(p) {
+                criados += 1;
+                if let Some(g) = grupo.get_mut(&d(p + 0x1a)) {
+                    g.push(p);
+                } else if por_nacao.contains_key(&d(p + 0x1a)) {
+                    grupo.insert(d(p + 0x1a), vec![p]);
+                }
             }
-            if d(p + 0x39) == c {
-                dados += 1;
-                chegaram.entry(c).or_default().push(p);
-            } else {
-                falhas += 1;
-            }
-            // intake-regen  data  idade  PA  CA  goleiro/defesa/meia/atacante (+0xf, +0x11, +0x13, +0x15)  clube (vazio: sem)
-            let f = d(p + 0x61);
-            registro::linha(&format!("intake-regen	{}	{}	{}	{}	{}/{}/{}/{}	{}", crate::data_do_jogo(), crate::b(p + 0x18), w(f + 7), w(f + 5),
-                crate::b(f + 0xf), crate::b(f + 0x11), crate::b(f + 0x13), crate::b(f + 0x15), if d(p + 0x39) != 0 { crate::nome(d(p + 0x39)) } else { String::new() }));
         }
     }
-    // c. a mensagem, com os jovens das duas origens
+    SEGURAR = false;
+    // 4. a distribuição: do maior PA para o menor, cada um pela curva entre os clubes da nação que ainda têm cota
+    let assinar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
+    let (mut dados, mut sobras_com_clube, mut sobras_sem_clube) = (0, 0, 0);
+    for (nac, mut g) in grupo {
+        g.sort_by_key(|&p| core::cmp::Reverse(w(d(p + 0x61) + 7) as i16));
+        let Some(cs) = por_nacao.get(&nac) else { continue };
+        for p in g {
+            let abertos: Vec<usize> = cs.iter().copied().filter(|c| cota[c] > 0).collect();
+            if let Some(c) = if abertos.is_empty() { None } else { sortear_clube(p, &abertos) } {
+                assinar(this, p, c);
+                if d(p + 0x39) == c {
+                    *cota.get_mut(&c).unwrap() -= 1;
+                    chegaram.entry(c).or_default().push(p);
+                    dados += 1;
+                    continue;
+                }
+            }
+            // 5. as sobras do dia: a disputa normal da nação, entre os clubes com vaga (qualquer divisão)
+            if do_dia.contains(&p) {
+                let da_nac: Vec<usize> = todos.iter().copied().filter(|&c| d(c + 0x53) == nac).collect();
+                if let Some(c) = sortear_clube(p, &da_nac) {
+                    assinar(this, p, c);
+                }
+                if d(p + 0x39) != 0 {
+                    sobras_com_clube += 1
+                } else {
+                    sobras_sem_clube += 1
+                }
+            }
+        }
+    }
+    // 6. a mensagem: quem chegou, e o aviso de falta de vaga
     if cfg().mensagem {
         for &c in &clubes {
             if let Some(v) = chegaram.get(&c).filter(|v| !v.is_empty()) {
                 avisar(c, nivel.get(&c).copied().unwrap_or(0), v);
             }
         }
+        for &c in &sem_vaga {
+            avisar(c, 0, &[]);
+        }
     }
     if clubes.is_empty() && da_fila == 0 {
         return;
     }
-    let com_3 = clubes.iter().filter(|c| chegaram.get(c).map_or(0, |v| v.len()) as i32 >= cfg().por_clube).count();
-    registro::linha(&format!("intake\t{}\tclubs {}\tgame regens {} (without a club {}, then given to clubs below the minimum {})\tfrom the stock {} (surprises {})\tclubs with {} or more {}\tfull {}\tno template {}\tleft without the club {}\tstock left {}",
-        crate::data_do_jogo(), clubes.len(), da_fila, fila_sem_clube, dos_livres, dados, surpresas, cfg().por_clube, com_3, cheios, sem_molde, falhas, estoque.len()));
+    let completos = clubes.iter().filter(|c| cota[c] == 0).count();
+    let faltou: i32 = cota.values().sum();
+    registro::linha(&format!(
+        "intake\t{}\tclubs {}\tborn from the queue {}\tfree regens up to 21 {}\tcreated {}\tgiven to clubs {}\tclubs with their quota {}\tmissing {}\tno room {}\tleftovers signed {}\tleftovers without a club {}\tno parents {}\treserve left {}{}",
+        crate::data_do_jogo(), clubes.len(), da_fila, livres_antes, criados, dados, completos, faltou, sem_vaga.len(), sobras_com_clube, sobras_sem_clube, sem_pais, reserva.len(),
+        if acabou { "\treserve ran out" } else { "" }
+    ));
 }
 
 // ---- A mensagem na caixa de entrada ----
@@ -521,6 +598,8 @@ fn embutida(codigo: &str, chave: &str) -> &'static str {
         "potential_1" => ["has the potential to play for his country", "tem potencial para a seleção", "tiene potencial para la selección"],
         "potential_2" => ["could be a regular at a big club", "pode ser titular de um clube grande", "puede ser titular en un club grande"],
         "potential_3" => ["should make a career in the top flight", "deve fazer carreira na primeira divisão", "debería hacer carrera en primera división"],
+        "no_room_title" => ["Youth intake: no youngsters this year", "Fornada da base: nenhum jovem este ano", "Hornada de juveniles: ningún juvenil este año"],
+        "no_room" => ["The youth coach had youngsters ready to step up, but the squad is full (50 players), so none of them could join in this intake. Free some places before the next one.", "O treinador da base tinha jovens prontos para subir, mas o elenco está cheio (50 jogadores), e nenhum pôde chegar nesta fornada. Libere vagas antes da próxima.", "El entrenador de las inferiores tenía juveniles listos para subir, pero la plantilla está llena (50 jugadores) y ninguno pudo llegar en esta hornada. Libera plazas antes de la próxima."],
         "potential_4" => ["is unlikely to go beyond the lower divisions", "dificilmente passará das divisões de baixo", "difícilmente pasará de las divisiones inferiores"],
         _ => ["", "", ""],
     };
@@ -604,7 +683,7 @@ unsafe fn avisar(clube: usize, nivel: i32, jovens: &[usize]) {
     vaga(0, d(tecnico) as u32); // quem manda: o próprio técnico (o título sem a DLL)
     vaga(1, 1); // particular
     vaga(2, MARCA);
-    let mut curto = latin1(&texto_curto(jovens.len()));
+    let mut curto = latin1(&if jovens.is_empty() { frase("no_room_title") } else { texto_curto(jovens.len()) });
     curto.truncate(67);
     core::ptr::copy_nonoverlapping(curto.as_ptr(), (item_p + 5 + 4 * 3) as *mut u8, curto.len());
     vaga(20, MARCA2);
@@ -680,7 +759,10 @@ unsafe extern "thiscall" fn escrever(item: usize, tecnico: usize, saida: usize, 
     let (pessoas, total) = (d(0xae23bc), d(0xae2364));
     let mut s: Vec<u8> = Vec::new();
     let mut links: Vec<(Vec<u8>, usize)> = Vec::new();
-    if completo == 0 {
+    if n == 0 {
+        // o clube sem vaga no elenco: ninguém chegou
+        s = latin1(&frase(if completo == 0 { "no_room_title" } else { "no_room" }));
+    } else if completo == 0 {
         s = latin1(&frase("title").replace("{n}", &n.to_string()));
     } else {
         s.extend(latin1(&frase("intro")));
@@ -806,8 +888,8 @@ unsafe fn trocar_call(em: usize, para: usize) {
 
 pub unsafe fn instalar() -> bool {
     F = ler();
-    // ligada só com estoque e jovens por clube: sem isso, intake_only pararia os regens do jogo sem fornada nenhuma
-    if cfg().estoque <= 0 || cfg().por_clube <= 0 {
+    // ligada com regens por clube: sem isso a fila ficaria guardada sem fornada nenhuma
+    if !cfg().ligada || cfg().por_clube <= 0 {
         return false;
     }
     // o trecho do ftol: call ftol; push [esp+0x54] (preferências); push [esp+0x60] (fichas); push [esp+0x2c] (pessoas);
@@ -852,9 +934,8 @@ pub unsafe fn instalar() -> bool {
         }
     }
     if ok {
-        registro::linha(&format!("intake (EXPERIMENTAL): on (stock {}, at least {} per club on {}, {} clubs, stock PA {}..{} by reputation, spread {}, surprise {}%, squads up to {}{})",
-            cfg().estoque, cfg().por_clube, if cfg().por_temporada { "each nation's season end".to_string() } else { format!("day {}", cfg().dia) }, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }, cfg().pa_min, cfg().pa_max, cfg().pa_espalhar, cfg().surpresa, cfg().elenco_max,
-            if cfg().so_fornada { "; the game's regens are held and born on intake day through the clubs' contest, the stock tops each club up" } else { "; the game's regens through the season, the stock on top" }));
+        registro::linha(&format!("intake (EXPERIMENTAL): on ({} per club with squad room on {}, {} clubs; the regens are only born on intake day, retired players' and created ones alike, and the Regens tab's curve hands them out; season_cap and squad_limit don't apply)",
+            cfg().por_clube, if cfg().por_temporada { "each nation's season end".to_string() } else { format!("day {}", cfg().dia) }, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }));
     }
     ok
 }

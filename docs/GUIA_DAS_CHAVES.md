@@ -261,58 +261,35 @@ Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ## Fornada (experimental)
 
-EXPERIMENTAL. A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol): os regens chegam todos de uma vez, num dia do ano, em vez de nascerem um a um ao longo da temporada. O que muda é só a data: cada regen do jogo continua passando pela disputa dos clubes, com toda a curva da aba Regens, e continua no regen_origins. Por cima disso, a garantia: todo clube com espaço no elenco fica com pelo menos intake_per_club jovens, completados com um estoque de pessoas criado com a carreira. E o seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
+EXPERIMENTAL. A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol). Com ela ligada, você joga de outro jeito: os regens chegam todos de uma vez, num dia do ano, e todo clube com vaga recebe o mesmo número deles. Regen é regen: venha de um aposentado ou criado pela DLL, todos nascem pela rotina do jogo e vão para os clubes pela curva da aba Regens. O máximo por ano e o teto do elenco da aba Regens deixam de valer, porque a cota da fornada é o limite. O seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
 
-- **Estoque**: as pessoas a mais que a DLL cria com a carreira nova, adormecidas até a fornada. Cada fornada gasta umas 750 (3 por clube, 278 clubes); com o estoque vazio, a fornada para e o jogo segue normal.
+- **Regens criados**: quando as aposentadorias não bastam para a cota de todos os clubes, a DLL cria os que faltam: a pessoa vem de uma reserva criada junto com a carreira nova (até 50 mil, conforme a folga do banco), e a ficha é a mistura de duas fichas de aposentados do país na mesma posição (as posições e os pés de uma, cada atributo de uma das duas, o PA entre os dois). Depois, nascem pela mesma rotina do jogo que qualquer regen.
+- **Cota**: quantos regens um clube recebe na fornada: o número escolhido, limitado às vagas do elenco (50) no dia.
 - **Fim da temporada**: o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.
 
-### Estoque (pessoas criadas com a carreira) — `intake_stock`
+### Fornada — `intake`
 
-Liga a fornada (0 = desligada). É o estoque da garantia: quantas pessoas a DLL cria com a carreira nova, adormecidas, para completar os clubes que a disputa deixou com menos jovens que o mínimo. Os regens do próprio jogo não saem daqui: eles vêm das aposentadorias. Com 3.000, sobram uns 2.650 depois de três fornadas; o máximo é a folga das tabelas do jogo, umas 120.000. Só vale numa carreira nova.
+Liga a fornada, o "Youth Intake" do Football Manager. Regen é regen: a fornada muda só duas coisas. A data: os regens só nascem no dia da fornada (quem se aposenta espera na fila do jogo até lá). A quantidade: todo clube com vaga no elenco recebe o número escolhido abaixo. Para qual clube vai cada regen, quem decide é a curva da aba Regens (nível, instalações, comissão, surpresa, temperatura); o máximo por ano e o teto do elenco da aba Regens não valem, porque a cota da fornada é o limite. Quando as aposentadorias não bastam para todos, a DLL cria os regens que faltam, com pessoas criadas junto com a carreira e a ficha misturada de dois aposentados do país na mesma posição. Só numa carreira nova.
 
-Valores: de 0 a 100000 (inteiro). Padrão: `0`.
+Valores: `0` (Desligada (regens ao longo da temporada)), `1` (Ligada (só numa carreira nova)). Padrão: `0`.
 
-### Mínimo garantido por clube — `intake_per_club`
+### Regens por clube em cada fornada — `intake_per_club`
 
-O mínimo garantido por clube em cada fornada. Primeiro nascem os regens do jogo, pela disputa (a curva da aba Regens decide o clube de cada um); depois, todo clube com espaço no elenco que ficou abaixo desse número é completado: primeiro com os regens do jogo que a disputa deixou sem clube (até 21 anos, do país do clube), e só o que faltar com o estoque. Um clube que recebeu 5 pela disputa fica com 5; um que recebeu 1 ganha mais 2 do estoque. 0 = sem garantia.
+Quantos regens cada clube recebe em cada fornada, limitado às vagas do elenco (50): com 2 vagas, chegam 2; sem vaga, nenhum, e o seu clube recebe uma mensagem dizendo isso. A vaga é contada no próprio dia: dá para liberar jogadores até a véspera. O seu clube recebe pela mesma regra. Os regens de um país são distribuídos do maior PA para o menor, cada um sorteado pela curva entre os clubes que ainda têm vaga na cota; os que sobram vão para a disputa normal do país.
 
-Valores: de 0 a 20 (inteiro). Padrão: `3`.
+Valores: de 1 a 20 (inteiro). Padrão: `3`.
 
 ### Dia da fornada — `intake_day`
 
-O dia em que os jovens chegam. Num dia fixo (contado de 0 = 1º de janeiro; 181 = 1º de julho), todos os países juntos. No fim da temporada, cada país quando a temporada dele acaba (o Brasil no começo do ano, a Inglaterra e a Itália no meio); os países fora da lista dos 35 principais do jogo recebem no dia 181. No tweaks.cfg vale qualquer dia de 0 a 365.
+O dia em que os regens chegam. No fim da temporada (o padrão), cada país quando a temporada dele acaba (o Brasil no começo do ano, a Inglaterra e a Itália no meio); os países fora da lista dos 35 principais do jogo recebem no dia 181. Num dia fixo (contado de 0 = 1º de janeiro; 181 = 1º de julho), todos os países juntos. No tweaks.cfg vale qualquer dia de 0 a 365.
 
-Valores: `181` (1º de julho (dia 181)), `season_end` (Fim da temporada de cada nação), `0` (1º de janeiro (dia 0)). Padrão: `181`.
+Valores: `season_end` (Fim da temporada de cada nação), `181` (1º de julho (dia 181), para todos), `0` (1º de janeiro (dia 0), para todos). Padrão: `season_end`.
 
-### Clubes com a garantia — `intake_clubs`
+### Clubes que recebem — `intake_clubs`
 
-Quais clubes têm a garantia do mínimo: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira. Os regens do jogo continuam indo para onde a disputa mandar.
+Quais clubes recebem a cota: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira. Os países de fora seguem o caminho original do jogo.
 
 Valores: `playable` (Ligas jogáveis), `selected` (Também as ligas de fundo). Padrão: `playable`.
-
-### PA: clube de reputação 0 — `intake_pa_min`
-
-Só para os jovens do estoque (a garantia). O PA de um clube de reputação 0, na escala do jogo de 1 a 200. Entre 0 e 10.000 de reputação, o PA sobe em linha reta até o máximo: com 60 e 170, um clube de reputação 5.000 fica com 115. Os regens do jogo têm o PA da ficha do aposentado, como sempre.
-
-Valores: de 1 a 200 (inteiro). Padrão: `60`.
-
-### PA: clube de reputação 10000 (teto) — `intake_pa_max`
-
-Só para os jovens do estoque. O PA de um clube de reputação 10.000, e o teto: nenhum jovem do estoque passa dele, nem com a variação nem com a surpresa.
-
-Valores: de 1 a 200 (inteiro). Padrão: `170`.
-
-### PA: sorteio em volta — `intake_pa_spread`
-
-Só para os jovens do estoque. A variação sorteada em volta do PA do clube: 30 vai de 15 abaixo a 15 acima. 0 = todo jovem do estoque no clube com o mesmo PA. O resultado fica sempre entre o mínimo e o máximo.
-
-Valores: de 0 a 200 (inteiro). Padrão: `30`.
-
-### Surpresa (% dos jovens do estoque) — `intake_surprise`
-
-Só para os jovens do estoque. A chance, em %, de um deles ser a surpresa: o PA sorteado entre o do clube e o teto (intake_pa_max), em vez da variação de sempre. É o craque que aparece no clube pequeno. 10 = 1 em cada 10. 0 = nunca.
-
-Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ### Dia das aposentadorias — `retire_day`
 
@@ -320,21 +297,9 @@ O dia do ano das aposentadorias de jogadores. No jogo original, cada um se apose
 
 Valores: `original` (Datas do próprio jogo), `174` (24 de junho (dia 174, uma semana antes do 1º de julho)), `358` (24 de dezembro (dia 358)). Padrão: `original`.
 
-### Elenco: clube com esse tanto fica de fora — `intake_squad_max`
-
-O clube com esse número de jogadores no elenco (o elenco tem 50 vagas) não recebe jovens do estoque naquele ano. Com 50, só o elenco lotado fica de fora. Os regens do jogo seguem o espaço no elenco da aba Regens.
-
-Valores: de 1 a 50 (inteiro). Padrão: `50`.
-
-### Regens do jogo — `intake_only`
-
-1 = os regens do jogo só nascem no dia da fornada: durante a temporada, quem se aposenta fica guardado na fila do jogo, e no dia da fornada todos nascem de uma vez, cada um pela disputa, com tudo da aba Regens (nível, instalações, comissão, espaço, teto, surpresa, temperatura), as idades e os nomes, e entram no regen_origins. Só a data muda. 0 = os regens do jogo nascem ao longo da temporada, como sempre, e o estoque dá intake_per_club a cada clube por cima.
-
-Valores: `1` (Todos nascem no dia da fornada), `0` (Ao longo da temporada, como sempre). Padrão: `1`.
-
 ### Mensagem da fornada — `intake_news`
 
-No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com todos os jovens que chegaram (os da disputa e os do estoque) e o parecer sobre cada um: se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo. As frases ficam no intake_news.txt, ao lado do exe, uma seção para cada uma das 19 línguas do jogo: dá para editar ou traduzir (português, espanhol, inglês, francês, alemão, italiano, holandês, dinamarquês, norueguês e sueco já vêm traduzidos). Sem a DLL, a mensagem aparece numa linha curta.
+No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com todos os regens que chegaram e o parecer sobre cada um (ou o aviso de que ninguém pôde chegar por falta de vaga): se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo. As frases ficam no intake_news.txt, ao lado do exe, uma seção para cada uma das 19 línguas do jogo: dá para editar ou traduzir (português, espanhol, inglês, francês, alemão, italiano, holandês, dinamarquês, norueguês e sueco já vêm traduzidos). Sem a DLL, a mensagem aparece numa linha curta.
 
 Valores: `1` (Mensagem na caixa de entrada), `0` (Sem mensagem). Padrão: `1`.
 
