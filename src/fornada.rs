@@ -13,7 +13,7 @@
 //!    de `end_season_for_nation` 0x59cdd0 em 0x5d5ea2, e as outras no dia 181), em `soltar`:
 //!    a. a cota de cada clube de competição das nações da garantia: `intake_per_club`, limitada às vagas (50);
 //!    b. a fila das nações do dia nasce inteira, pela chamada da fila (0x7a664f: a 0x7abac0 e o `regen_origins`), com a
-//!       disputa (chamada em 0x7acea2) segurada para as nações da garantia; juntam-se os regens livres de até 21 anos;
+//!       disputa (chamada em 0x7acea2) e a lista da nação (0x7acf4f) seguradas para as nações da garantia; juntam-se os regens livres de até 21 anos;
 //!    c. os que faltam nascem de pessoas da reserva, com a ficha misturada de dois jogadores da nação na mesma posição;
 //!    d. a distribuição: do maior PA para o menor, cada um sorteado pela curva da aba Regens entre os clubes da nação
 //!       com cota (`crate::peso_na_fornada`, sem `season_cap` e sem `squad_limit`), assinado pela 0x7a6f10; as sobras do
@@ -168,6 +168,16 @@ unsafe extern "C" fn antes_de_rodar() -> u32 {
     }
     let original: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x5cc850usize);
     original()
+}
+
+/// A lista da nação no `call` de 0x7acf4f (`0x7ad590`, thiscall, ret 4): o caminho de 1 em 10 do regen que não foi
+/// à disputa, para clube de reputação ≤ 2 (o Guiseley). Na fornada, segurado como a disputa: o jovem fica livre para a cota.
+unsafe extern "thiscall" fn lista_da_nacao(this: usize, jogador: usize) -> usize {
+    if SEGURAR && na_garantia(d(jogador + 0x1a)) {
+        return 0;
+    }
+    let original: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7ad590usize);
+    original(this, jogador)
 }
 
 /// A disputa no `call` de 0x7acea2 (thiscall, ret 4).
@@ -446,6 +456,8 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         }
     }
     let (mut criados, mut sem_pais, mut acabou) = (0, 0, false);
+    // diagnóstico dos que saem da criação já com clube: (nação do regen na garantia, mesma nação pedida, clube)
+    let mut extras: std::collections::BTreeMap<String, i32> = Default::default();
     for (&nac, cs) in &por_nacao {
         let falta = cs.iter().map(|c| cota[c]).sum::<i32>() - grupo.get(&nac).map_or(0, |g| g.len()) as i32;
         let Some(lista) = pais.get(&nac).filter(|x| !x.is_empty()) else {
@@ -467,6 +479,14 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
                 FALHA_CRIAR += 1;
             } else if !livre(p) {
                 FALHA_LIVRE += 1;
+                let c = d(p + 0x39);
+                let chave = format!(
+                    "{}|{}|{}|club nation in guarantee {}",
+                    if na_garantia(d(p + 0x1a)) { "regen nation in guarantee" } else { "regen nation outside" },
+                    if d(p + 0x1a) == nac { "same nation" } else { "other nation" },
+                    crate::nome(c), na_garantia(d(c + 0x53))
+                );
+                *extras.entry(chave).or_default() += 1;
             } else if d(p + 0x1a) != nac {
                 OUTRA_NACAO += 1;
             } else {
@@ -579,6 +599,19 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         crate::data_do_jogo(), { FALHA_CRIAR }, { FALHA_LIVRE }, { OUTRA_NACAO }, { BASCOS }
     ));
     (FALHA_CRIAR, FALHA_LIVRE, OUTRA_NACAO, BASCOS) = (0, 0, 0, 0);
+    let mut l: Vec<(&String, &i32)> = extras.iter().collect();
+    l.sort_by(|x, y| y.1.cmp(x.1));
+    for (k, v) in l.iter().take(40) {
+        registro::linha(&format!("intake-extra	{}	{}	{}", crate::data_do_jogo(), v, k));
+    }
+    let mut por_tipo: std::collections::BTreeMap<String, i32> = Default::default();
+    for (k, v) in &extras {
+        let t: Vec<&str> = k.split('|').collect();
+        *por_tipo.entry(format!("{} | {} | {}", t[0], t[1], t[3])).or_default() += v;
+    }
+    for (k, v) in &por_tipo {
+        registro::linha(&format!("intake-extra-kind	{}	{}	{}", crate::data_do_jogo(), v, k));
+    }
     // ponytail: só os 20 primeiros, para o diagnóstico
     let faltando: Vec<String> = clubes.iter().filter(|c| cota[c] > 0).take(20).map(|&c| format!("{} ({})", crate::nome(c), cota[&c])).collect();
     if !faltando.is_empty() {
@@ -988,6 +1021,9 @@ pub unsafe fn instalar() -> bool {
         trocar_call(0x829fd9, antes_de_rodar as *const () as usize);
         trocar_call(0x5cda7a, fila_do_dia as *const () as usize);
         trocar_call(0x7acea2, disputa as *const () as usize);
+        if e_call(0x7acf4f, 0x7ad590) {
+            trocar_call(0x7acf4f, lista_da_nacao as *const () as usize);
+        }
         if cfg().por_temporada {
             trocar_call(0x5d5ea2, fim_da_temporada as *const () as usize);
         }

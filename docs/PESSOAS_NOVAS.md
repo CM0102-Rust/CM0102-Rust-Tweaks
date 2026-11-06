@@ -188,7 +188,7 @@ O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem s
   4. **Os clubes bascos:** o Athletic Bilbao e o Eibar só contratam bascos (0x53d7f0, motivo 0x19 da 0x8ce990); a Real Sociedad não contrata espanhol que não seja basco (motivo 0x1a). Quando só eles ainda têm cota, o jovem espanhol ganha a segunda nacionalidade basca (a nação 0x9cf424) e vai para um deles. O Eibar precisou de mais um ajuste: o veto do regen basco que a DLL copia da distribuição do jogo (0x7ad0e0) só o deixa ir para 5 clubes, e o Eibar não é um deles. Na fornada, o clube que só contrata bascos fica fora desse veto; a disputa normal segue a regra original.
 
   Com as quatro correções: os 1.134 clubes com a cota inteira, 0 faltando, 9 jovens feitos bascos. No fim da temporada (a fornada de verdade, até julho de 2002, `resultados/fim_temporada.log`): as 9 fornadas com 0 faltando; a do dia 169, 788 clubes, 9 feitos bascos. A história confere: o Athletic só escala bascos desde 1912; a Real Sociedad largou a regra em 1989 (Aldridge) mas só contratou espanhol não basco em 2001 (Boris); do Eibar não há fonte firme, e a DLL segue o que o jogo diz dele.
-- **O clube depósito** (o Guiseley com 41 regens em 2003) não vem da fornada: ver `TESTES.md` §4.5.
+- **O clube depósito** (o Guiseley com 41 regens em 2003) vinha da criação dos regens da fornada: a lista da nação (0x7ad590) mandava 1 em 10 para clube de reputação ≤ 2. Desde 06/11 a fornada segura esse caminho, e o maior acumulado em 2003 é o Prato com 12: ver `TESTES.md` §4.5.
 
 ### 8.1 As chaves
 
@@ -265,7 +265,7 @@ Estoque de 3.000, 3 por clube, as duas carreiras em paralelo, sob a mesma carga 
 | regens com PA ≥ 150 acumulados | 1.373 | 1.081 |
 | o maior acumulado de regens num elenco ("clube depósito") | 44 (Bangu) | 39 (Corinthians de Caicó) |
 
-O B fica: gasta menos da metade do estoque, completa todos os clubes, segura o elenco e deixa menos regens perdidos como livres. A pendência dos dois é o clube depósito, que cresce ano a ano (de 5 a 39 no B), concentrado em clubes pequenos do Brasil.
+O B fica: gasta menos da metade do estoque, completa todos os clubes, segura o elenco e deixa menos regens perdidos como livres. A pendência dos dois é o clube depósito, que cresce ano a ano (de 5 a 39 no B), concentrado em clubes pequenos do Brasil (resolvido em 06/11: a lista da nação, ver `TESTES.md` §4.5).
 
 ### 8.4 A fazer
 
