@@ -1,4 +1,4 @@
-//! A fornada de regens (EXPERIMENTAL; o desenho em docs/PESSOAS_NOVAS.md, "O desenho final"). Regen é regen: a fornada
+//! A fornada de regens (ligada no tweaks.cfg distribuído desde a 1.3; o desenho em docs/PESSOAS_NOVAS.md, "O desenho final"). Regen é regen: a fornada
 //! muda a data (os regens só nascem no dia da fornada) e a quantidade (`intake_per_club` por clube com vaga); o resto é
 //! a aba Regens.
 //!
@@ -360,13 +360,14 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     let total = (d(0xae235c) as i32 - 2 * d(0xae2350) as i32).max(0) as usize;
     let base = d(0xae23b4);
     let todos: Vec<usize> = (0..total).map(|i| base + 0x245 * i).collect();
-    // 1. a cota: os clubes de competição das nações da garantia; intake_per_club, limitado às vagas (50)
+    // 1. a cota: os clubes de competição das nações da garantia, menos os times B (a curva não manda regen para eles:
+    // com cota, ficavam faltando todo ano); intake_per_club, limitado às vagas (50)
     let clubes: Vec<usize> = todos
         .iter()
         .copied()
         .filter(|&c| {
             let nac = d(c + 0x53);
-            nac != 0 && da_nacao(d(nac)) && na_garantia(nac) && crate::em_competicao(c)
+            nac != 0 && da_nacao(d(nac)) && na_garantia(nac) && crate::em_competicao(c) && !crate::time_b(c)
         })
         .collect();
     let nivel: HashMap<usize, i32> = clubes.iter().map(|&c| (c, nivel_do_elenco(c))).collect();
@@ -476,6 +477,7 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             if let Some(c) = if abertos.is_empty() { None } else { sortear_clube(p, &abertos) } {
                 assinar(this, p, c);
                 if d(p + 0x39) == c {
+                    crate::marcar_fornada(d(p), d(c), false);
                     *cota.get_mut(&c).unwrap() -= 1;
                     chegaram.entry(c).or_default().push(p);
                     dados += 1;
@@ -487,6 +489,9 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
                 let da_nac: Vec<usize> = todos.iter().copied().filter(|&c| d(c + 0x53) == nac).collect();
                 if let Some(c) = sortear_clube(p, &da_nac) {
                     assinar(this, p, c);
+                    if d(p + 0x39) == c {
+                        crate::marcar_fornada(d(p), d(c), true);
+                    }
                 }
                 if d(p + 0x39) != 0 {
                     sobras_com_clube += 1
@@ -517,6 +522,11 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         crate::data_do_jogo(), clubes.len(), da_fila, livres_antes, criados, dados, completos, faltou, sem_vaga.len(), sobras_com_clube, sobras_sem_clube, sem_pais, reserva.len(),
         if acabou { "\treserve ran out" } else { "" }
     ));
+    // ponytail: só os 20 primeiros, para o diagnóstico
+    let faltando: Vec<String> = clubes.iter().filter(|c| cota[c] > 0).take(20).map(|&c| format!("{} ({})", crate::nome(c), cota[&c])).collect();
+    if !faltando.is_empty() {
+        registro::linha(&format!("intake-missing\t{}\t{}", crate::data_do_jogo(), faltando.join(", ")));
+    }
 }
 
 // ---- A mensagem na caixa de entrada ----
@@ -934,7 +944,7 @@ pub unsafe fn instalar() -> bool {
         }
     }
     if ok {
-        registro::linha(&format!("intake (EXPERIMENTAL): on ({} per club with squad room on {}, {} clubs; the regens are only born on intake day, retired players' and created ones alike, and the Regens tab's curve hands them out; season_cap and squad_limit don't apply)",
+        registro::linha(&format!("intake: on ({} per club with squad room on {}, {} clubs; the regens are only born on intake day, retired players' and created ones alike, and the Regens tab's curve hands them out; season_cap and squad_limit don't apply)",
             cfg().por_clube, if cfg().por_temporada { "each nation's season end".to_string() } else { format!("day {}", cfg().dia) }, if cfg().so_jogaveis { "playable-league" } else { "selected-league" }));
     }
     ok

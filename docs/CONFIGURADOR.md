@@ -59,7 +59,7 @@ Sem controles de valor. Mostra:
 
 | Chave | Controle | Aceita | Barra | Sem a linha | No .cfg |
 |---|---|---|---|---|---|
-| `save_over_2gb` | interruptor | `1` liga, o resto desliga | — | 0 | 0 |
+| `save_over_2gb` | interruptor | `1` liga, o resto desliga | — | 0 | 1 (desde a 1.3) |
 | `portable_folder` | interruptor | idem | — | 0 | 0 |
 | `clear_admin_flag` | interruptor (com aviso "só serve com a NickDLL" quando não há `NickDLL.dll` na pasta) | idem | — | 0 | 0 |
 | `override_exe_changes` | interruptor com confirmação ("substituir as mudanças do exe pelas regras desta DLL") | idem | — | 0 | 0 |
@@ -169,10 +169,12 @@ As predefinições mexem nos grupos de jogo (idades, inativos, disputa) e, só a
 | inativos (dias, idade, rep, por ano, proteção) | (não mexe) | (não mexe) | 180, 28, 1500, 250, 0 | idem |
 | `rule` | original | original | new | new |
 | disputa (`target_k` … `temperature`) | (não mexe) | (não mexe) | os da Fase 1 (o `.cfg` distribuído) | idem |
+| `intake` | 0 | 0 | **1** | **1** |
+| fornada (`intake_per_club`, `intake_day`, `intake_clubs`) | (não mexe) | (não mexe) | 3, season_end, playable | idem |
 
 - **Original:** a DLL não muda nada no jogo; os números ficam como estão porque não valem com os interruptores desligados.
 - **Só o save:** para quem vinha do `cm0102-save2gb`.
-- **Equilibrado:** o `tweaks.cfg` distribuído, decidido e calibrado na Fase 1.
+- **Equilibrado:** o `tweaks.cfg` distribuído, decidido e calibrado na Fase 1; desde a 1.3, com a fornada ligada (a carreira de 10 anos com todas as ligas em [PESSOAS_NOVAS.md](PESSOAS_NOVAS.md) §8).
 - **Equilibrado, todos com clube:** o das carreiras longas de [TESTES.md](TESTES.md) §4.3 (os regens sem clube caem de 899 para 353 na fábrica e de 233 para 77 no CLZ).
 
 Ao escolher uma predefinição, a interface mostra a lista de mudanças antes de aplicar ("12 valores vão mudar") e permite desfazer.
@@ -298,7 +300,7 @@ Texto: "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, 
 - `src/cfg.rs`: ler e gravar o `.cfg` como no §5 (só o valor muda; `.bak` e troca atômica; recusa gravar se o arquivo mudou no disco).
 - `src/chaves.rs`: as chaves, as faixas, os padrões da DLL e as quatro predefinições do §4.
 - `src/exe.rs`: o estado de cada ajuste no exe (§6), com as **mesmas** tabelas da DLL: `src/partes.rs` (as `Parte`, as assinaturas e os casos conhecidos, agora fora do `lib.rs`) e `src/trocas.rs`, incluídos pelo caminho, sem cópia.
-- `src/main.rs`: a janela (§2) e as abas (§3), no menu da esquerda em grupos (03/11, pedido do Lucas, reorganizado no mesmo dia): o **Início**, com o retrato e a tabela de estados (o nome da opção e a chave em cinza); **Ajustes da carreira**: Idades dos regens (o gráfico arrastável, o contorno dos "regens mais novos" e a idade escolhida por extenso: a chance, a porcentagem, o teto do CA e a linha `age_NN` como fica no `.cfg`), Disputa dos clubes (a curva do nível e as chances dos clubes de exemplo, a mesma conta de `peso()`), Aposentadoria (a chance de aposentar por idade), Nomes dos regens (a escolha, o mínimo e, lida do banco da pasta do jogo, a lista dos países que pegam nomes emprestados: de que país vêm hoje e se passam a usar os próprios; `src/nomes.rs`) Jogadores cinzentos (a escolha, a barra "± N" da variação e os exemplos da carreira de teste) e Fornada (experimental) (as chaves `intake_*`, desde a 1.2); **Registro**: De quem é cada regen (o histórico); **Instalação**: Tela, save e pasta; **Arquivos**: tweaks.cfg (as linhas mudadas) e tweaks.log (o último log). Português e inglês.
+- `src/main.rs`: a janela (§2) e as abas (§3), no menu da esquerda em grupos (03/11, pedido do Lucas, reorganizado no mesmo dia): o **Início**, com o retrato e a tabela de estados (o nome da opção e a chave em cinza); **Ajustes da carreira**: Fornada de regens (as chaves `intake_*`, desde a 1.2; a primeira desde a 1.3, quando passou a vir ligada), Idades dos regens (o gráfico arrastável, o contorno dos "regens mais novos" e a idade escolhida por extenso: a chance, a porcentagem, o teto do CA e a linha `age_NN` como fica no `.cfg`), Disputa dos clubes (a curva do nível e as chances dos clubes de exemplo, a mesma conta de `peso()`), Aposentadoria (a chance de aposentar por idade), Nomes dos regens (a escolha, o mínimo e, lida do banco da pasta do jogo, a lista dos países que pegam nomes emprestados: de que país vêm hoje e se passam a usar os próprios; `src/nomes.rs`) Jogadores cinzentos (a escolha, a barra "± N" da variação e os exemplos da carreira de teste); **Registro**: De quem é cada regen (o histórico); **Instalação**: Tela, save e pasta; **Arquivos**: tweaks.cfg (as linhas mudadas) e tweaks.log (o último log). Português e inglês.
 
 **Nenhum número sem explicação** (03/11, pedido do Lucas): embaixo de cada opção com número, uma frase calculada na hora diz o que aquele valor faz no jogo, em unidades de quem joga ("um jovem de PA 150 mira um clube de reputação 7500", "0,5% = cerca de 1 em 200 jovens nasce sem o teto", "180 dias = uns 6 meses", "um clube com 24 jogadores tem ×1,73 a chance de um com 40"). Os números aparecem como se leem ("2", não "2.00"), com vírgula no português (`App::frase`). Na Disputa, o ajuste fino do sorteio (larguras, piso, instalações, comissão, peso da vaga, temperatura) fica num bloco **Avançado**, fechado, cada um com a sua frase. Na aba dos cinzentos, a barra mostra "± 5" e o `.cfg` guarda a largura toda (`grey_players_spread = 10`).
 

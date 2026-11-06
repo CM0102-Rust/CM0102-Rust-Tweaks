@@ -59,7 +59,7 @@ No value controls. It shows:
 
 | Key | Control | Accepts | Slider | No line | In .cfg |
 |---|---|---|---|---|---|
-| `save_over_2gb` | switch | `1` on, anything else off | — | 0 | 0 |
+| `save_over_2gb` | switch | `1` on, anything else off | — | 0 | 1 (since 1.3) |
 | `portable_folder` | switch | same | — | 0 | 0 |
 | `clear_admin_flag` | switch (with a "only useful with NickDLL" note when there is no `NickDLL.dll` in the folder) | same | — | 0 | 0 |
 | `override_exe_changes` | switch with confirmation ("replace the exe's changes with this DLL's rules") | same | — | 0 | 0 |
@@ -169,10 +169,12 @@ Presets touch the gameplay groups (ages, idle players, contest) and, only "Save 
 | idle (days, age, rep, per year, protection) | (unchanged) | (unchanged) | 180, 28, 1500, 250, 0 | same |
 | `rule` | original | original | new | new |
 | contest (`target_k` … `temperature`) | (unchanged) | (unchanged) | the Phase 1 values (the distributed `.cfg`) | same |
+| `intake` | 0 | 0 | **1** | **1** |
+| intake (`intake_per_club`, `intake_day`, `intake_clubs`) | (unchanged) | (unchanged) | 3, season_end, playable | same |
 
 - **Original:** the DLL changes nothing in the game; the numbers stay as they are because they don't apply with the switches off.
 - **Save only:** for those coming from `cm0102-save2gb`.
-- **Balanced:** the distributed `tweaks.cfg`, decided and calibrated in Phase 1.
+- **Balanced:** the distributed `tweaks.cfg`, decided and calibrated in Phase 1; since 1.3, with the intake on (the 10-year all-leagues career in [PESSOAS_NOVAS.en.md](PESSOAS_NOVAS.en.md) §8).
 - **Balanced, everyone gets a club:** the one from the long careers in [TESTES.en.md](TESTES.en.md) §4.3 (regens without a club drop from 899 to 353 in the stock database and from 233 to 77 in CLZ).
 
 When a preset is picked, the interface lists the changes before applying ("12 values will change") and allows undo.
@@ -298,7 +300,7 @@ Text: "A nation in the game is one whose league you picked when creating the car
 - `src/cfg.rs`: reading and writing the `.cfg` as in §5 (only the value changes; `.bak` and an atomic swap; refuses to save if the file changed on disk).
 - `src/chaves.rs`: the keys, the ranges, the DLL's defaults and the four presets of §4.
 - `src/exe.rs`: each tweak's state on the exe (§6), with the DLL's **own** tables: `src/partes.rs` (the `Parte`s, the signatures and the known cases, now out of `lib.rs`) and `src/trocas.rs`, included by path, not copied.
-- `src/main.rs`: the window (§2) and the tabs (§3), in the left menu by group (11/03, Lucas's request, reorganised the same day): **Start**, with the snapshot and the state table (the option's name and the key in grey); **Career tweaks**: Regen ages (the draggable chart, the "younger regens" outline and the chosen age spelled out: the chance, the percentage, the CA cap and the `age_NN` line as it is in the `.cfg`), Clubs' contest (the level curve and the example clubs' chances, the same sum as `peso()`), Retirement (the chance of retiring by age), Regen names (the choice, the minimum and, read from the game folder's database, the list of countries that borrow names: which country they come from today and whether they start using their own; `src/nomes.rs`) Grey players (the choice, the "± N" variation bar and the test career's examples) and Intake (experimental) (the `intake_*` keys, since 1.2); **Records**: Regen origins (the history); **Install**: Screen, save, folder; **Files**: tweaks.cfg (the changed lines) and tweaks.log (the last log). Portuguese and English.
+- `src/main.rs`: the window (§2) and the tabs (§3), in the left menu by group (11/03, Lucas's request, reorganised the same day): **Start**, with the snapshot and the state table (the option's name and the key in grey); **Career tweaks**: Youth intake (the `intake_*` keys, since 1.2; first since 1.3, when it became on by default), Regen ages (the draggable chart, the "younger regens" outline and the chosen age spelled out: the chance, the percentage, the CA cap and the `age_NN` line as it is in the `.cfg`), Clubs' contest (the level curve and the example clubs' chances, the same sum as `peso()`), Retirement (the chance of retiring by age), Regen names (the choice, the minimum and, read from the game folder's database, the list of countries that borrow names: which country they come from today and whether they start using their own; `src/nomes.rs`) Grey players (the choice, the "± N" variation bar and the test career's examples); **Records**: Regen origins (the history); **Install**: Screen, save, folder; **Files**: tweaks.cfg (the changed lines) and tweaks.log (the last log). Portuguese and English.
 
 **No number without an explanation** (11/03, Lucas's request): below each option with a number, a sentence worked out on the spot says what that value does in the game, in a player's units ("a PA 150 youngster aims at a club of reputation 7500", "0.5% = about 1 in 200 youngsters is born without the cap", "180 days = about 6 months", "a club with 24 players has ×1.73 the chance of one with 40"). Numbers show as they read ("2", not "2.00"), with a decimal comma in Portuguese (`App::frase`). In the contest tab, the draw's fine-tuning (widths, floor, facilities, staff, squad room, temperature) sits in a closed **Advanced** block, each with its sentence. In the grey players tab, the bar shows "± 5" and the `.cfg` keeps the full width (`grey_players_spread = 10`).
 

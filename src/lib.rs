@@ -417,18 +417,39 @@ unsafe fn registrar_temporada(data: String) {
     let topo = (0..nc).max_by_key(|&i| regens_no[i]).unwrap_or(0);
     // quantos regens do clube líder chegaram pela disputa (o resto veio por contratação ou por outro caminho)
     let (mut dados, mut de_outro) = (0, 0);
-    for p in (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0 && d(d(p + 0x39)) == topo) {
-        if *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 != 0 {
+    // os clubes de reputação negativa (diagnóstico do clube depósito): os regens deles e por onde chegaram
+    let (mut neg_clubes, mut neg_regens, mut neg_cota, mut neg_sobra, mut neg_disputa) = (0, 0, 0, 0, 0);
+    let (mut topo_cota, mut topo_sobra) = (0, 0);
+    for i in 0..nc {
+        neg_clubes += (w(clubes + 0x245 * i + 0x80) < 0) as i32;
+    }
+    for p in (0..n).map(|s| pessoas + 110 * s).filter(|&p| d(p + 0x61) != 0 && d(p + 0x39) != 0) {
+        if *((d(0xae2d0c) + 79 * d(p) + 0xb) as *const u8) & 0x40 == 0 {
+            continue;
+        }
+        let c = d(d(p + 0x39));
+        let f = pela_fornada(d(p), c);
+        if c == topo {
             match destino(d(p)) {
-                Some(c) if c == topo => dados += 1,
+                Some(x) if x == topo => dados += 1,
                 Some(_) => de_outro += 1,
                 None => {}
             }
+            topo_cota += (f == 1) as i32;
+            topo_sobra += (f == 2) as i32;
+        }
+        if w(d(p + 0x39) + 0x80) < 0 {
+            neg_regens += 1;
+            neg_cota += (f == 1) as i32;
+            neg_sobra += (f == 2) as i32;
+            neg_disputa += (destino(d(p)) == Some(c)) as i32;
         }
     }
-    registro::linha(&(format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} given by the contest, {} via the contest to another club)\tpa150 {} free {} big {} rep {}",
+    registro::linha(&(format!("season\t{}\tplayers {}\tfree {}\tsquad {}/{:.1}/{} ({} clubs)\tregens {}\tregens_free {}\tmax_regens_club {} ({}, {} given by the contest, {} via the contest to another club, {} by the intake quota, {} as intake leftovers, reputation {})\tpa150 {} free {} big {} rep {}\tnegative-reputation clubs {}: regens {} ({} by the intake quota, {} as intake leftovers, {} by the contest, the rest signed later)",
         data, jogadores, livres, min, media, max, em_jogo.len(), regens, regens_livres, regens_no[topo], nome(clubes + 0x245 * topo), dados, de_outro,
-        altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 })
+        topo_cota, topo_sobra, w(clubes + 0x245 * topo + 0x80),
+        altos, altos_livres, altos_grandes, if com_clube > 0 { rep_altos / com_clube as i64 } else { 0 },
+        neg_clubes, neg_regens, neg_cota, neg_sobra, neg_disputa)
         + if arse() { "\tarse (player_setup.cfg): every person has the regen bit, so the regen counts mean nothing" } else { "" }));
 }
 /// No primeiro DirectDrawCreate, quando as DLLs do exe já carregaram: cada desvio continua no lugar?
@@ -719,11 +740,9 @@ unsafe fn vetado(jogador: usize, clube: usize) -> bool {
 /// (0x8ce990). Devolve o elenco (0x53c590) do clube elegível.
 unsafe fn elegivel(jogador: usize, clube: usize) -> Option<i32> {
     let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
-    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, *mut i16, u32) -> u32 = core::mem::transmute(0x8ce990usize);
-    let mut eh_a = 0u32;
-    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 || (parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0) || vetado(jogador, clube) {
+    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 || time_b(clube) || vetado(jogador, clube) {
         return None;
     }
     let mut motivo = 0i16;
@@ -731,6 +750,13 @@ unsafe fn elegivel(jogador: usize, clube: usize) -> Option<i32> {
         return None;
     }
     Some(elenco_de(clube, 0, 0) as i8 as i32)
+}
+
+/// O time B de outro clube (0x540a50: tem par e não é o time A); a disputa não manda jovem para ele.
+pub(crate) unsafe fn time_b(clube: usize) -> bool {
+    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
+    let mut eh_a = 0u32;
+    parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0
 }
 
 /// O melhor "Working with Youngsters" (+0x22 da ficha de não jogador +0x69) entre o técnico (+0xcf) e os 5 treinadores
@@ -750,6 +776,22 @@ unsafe fn melhor_com_jovens(clube: usize) -> i32 {
 /// empréstimo). Vetor fixo, sem alocar na linha do jogo (o jogo lê memória não inicializada, e a heap muda a trajetória
 /// da carreira; TESTES §4.5). ponytail: um id reaproveitado por outro regen herda o destino; ids acima de 2^18 não contam.
 static DESTINO: [core::sync::atomic::AtomicU16; 1 << 18] = [const { core::sync::atomic::AtomicU16::new(0) }; 1 << 18];
+
+/// Por onde o regen chegou pela fornada (diagnóstico da linha `season`): o clube + 1 nos 16 bits de baixo, 1 (cota)
+/// ou 2 (sobra) nos de cima. ponytail: o mesmo limite de ids do DESTINO.
+static FORNADA: [core::sync::atomic::AtomicU32; 1 << 18] = [const { core::sync::atomic::AtomicU32::new(0) }; 1 << 18];
+
+pub(crate) fn marcar_fornada(pessoa: usize, clube: usize, sobra: bool) {
+    if pessoa < 1 << 18 && clube < 0xffff {
+        FORNADA[pessoa].store((clube as u32 + 1) | if sobra { 2 << 16 } else { 1 << 16 }, core::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+/// 0: não chegou ao `clube` pela fornada; 1: pela cota; 2: como sobra.
+fn pela_fornada(pessoa: usize, clube: usize) -> u32 {
+    let v = if pessoa < 1 << 18 { FORNADA[pessoa].load(core::sync::atomic::Ordering::Relaxed) } else { 0 };
+    if v & 0xffff == clube as u32 + 1 { v >> 16 } else { 0 }
+}
 
 fn marcar_destino(pessoa: usize, clube: usize) {
     if pessoa < 1 << 18 && clube < 0xffff {
@@ -862,7 +904,7 @@ unsafe fn uniforme() -> f64 {
     ((sorteio(0x8000) as u32) << 15 | sorteio(0x8000) as u32) as f64 / (1u32 << 30) as f64
 }
 
-unsafe fn nome(clube: usize) -> String {
+pub(crate) unsafe fn nome(clube: usize) -> String {
     let s = core::slice::from_raw_parts((clube + 4) as *const u8, 51);
     s.iter().take_while(|&&c| c != 0).map(|&c| c as char).collect()
 }
@@ -1288,7 +1330,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             }
         }
         if !fornada::instalar() {
-            registro::linha("intake (EXPERIMENTAL): off (intake = 0)");
+            registro::linha("intake: off (intake = 0)");
         }
         fornada::instalar_aposentadoria();
     }

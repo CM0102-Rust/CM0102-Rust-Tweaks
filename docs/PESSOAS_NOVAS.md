@@ -166,6 +166,24 @@ O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem s
 - As sobras são da Inglaterra e da Itália, onde se aposentam mais do que as cotas somam; vão para a disputa normal, como combinado. Por isso um clube passa de 3 por ano: o máximo de regens num clube foi de 5 (2002) a 27 (Varese, 2007).
 - Elenco médio de 35 a 38 (mínimo 5 a 10, máximo 50 ou 51); regens com PA 150 ou mais no fim de cada temporada: 25, 42, 96, 165, 236, 339.
 
+**Todas as ligas, 10 anos (06/11).** A mesma configuração, agora a do `tweaks.cfg` distribuído, com todas as nações do jogo original selecionadas (1.134 clubes), de 2001 a 2011-199, sem quedas e sem caixas de erro [observado, `resultados/todas10anos.log`]. A fornada do dia 169 (o fim da temporada da maior parte da Europa):
+
+| Ano | Nascidos da fila | Criados | Entregues | Faltando | Sem vaga | Sobras assinadas | Reserva restante |
+|---|---|---|---|---|---|---|---|
+| 2002 | 1.176 | 1.068 | 2.121 | 66 | 36 | 91 | 47.919 |
+| 2004 | 1.439 | 948 | 2.128 | 66 | 25 | 282 | 45.658 |
+| 2006 | 2.411 | 445 | 2.313 | 35 | 0 | 656 | 44.041 |
+| 2008 | 3.249 | 241 | 2.316 | 36 | 1 | 1.157 | 43.172 |
+| 2011 | 3.055 | 118 | 2.294 | 43 | 3 | 876 | 42.372 |
+
+- A reserva de 50.000 coube com todas as ligas e gastou 7.600 em 10 anos.
+- Elenco médio de 29,8 (2001) a 36,3, estável de 2005 em diante; máximo 50 a 52.
+- Regens com PA 150 ou mais no fim de cada temporada: de 20 (2002) a 1.008 (2011).
+- Duas paradas longas (mais de 60 s numa data, em 2001-194 e 2010-169), que o jogo venceu sozinho.
+- **Gravar e carregar:** o save de 2011 (no dia da fornada) carregou com a reserva intacta (42.372), e a fornada seguinte bateu com a da carreira contínua [observado, `resultados/todas10anos_carga.log`].
+- **Faltando** são clubes com vaga que não receberam a cota inteira: 35 a 80 de 1.134 por ano, quase todos de nações com regra de nacionalidade (o Athletic Bilbao só contrata bascos) ou de clubes grandes. Os times B (o parceiro pela 0x540a50) saíram da cota em 06/11; a carreira curta seguinte deu 57 e 51, contra 66 e 80 antes.
+- **O clube depósito** (o Guiseley com 41 regens em 2003) não vem da fornada: ver `TESTES.md` §4.5.
+
 ### 8.1 As chaves
 
 Desde o desenho final (05/11, noite). As chaves do estoque (`intake_stock`, `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`) e o `intake_only` saíram; um cfg da 1.2 com `intake_stock` > 0 e sem a linha `intake` liga a fornada.

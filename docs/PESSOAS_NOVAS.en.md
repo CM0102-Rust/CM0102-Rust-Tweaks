@@ -166,6 +166,24 @@ What went (parallel rules, for stock youngsters only, that make no sense once a 
 - The leftovers are England's and Italy's, where more retire than the quotas add up to; they go to the normal contest, as agreed. That's why a club goes past 3 a year: the most regens at one club went from 5 (2002) to 27 (Varese, 2007).
 - Average squad 35 to 38 (minimum 5 to 10, maximum 50 or 51); regens with PA 150 or more at each season end: 25, 42, 96, 165, 236, 339.
 
+**All leagues, 10 years (11/06).** The same setup, now the shipped `tweaks.cfg`'s, with every nation of the original game selected (1,134 clubs), from 2001 to 2011-199, no crashes and no error boxes [observed, `resultados/todas10anos.log`]. The day-169 intake (most of Europe's season end):
+
+| Year | Born from the queue | Created | Given | Missing | No room | Leftovers signed | Reserve left |
+|---|---|---|---|---|---|---|---|
+| 2002 | 1,176 | 1,068 | 2,121 | 66 | 36 | 91 | 47,919 |
+| 2004 | 1,439 | 948 | 2,128 | 66 | 25 | 282 | 45,658 |
+| 2006 | 2,411 | 445 | 2,313 | 35 | 0 | 656 | 44,041 |
+| 2008 | 3,249 | 241 | 2,316 | 36 | 1 | 1,157 | 43,172 |
+| 2011 | 3,055 | 118 | 2,294 | 43 | 3 | 876 | 42,372 |
+
+- The 50,000 reserve fit with all leagues and used 7,600 in 10 years.
+- Average squad from 29.8 (2001) to 36.3, steady from 2005 on; maximum 50 to 52.
+- Regens with PA 150 or more at each season end: from 20 (2002) to 1,008 (2011).
+- Two long stalls (over 60 s on one date, at 2001-194 and 2010-169), which the game got past on its own.
+- **Save and load:** the 2011 save (on intake day) loaded with the reserve intact (42,372), and the next intake matched the continuous career's [observed, `resultados/todas10anos_carga.log`].
+- **Missing** are clubs with room that didn't get their whole quota: 35 to 80 of 1,134 a year, nearly all from nations with a nationality rule (Athletic Bilbao only signs Basques) or big clubs. B teams (the partner via 0x540a50) left the quota on 11/06; the next short career gave 57 and 51, against 66 and 80 before.
+- **The sink club** (Guiseley with 41 regens in 2003) doesn't come from the intake: see `TESTES.en.md` §4.5.
+
 ### 8.1 The keys
 
 Since the final design (11/05, evening). The stock keys (`intake_stock`, `intake_pa_min`, `intake_pa_max`, `intake_pa_spread`, `intake_surprise`, `intake_squad_max`) and `intake_only` are gone; a 1.2 cfg with `intake_stock` > 0 and no `intake` line turns the intake on.

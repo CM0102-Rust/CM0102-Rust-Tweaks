@@ -259,9 +259,9 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
-## Fornada (experimental)
+## Fornada de regens
 
-EXPERIMENTAL. A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol). Com ela ligada, você joga de outro jeito: os regens chegam todos de uma vez, num dia do ano, e todo clube com vaga recebe o mesmo número deles. Regen é regen: venha de um aposentado ou criado pela DLL, todos nascem pela rotina do jogo e vão para os clubes pela curva da aba Regens. O máximo por ano e o teto do elenco da aba Regens deixam de valer, porque a cota da fornada é o limite. O seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
+A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol). Com ela ligada, você joga de outro jeito: os regens chegam todos de uma vez, num dia do ano, e todo clube com vaga recebe o mesmo número deles. Regen é regen: venha de um aposentado ou criado pela DLL, todos nascem pela rotina do jogo e vão para os clubes pela curva da aba Disputa dos clubes. O máximo por ano e o teto do elenco da aba Disputa dos clubes deixam de valer, porque a cota da fornada é o limite. O seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
 
 - **Regens criados**: quando as aposentadorias não bastam para a cota de todos os clubes, a DLL cria os que faltam: a pessoa vem de uma reserva criada junto com a carreira nova (até 50 mil, conforme a folga do banco), e a ficha é a mistura de duas fichas de aposentados do país na mesma posição (as posições e os pés de uma, cada atributo de uma das duas, o PA entre os dois). Depois, nascem pela mesma rotina do jogo que qualquer regen.
 - **Cota**: quantos regens um clube recebe na fornada: o número escolhido, limitado às vagas do elenco (50) no dia.
@@ -269,7 +269,7 @@ EXPERIMENTAL. A fornada de regens (o Youth Intake do Football Manager; hornada n
 
 ### Fornada — `intake`
 
-Liga a fornada, o "Youth Intake" do Football Manager. Regen é regen: a fornada muda só duas coisas. A data: os regens só nascem no dia da fornada (quem se aposenta espera na fila do jogo até lá). A quantidade: todo clube com vaga no elenco recebe o número escolhido abaixo. Para qual clube vai cada regen, quem decide é a curva da aba Regens (nível, instalações, comissão, surpresa, temperatura); o máximo por ano e o teto do elenco da aba Regens não valem, porque a cota da fornada é o limite. Quando as aposentadorias não bastam para todos, a DLL cria os regens que faltam, com pessoas criadas junto com a carreira e a ficha misturada de dois aposentados do país na mesma posição. Só numa carreira nova.
+Liga a fornada, o "Youth Intake" do Football Manager. Regen é regen: a fornada muda só duas coisas. A data: os regens só nascem no dia da fornada (quem se aposenta espera na fila do jogo até lá). A quantidade: todo clube com vaga no elenco recebe o número escolhido abaixo. Para qual clube vai cada regen, quem decide é a curva da aba Disputa dos clubes (nível, instalações, comissão, surpresa, temperatura); o máximo por ano e o teto do elenco da aba Disputa dos clubes não valem, porque a cota da fornada é o limite. Quando as aposentadorias não bastam para todos, a DLL cria os regens que faltam, com pessoas criadas junto com a carreira e a ficha misturada de dois aposentados do país na mesma posição. Só numa carreira nova.
 
 Valores: `0` (Desligada (regens ao longo da temporada)), `1` (Ligada (só numa carreira nova)). Padrão: `0`.
 
@@ -335,7 +335,7 @@ O save, a instalação, a tela e o CD. Estes ajustes não mudam as regras do jog
 
 Permite gravar e carregar saves acima de 2 GB (até 4 GB). Ligue se o seu save é grande (muitas ligas, carreira longa) ou se o jogo dá erro ao carregar. Desligado, um save acima de 2 GB não carrega. Não muda nada na carreira.
 
-Valores: `1` liga, `0` desliga. Padrão: `0`.
+Valores: `1` liga, `0` desliga. Padrão: `0` sem a linha; o `tweaks.cfg` distribuído vem com `1` (desde a 1.3).
 
 ### Pasta portátil (sem SetupReg) — `portable_folder`
 

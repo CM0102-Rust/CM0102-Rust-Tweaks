@@ -1135,11 +1135,11 @@ impl App {
         self.controle(ui, "intake", true);
         let ativo = self.fornada_ligada();
         ui.colored_label(if ativo { AZUL } else { CINZA }, if ativo {
-            self.t("Ligada. Regen é regen: os regens só nascem no dia da fornada, e cada clube com vaga recebe o número abaixo. Para qual clube vai cada um, quem decide é a curva da aba Regens. O máximo por ano e o teto do elenco da aba Regens não valem.",
-                "On. A regen is a regen: regens are only born on intake day, and every club with room gets the number below. Which club each one goes to is up to the Regens tab's curve. The Regens tab's yearly maximum and squad limit don't apply.")
+            self.t("Ligada. Regen é regen: os regens só nascem no dia da fornada, e cada clube com vaga recebe o número abaixo. Para qual clube vai cada um, quem decide é a curva da aba Disputa dos clubes. O máximo por ano e o teto do elenco da aba Disputa dos clubes não valem.",
+                "On. A regen is a regen: regens are only born on intake day, and every club with room gets the number below. Which club each one goes to is up to the Clubs' contest tab's curve. The Clubs' contest tab's yearly maximum and squad limit don't apply.")
         } else {
-            self.t("Desligada: os regens nascem ao longo da temporada, como no jogo original, pelas regras da aba Regens.",
-                "Off: regens are born through the season, as in the original game, by the Regens tab's rules.")
+            self.t("Desligada: os regens nascem ao longo da temporada, como no jogo original, pelas regras da aba Disputa dos clubes.",
+                "Off: regens are born through the season, as in the original game, by the Clubs' contest tab's rules.")
         });
         ui.add_space(6.0);
         ui.strong(self.t("Quando", "When"));

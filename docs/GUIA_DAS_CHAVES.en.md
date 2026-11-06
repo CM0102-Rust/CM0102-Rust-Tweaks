@@ -259,9 +259,9 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
-## Intake (experimental)
+## Youth intake
 
-EXPERIMENTAL. The regen intake (Football Manager's Youth Intake; hornada in Spanish). With it on, you play a different way: regens all arrive at once, on one day of the year, and every club with room gets the same number of them. A regen is a regen: whether from a retired player or created by the DLL, they're all born through the game's routine and go to the clubs by the Regens tab's curve. The Regens tab's yearly maximum and squad limit stop applying, because the intake's quota is the limit. Your club gets a message from the youth coach. It only works in a NEW career.
+The regen intake (Football Manager's Youth Intake; hornada in Spanish). With it on, you play a different way: regens all arrive at once, on one day of the year, and every club with room gets the same number of them. A regen is a regen: whether from a retired player or created by the DLL, they're all born through the game's routine and go to the clubs by the Clubs' contest tab's curve. The Clubs' contest tab's yearly maximum and squad limit stop applying, because the intake's quota is the limit. Your club gets a message from the youth coach. It only works in a NEW career.
 
 - **Created regens**: when retirements aren't enough for every club's quota, the DLL creates the missing ones: the person comes from a reserve created with the new career (up to 50 thousand, as the database's room allows), and the record is a mix of two records of the country's retired players in the same position (positions and feet from one, each attribute from one of the two, the PA between the two). Then they're born through the same game routine as any regen.
 - **Quota**: how many regens a club gets in the intake: the number chosen, limited to the squad's room (50) on the day.
@@ -269,7 +269,7 @@ EXPERIMENTAL. The regen intake (Football Manager's Youth Intake; hornada in Span
 
 ### Intake — `intake`
 
-Turns on the intake, Football Manager's "Youth Intake". A regen is a regen: the intake changes only two things. The date: regens are only born on intake day (whoever retires waits in the game's queue until then). The number: every club with squad room gets the number chosen below. Which club each regen goes to is up to the Regens tab's curve (level, facilities, staff, surprise, temperature); the Regens tab's yearly maximum and squad limit don't apply, because the intake's quota is the limit. When retirements aren't enough for everyone, the DLL creates the missing regens, with people created along with the career and a record mixed from two of the country's retired players of the same position. New career only.
+Turns on the intake, Football Manager's "Youth Intake". A regen is a regen: the intake changes only two things. The date: regens are only born on intake day (whoever retires waits in the game's queue until then). The number: every club with squad room gets the number chosen below. Which club each regen goes to is up to the Clubs' contest tab's curve (level, facilities, staff, surprise, temperature); the Clubs' contest tab's yearly maximum and squad limit don't apply, because the intake's quota is the limit. When retirements aren't enough for everyone, the DLL creates the missing regens, with people created along with the career and a record mixed from two of the country's retired players of the same position. New career only.
 
 Values: `0` (Off (regens through the season)), `1` (On (new career only)). Default: `0`.
 
@@ -335,7 +335,7 @@ The save, the install, the screen and the CD. These tweaks don't change the game
 
 Lets the game save and load saves above 2 GB (up to 4 GB). Turn it on if your save is large (many leagues, a long career) or the game errors when loading. Off, a save above 2 GB won't load. It changes nothing in the career.
 
-Values: `1` on, `0` off. Default: `0`.
+Values: `1` on, `0` off. Default: `0` without the line; the distributed `tweaks.cfg` comes with `1` (since 1.3).
 
 ### Portable folder (no SetupReg) — `portable_folder`
 

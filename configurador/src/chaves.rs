@@ -38,12 +38,12 @@ pub enum Aba {
 /// (03/11, Lucas): o que muda a carreira, o que só registra, a instalação e os arquivos.
 pub const ABAS: [(Aba, &str, &str, &str, &str); 11] = [
     (Aba::Inicio, "Início", "Start", "", ""),
+    (Aba::Fornada, "Fornada de regens", "Youth intake", "Ajustes da carreira", "Career tweaks"),
     (Aba::Idades, "Idades dos regens", "Regen ages", "Ajustes da carreira", "Career tweaks"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Ajustes da carreira", "Career tweaks"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Ajustes da carreira", "Career tweaks"),
     (Aba::Nomes, "Nomes dos regens", "Regen names", "Ajustes da carreira", "Career tweaks"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Ajustes da carreira", "Career tweaks"),
-    (Aba::Fornada, "Fornada (experimental)", "Intake (experimental)", "Ajustes da carreira", "Career tweaks"),
     (Aba::Registro, "De quem é cada regen", "Regen origins", "Registro", "Records"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),
     (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos", "Files"),
@@ -134,14 +134,14 @@ pub fn ligado(nome: &str, valor: &str) -> bool {
 /// As predefinições (docs/CONFIGURADOR.md §4): (nome pt, nome en, valores). As chaves de instalação (pasta, marca,
 /// sobrescrever, log, vídeo, resolução, CD) ficam fora: dependem da instalação, não do gosto.
 pub const PREDEFINICOES: &[(&str, &str, &[(&str, &str)])] = &[
-    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original")]),
-    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original")]),
+    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0")]),
+    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0")]),
     ("Equilibrado", "Balanced", &[("ages", "custom"), ("younger_from_age", "22"), ("younger_by", "6"), ("ages_out_of_game", "original"), ("ca_cap_skip", "0.5"), ("contest_max_age", "18"), ("unattached", "original"),
         ("retire_idle_players", "1"), ("idle_days", "180"), ("idle_min_age", "28"), ("idle_rep", "1500"), ("idle_rep_per_year", "250"), ("protect_young_unemployed", "0"), ("rule", "new"),
         ("target_k", "50"), ("target_ca", "0"), ("sigma", "2500"), ("sigma_below", "1200"), ("level_floor", "0.002"), ("facilities_base", "0.4"), ("facilities_k", "0.06"), ("staff_min", "0.8"),
-        ("staff_max", "1.2"), ("squad_limit", "48"), ("squad_exp", "0.5"), ("season_cap", "2"), ("surprise", "15"), ("temperature", "1")]),
+        ("staff_max", "1.2"), ("squad_limit", "48"), ("squad_exp", "0.5"), ("season_cap", "2"), ("surprise", "15"), ("temperature", "1"), ("intake", "1"), ("intake_per_club", "3"), ("intake_day", "season_end"), ("intake_clubs", "playable")]),
     ("Equilibrado, todos com clube", "Balanced, everyone with a club", &[("ages", "custom"), ("younger_from_age", "22"), ("younger_by", "6"), ("ages_out_of_game", "original"), ("ca_cap_skip", "0.5"), ("contest_max_age", "18"), ("unattached", "only_if_no_room"),
         ("retire_idle_players", "1"), ("idle_days", "180"), ("idle_min_age", "28"), ("idle_rep", "1500"), ("idle_rep_per_year", "250"), ("protect_young_unemployed", "0"), ("rule", "new"),
         ("target_k", "50"), ("target_ca", "0"), ("sigma", "2500"), ("sigma_below", "1200"), ("level_floor", "0.002"), ("facilities_base", "0.4"), ("facilities_k", "0.06"), ("staff_min", "0.8"),
-        ("staff_max", "1.2"), ("squad_limit", "48"), ("squad_exp", "0.5"), ("season_cap", "2"), ("surprise", "15"), ("temperature", "1")]),
+        ("staff_max", "1.2"), ("squad_limit", "48"), ("squad_exp", "0.5"), ("season_cap", "2"), ("surprise", "15"), ("temperature", "1"), ("intake", "1"), ("intake_per_club", "3"), ("intake_day", "season_end"), ("intake_clubs", "playable")]),
 ];
