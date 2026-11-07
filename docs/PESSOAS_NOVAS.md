@@ -166,7 +166,7 @@ O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem s
 - As sobras são da Inglaterra e da Itália, onde se aposentam mais do que as cotas somam; vão para a disputa normal, como combinado. Por isso um clube passa de 3 por ano: o máximo de regens num clube foi de 5 (2002) a 27 (Varese, 2007).
 - Elenco médio de 35 a 38 (mínimo 5 a 10, máximo 50 ou 51); regens com PA 150 ou mais no fim de cada temporada: 25, 42, 96, 165, 236, 339.
 
-**Todas as ligas, 10 anos (06/11).** A mesma configuração, agora a do `tweaks.cfg` distribuído, com todas as nações do jogo original selecionadas (1.134 clubes), de 2001 a 2011-199, sem quedas e sem caixas de erro [observado, `resultados/todas10anos.log`]. A fornada do dia 169 (o fim da temporada da maior parte da Europa):
+**Todas as ligas, 10 anos, antes das correções (06/11).** A mesma configuração, agora a do `tweaks.cfg` distribuído, com todas as nações do jogo original selecionadas (1.134 clubes), de 2001 a 2011-199, sem quedas e sem caixas de erro [observado, `resultados/todas10anos.log`]. A fornada do dia 169 (o fim da temporada da maior parte da Europa):
 
 | Ano | Nascidos da fila | Criados | Entregues | Faltando | Sem vaga | Sobras assinadas | Reserva restante |
 |---|---|---|---|---|---|---|---|
@@ -189,6 +189,21 @@ O que saiu (eram regras paralelas, só para os jovens do estoque, e não fazem s
 
   Com as quatro correções: os 1.134 clubes com a cota inteira, 0 faltando, 9 jovens feitos bascos. No fim da temporada (a fornada de verdade, até julho de 2002, `resultados/fim_temporada.log`): as 9 fornadas com 0 faltando; a do dia 169, 788 clubes, 9 feitos bascos. A história confere: o Athletic só escala bascos desde 1912; a Real Sociedad largou a regra em 1989 (Aldridge) mas só contratou espanhol não basco em 2001 (Boris); do Eibar não há fonte firme, e a DLL segue o que o jogo diz dele.
 - **O clube depósito** (o Guiseley com 41 regens em 2003) vinha da criação dos regens da fornada: a lista da nação (0x7ad590) mandava 1 em 10 para clube de reputação ≤ 2. Desde 06/11 a fornada segura esse caminho, e o maior acumulado em 2003 é o Prato com 12: ver `TESTES.md` §4.5.
+
+**Todas as ligas, 10 anos, com as correções (07/11).** A mesma carreira (1.134 clubes, 2001 a 2011-199), com a cota inteira, a regra basca e a lista da nação segurada; sem quedas e sem caixas de erro, 36.580 s [observado, `resultados/final10anos.log`]. A fornada do dia 169:
+
+| Ano | Nascidos da fila | Criados | Entregues | Faltando | Sem vaga | Sobras assinadas | Reserva restante | Feitos bascos |
+|---|---|---|---|---|---|---|---|---|
+| 2002 | 1.202 | 1.077 | 2.205 | 0 | 28 | 74 | 47.937 | 9 |
+| 2004 | 1.473 | 970 | 2.177 | 2 | 19 | 320 | 45.724 | 5 |
+| 2006 | 2.394 | 400 | 2.328 | 2 | 1 | 643 | 44.220 | 6 |
+| 2008 | 3.223 | 247 | 2.324 | 0 | 2 | 1.229 | 43.389 | 3 |
+| 2011 | 3.042 | 137 | 2.311 | 0 | 1 | 929 | 42.691 | 4 |
+
+- **Faltando:** das 112 fornadas, 95 com 0; as outras com 1 a 6 vagas, quase todas de clubes alemães (o Werder Bremen em 5 anos; o Dortmund e o Friburgo com 2 em 2007), contra 35 a 80 por ano antes. O motivo anotado é a recusa 33 (0x21) da 0x8ce990 em 1 a 6 jovens, com uns 106 aceitáveis no dia; ainda não investigado.
+- Elenco médio de 33,5 (2002) a 36,2, estável de 2005 em diante; máximo 50 a 52. Regens com PA 150 ou mais no fim de cada temporada: de 27 (2002) a 1.012 (2011).
+- **Sem clube depósito:** o maior acumulado foi de 5 (2002) a 42 (o Stabæk em 2011: 19 pela cota e 16 pelas sobras, em 10 anos); os clubes de reputação negativa com 0 a 29 regens, nenhum pela cota. Em 2009 e 2010 o maior foi o Atlético de Madrid B (40 e 43, nenhum pela fornada nem pela disputa: contratados depois pelo próprio jogo).
+- **As paradas longas são do jogo:** a fornada mais lenta levou 14,7 s (a do dia 169, com uns 780 clubes; as outras, de 0,02 s a 4,5 s, campo `ms` da linha `intake`). As paradas de mais de 60 s caíram em 2001-194, antes da primeira fornada, na lista de observação dos treinadores (0x83fa5d e 0x83fb57, `shortlist_manager`), e no fim da temporada de 2006 e 2010 (dia 169), nas estatísticas dos jogadores (0x7c6d40, `player_stats`) e em 0x9453d7, rotinas do próprio jogo que rodam no mesmo dia.
 
 ### 8.1 As chaves
 

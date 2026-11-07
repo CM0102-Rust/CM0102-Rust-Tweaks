@@ -370,6 +370,7 @@ unsafe fn sortear_clube(p: usize, clubes: &[usize]) -> Option<usize> {
 unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     use std::collections::{HashMap, HashSet};
     TESTE_FEITO = false;
+    let relogio = std::time::Instant::now();
     let (pessoas, n) = (d(0xae23bc), d(0xae2364));
     let total = (d(0xae235c) as i32 - 2 * d(0xae2350) as i32).max(0) as usize;
     let base = d(0xae23b4);
@@ -508,7 +509,7 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
     let (mut dados, mut sobras_com_clube, mut sobras_sem_clube) = (0, 0, 0);
     // diagnóstico das cotas que faltam: o motivo de cada recusa, medido antes de os jovens terem contrato
     let mut recusas: HashMap<usize, std::collections::BTreeMap<String, i32>> = HashMap::new();
-    for &c in &clubes {
+    for &c in clubes.iter().filter(|_| crate::diagnostico()) {
         let m = recusas.entry(c).or_default();
         for &p in grupo.get(&d(c + 0x53)).map(|v| v.as_slice()).unwrap_or(&[]) {
             *m.entry(crate::motivo_recusa(p, c)).or_default() += 1;
@@ -584,14 +585,16 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
             avisar(c, 0, &[]);
         }
     }
-    if clubes.is_empty() && da_fila == 0 {
+    // daqui para baixo, o diagnóstico: só com log = 1 (o cfg do release vem com 0: só as linhas da partida)
+    if (clubes.is_empty() && da_fila == 0) || !crate::diagnostico() {
+        (FALHA_CRIAR, FALHA_LIVRE, OUTRA_NACAO, BASCOS) = (0, 0, 0, 0);
         return;
     }
     let completos = clubes.iter().filter(|c| cota[c] == 0).count();
     let faltou: i32 = cota.values().sum();
     registro::linha(&format!(
-        "intake\t{}\tclubs {}\tborn from the queue {}\tfree regens up to 21 {}\tcreated {}\tgiven to clubs {}\tclubs with their quota {}\tmissing {}\tno room {}\tleftovers signed {}\tleftovers without a club {}\tno parents {}\treserve left {}{}",
-        crate::data_do_jogo(), clubes.len(), da_fila, livres_antes, criados, dados, completos, faltou, sem_vaga.len(), sobras_com_clube, sobras_sem_clube, sem_pais, reserva.len(),
+        "intake\t{}\tclubs {}\tborn from the queue {}\tfree regens up to 21 {}\tcreated {}\tgiven to clubs {}\tclubs with their quota {}\tmissing {}\tno room {}\tleftovers signed {}\tleftovers without a club {}\tno parents {}\treserve left {}\tms {}{}",
+        crate::data_do_jogo(), clubes.len(), da_fila, livres_antes, criados, dados, completos, faltou, sem_vaga.len(), sobras_com_clube, sobras_sem_clube, sem_pais, reserva.len(), relogio.elapsed().as_millis(),
         if acabou { "\treserve ran out" } else { "" }
     ));
     registro::linha(&format!(

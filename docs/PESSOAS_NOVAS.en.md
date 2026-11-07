@@ -166,7 +166,7 @@ What went (parallel rules, for stock youngsters only, that make no sense once a 
 - The leftovers are England's and Italy's, where more retire than the quotas add up to; they go to the normal contest, as agreed. That's why a club goes past 3 a year: the most regens at one club went from 5 (2002) to 27 (Varese, 2007).
 - Average squad 35 to 38 (minimum 5 to 10, maximum 50 or 51); regens with PA 150 or more at each season end: 25, 42, 96, 165, 236, 339.
 
-**All leagues, 10 years (11/06).** The same setup, now the shipped `tweaks.cfg`'s, with every nation of the original game selected (1,134 clubs), from 2001 to 2011-199, no crashes and no error boxes [observed, `resultados/todas10anos.log`]. The day-169 intake (most of Europe's season end):
+**All leagues, 10 years, before the fixes (11/06).** The same setup, now the shipped `tweaks.cfg`'s, with every nation of the original game selected (1,134 clubs), from 2001 to 2011-199, no crashes and no error boxes [observed, `resultados/todas10anos.log`]. The day-169 intake (most of Europe's season end):
 
 | Year | Born from the queue | Created | Given | Missing | No room | Leftovers signed | Reserve left |
 |---|---|---|---|---|---|---|---|
@@ -189,6 +189,21 @@ What went (parallel rules, for stock youngsters only, that make no sense once a 
 
   With the four fixes: all 1,134 clubs with their whole quota, 0 missing, 9 youngsters made Basque. At season end (the real intake, to July 2002, `resultados/fim_temporada.log`): the 9 intakes with 0 missing; day 169's, 788 clubs, 9 made Basque. History checks out: Athletic has fielded only Basques since 1912; Real Sociedad dropped the rule in 1989 (Aldridge) but only signed a non-Basque Spaniard in 2001 (Boris); for Eibar there's no firm source, and the DLL follows what the game says about it.
 - **The sink club** (Guiseley with 41 regens in 2003) came from the intake creating regens: the nation list (0x7ad590) sent 1 in 10 to a club with reputation ≤ 2. Since 11/06 the intake holds that path, and the biggest pile in 2003 is Prato with 12: see `TESTES.en.md` §4.5.
+
+**All leagues, 10 years, with the fixes (11/07).** The same career (1,134 clubs, 2001 to 2011-199), with the whole quota, the Basque rule and the nation list held; no crashes and no error boxes, 36,580 s [observed, `resultados/final10anos.log`]. The day-169 intake:
+
+| Year | Born from the queue | Created | Given | Missing | No room | Leftovers signed | Reserve left | Made Basque |
+|---|---|---|---|---|---|---|---|---|
+| 2002 | 1,202 | 1,077 | 2,205 | 0 | 28 | 74 | 47,937 | 9 |
+| 2004 | 1,473 | 970 | 2,177 | 2 | 19 | 320 | 45,724 | 5 |
+| 2006 | 2,394 | 400 | 2,328 | 2 | 1 | 643 | 44,220 | 6 |
+| 2008 | 3,223 | 247 | 2,324 | 0 | 2 | 1,229 | 43,389 | 3 |
+| 2011 | 3,042 | 137 | 2,311 | 0 | 1 | 929 | 42,691 | 4 |
+
+- **Missing:** of 112 intakes, 95 with 0; the rest with 1 to 6 places, nearly all German clubs (Werder Bremen in 5 years; Dortmund and Freiburg with 2 in 2007), against 35 to 80 a year before. The logged reason is refusal 33 (0x21) of 0x8ce990 for 1 to 6 youngsters, with about 106 acceptable that day; not investigated yet.
+- Average squad from 33.5 (2002) to 36.2, steady from 2005 on; maximum 50 to 52. Regens with PA 150 or more at each season end: from 27 (2002) to 1,012 (2011).
+- **No sink club:** the biggest pile went from 5 (2002) to 42 (Stabæk in 2011: 19 by the quota and 16 as leftovers, over 10 years); negative-reputation clubs with 0 to 29 regens, none by the quota. In 2009 and 2010 the biggest was Atlético de Madrid B (40 and 43, none from the intake or the contest: signed later by the game itself).
+- **The long stalls are the game's:** the slowest intake took 14.7 s (day 169, about 780 clubs; the others 0.02 s to 4.5 s, the `ms` field of the `intake` line). The stalls over 60 s fell at 2001-194, before the first intake, in the managers' shortlist (0x83fa5d and 0x83fb57, `shortlist_manager`), and at the 2006 and 2010 season end (day 169), in player statistics (0x7c6d40, `player_stats`) and at 0x9453d7, the game's own routines running that same day.
 
 ### 8.1 The keys
 

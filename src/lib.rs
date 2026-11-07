@@ -39,6 +39,11 @@ mod trocas;
 mod video;
 mod win;
 
+/// O diagnóstico (as linhas para nós, fora do cfg do release): só com `log = 1`.
+pub(crate) fn diagnostico() -> bool {
+    unsafe { REGRAS.registrar }
+}
+
 /// O registro da camada de vídeo: só com `log = 1`.
 pub(crate) fn linha_de_video(texto: &str) {
     if unsafe { REGRAS.registrar } {
