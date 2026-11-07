@@ -1,7 +1,7 @@
 """Quais opções do NickPatcher (e quais patches do MiscPatches.zip) escrevem nos trechos que cada ajuste do Tweaks confere
 ou troca. Lê os dados do NickPatcher como dados (o dicionário `patches` do Patcher.cs e os .patch do zip), sem rodar nada
 e sem copiar código.
-Uso: python tools/nickpatcher_vs_tweaks.py CAMINHO/CM0102Patcher"""
+Uso: python tools/exe/nickpatcher_vs_tweaks.py CAMINHO/CM0102Patcher"""
 import os
 import re
 import sys

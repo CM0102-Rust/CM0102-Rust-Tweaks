@@ -1,0 +1,28 @@
+CM0102 Rust Tweaks {versao} - para o Championship Manager 01/02 3.9.68
+TRABALHO EM ANDAMENTO: versão de teste, não a final. FAÇA SEMPRE BACKUP DOS SEUS SAVES E DA PASTA DO JOGO ANTES.
+
+INSTALAR
+Copie ddraw.dll, tweaks.cfg, tweaks-config.exe e intake_news.txt para a pasta do cm0102.exe e abra o
+tweaks-config.exe para escolher o que ligar. Sem o tweaks.cfg nada muda no jogo. Para tirar: apague a ddraw.dll.
+Usa o NickPatcher ou a NickDLL? Leia antes o NICKPATCHER.md. Cada opção está explicada no GUIA_DAS_CHAVES.md (e no
+configurador: passe o mouse no "?").
+
+NOVO NA 1.3: A FORNADA DE REGENS, LIGADA POR PADRÃO (só numa carreira NOVA)
+O "Youth Intake" do Football Manager no CM 01/02. Regen é regen: a fornada muda só duas coisas.
+- A DATA: os regens nascem no dia da fornada (o fim da temporada de cada nação, ou um dia fixo), e não um a um ao
+  longo da temporada. Quem se aposenta espera na fila do próprio jogo até lá.
+- A QUANTIDADE: todo clube com vaga no elenco recebe 3 regens (intake_per_club), até 50 no elenco. Para qual clube
+  vai cada regen, quem decide continua sendo a curva da aba Disputa dos clubes. Quando as aposentadorias não bastam,
+  a DLL cria os que faltam com uma reserva oculta criada junto com a carreira, cada um a mistura de dois aposentados
+  da mesma posição do país do clube (sem clones), nascido pela rotina do próprio jogo.
+- A MENSAGEM: o seu clube recebe na caixa de entrada uma mensagem do treinador da base com cada jovem e o parecer
+  dele. As frases estão no intake_news.txt, em 19 línguas: dá para editar.
+Testada em 10 temporadas com todas as ligas do jogo original (1.134 clubes): todo clube recebe a cota, sem clube
+"depósito" de regens, os clubes bascos (Athletic, Eibar, Real Sociedad) recebem jovens bascos, a reserva dura
+(sobram 42 mil de 50 mil depois de 10 anos), e gravar e carregar o save mantém a fornada. As chaves intake_stock e
+intake_pa_* da 1.2 saíram: um tweaks.cfg da 1.2 com intake_stock acima de 0 continua ligando a fornada.
+Também ligado por padrão agora: save_over_2gb (saves acima de 2 GB). Para jogar do jeito original, intake = 0.
+
+Problemas: mande o tweaks.log (ao lado do exe) e conte o que aconteceu.
+Código-fonte, documentação e testes: https://github.com/CM0102-Rust/CM0102-Rust-Tweaks
+Licença: MIT (LICENSE). O jogo, o executável e o banco de dados não vêm junto.

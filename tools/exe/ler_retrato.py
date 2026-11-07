@@ -1,7 +1,7 @@
 """Dá nome às linhas do retrato no tweaks.log (exe-fn, exe-data, runtime-fn): a função do 3.9.68, o arquivo de código e os
 patches do catálogo do NickPatcher que mexem nela.
 
-Uso: python tools/ler_retrato.py tweaks.log [--exe O_EXE.exe] [--catalogo MiscPatches.zip] [--nomes PASTA_DO_MAPA]
+Uso: python tools/exe/ler_retrato.py tweaks.log [--exe O_EXE.exe] [--catalogo MiscPatches.zip] [--nomes PASTA_DO_MAPA]
 
 Com --exe, só lista os patches do catálogo que estão mesmo aplicados nele; sem, os que tocam a função (candidatos).
 Os nomes vêm do mapa da comunidade (maxevans60, CC BY 4.0) e o catálogo é o que acompanha o NickPatcher (Nick+Co e

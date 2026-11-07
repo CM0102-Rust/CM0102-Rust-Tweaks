@@ -1,7 +1,7 @@
 """Compara dois tweaks.log gravados com log = 1 (um com a regra nova, outro com rule = original, que só registra a escolha
 da regra do jogo): os jovens da disputa por faixa de reputação do clube, os de PA ≥ 140, as idades, os que ficaram sem
 clube, as surpresas e as aposentadorias pela regra dos inativos.
-Uso: python tools/comparar_logs.py ORIGINAL.log NOVA.log"""
+Uso: python tools/logs/comparar_logs.py ORIGINAL.log NOVA.log"""
 import collections, sys
 
 

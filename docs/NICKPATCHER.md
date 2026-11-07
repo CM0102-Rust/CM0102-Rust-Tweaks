@@ -4,7 +4,7 @@
 
 A compatibilidade do Tweaks com um exe alterado pelo NickPatcher (ou pelos patches da comunidade que vêm com ele) vale **até onde as alterações aplicadas permitem**. Antes de ligar, cada ajuste confere no exe o trecho que usa. Se uma opção do NickPatcher já mudou esse trecho, o ajuste não liga por cima: fica com a versão do exe e avisa no `tweaks.log` e no configurador. Os outros ajustes ligam normalmente, e o jogo nunca é interrompido por isso. Com `override_exe_changes = 1`, os ajustes das idades, da disputa, dos inativos e do save trocam a versão do exe pela do Tweaks, e o efeito daquela opção do NickPatcher se perde.
 
-O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, a partir dos próprios dados do NickPatcher (as opções do `Patcher.cs` e os patches do `MiscPatches.zip`, lidos com `tools/nickpatcher_vs_tweaks.py`).
+O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, a partir dos próprios dados do NickPatcher (as opções do `Patcher.cs` e os patches do `MiscPatches.zip`, lidos com `tools/exe/nickpatcher_vs_tweaks.py`).
 
 ## Opções que mexem no mesmo lugar (uma ou outra)
 

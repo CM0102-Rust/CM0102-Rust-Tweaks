@@ -7,7 +7,7 @@
 //!   CLZ, por exemplo) mudou ao rodar.
 //!
 //! O resumo vai sempre para o tweaks.log; a lista das funções e blocos, só com `log = 1`. Os nomes das funções e dos
-//! patches do catálogo do NickPatcher ficam fora da DLL: `tools/ler_retrato.py` os acrescenta a partir do log.
+//! patches do catálogo do NickPatcher ficam fora da DLL: `tools/exe/ler_retrato.py` os acrescenta a partir do log.
 use crate::referencia::{BLOCOS, ENTRADA, FUNCOES, SECOES};
 use crate::registro::linha;
 
@@ -92,7 +92,7 @@ pub unsafe fn do_disco(detalhe: bool) {
         linha("exe\tthe same code and data as the original 3.9.68");
     } else {
         linha(&format!("exe\tdiffers from 3.9.68: {} of {} functions, {} of {} data blocks{}", funcoes.len(), FUNCOES.len(), blocos.len(), BLOCOS.len(),
-            if detalhe { " (listed below as exe-fn and exe-data; tools/ler_retrato.py names them)" } else { " (log = 1 lists them)" }));
+            if detalhe { " (listed below as exe-fn and exe-data; tools/exe/ler_retrato.py names them)" } else { " (log = 1 lists them)" }));
     }
     for c in &conhecidos {
         linha(&format!("exe\tknown change: {}", c));
@@ -188,7 +188,7 @@ pub unsafe fn da_memoria(nossas: &[(usize, usize)], partes: &[(&str, &[(usize, u
     linha(&format!("runtime\tanother DLL changed the exe after loading: {} ranges, {} bytes{}", trechos.len(), bytes, if detalhe { " (listed below as runtime-fn)" } else { "" }));
     if detalhe {
         for (va, n) in trechos {
-            // a função do 3.9.68 onde o trecho começa (o início dela, para tools/ler_retrato.py)
+            // a função do 3.9.68 onde o trecho começa (o início dela, para tools/exe/ler_retrato.py)
             let k = FUNCOES.partition_point(|f| f.0 <= va);
             let f = if k > 0 { FUNCOES[k - 1].0 } else { 0 };
             linha(&format!("runtime-fn\t{:08x}\t{}\tin {:08x}", va, n, f));

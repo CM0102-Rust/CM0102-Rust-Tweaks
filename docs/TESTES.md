@@ -25,7 +25,7 @@ Tudo o que foi rodado para provar o CM0102-Rust-Tweaks, de 01/11 a 02/11/2026 (a
 - O jogo roda **oculto**, em janela de 960×540, com a nossa `ddraw.dll` de trabalho encadeada atrás (`ddraw_chain.dll`) só pelo vídeo, sem nenhuma rotina dela trocada.
 - **`log = 1`** no `tweaks.cfg`: uma linha por evento (`regen`, `birth`, `idle`, `tick` a cada mês, `crash`, `hang`, `msgbox`, `exe`, `runtime`).
 - **Um jogo por pasta**, com a vigia de memória do laboratório (não roda com menos de 4 GB livres). O jogo só aceita uma cópia aberta (o mutex "Championship Manager 2001/02 Process"); nas carreiras longas, cada pasta roda com `TWEAKS_MUTEX` = um caractere próprio, uma variável de ambiente só dos testes que troca a última letra do nome do mutex, e até três carreiras rodaram ao mesmo tempo. Sem a variável, nada muda.
-- **A linha `season`** (desde 02/11): em julho de cada ano, o retrato da população, só lendo a memória: jogadores e quantos estão sem clube, os elencos (mínimo, média e máximo nos clubes das competições que rodam), os regens (quantos, quantos sem clube, o máximo num clube só, e qual), os de PA ≥ 150 (quantos, sem clube, em clube grande e a reputação média do clube). `tools/temporadas.py` monta a tabela por temporada.
+- **A linha `season`** (desde 02/11): em julho de cada ano, o retrato da população, só lendo a memória: jogadores e quantos estão sem clube, os elencos (mínimo, média e máximo nos clubes das competições que rodam), os regens (quantos, quantos sem clube, o máximo num clube só, e qual), os de PA ≥ 150 (quantos, sem clube, em clube grande e a reputação média do clube). `tools/logs/temporadas.py` monta a tabela por temporada.
 - **Os exes:**
   - `cm0102.exe` 3.9.68 intacto (só para o retrato: ele pede o CD);
   - `cm0102-1080.exe`, o 3.9.68 com a resolução 1920×1080 do projeto CM0102: as carreiras "originais";
@@ -79,7 +79,7 @@ Uma lição de método: as primeiras cargas com a chave desligada pareciam passa
 | Regen Tweak | 83 de 11.314 funções e 3 de 373 blocos de dados; o Regen Tweak nomeado | nada mudado |
 | CLZ | ponto de entrada na seção nova `.nick` (2 MB); 519 funções e 28 blocos; seis casos nomeados (Regen Tweak, RetirePatchV4, AlwaysRegenToNewGoodCountry, o ramo das nações fora do jogo pulado, as faixas raras de idade) | a NickDLL e a LaMOHatesCD mudam mais 1.205 trechos (10.090 bytes) |
 
-Pelo catálogo do NickPatcher (`tools/retrato_exe.py`, fora do jogo), o CLZ tem 85 patches reconhecidos. Na memória, dois desvios caem em trechos que os ajustes conferem; os dois foram lidos e são inofensivos [medido]:
+Pelo catálogo do NickPatcher (`tools/exe/retrato_exe.py`, fora do jogo), o CLZ tem 85 patches reconhecidos. Na memória, dois desvios caem em trechos que os ajustes conferem; os dois foram lidos e são inofensivos [medido]:
 - **0x540a50 → NickDLL**: a rotina do time B com a lista de pares do banco do CLZ; a disputa a usa para deixar os times B de fora, como a do exe faria.
 - **0x5e8290 → LaMOHatesCD**: um filtro da caixa de mensagem (o aviso do CD); os outros erros continuam aparecendo.
 
@@ -301,7 +301,7 @@ O que os números mostram:
 
 Uma suspeita, descartada [medido]: a lista `PELA_DISPUTA` da DLL (um `Vec` que crescia a cada jovem na linha do jogo) pareceu a causa, porque o Guiseley apareceu nas três primeiras carreiras com ela e sumiu sem ela. Mas a carreira final, com um mapa de bits fixo no lugar da lista, também teve o Guiseley (13 em julho de 2002). Contagem: o depósito do Guiseley apareceu em 4 de 8 carreiras com a DLL nova (com e sem a lista) e em 0 de 2 com a anterior; é a trajetória da carreira, que muda com qualquer diferença (o jogo sorteia pelo relógio e lê memória não inicializada), e não um defeito da lista. O mapa de bits ficou: não alocar na linha do jogo é a prática certa.
 
-O que falta saber: se esses regens chegam por contratação ou por empréstimo (no empréstimo, o +0x39 do jogador passa a ser o clube que recebe), e se o mesmo acontece na original sem ser notado (a disputa original já concentra tanto que o depósito não aparece no topo). Para isso, um save no meio de uma carreira com o depósito, lido com `tools/regens_por_clube.py`.
+O que falta saber: se esses regens chegam por contratação ou por empréstimo (no empréstimo, o +0x39 do jogador passa a ser o clube que recebe), e se o mesmo acontece na original sem ser notado (a disputa original já concentra tanto que o depósito não aparece no topo). Para isso, um save no meio de uma carreira com o depósito, lido com `tools/regens/regens_por_clube.py`.
 
 Uma leitura da memória do jogo em execução (de fora, só leitura; `resultados/deposito.py`), na carreira final do §4.5 em 2003: o Guiseley tinha 16 jogadores, **todos regens**, de 17 a 21 anos. O clube de fora das ligas trocou o elenco inteiro por jovens. A leitura do dono do contrato não deu valores coerentes (o leiaute do contrato ainda não está certo), então contratação contra empréstimo segue em aberto.
 
@@ -313,7 +313,7 @@ Correção: na fornada, a DLL segura também a lista da nação, só para as na�
 
 ### 4.6 De quem é cada regen (`regen_origins`)
 
-**A prova (03/11), na base de fábrica**, com o verificador `tools/conferir_origens.py`: ele confere cada regen do `regen_origins.csv` contra um save da mesma carreira, gravado depois. O regen tem de ser regen no save, com o mesmo nome, a mesma nação e o mesmo PA, e o PA tem de ser o da ficha registrada, a do dono. Uma mutação proposital (um PA e um nome trocados no CSV) deu 3 erros: o verificador discrimina. **[medido]**
+**A prova (03/11), na base de fábrica**, com o verificador `tools/regens/conferir_origens.py`: ele confere cada regen do `regen_origins.csv` contra um save da mesma carreira, gravado depois. O regen tem de ser regen no save, com o mesmo nome, a mesma nação e o mesmo PA, e o PA tem de ser o da ficha registrada, a do dono. Uma mutação proposital (um PA e um nome trocados no CSV) deu 3 erros: o verificador discrimina. **[medido]**
 
 | Prova | Regens | Donos desconhecidos | Erros | Reserva na carga / na gravação |
 |---|---|---|---|---|
@@ -377,4 +377,4 @@ Exemplos no update 2026 (primeiros e sobrenomes próprios em 200): Serra Leoa, B
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).
 - Os logs brutos de cada execução (com o nome da tabela: `clzLonga2.log`, `oficialSemVaga.log`, `longaOriginal.log`, `longaLigadoV1.log`, `longaLigado2.log`, `longaClzNick.log`, `longaClzNosso.log`, `longaClzNosso2.log`, `dezOriginal.log`, `dezAjustes.log`, `dezSemInativos.log`, `dezTeto3.log`, `controleDllNova.log`, `bisect*.log`...), os `.cfg` usados e o executor dos testes (`prova_tweaks.py`) ficam em `resultados/`, fora do git.
-- `tools/comparar_logs.py` compara dois logs; `tools/temporadas.py` monta a tabela por temporada das carreiras longas; `tools/ler_retrato.py` dá nome às linhas do retrato; `tools/regens_por_clube.py` lê os regens de um save.
+- `tools/logs/comparar_logs.py` compara dois logs; `tools/logs/temporadas.py` monta a tabela por temporada das carreiras longas; `tools/exe/ler_retrato.py` dá nome às linhas do retrato; `tools/regens/regens_por_clube.py` lê os regens de um save.

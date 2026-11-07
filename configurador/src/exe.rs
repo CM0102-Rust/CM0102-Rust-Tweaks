@@ -1,11 +1,11 @@
 //! O estado de cada ajuste num exe, sem rodar o jogo (docs/CONFIGURADOR.md §6, docs/COMPATIBILIDADE.md): as mesmas
 //! conferências da DLL, lendo o arquivo em vez da memória, mais a pasta (LaMOHatesCD.dll, NickDLL.dll e o "resolucao"
-//! dela). As tabelas são as da DLL (`src/partes.rs`, `src/trocas.rs`), sem cópia.
+//! dela). As tabelas são as da DLL (`src/exe/partes.rs`, `src/video/trocas.rs`), sem cópia.
 
-#[path = "../../src/partes.rs"]
+#[path = "../../src/exe/partes.rs"]
 #[allow(dead_code)]
 mod partes;
-#[path = "../../src/trocas.rs"]
+#[path = "../../src/video/trocas.rs"]
 mod trocas;
 
 use partes::*;

@@ -1,7 +1,7 @@
 """A carreira longa por temporada, de um ou mais tweaks.log (log = 1): as linhas `season` (a população em julho) e, para
 cada temporada (de julho a junho), os jovens da disputa: quantos, quantos clubes, o máximo num clube, a parte dos
 grandes (reputação ≥ 7000) e os sem clube.
-Uso: python tools/temporadas.py A.log [B.log ...]"""
+Uso: python tools/logs/temporadas.py A.log [B.log ...]"""
 import collections, sys
 
 

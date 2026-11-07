@@ -2,8 +2,8 @@
 regra original (a nota da 0x7ad220 e o maior sorteio da 0x7ad0e0) e pela regra nova (sorteio proporcional, os pesos de
 `tweaks.cfg`). Só leitura do save; nada roda no jogo.
 
-Uso: python tools/calibrar.py SAVE PAIS [--cfg tweaks.cfg] [--temporadas 20] [--humano "Nome do clube"]
-Ex.: python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham
+Uso: python tools/regens/calibrar.py SAVE PAIS [--cfg tweaks.cfg] [--temporadas 20] [--humano "Nome do clube"]
+Ex.: python tools/regens/calibrar.py TesteTelas.sav Inglaterra --humano Fulham
 
 Simplificações (ponytail: bastam para comparar as duas regras; o jogo real é a prova):
 - os jovens são os do ramo da disputa (3 em 4 dos regens de nação no jogo), com a idade pela tabela original (regra
@@ -135,7 +135,7 @@ def ler_cfg(caminho):
 
 
 def peso_novo(j, c, cfg, recebidos, surpresa=False):
-    """O peso do clube: nível × instalações × comissão × elenco, à potência da temperatura (o mesmo que src/lib.rs)."""
+    """O peso do clube: nível × instalações × comissão × elenco, à potência da temperatura (o mesmo que src/regens/disputa.rs)."""
     if c['elenco'] >= cfg['squad_limit'] or recebidos >= cfg['season_cap'] > 0:
         return 0.0
     if surpresa and c['divisao'] < 0:  # na surpresa, só clubes de competição

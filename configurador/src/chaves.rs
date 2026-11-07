@@ -1,5 +1,5 @@
 //! As chaves do `tweaks.cfg` (docs/CONFIGURADOR.md §3): o controle, a faixa e o padrão da DLL sem a linha (`PADRAO` em
-//! `src/lib.rs`). As faixas que o código não limita são as propostas do projeto.
+//! `src/regras.rs`). As faixas que o código não limita são as propostas do projeto.
 
 pub enum Tipo {
     /// Interruptor: grava "1" ou "0" (a DLL liga só com "1"; `log` com qualquer número ≠ 0).

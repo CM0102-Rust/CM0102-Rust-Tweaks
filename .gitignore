@@ -1,3 +1,4 @@
 target/
 resultados/
 postagens/
+__pycache__/

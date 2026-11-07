@@ -17,7 +17,7 @@ The same ones the configurator will show ([CONFIGURADOR.en.md](CONFIGURADOR.en.m
 | 🔁 left to the other | a **known** change does the same job; ours stays out, and the exe's or the other DLL's applies | the resolution of CLZ 6.1's NickDLL; LaMOHatesCD's CD |
 | ❓ unknown | the code differs from 3.9.68 in a way the catalogue doesn't recognise; only this setting stays out | someone's new patch |
 
-"Known" means named by the exe snapshot (`src/retrato.rs`, the known cases), by the NickPatcher catalogue (`tools/retrato_exe.py`) or by this document.
+"Known" means named by the exe snapshot (`src/exe/retrato.rs`, the known cases), by the NickPatcher catalogue (`tools/exe/retrato_exe.py`) or by this document.
 
 ## 2. The matrix
 

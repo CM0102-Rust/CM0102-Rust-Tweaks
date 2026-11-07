@@ -17,7 +17,7 @@ Os mesmos que o configurador vai mostrar ([CONFIGURADOR.md](CONFIGURADOR.md)):
 | 🔁 fica com o outro | uma mudança **conhecida** faz o mesmo papel; a nossa fica de fora, e a do exe ou da outra DLL vale | a resolução da NickDLL do CLZ 6.1; o CD da LaMOHatesCD |
 | ❓ desconhecido | o trecho difere do 3.9.68 de um jeito que o catálogo não reconhece; só este ajuste fica de fora | um patch novo de alguém |
 
-"Conhecido" quer dizer nomeado pelo retrato do exe (`src/retrato.rs`, os casos conhecidos), pelo catálogo do NickPatcher (`tools/retrato_exe.py`) ou por este documento.
+"Conhecido" quer dizer nomeado pelo retrato do exe (`src/exe/retrato.rs`, os casos conhecidos), pelo catálogo do NickPatcher (`tools/exe/retrato_exe.py`) ou por este documento.
 
 ## 2. A matriz
 

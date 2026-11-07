@@ -4,7 +4,7 @@
 
 The design for Phase 3 of the [ROADMAP](../ROADMAP.md): the program that edits `tweaks.cfg` with sliders, charts and the exe's status. The design, the mock-up and, since 11/02, the program prototype (§10). The interactive mock-up, which opens in a browser, is [configurador_maquete.html](configurador_maquete.html). Written on 02/11/2026.
 
-Sources: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, the `Parte` entries and `pode_ligar`), `src/retrato.rs`, `src/pasta.rs`, [TESTES.en.md](TESTES.en.md). The ranges below are the code's; where the code sets no limit, the range is **proposed** (or "to be decided") and marked as such.
+Sources: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, the `Parte` entries and `pode_ligar`), `src/exe/retrato.rs`, `src/jogo/pasta.rs`, [TESTES.en.md](TESTES.en.md). The ranges below are the code's; where the code sets no limit, the range is **proposed** (or "to be decided") and marked as such.
 
 ## 1. Principles
 
@@ -136,7 +136,7 @@ Three live drawings:
 2. **Facilities and staff** as one changing line of text: "Training 1 = 0.46 · 10 = 1.00 · 20 = 1.60" and "worst coach 0.80 · best 1.20".
 3. **Chances by club.** Horizontal bars with each sample club's chance of getting the youngster, using the same maths as `peso()` in `lib.rs` (level × facilities × staff × room, raised to `temperature`; out if the squad is ≥ `squad_limit` or the club already got `season_cap`). The surprise is mixed in: `(1 − s) × normal + s × surprise`, the surprise without the level and only among clubs in a competition. The original rule (the highest random(score)) is not drawn: it's a different calculation, and the example shows only the new one.
 
-The sample clubs are made up and labelled as such ("example"): a big one, a mid-sized one, a small one and "120 small clubs added up", to show why `sigma_below` and `level_floor` exist (hundreds of small clubs, added up, take the youngsters). Future improvement: load the real clubs from a save, like `tools/calibrar.py` (§9).
+The sample clubs are made up and labelled as such ("example"): a big one, a mid-sized one, a small one and "120 small clubs added up", to show why `sigma_below` and `level_floor` exist (hundreds of small clubs, added up, take the youngsters). Future improvement: load the real clubs from a save, like `tools/regens/calibrar.py` (§9).
 
 `rule = original` greys out the three drawings with the note "the game uses the 3.9.68 contest".
 
@@ -212,7 +212,7 @@ The states, the per-exe matrix and what the CLZ DLLs change are in [COMPATIBILID
 | 🔁 **left to the other** | a **known** change does the same job; ours stays out and the exe's or the other DLL's applies | blue | the name (Regen Tweak, NickDLL, LaMOHatesCD); for `override_exe_changes` cases, the "use this DLL's rules" button |
 | ❓ **unknown** | the code differs from 3.9.68 in a way the catalogue doesn't recognise; only this tweak stays out | red | how many places and where; a request to send `tweaks.log` |
 
-A tweak that is off in the `.cfg` shows in grey ("off") and doesn't count. "Known" = named by the exe snapshot (`CONHECIDOS` in `src/retrato.rs`), by the NickPatcher catalogue (`tools/retrato_exe.py`) or by COMPATIBILIDADE.en.md.
+A tweak that is off in the `.cfg` shows in grey ("off") and doesn't count. "Known" = named by the exe snapshot (`CONHECIDOS` in `src/exe/retrato.rs`), by the NickPatcher catalogue (`tools/exe/retrato_exe.py`) or by COMPATIBILIDADE.en.md.
 
 **General warning:** when any tweak that is on is ⚠️ or ❓, a strip at the top of the window says "warning: X tweaks are not compatible with this exe/patch", with the names and a shortcut to the Start table. Each tab's coloured dot shows the worst state among its tweaks that are on.
 
@@ -222,7 +222,7 @@ Without running the game, from three sources:
 
 1. **The exe file**, with the same checks as the DLL, reading from disk instead of memory (VAs turned into offsets through the PE sections):
    - for each `Parte` in `lib.rs` (`SAVE`, `IDADE`, `IDADE_FORA`, `DISPUTA`, `INATIVOS`, `SEM_CLUBE`), the 64-bit FNV-1a of the **edges** and of the **body**. Edges differ → ❓. Body matches → ✅. Body differs → 🔁 or ⚠️ (by `override_exe_changes`) if the change is known, ❓ if not;
-   - for the **replacements** (`aplicar_trocas`: the 201 for the resolution and the 33 for the CD, in `src/trocas.rs`), each place is counted as "as in 3.9.68", "already changed" or "foreign". For the resolution, one foreign place refuses the whole list (❓), because half a list would give broken screens. For the CD, each check stands alone, and the foreign ones are just left out. "Already changed" is ✅ (the exe already has it);
+   - for the **replacements** (`aplicar_trocas`: the 201 for the resolution and the 33 for the CD, in `src/video/trocas.rs`), each place is counted as "as in 3.9.68", "already changed" or "foreign". For the resolution, one foreign place refuses the whole list (❓), because half a list would give broken screens. For the CD, each check stands alone, and the foreign ones are just left out. "Already changed" is ✅ (the exe already has it);
    - the **30-row limit**: the 6 entry bytes of `Area::init` (0x402ac0) as in 3.9.68;
    - the **video**: `ChangeDisplaySettingsA` in the import table;
    - the **disk snapshot** (`retrato.rs`: functions and blocks against `referencia.rs`, new sections, `CONHECIDOS`) on the Start card.
@@ -299,8 +299,8 @@ Text: "A nation in the game is one whose league you picked when creating the car
 
 - `src/cfg.rs`: reading and writing the `.cfg` as in §5 (only the value changes; `.bak` and an atomic swap; refuses to save if the file changed on disk).
 - `src/chaves.rs`: the keys, the ranges, the DLL's defaults and the four presets of §4.
-- `src/exe.rs`: each tweak's state on the exe (§6), with the DLL's **own** tables: `src/partes.rs` (the `Parte`s, the signatures and the known cases, now out of `lib.rs`) and `src/trocas.rs`, included by path, not copied.
-- `src/main.rs`: the window (§2) and the tabs (§3), in the left menu by group (11/03, Lucas's request, reorganised the same day): **Start**, with the snapshot and the state table (the option's name and the key in grey); **Career tweaks**: Youth intake (the `intake_*` keys, since 1.2; first since 1.3, when it became on by default), Regen ages (the draggable chart, the "younger regens" outline and the chosen age spelled out: the chance, the percentage, the CA cap and the `age_NN` line as it is in the `.cfg`), Clubs' contest (the level curve and the example clubs' chances, the same sum as `peso()`), Retirement (the chance of retiring by age), Regen names (the choice, the minimum and, read from the game folder's database, the list of countries that borrow names: which country they come from today and whether they start using their own; `src/nomes.rs`) Grey players (the choice, the "± N" variation bar and the test career's examples); **Records**: Regen origins (the history); **Install**: Screen, save, folder; **Files**: tweaks.cfg (the changed lines) and tweaks.log (the last log). Portuguese and English.
+- `src/exe.rs`: each tweak's state on the exe (§6), with the DLL's **own** tables: `src/exe/partes.rs` (the `Parte`s, the signatures and the known cases, now out of `lib.rs`) and `src/video/trocas.rs`, included by path, not copied.
+- `src/main.rs`: the window (§2) and the tabs (§3), in the left menu by group (11/03, Lucas's request, reorganised the same day): **Start**, with the snapshot and the state table (the option's name and the key in grey); **Career tweaks**: Youth intake (the `intake_*` keys, since 1.2; first since 1.3, when it became on by default), Regen ages (the draggable chart, the "younger regens" outline and the chosen age spelled out: the chance, the percentage, the CA cap and the `age_NN` line as it is in the `.cfg`), Clubs' contest (the level curve and the example clubs' chances, the same sum as `peso()`), Retirement (the chance of retiring by age), Regen names (the choice, the minimum and, read from the game folder's database, the list of countries that borrow names: which country they come from today and whether they start using their own; `src/regens/nomes.rs`) Grey players (the choice, the "± N" variation bar and the test career's examples); **Records**: Regen origins (the history); **Install**: Screen, save, folder; **Files**: tweaks.cfg (the changed lines) and tweaks.log (the last log). Portuguese and English.
 
 **No number without an explanation** (11/03, Lucas's request): below each option with a number, a sentence worked out on the spot says what that value does in the game, in a player's units ("a PA 150 youngster aims at a club of reputation 7500", "0.5% = about 1 in 200 youngsters is born without the cap", "180 days = about 6 months", "a club with 24 players has ×1.73 the chance of one with 40"). Numbers show as they read ("2", not "2.00"), with a decimal comma in Portuguese (`App::frase`). In the contest tab, the draw's fine-tuning (widths, floor, facilities, staff, squad room, temperature) sits in a closed **Advanced** block, each with its sentence. In the grey players tab, the bar shows "± 5" and the `.cfg` keeps the full width (`grey_players_spread = 10`).
 

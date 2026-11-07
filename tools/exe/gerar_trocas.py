@@ -1,9 +1,9 @@
-"""Gera src/trocas.rs: as trocas de bytes que `no_cd = 1` e `resolution = 1080` aplicam em memória, tiradas da diferença
+"""Gera src/video/trocas.rs: as trocas de bytes que `no_cd = 1` e `resolution = 1080` aplicam em memória, tiradas da diferença
 entre os exes do projeto CM0102 (que gera os dois exes com patch_portatil.py e resolucao.py; o código de lá não vem):
 - CD: original → portátil, só as 33 checagens do CD (cada uma um `jne` → `nop nop` e um `test eax,eax` → `xor eax,eax`);
   as outras trocas do portátil (a pasta do registro e o caminho do game.cfg) ficam de fora;
 - resolução: portátil → 1080, todas.
-Uso: python tools/gerar_trocas.py cm0102.exe cm0102-portatil.exe cm0102-1080.exe"""
+Uso: python tools/exe/gerar_trocas.py cm0102.exe cm0102-portatil.exe cm0102-1080.exe"""
 import hashlib
 import os
 import sys
@@ -60,9 +60,9 @@ def main():
     print('portátil: %d trechos, %d do CD; de fora: %s' % (len(todos), len(cd), ', '.join('%#x' % va_do_arquivo(orig, t[0]) for t in todos if t not in cd)))
     res = trechos(port, r1080)
     print('resolução: %d trechos, %d bytes' % (len(res), sum(len(t[1]) for t in res)))
-    saida = os.path.join(os.path.dirname(__file__), '..', 'src', 'trocas.rs')
+    saida = os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'video', 'trocas.rs')
     with open(saida, 'w', encoding='utf-8', newline='\n') as f:
-        f.write('//! GERADO por `python tools/gerar_trocas.py` (não editar): as trocas de `no_cd` e `resolution`, (VA, antes, depois),\n'
+        f.write('//! GERADO por `python tools/exe/gerar_trocas.py` (não editar): as trocas de `no_cd` e `resolution`, (VA, antes, depois),\n'
                 '//! tiradas dos exes portátil e 1080 do projeto CM0102.\n\n')
         f.write(rust('CD', 'no_cd: as 33 checagens do CD (o `jne` da unidade vira `nop nop`; o `test eax,eax` do _findfirst, `xor eax,eax`).', cd, orig))
         f.write('\n')

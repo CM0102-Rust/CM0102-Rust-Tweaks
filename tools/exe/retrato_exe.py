@@ -1,10 +1,10 @@
 """O retrato de um exe do CM 01/02 contra o 3.9.68 original: o que ele muda, onde e, quando possível, com que nome.
 
-Uso: python tools/retrato_exe.py ORIGINAL.exe EXE [--catalogo MiscPatches.zip] [--nomes PASTA_DO_MAPA] [--saida relatorio.md]
+Uso: python tools/exe/retrato_exe.py ORIGINAL.exe EXE [--catalogo MiscPatches.zip] [--nomes PASTA_DO_MAPA] [--saida relatorio.md]
 
 - Compara os bytes de cada seção do original (.text, .rdata, .data, .rsrc) com os do exe; as seções novas (como a .nick do
   NickPatcher) são listadas à parte.
-- Agrupa os bytes mudados em trechos e põe cada trecho do código na sua função (tools/mapa_funcoes.csv, as fronteiras das
+- Agrupa os bytes mudados em trechos e põe cada trecho do código na sua função (tools/exe/mapa_funcoes.csv, as fronteiras das
   funções do 3.9.68), com o nome do mapa da comunidade (maxevans60, CC BY 4.0) quando a pasta dele é dada.
 - Nos trechos de código, procura desvios (jmp/call) para fora das seções originais: é assim que um patcher pendura código
   novo numa seção própria.

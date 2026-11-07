@@ -1,5 +1,5 @@
-//! Gerado por tools/gerar_referencia.py a partir do cm0102.exe 3.9.68: só endereços, tamanhos e FNV-1a de 32 bits.
-//! As fronteiras das funções vêm de tools/mapa_funcoes.csv (projeto CM0102).
+//! Gerado por tools/exe/gerar_referencia.py a partir do cm0102.exe 3.9.68: só endereços, tamanhos e FNV-1a de 32 bits.
+//! As fronteiras das funções vêm de tools/exe/mapa_funcoes.csv (projeto CM0102).
 
 pub const ENTRADA: u32 = 0x947a13;
 /// (nome, endereço, tamanho na memória)

@@ -126,7 +126,7 @@ The full reports and lists (the 1,155 uses, one per line) stayed in the session'
 
 **The name:** "fornada" comes from Football Manager's European Portuguese translation. In English FM it's the *Youth Intake* (the day, *Youth Intake Day*), and the keys follow that name (`intake_*`); in Spanish FM, *hornada de juveniles*.
 
-The code is in `src/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
+The code is in `src/regens/fornada.rs`. Released in version 1.2 (11/05/2026, with Lucas's OK), still experimental. It's off without the keys, so nothing changes in the game for anyone who doesn't use them.
 
 **The final design (11/05, evening; settled with Lucas point by point). It replaces the 11/05 afternoon one.** The principle: **a regen is a regen**. Where it comes from doesn't matter, and the program doesn't treat regens from different sources differently. The intake changes two things: the date (regens only arrive on intake day) and the number (every club with room gets `intake_per_club`, 3 by default). Everything else is the Regens tab.
 

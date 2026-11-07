@@ -1,8 +1,8 @@
-"""Gera src/referencia.rs: o retrato do cm0102.exe 3.9.68 que a DLL usa para dizer o que outro exe mudou.
+"""Gera src/exe/referencia.rs: o retrato do cm0102.exe 3.9.68 que a DLL usa para dizer o que outro exe mudou.
 
-Uso: python tools/gerar_referencia.py ORIGINAL.exe
+Uso: python tools/exe/gerar_referencia.py ORIGINAL.exe
 
-- uma linha por função do .text (tools/mapa_funcoes.csv): endereço, tamanho e o FNV-1a de 32 bits dos bytes;
+- uma linha por função do .text (tools/exe/mapa_funcoes.csv): endereço, tamanho e o FNV-1a de 32 bits dos bytes;
 - blocos de 4 KB das outras seções, como estão no arquivo (.rdata, .data, .rsrc);
 - o ponto de entrada e as seções originais.
 Só hashes e endereços: nada do código do jogo vai para o repositório."""
@@ -41,8 +41,8 @@ def main():
         for k in range(0, tam, BLOCO):
             n = min(BLOCO, tam - k)
             blocos.append((va + k, n, fnv32(d[cru + k:cru + k + n])))
-    linhas = ['//! Gerado por tools/gerar_referencia.py a partir do cm0102.exe 3.9.68: só endereços, tamanhos e FNV-1a de 32 bits.',
-              '//! As fronteiras das funções vêm de tools/mapa_funcoes.csv (projeto CM0102).', '',
+    linhas = ['//! Gerado por tools/exe/gerar_referencia.py a partir do cm0102.exe 3.9.68: só endereços, tamanhos e FNV-1a de 32 bits.',
+              '//! As fronteiras das funções vêm de tools/exe/mapa_funcoes.csv (projeto CM0102).', '',
               'pub const ENTRADA: u32 = 0x%x;' % (0x400000 + pe.OPTIONAL_HEADER.AddressOfEntryPoint),
               '/// (nome, endereço, tamanho na memória)',
               'pub const SECOES: [(&str, u32, u32); %d] = [%s];' % (len(secoes), ', '.join('("%s", 0x%x, 0x%x)' % (n, va, vs) for n, va, vs, _, _ in secoes)),
@@ -53,7 +53,7 @@ def main():
                'pub static BLOCOS: [(u32, u32, u32); %d] = [' % len(blocos)]
     linhas += ['    %s' % ' '.join('(0x%x, %d, 0x%08x),' % b for b in blocos[i:i + 6]) for i in range(0, len(blocos), 6)]
     linhas += ['];', '']
-    open(os.path.join(AQUI, '..', 'src', 'referencia.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(linhas))
+    open(os.path.join(AQUI, '..', '..', 'src', 'exe', 'referencia.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(linhas))
     print('%d funções, %d blocos' % (len(funcoes), len(blocos)))
 
 

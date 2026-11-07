@@ -126,7 +126,7 @@ Os relatórios completos e as listas (os 1.155 usos, um por linha) ficaram no ra
 
 **O nome:** "fornada" vem da tradução do Football Manager em português de Portugal. No FM em inglês é *Youth Intake* (o dia, *Youth Intake Day*), e as chaves seguem esse nome (`intake_*`); no FM em espanhol, *hornada de juveniles*.
 
-O código está em `src/fornada.rs`. Saiu na versão 1.2 (05/11/2026, com o ok do Lucas), ainda experimental. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
+O código está em `src/regens/fornada.rs`. Saiu na versão 1.2 (05/11/2026, com o ok do Lucas), ainda experimental. Fica desligado sem as chaves; nada muda no jogo de quem não as usa.
 
 **O desenho final (05/11, noite; decidido com o Lucas ponto a ponto). Substitui o de 05/11 à tarde.** O princípio: **regen é regen**. De onde ele vem não importa, e o programa não trata regens de origens diferentes de jeitos diferentes. A fornada muda duas coisas: a data (os regens só chegam no dia da fornada) e a quantidade (todo clube com vaga recebe `intake_per_club`, 3 por padrão). O resto é a aba Regens.
 

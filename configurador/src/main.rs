@@ -802,7 +802,7 @@ impl App {
             "Chance of retiring per check (days 0, 80, 173 and 250 of the year), by age, for the example reputation. Dashed: the original rule (750 / reputation, after 365 days without a club).")).size(11.0).color(CINZA));
     }
 
-    /// O peso do clube para o jovem: a mesma conta de `peso()` em src/lib.rs.
+    /// O peso do clube para o jovem: a mesma conta de `peso()` em src/regens/disputa.rs.
     fn peso(&self, c: &Clube, surpresa: bool) -> f64 {
         let g = |k: &str, d: f64| self.valor(k).parse::<f64>().unwrap_or(d);
         let (teto, exp) = (g("squad_limit", 48.0).clamp(1.0, 50.0), g("squad_exp", 0.5));

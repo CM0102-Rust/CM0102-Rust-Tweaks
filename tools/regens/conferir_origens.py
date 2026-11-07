@@ -2,7 +2,7 @@
 ser regen no save (bit 0x40 do +0xb do registro de 79 bytes) com o mesmo nome, a mesma nação, o mesmo PA (a ficha que
 ele herdou) e, em geral, o mesmo clube (um regen pode mudar de clube depois de nascer: isso sai como aviso, não erro).
 Também conta os donos desconhecidos e confere que o PA do regen é o PA da ficha registrada (o dono da ficha).
-Só leitura. Uso: python tools/conferir_origens.py regen_origins.csv SAVE.sav [carreira]
+Só leitura. Uso: python tools/regens/conferir_origens.py regen_origins.csv SAVE.sav [carreira]
 (carreira: só as linhas com esse nome na coluna career; sem ele, todas)"""
 import csv
 import os

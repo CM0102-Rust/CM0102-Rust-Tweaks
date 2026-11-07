@@ -1,6 +1,6 @@
 //! Os nomes por nação do banco da pasta do jogo (`Data/nation.dat`, `first_names.dat`, `second_names.dat`), para a aba
 //! Nomes dos regens mostrar, país por país, de onde vêm os nomes hoje e o que muda com `regen_names = own`. A regra é a
-//! de `database_pick_first_name_for_nation` 0x539c60 (ver `src/nomes.rs` da DLL).
+//! de `database_pick_first_name_for_nation` 0x539c60 (ver `src/regens/nomes.rs` da DLL).
 
 use std::path::Path;
 

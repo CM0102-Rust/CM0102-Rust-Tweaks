@@ -1,4 +1,4 @@
-//! GERADO por `python tools/gerar_trocas.py` (não editar): as trocas de `no_cd` e `resolution`, (VA, antes, depois),
+//! GERADO por `python tools/exe/gerar_trocas.py` (não editar): as trocas de `no_cd` e `resolution`, (VA, antes, depois),
 //! tiradas dos exes portátil e 1080 do projeto CM0102.
 
 /// no_cd: as 33 checagens do CD (o `jne` da unidade vira `nop nop`; o `test eax,eax` do _findfirst, `xor eax,eax`).

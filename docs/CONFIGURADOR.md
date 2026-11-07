@@ -4,7 +4,7 @@
 
 Projeto da Fase 3 do [ROADMAP](../ROADMAP.pt.md): o programa que edita o `tweaks.cfg` com barras, gráficos e o estado do exe. O projeto, a maquete e, desde 02/11, o protótipo do programa (§10). A maquete interativa, que abre no navegador, está em [configurador_maquete.html](configurador_maquete.html). Escrito em 02/11/2026.
 
-Fontes: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, as `Parte` e `pode_ligar`), `src/retrato.rs`, `src/pasta.rs`, [TESTES.md](TESTES.md). As faixas abaixo são as do código; onde o código não limita, a faixa é **proposta** (ou "a definir") e está marcada assim.
+Fontes: `tweaks.cfg`, `src/lib.rs` (`Regras`, `PADRAO`, `ler_regras`, as `Parte` e `pode_ligar`), `src/exe/retrato.rs`, `src/jogo/pasta.rs`, [TESTES.md](TESTES.md). As faixas abaixo são as do código; onde o código não limita, a faixa é **proposta** (ou "a definir") e está marcada assim.
 
 ## 1. Os princípios
 
@@ -136,7 +136,7 @@ Três desenhos, ao vivo:
 2. **Instalações e comissão** em uma linha de texto que muda: "Training 1 = 0,46 · 10 = 1,00 · 20 = 1,60" e "pior treinador 0,80 · melhor 1,20".
 3. **Chances por clube.** Barras horizontais com a chance de cada clube de exemplo receber o jovem, com a mesma conta de `peso()` em `lib.rs` (nível × instalações × comissão × vaga, elevado a `temperature`; fora quem tem elenco ≥ `squad_limit` ou já recebeu `season_cap`). A surpresa é misturada: `(1 − s) × normal + s × surpresa`, a surpresa sem o nível e só entre os clubes de competição. A regra original (o maior sorteio(nota)) não é desenhada: é outra conta, e o exemplo mostra só a nova.
 
-Os clubes do exemplo são fictícios e marcados assim ("exemplo"): um grande, um médio, um pequeno e "120 clubes pequenos somados", para mostrar por que `sigma_below` e `level_floor` existem (as centenas de clubes pequenos, somadas, levam os jovens). Melhoria futura: carregar os clubes reais de um save, como o `tools/calibrar.py` (§9).
+Os clubes do exemplo são fictícios e marcados assim ("exemplo"): um grande, um médio, um pequeno e "120 clubes pequenos somados", para mostrar por que `sigma_below` e `level_floor` existem (as centenas de clubes pequenos, somadas, levam os jovens). Melhoria futura: carregar os clubes reais de um save, como o `tools/regens/calibrar.py` (§9).
 
 `rule = original` deixa os três desenhos cinza com o aviso "o jogo usa a disputa do 3.9.68".
 
@@ -212,7 +212,7 @@ Os estados, a matriz por exe e o que as DLLs do CLZ mudam estão em [COMPATIBILI
 | 🔁 **fica com o outro** | uma mudança **conhecida** faz o mesmo papel; a nossa fica de fora e vale a do exe ou da outra DLL | azul | o nome (Regen Tweak, NickDLL, LaMOHatesCD); nos casos de `override_exe_changes`, o botão "usar as regras desta DLL" |
 | ❓ **desconhecido** | o trecho difere do 3.9.68 de um jeito que o catálogo não reconhece; só este ajuste fica de fora | vermelho | quantos trechos e onde; o pedido para mandar o `tweaks.log` |
 
-Um ajuste desligado no `.cfg` aparece em cinza ("desligado") e não conta. "Conhecido" = nomeado pelo retrato do exe (`CONHECIDOS` em `src/retrato.rs`), pelo catálogo do NickPatcher (`tools/retrato_exe.py`) ou por COMPATIBILIDADE.md.
+Um ajuste desligado no `.cfg` aparece em cinza ("desligado") e não conta. "Conhecido" = nomeado pelo retrato do exe (`CONHECIDOS` em `src/exe/retrato.rs`), pelo catálogo do NickPatcher (`tools/exe/retrato_exe.py`) ou por COMPATIBILIDADE.md.
 
 **Aviso geral:** quando algum ajuste ligado está em ⚠️ ou ❓, uma faixa no topo da janela diz "atenção: X ajustes não são compatíveis com este exe/patch", com os nomes e o atalho para a tabela do Início. O ponto colorido de cada aba mostra o pior estado entre os ajustes ligados dela.
 
@@ -222,7 +222,7 @@ Sem rodar o jogo, em três fontes:
 
 1. **O arquivo do exe**, com as mesmas conferências da DLL, lendo do disco em vez da memória (os VA convertidos em deslocamento pelas seções do PE):
    - para cada `Parte` de `lib.rs` (`SAVE`, `IDADE`, `IDADE_FORA`, `DISPUTA`, `INATIVOS`, `SEM_CLUBE`), o FNV-1a de 64 bits das **bordas** e do **corpo**. Bordas diferentes → ❓. Corpo igual → ✅. Corpo diferente → 🔁 ou ⚠️ (por `override_exe_changes`) se a mudança for conhecida, ❓ se não for;
-   - para as **trocas** (`aplicar_trocas`: as 201 da resolução e as 33 do CD, em `src/trocas.rs`), cada trecho é contado como "como no 3.9.68", "já trocado" ou "estranho". Na resolução, um estranho recusa a lista toda (❓), porque meia lista daria telas quebradas. No CD, cada checagem vale sozinha, e as estranhas só ficam de fora. "Já trocado" é ✅ (o exe já tem);
+   - para as **trocas** (`aplicar_trocas`: as 201 da resolução e as 33 do CD, em `src/video/trocas.rs`), cada trecho é contado como "como no 3.9.68", "já trocado" ou "estranho". Na resolução, um estranho recusa a lista toda (❓), porque meia lista daria telas quebradas. No CD, cada checagem vale sozinha, e as estranhas só ficam de fora. "Já trocado" é ✅ (o exe já tem);
    - a **trava das 30 linhas**: os 6 bytes da entrada do `Area::init` (0x402ac0) como no 3.9.68;
    - o **vídeo**: `ChangeDisplaySettingsA` na tabela de importações;
    - o **retrato do disco** (`retrato.rs`: funções e blocos contra `referencia.rs`, seções novas, `CONHECIDOS`) no cartão do Início.
@@ -299,8 +299,8 @@ Texto: "Nação no jogo é aquela cuja liga você escolheu ao criar a carreira, 
 
 - `src/cfg.rs`: ler e gravar o `.cfg` como no §5 (só o valor muda; `.bak` e troca atômica; recusa gravar se o arquivo mudou no disco).
 - `src/chaves.rs`: as chaves, as faixas, os padrões da DLL e as quatro predefinições do §4.
-- `src/exe.rs`: o estado de cada ajuste no exe (§6), com as **mesmas** tabelas da DLL: `src/partes.rs` (as `Parte`, as assinaturas e os casos conhecidos, agora fora do `lib.rs`) e `src/trocas.rs`, incluídos pelo caminho, sem cópia.
-- `src/main.rs`: a janela (§2) e as abas (§3), no menu da esquerda em grupos (03/11, pedido do Lucas, reorganizado no mesmo dia): o **Início**, com o retrato e a tabela de estados (o nome da opção e a chave em cinza); **Ajustes da carreira**: Fornada de regens (as chaves `intake_*`, desde a 1.2; a primeira desde a 1.3, quando passou a vir ligada), Idades dos regens (o gráfico arrastável, o contorno dos "regens mais novos" e a idade escolhida por extenso: a chance, a porcentagem, o teto do CA e a linha `age_NN` como fica no `.cfg`), Disputa dos clubes (a curva do nível e as chances dos clubes de exemplo, a mesma conta de `peso()`), Aposentadoria (a chance de aposentar por idade), Nomes dos regens (a escolha, o mínimo e, lida do banco da pasta do jogo, a lista dos países que pegam nomes emprestados: de que país vêm hoje e se passam a usar os próprios; `src/nomes.rs`) Jogadores cinzentos (a escolha, a barra "± N" da variação e os exemplos da carreira de teste); **Registro**: De quem é cada regen (o histórico); **Instalação**: Tela, save e pasta; **Arquivos**: tweaks.cfg (as linhas mudadas) e tweaks.log (o último log). Português e inglês.
+- `src/exe.rs`: o estado de cada ajuste no exe (§6), com as **mesmas** tabelas da DLL: `src/exe/partes.rs` (as `Parte`, as assinaturas e os casos conhecidos, agora fora do `lib.rs`) e `src/video/trocas.rs`, incluídos pelo caminho, sem cópia.
+- `src/main.rs`: a janela (§2) e as abas (§3), no menu da esquerda em grupos (03/11, pedido do Lucas, reorganizado no mesmo dia): o **Início**, com o retrato e a tabela de estados (o nome da opção e a chave em cinza); **Ajustes da carreira**: Fornada de regens (as chaves `intake_*`, desde a 1.2; a primeira desde a 1.3, quando passou a vir ligada), Idades dos regens (o gráfico arrastável, o contorno dos "regens mais novos" e a idade escolhida por extenso: a chance, a porcentagem, o teto do CA e a linha `age_NN` como fica no `.cfg`), Disputa dos clubes (a curva do nível e as chances dos clubes de exemplo, a mesma conta de `peso()`), Aposentadoria (a chance de aposentar por idade), Nomes dos regens (a escolha, o mínimo e, lida do banco da pasta do jogo, a lista dos países que pegam nomes emprestados: de que país vêm hoje e se passam a usar os próprios; `src/regens/nomes.rs`) Jogadores cinzentos (a escolha, a barra "± N" da variação e os exemplos da carreira de teste); **Registro**: De quem é cada regen (o histórico); **Instalação**: Tela, save e pasta; **Arquivos**: tweaks.cfg (as linhas mudadas) e tweaks.log (o último log). Português e inglês.
 
 **Nenhum número sem explicação** (03/11, pedido do Lucas): embaixo de cada opção com número, uma frase calculada na hora diz o que aquele valor faz no jogo, em unidades de quem joga ("um jovem de PA 150 mira um clube de reputação 7500", "0,5% = cerca de 1 em 200 jovens nasce sem o teto", "180 dias = uns 6 meses", "um clube com 24 jogadores tem ×1,73 a chance de um com 40"). Os números aparecem como se leem ("2", não "2.00"), com vírgula no português (`App::frase`). Na Disputa, o ajuste fino do sorteio (larguras, piso, instalações, comissão, peso da vaga, temperatura) fica num bloco **Avançado**, fechado, cada um com a sua frase. Na aba dos cinzentos, a barra mostra "± 5" e o `.cfg` guarda a largura toda (`grey_players_spread = 10`).
 

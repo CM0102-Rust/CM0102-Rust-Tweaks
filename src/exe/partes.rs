@@ -82,7 +82,7 @@ pub const SEM_CLUBE: Parte = Parte {
 };
 
 /// Os casos que este projeto já identificou, pelo byte que cada um muda (os outros ficam com o endereço), com o nome do
-/// patch no catálogo do NickPatcher (MiscPatches.zip e as opções do Patcher.cs; `tools/nickpatcher_vs_tweaks.py`).
+/// patch no catálogo do NickPatcher (MiscPatches.zip e as opções do Patcher.cs; `tools/exe/nickpatcher_vs_tweaks.py`).
 pub const CONHECIDOS: [(&str, u32, &[u8]); 6] = [
     ("Regen tweak 2 (Saturn) / Regen fixes (NickPatcher): squad limit 45 in the regens' contest", 0x7ad1bf, &[0x2d]),
     ("RetirePatchV4: no retirement under 34", 0x7a5806, &[0xe9]),
