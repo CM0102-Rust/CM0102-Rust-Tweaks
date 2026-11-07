@@ -406,10 +406,15 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
         }
     }
     let mut livres_antes = 0;
+    // o contrato pendente (0x4cca30 do CONTRACT_MANAGER, registro do tipo 2): a 0x8ce990 recusa qualquer clube (motivo
+    // 0x21); contá-lo no grupo deixava uma vaga sem ninguém (os 1 a 6 que faltavam na Alemanha)
+    let pendente: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cca30usize);
     for id in 0..n.saturating_sub(16) {
         let p = pessoas + 110 * id;
         // regen (bit 0x40), não aposentado (bits 0x30)
-        if !do_dia.contains(&p) && livre(p) && crate::b(p + 0x18) <= 21 && (*registro79(id) & 0x70) == 0x40 && por_nacao.contains_key(&d(p + 0x1a)) {
+        if !do_dia.contains(&p) && livre(p) && crate::b(p + 0x18) <= 21 && (*registro79(id) & 0x70) == 0x40 && por_nacao.contains_key(&d(p + 0x1a))
+            && pendente(d(0xae1050), d(p)) == 0
+        {
             grupo.entry(d(p + 0x1a)).or_default().push(p);
             livres_antes += 1;
         }

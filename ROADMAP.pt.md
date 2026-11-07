@@ -114,6 +114,7 @@ Um `.exe` só, com interface própria (sem copiar a do NickPatcher). Não precis
   - melhora a qualidade e a variedade da comissão em carreiras longas;
   - a fazer: localizar o limite no código (a evolução dos atributos de não jogador), conferir a rotina e expor a idade no `.cfg` (`staff_development_age`), com o crédito a ele.
 - 💡 **Os que nascem sem clube** passarem pelo sorteio, só entre clubes de divisões inferiores. Depende da medição da fase 2.
+- ⏳ **O basco espanhol no jogo inteiro** (Lucas, 07/11): desviar a rotina do estrangeiro (0x53d980) para que, na Espanha, o basco (primeira ou segunda nacionalidade) não seja estrangeiro em nada (escalação, contratações, regens), como a NickDLL nova faz. Chave própria, desligada por padrão, e cede à NickDLL quando ela já desvia o mesmo lugar. Desde a 1.3 isso já vale na escolha do clube do regen (a disputa e a fornada).
 - 💡 **As instalações no PA**: na assinatura, PA + (Training − 10) × 0,5 ± 2. Desligado por padrão.
 
 ## Fase 5: a abertura ⏳

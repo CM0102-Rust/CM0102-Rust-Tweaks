@@ -731,25 +731,35 @@ unsafe fn sorteio(n: i32) -> i32 {
     f(n)
 }
 
-/// O jovem com a segunda nacionalidade (+0x1e) basca só vai para os clubes bascos (como a 0x7ad0e0).
+/// O regen basco só vai para os clubes bascos. A 0x7ad0e0 olha só a segunda nacionalidade (+0x1e) e aceita 5 clubes
+/// (Athletic e o B, Real Sociedad e o B, Alavés); aqui vale também a primeira (+0x1a; bancos novos trazem bascos nela) e
+/// também os clubes que o próprio jogo marca como "só contrata bascos" (0x53d7f0: Eibar, Barakaldo, Sestao..., que a
+/// original deixava sem regen basco).
+unsafe fn basco(jogador: usize) -> bool {
+    let e = |n: usize| n != 0 && d(n) == d(0x9cf424);
+    e(d(jogador + 0x1a)) || e(d(jogador + 0x1e))
+}
+
 unsafe fn vetado(jogador: usize, clube: usize) -> bool {
-    let e = d(jogador + 0x1e);
-    if e == 0 || d(e) != d(0x9cf424) {
+    if !basco(jogador) {
         return false;
     }
+    let so_bascos: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d7f0usize);
     let id = d(clube);
-    ![0x9d0120usize, 0x9d0134, 0x9d0128, 0x9d01a0, 0x9d0124].iter().any(|&g| d(g) == id)
+    ![0x9d0120usize, 0x9d0134, 0x9d0128, 0x9d01a0, 0x9d0124].iter().any(|&g| d(g) == id) && so_bascos(clube) == 0
 }
 
 /// Os filtros da 0x7ad0e0: não estrangeiro (0x53d980), não é o time B (0x540a50), não vetado, pode chegar ao jogador
 /// (0x8ce990). Devolve o elenco (0x53c590) do clube elegível.
-unsafe fn elegivel(jogador: usize, clube: usize, fornada: bool) -> Option<i32> {
+unsafe fn elegivel(jogador: usize, clube: usize) -> Option<i32> {
     let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, *mut i16, u32) -> u32 = core::mem::transmute(0x8ce990usize);
-    // na fornada, o clube que só contrata bascos (0x53d7f0, o Eibar) não fica de fora pelo veto do regen basco
-    let so_bascos: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d7f0usize);
-    if estrangeiro(jogador, d(clube + 0x53), 1) != 0 || time_b(clube) || (vetado(jogador, clube) && !(fornada && so_bascos(clube) != 0)) {
+    // o basco não é estrangeiro na Espanha (só aqui, na escolha do clube do regen: num banco com bascos na primeira
+    // nacionalidade, a 0x53d980 original o barraria em todo clube espanhol; o desvio no jogo inteiro está no ROADMAP)
+    let nacao = d(clube + 0x53);
+    let espanhol = nacao != 0 && d(nacao) == d(0x9cf488) && basco(jogador);
+    if (estrangeiro(jogador, nacao, 1) != 0 && !espanhol) || time_b(clube) || vetado(jogador, clube) {
         return None;
     }
     let mut motivo = 0i16;
@@ -906,7 +916,7 @@ unsafe fn peso(r: &Regras, pa: f64, ca: f64, clube: usize, elenco: i32, surpresa
 /// (a cota da fornada já é o limite; elenco cheio, 50, fica de fora). `None`: o clube não pode recebê-lo (os filtros
 /// da disputa: estrangeiro, time B, vetado).
 pub(crate) unsafe fn peso_na_fornada(jogador: usize, clube: usize, surpresa: bool) -> Option<f64> {
-    elegivel(jogador, clube, true)?;
+    elegivel(jogador, clube)?;
     // as 50 vagas do próprio clube; a 0x53c590 soma o time B (na Espanha, em Portugal e na Alemanha, A + B passa de 50)
     let elenco = (0..50).filter(|&k| d(clube + 0xd7 + 4 * k) != 0).count() as i32;
     if elenco >= 50 {
@@ -951,7 +961,7 @@ unsafe extern "thiscall" fn escolher_clube(_this: usize, jogador: usize) -> usiz
         pesos.clear();
         for i in 0..total_de_clubes.max(0) as usize {
             let clube = base + 0x245 * i;
-            if let Some(elenco) = elegivel(jogador, clube, false) {
+            if let Some(elenco) = elegivel(jogador, clube) {
                 let p = peso(&r, pa, ca, clube, elenco, surpresa);
                 if p > 0.0 {
                     pesos.push((clube, p));
