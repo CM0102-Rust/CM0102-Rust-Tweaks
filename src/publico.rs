@@ -207,7 +207,7 @@ struct Soma {
     cheios: i32,
     mata: i32,
     classicos: i32,
-    /// os jogos comuns da liga (sem clássico e sem jogo grande): o alvo da média do fim da temporada
+    /// os jogos da liga, sem o acréscimo do clássico e do jogo grande: o alvo da média do fim da temporada
     comuns: i32,
     publico_comuns: i64,
 }
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
         let codigo = w(partida + 0x30) as u16 as i32;
         let mata = eh_mata(partida, d(partida + 0x14) != 0 && d(casa + 0x57) == d(partida + 0x14), codigo);
         let liga = d(partida + 0x14) != 0 && d(casa + 0x57) == d(partida + 0x14);
-        somar_jogo(casa, *saida.add(1), *saida.add(1), i(est + 0x3c), mata, rival(casa, fora), liga && !rival(casa, fora));
+        somar_jogo(casa, *saida.add(1), *saida.add(1), i(est + 0x3c), mata, rival(casa, fora), if liga { Some(if rival(casa, fora) { 1.5 } else { 1.0 }) } else { None });
         registro_jogo(partida, -1, -1, -1, *saida.add(1), *saida.add(2), i(casa + 0x7b), i(casa + 0x7b), 1.0);
         return total;
     }
@@ -333,7 +333,7 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
     if novo != recorde {
         pi(casa + 0x7b, novo);
     }
-    somar_jogo(casa, mandante, dem_casa, cap, mata, classico, da_liga && !classico && disputa <= 1.0);
+    somar_jogo(casa, mandante, dem_casa, cap, mata, classico, if da_liga { Some(disputa * if classico { 1.5 } else { 1.0 }) } else { None });
     registro_jogo(partida, dem_casa, dem_fora, teto, mandante, visitante, recorde, novo, disputa);
     total
 }
@@ -382,11 +382,12 @@ unsafe fn fator_disputa(liga: usize, casa: usize, fora: usize) -> f64 {
     f
 }
 
-unsafe fn somar_jogo(casa: usize, mandante: i32, demanda: i32, cap: i32, mata: bool, classico: bool, comum: bool) {
+unsafe fn somar_jogo(casa: usize, mandante: i32, demanda: i32, cap: i32, mata: bool, classico: bool, comum: Option<f64>) {
     let e = somas().entry(d(casa)).or_default();
-    if comum {
+    // o jogo de liga entra no alvo da média sem o que o clássico (× 1,5) e o jogo grande (× o fator) somaram
+    if let Some(k) = comum {
         e.comuns += 1;
-        e.publico_comuns += mandante as i64;
+        e.publico_comuns += (mandante as f64 / k.max(1.0)) as i64;
     }
     e.jogos += 1;
     e.publico += mandante as i64;
@@ -461,7 +462,7 @@ unsafe extern "C" fn media(liga: usize) {
         let est = d(c + 0x69);
         let cap = if est != 0 { i(est + 0x3c) } else { 0 };
         let s = somas().remove(&d(c)).unwrap_or_default();
-        // o alvo: o público real dos jogos comuns da liga (sem clássico e sem jogo grande, que ficam só no jogo); sem a
+        // o alvo: o público real dos jogos da liga, tirado o acréscimo do clássico e do jogo grande (que fica só no jogo); sem a
         // contagem da DLL (save carregado no meio da temporada), o da estatística da liga
         let real = if s.comuns > 0 {
             (s.publico_comuns / s.comuns as i64) as i32
