@@ -63,10 +63,10 @@ Principle: attendance is **the support × the moment × the match**. It grows fr
 | `stadium` | `on` | `off` | the stadium switch (the `stadium_*` keys): `off` = the original game |
 | `stadium_seating_growth` | `off` | `on` | converting to seats no longer adds to capacity |
 | `stadium_reputation_trigger` | `off` | `on` | removes the "reputation × 2 above capacity" trigger |
-| `attendance_league_caps` | `off` | `on` | removes the average's league caps and the weak-league cut per match |
+| `attendance_league_caps` | `off` | `on` | removes the average's league caps and the weak-league cut per match; the season-end average moves half the way to the real attendance of the league's ordinary matches (no derbies, no big games), ±3% per place above or below the prediction |
 | `attendance_record` | `real` | `fixed` | the record becomes the largest crowd that actually came |
 | `pent_up_demand` | 0.1 | 0 | the share of a match's unmet demand that becomes a new record (10,000 people left out: the ceiling rises 1,000) |
-| `tradition_weight` | 0.5 | 0 | a club finishing 5 places above its prediction moves 25% of the way to its historical record |
+| `tradition_weight` | 0.25 | 0 | only for clubs finishing 2 or more places above their prediction: 5 above moves 12.5% of the way to the historical record |
 | `knockout_ceiling` | `stadium` | `record` | in knockout rounds (category and round code) only the stadium limits |
 | `title_race` | `on` | `off` | the big game by the table: both can still be champions; up to ×1.75 in the run-in of a 1st v 2nd, and another × 1.5 if it is a derby |
 | `stadium_full_seasons` | 2 | 1 | consecutive seasons above 92% to become eligible to expand |

@@ -8,9 +8,10 @@
 //!   das ligas de nível até 4 (acima de 1.500 × nível, só 20% do excesso). `attendance_record = real`: o recorde passa a ser
 //!   o maior público que veio; `pent_up_demand`: a fração da demanda acima do recorde (até a capacidade) que vira recorde.
 //! - a média do fim da temporada (0x5d6280, chamada em 0x5d5cfb): com `attendance_league_caps = off`, a média nova é a
-//!   metade do caminho até o público real da temporada (o somado da estatística da liga), × (1 + 0,05 × (prevista −
-//!   final)), sem os tetos de 2.000, 3.000 ou 5.000 × o nível; `tradition_weight`: quem foi melhor que o previsto anda
-//!   essa fração × (prevista − final) / 10 do caminho até o recorde (o histórico do banco, a torcida que já existiu).
+//!   metade do caminho até o público real dos jogos comuns da liga na temporada (sem clássico e sem jogo grande), ×
+//!   (1 + 0,03 × (prevista − final)), sem os tetos de 2.000, 3.000 ou 5.000 × o nível; `tradition_weight`: quem terminou
+//!   2 posições ou mais acima do previsto anda essa fração × (prevista − final) / 10 do caminho até o recorde (o
+//!   histórico do banco, a torcida que já existiu).
 //! - o estádio no fim da temporada (0x59cfa0, chamada em 0x59cee4): `stadium_seating_growth = off` impede a conversão em
 //!   lugares sentados de somar na capacidade; qualquer outra chave do estádio tira a ampliação da original (o teto fica
 //!   igual à capacidade durante a chamada) e a decide aqui: apto com a ocupação acima de 92% na temporada e, com
@@ -55,7 +56,7 @@ const ORIGINAL: Publico = Publico {
 /// As nossas regras, o padrão de cada chave ausente de um tweaks.cfg (08/11, Lucas: o padrão é sempre o nosso). O custo
 /// por lugar −1 = `auto` (calibrado pelo caixa dos clubes do banco).
 const NOSSO: Publico = Publico {
-    sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.5,
+    sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.25,
     mata_estadio: true, temporadas_cheias: 2, ocupacao_tudo: true, obra_demanda: true, custo_lugar: -1.0, teto_demanda: true,
     maximo: 125_000, disputa: true,
 };
@@ -206,6 +207,9 @@ struct Soma {
     cheios: i32,
     mata: i32,
     classicos: i32,
+    /// os jogos comuns da liga (sem clássico e sem jogo grande): o alvo da média do fim da temporada
+    comuns: i32,
+    publico_comuns: i64,
 }
 static mut SOMAS: Option<HashMap<usize, Soma>> = None;
 /// A soma da temporada que acabou (a média do fim da temporada a passa para cá; o estádio pode vir depois).
@@ -278,7 +282,8 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
         let total = original(this, partida, saida);
         let codigo = w(partida + 0x30) as u16 as i32;
         let mata = eh_mata(partida, d(partida + 0x14) != 0 && d(casa + 0x57) == d(partida + 0x14), codigo);
-        somar_jogo(casa, *saida.add(1), *saida.add(1), i(est + 0x3c), mata, rival(casa, fora));
+        let liga = d(partida + 0x14) != 0 && d(casa + 0x57) == d(partida + 0x14);
+        somar_jogo(casa, *saida.add(1), *saida.add(1), i(est + 0x3c), mata, rival(casa, fora), liga && !rival(casa, fora));
         registro_jogo(partida, -1, -1, -1, *saida.add(1), *saida.add(2), i(casa + 0x7b), i(casa + 0x7b), 1.0);
         return total;
     }
@@ -328,7 +333,7 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
     if novo != recorde {
         pi(casa + 0x7b, novo);
     }
-    somar_jogo(casa, mandante, dem_casa, cap, mata, classico);
+    somar_jogo(casa, mandante, dem_casa, cap, mata, classico, da_liga && !classico && disputa <= 1.0);
     registro_jogo(partida, dem_casa, dem_fora, teto, mandante, visitante, recorde, novo, disputa);
     total
 }
@@ -377,8 +382,12 @@ unsafe fn fator_disputa(liga: usize, casa: usize, fora: usize) -> f64 {
     f
 }
 
-unsafe fn somar_jogo(casa: usize, mandante: i32, demanda: i32, cap: i32, mata: bool, classico: bool) {
+unsafe fn somar_jogo(casa: usize, mandante: i32, demanda: i32, cap: i32, mata: bool, classico: bool, comum: bool) {
     let e = somas().entry(d(casa)).or_default();
+    if comum {
+        e.comuns += 1;
+        e.publico_comuns += mandante as i64;
+    }
     e.jogos += 1;
     e.publico += mandante as i64;
     e.demanda += demanda as i64;
@@ -451,14 +460,24 @@ unsafe extern "C" fn media(liga: usize) {
         let recorde = i(c + 0x7b);
         let est = d(c + 0x69);
         let cap = if est != 0 { i(est + 0x3c) } else { 0 };
-        let real = if a.jogos > 0 { a.soma / a.jogos } else { a.media };
+        let s = somas().remove(&d(c)).unwrap_or_default();
+        // o alvo: o público real dos jogos comuns da liga (sem clássico e sem jogo grande, que ficam só no jogo); sem a
+        // contagem da DLL (save carregado no meio da temporada), o da estatística da liga
+        let real = if s.comuns > 0 {
+            (s.publico_comuns / s.comuns as i64) as i32
+        } else if a.jogos > 0 {
+            a.soma / a.jogos
+        } else {
+            a.media
+        };
         let dif = (a.prevista - a.fim).clamp(-5, 5);
         let mut nova = if p.tetos_da_liga {
             da_original as f64
         } else {
-            (real + a.media) as f64 / 2.0 * (1.0 + 0.05 * dif as f64)
+            (real + a.media) as f64 / 2.0 * (1.0 + 0.03 * dif as f64)
         };
-        if p.tradicao > 0.0 && dif > 0 && (recorde as f64) > nova {
+        // a tradição só para quem terminou 2 posições ou mais acima do previsto
+        if p.tradicao > 0.0 && dif >= 2 && (recorde as f64) > nova {
             nova += p.tradicao * (recorde as f64 - nova) * dif as f64 / 10.0;
         }
         let mut teto = recorde;
@@ -470,7 +489,6 @@ unsafe extern "C" fn media(liga: usize) {
         if nova != da_original {
             pi(c + 0x73, nova);
         }
-        let s = somas().remove(&d(c)).unwrap_or_default();
         ultima().insert(d(c), s);
         if REGRAS.registrar {
             gravar("publico_temporada.tsv",

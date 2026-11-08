@@ -63,10 +63,10 @@ Princípio: o público é **a torcida × o momento × o jogo**. Cresce pelo que 
 | `stadium` | `on` | `off` | o interruptor do estádio (as chaves `stadium_*`): `off` = o jogo original |
 | `stadium_seating_growth` | `off` | `on` | a conversão em lugares sentados não soma mais na capacidade |
 | `stadium_reputation_trigger` | `off` | `on` | tira o gatilho "reputação × 2 acima da capacidade" |
-| `attendance_league_caps` | `off` | `on` | tira os tetos da média pela liga e o corte das ligas fracas no jogo |
+| `attendance_league_caps` | `off` | `on` | tira os tetos da média pela liga e o corte das ligas fracas no jogo; a média do fim da temporada anda metade do caminho até o público real dos jogos comuns da liga (sem clássico e sem jogo grande), ±3% por posição acima ou abaixo do previsto |
 | `attendance_record` | `real` | `fixed` | o recorde passa a ser o maior público que de fato veio |
 | `pent_up_demand` | 0.1 | 0 | a fração da demanda que ficou de fora num jogo que vira recorde novo (10.000 pessoas de fora: o teto sobe 1.000) |
-| `tradition_weight` | 0.5 | 0 | quem termina 5 posições acima do previsto anda 25% do caminho até o recorde histórico |
+| `tradition_weight` | 0.25 | 0 | só para quem termina 2 posições ou mais acima do previsto: com 5 acima, anda 12,5% do caminho até o recorde histórico |
 | `knockout_ceiling` | `stadium` | `record` | no mata-mata (categoria e código da rodada) só o estádio limita |
 | `title_race` | `on` | `off` | o jogo grande pela tabela: os dois ainda podem ser campeões; até ×1,75 na reta final de um 1º × 2º, e × 1,5 a mais se for clássico |
 | `stadium_full_seasons` | 2 | 1 | temporadas seguidas acima de 92% para ficar apto a ampliar |
