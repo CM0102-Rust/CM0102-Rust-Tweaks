@@ -307,6 +307,9 @@ unsafe fn completar_reserva() {
 
 /// Os trampolins das três rotinas desviadas na entrada (o começo original e um salto de volta).
 static mut CARREGAR_ORIGINAL: usize = 0;
+/// O registro das origens ligado (os ganchos da carga e da gravação também servem ao público: `ganchos_do_save`).
+static mut ORIGENS: bool = false;
+static mut GANCHOS: bool = false;
 static mut GRAVAR_ORIGINAL: usize = 0;
 static mut LIBERAR_ORIGINAL: usize = 0;
 
@@ -335,9 +338,12 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
     let r = original(caminho);
     if r == 1 {
         let c = caminho_c(caminho);
-        ler_donos(Some(&c));
-        trocar_carreira(&c, false);
-        completar_reserva();
+        if ORIGENS {
+            ler_donos(Some(&c));
+            trocar_carreira(&c, false);
+            completar_reserva();
+        }
+        crate::publico::carregou(&c);
     }
     r
 }
@@ -349,10 +355,15 @@ unsafe extern "C" fn gravar_jogo(caminho: *const u8, tipo: u32) -> u32 {
     let r = original(caminho, tipo);
     if r == 1 && tipo == 0x16 {
         let c = caminho_c(caminho);
-        gravar_donos(&c);
-        trocar_carreira(&c, true);
+        if ORIGENS {
+            gravar_donos(&c);
+            trocar_carreira(&c, true);
+        }
+        crate::publico::gravou(&c);
     }
-    descarregar();
+    if ORIGENS {
+        descarregar();
+    }
     r
 }
 
@@ -361,9 +372,12 @@ unsafe extern "C" fn gravar_jogo(caminho: *const u8, tipo: u32) -> u32 {
 unsafe extern "C" fn liberar_jogo(flag: u32) -> u32 {
     let original: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(LIBERAR_ORIGINAL);
     let r = original(flag);
-    ler_donos(None);
-    definir_carreira(format!("new career ({})", agora()).as_bytes());
-    guardar_pendentes();
+    if ORIGENS {
+        ler_donos(None);
+        definir_carreira(format!("new career ({})", agora()).as_bytes());
+        guardar_pendentes();
+    }
+    crate::publico::liberou();
     r
 }
 
@@ -470,8 +484,23 @@ pub unsafe fn ligar(registrar: bool) -> bool {
     for &(de, _, para) in &chamadas {
         crate::chamar(de, para);
     }
+    ORIGENS = true;
+    ganchos_do_save()
+}
+
+/// Os desvios da carga (0x82a9c0), da gravação (0x82e430) e da liberação (0x82ff40) do jogo, uma vez só: servem ao
+/// registro das origens e ao público (o arquivo ao lado do save). Falso se alguma entrada não está como no 3.9.68.
+pub unsafe fn ganchos_do_save() -> bool {
+    if GANCHOS {
+        return true;
+    }
+    let comeca = |a: usize, b: &[u8]| core::slice::from_raw_parts(a as *const u8, b.len()) == b;
+    if !comeca(0x82a9c0, &ENTRADA_CARREGAR) || !comeca(0x82e430, &ENTRADA_GRAVAR) || !comeca(0x82ff40, &ENTRADA_LIBERAR) {
+        return false;
+    }
     CARREGAR_ORIGINAL = trampolim(0x82a9c0, &ENTRADA_CARREGAR, carregar_jogo as *const () as usize).unwrap_or(0x82a9c0);
     GRAVAR_ORIGINAL = trampolim(0x82e430, &ENTRADA_GRAVAR, gravar_jogo as *const () as usize).unwrap_or(0x82e430);
     LIBERAR_ORIGINAL = trampolim(0x82ff40, &ENTRADA_LIBERAR, liberar_jogo as *const () as usize).unwrap_or(0x82ff40);
+    GANCHOS = true;
     true
 }

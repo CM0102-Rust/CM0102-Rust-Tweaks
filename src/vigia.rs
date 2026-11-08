@@ -78,6 +78,9 @@ pub(crate) fn iniciar_batida() {
             // o vigia: a data parada por 60 s (com o jogo já numa carreira) é um travamento, ou o jogo esperando um clique
             if (dia, ano) != data_vista {
                 data_vista = (dia, ano);
+                if ano > 1900 && crate::estudo::ligado() {
+                    unsafe { crate::estudo::duplicados(&format!("{}-{:03}", ano, dia)) };
+                }
                 desde = std::time::Instant::now();
                 avisado = false;
             } else if ano > 1900 && !avisado && desde.elapsed().as_secs() >= 60 {

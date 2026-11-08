@@ -156,6 +156,10 @@ pub(crate) unsafe fn instalar() {
             if p.recorde_real { "real" } else { "fixed" }, p.reprimida, if p.mata_estadio { "stadium" } else { "record" }, on(p.disputa)));
     }
     if p.mexe_na_media() {
+        // a sombra (o piso da queda) vai num arquivo ao lado do save: os desvios da carga e da gravação
+        if !p.tetos_da_liga && !crate::origem::ganchos_do_save() {
+            registro::linha("season attendance: the save and load routines differ from 3.9.68; the original-game floor lasts only until the game closes");
+        }
         trocar("season attendance", 0x5d5cfb, 0x5d6280, media as *const () as usize,
             format!("league caps {}, tradition {}", liga_txt(p.tetos_da_liga), p.tradicao));
     }
@@ -214,6 +218,67 @@ struct Soma {
 static mut SOMAS: Option<HashMap<usize, Soma>> = None;
 /// A soma da temporada que acabou (a média do fim da temporada a passa para cá; o estádio pode vir depois).
 static mut ULTIMA: Option<HashMap<usize, Soma>> = None;
+/// A sombra: a média que cada clube teria no jogo original (o piso da queda: quem cresceu pela nossa regra cai, mas não
+/// abaixo do que o original daria). Começa na média do banco, anda pela rotina original no fim de cada temporada e vai
+/// num arquivo ao lado do save (X.sav → X.publico), gravado junto com ele e lido na carga.
+static mut SOMBRA: Option<HashMap<usize, i32>> = None;
+
+unsafe fn sombra() -> &'static mut HashMap<usize, i32> {
+    (*core::ptr::addr_of_mut!(SOMBRA)).get_or_insert_with(HashMap::new)
+}
+
+const MARCA_SOMBRA: &[u8; 8] = b"CMRTPUB1";
+
+/// Depois da carga de um save: a sombra dele, se houver o arquivo; sem ele, cada clube começa na média de agora.
+pub(crate) unsafe fn carregou(save: &std::path::Path) {
+    let m = sombra();
+    m.clear();
+    somas().clear();
+    ultima().clear();
+    medias_antes().clear();
+    let Ok(v) = std::fs::read(save.with_extension("publico")) else {
+        let p = P;
+        if p.mexe_na_media() {
+            registro::linha("season attendance: no .publico file next to the save; the original-game floor starts at the current averages");
+        }
+        return;
+    };
+    if v.len() < 8 || &v[..8] != MARCA_SOMBRA || (v.len() - 8) % 8 != 0 {
+        registro::linha("season attendance: the .publico file next to the save is not valid; ignored");
+        return;
+    }
+    for r in v[8..].chunks_exact(8) {
+        m.insert(u32::from_le_bytes([r[0], r[1], r[2], r[3]]) as usize, i32::from_le_bytes([r[4], r[5], r[6], r[7]]));
+    }
+    registro::linha(&format!("season attendance: loaded the original-game floor of {} clubs", m.len()));
+}
+
+/// Depois de gravar um save (.sav): a sombra ao lado dele.
+pub(crate) unsafe fn gravou(save: &std::path::Path) {
+    let m = sombra();
+    if m.is_empty() {
+        return;
+    }
+    let mut v = MARCA_SOMBRA.to_vec();
+    let mut ids: Vec<_> = m.iter().collect();
+    ids.sort();
+    for (&id, &x) in ids {
+        v.extend_from_slice(&(id as u32).to_le_bytes());
+        v.extend_from_slice(&x.to_le_bytes());
+    }
+    if std::fs::write(save.with_extension("publico"), &v).is_err() {
+        registro::linha("season attendance: could not write the .publico file next to the save");
+    }
+}
+
+/// O jogo apagou a carreira: a próxima começa do zero.
+pub(crate) unsafe fn liberou() {
+    sombra().clear();
+    somas().clear();
+    ultima().clear();
+    medias_antes().clear();
+}
+
 /// A média de cada clube antes do fim da temporada da liga (para o estádio, que pode vir depois).
 static mut MEDIA_ANTES: Option<HashMap<usize, i32>> = None;
 
@@ -451,10 +516,28 @@ unsafe extern "C" fn media(liga: usize) {
             fim: *((e + 0x73) as *const u8) as i32, jogos: *((e + 5) as *const u8) as i32, soma: i(e + 6),
         });
     }
+    // a original roda sobre a sombra de cada clube (a média que o jogo original teria): o resultado é a sombra nova e o
+    // piso da queda; depois a média de verdade volta e a nossa regra anda a partir dela
+    let usa_sombra = !P.tetos_da_liga;
+    if usa_sombra {
+        for a in &antes {
+            let s = *sombra().entry(d(a.c)).or_insert(a.media);
+            pi(a.c + 0x73, s);
+        }
+    }
     original(liga);
+    let mut sombra_nova = Vec::with_capacity(antes.len());
+    for a in &antes {
+        let s = i(a.c + 0x73);
+        sombra_nova.push(s);
+        if usa_sombra {
+            sombra().insert(d(a.c), s);
+            pi(a.c + 0x73, a.media);
+        }
+    }
     let p = P;
     let nivel = w(d(liga + 4) + 0x69) as i32;
-    for a in &antes {
+    for (k, a) in antes.iter().enumerate() {
         let c = a.c;
         medias_antes().insert(d(c), a.media);
         let da_original = i(c + 0x73);
@@ -485,19 +568,24 @@ unsafe extern "C" fn media(liga: usize) {
         if cap > 0 {
             teto = teto.min(cap);
         }
+        // o piso da queda: o que o jogo original daria (a sombra), nunca abaixo; quem já estava abaixo dela não cai mais
+        let mut nova = nova as i32;
+        if usa_sombra && nova < a.media {
+            nova = nova.max(sombra_nova[k].min(a.media));
+        }
         let piso = a.minimo.max(500);
-        let nova = (nova as i32).min(teto).max(piso.min(teto.max(500)));
+        let nova = nova.min(teto).max(piso.min(teto.max(500)));
         if nova != da_original {
             pi(c + 0x73, nova);
         }
         ultima().insert(d(c), s);
         if REGRAS.registrar {
             gravar("publico_temporada.tsv",
-                "data\tliga\tnivel\tclube\tnome\trep\tprevista\tfinal\tjogos\tpublico_real\tmedia_antes\tmedia_original\tmedia_nova\tminimo\trecorde_antes\trecorde\tcapacidade\tdll_jogos\tdll_publico\tdll_demanda\tdll_cheios\tdll_mata\tdll_classicos",
-                &format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "data\tliga\tnivel\tclube\tnome\trep\tprevista\tfinal\tjogos\tpublico_real\tmedia_antes\tmedia_original\tmedia_nova\tminimo\trecorde_antes\trecorde\tcapacidade\tdll_jogos\tdll_publico\tdll_demanda\tdll_cheios\tdll_mata\tdll_classicos\tsombra",
+                &format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}	{}",
                     hoje(), d(d(liga + 4)), nivel, d(c), nome(c), w(c + 0x80), a.prevista, a.fim, a.jogos, real, a.media, da_original, nova,
                     a.minimo, a.recorde, recorde, cap, s.jogos, if s.jogos > 0 { s.publico / s.jogos as i64 } else { 0 },
-                    if s.jogos > 0 { s.demanda / s.jogos as i64 } else { 0 }, s.cheios, s.mata, s.classicos));
+                    if s.jogos > 0 { s.demanda / s.jogos as i64 } else { 0 }, s.cheios, s.mata, s.classicos, sombra_nova[k]));
         }
     }
     if t != 0 {

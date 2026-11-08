@@ -85,3 +85,36 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
     }
     gravar("estudo_mudancas.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tde\tde_rep\tpara\tpara_rep", &mudancas);
 }
+
+static mut VISTOS: Option<std::collections::HashSet<(usize, usize)>> = None;
+
+/// Todo dia de jogo: o mesmo jogador duas vezes no elenco de um clube (+0xd7, 50 ponteiros), a causa da caixa
+/// "match_man.cpp 1225" (a escalação automática 0x6dbc50 confere jogador repetido). Uma linha por par novo em
+/// `estudo_duplicados.tsv`, com a pessoa, os dois clubes que ela aponta e a idade.
+pub(crate) unsafe fn duplicados(data: &str) {
+    let (clubes, nc) = (d(0xae23b4), d(0xae235c));
+    if clubes == 0 || nc > 100_000 {
+        return;
+    }
+    let vistos = (*core::ptr::addr_of_mut!(VISTOS)).get_or_insert_with(Default::default);
+    let mut linhas = Vec::new();
+    for k in 0..nc {
+        let c = clubes + 0x245 * k;
+        let mut elenco: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| p != 0).collect();
+        elenco.sort_unstable();
+        for par in elenco.windows(2) {
+            if par[0] == par[1] && vistos.insert((d(c), par[0])) {
+                let p = par[0];
+                let onde = d(p + 0x39);
+                linhas.push(format!("{}	{}	{}	{}	{}	{}	{}", data, d(c), nome(c), d(p), b(p + 0x18),
+                    if onde != 0 { d(onde) as i64 } else { -1 }, if d(p + 0x61) != 0 { "player" } else { "non-player" }));
+            }
+        }
+    }
+    if !linhas.is_empty() {
+        for l in &linhas {
+            registro::linha(&format!("duplicate in squad	{}", l));
+        }
+        gravar("estudo_duplicados.tsv", "data	clube	nome	pessoa	idade	clube_da_pessoa	tipo", &linhas);
+    }
+}
