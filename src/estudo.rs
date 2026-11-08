@@ -133,6 +133,7 @@ pub(crate) unsafe fn instalar() {
         }
         registro::linha("study: watching the automatic team selection (0x6dbc50) for the repeated-player box");
     }
+    instalar_conferencia();
 }
 
 unsafe fn elenco_repetido(c: usize) -> Vec<usize> {
@@ -175,4 +176,67 @@ pub(crate) unsafe fn caixa_da_escalacao(texto: &str) {
                 if d(p + 0x39) != 0 { d(d(p + 0x39)) as i64 } else { -1 }, (ficha != 0) as u8, if ficha != 0 { w(ficha + 5) } else { -1 }));
         }
     }
+}
+
+/// Os dois caminhos que põem uma pessoa num elenco sem conferir se ela já está lá: `database_add_staff_to_club`
+/// (0x53bd10, cdecl(clube, pessoa, ...)) e `player_regen_sign_for_club` (0x7a6f10, thiscall(this, pessoa, clube)). Na
+/// entrada de cada um, um trecho em assembly passa o endereço de retorno (quem chamou), o clube e a pessoa para
+/// `conferir` e segue para a original pelo trampolim.
+static mut TRAMPOLIM_ADD: usize = 0;
+static mut TRAMPOLIM_REGEN: usize = 0;
+
+unsafe extern "C" fn conferir(retorno: usize, clube: usize, pessoa: usize) {
+    if clube == 0 || pessoa == 0 || clube < 0x10000 || pessoa < 0x10000 {
+        return;
+    }
+    if (0..50).any(|j| d(clube + 0xd7 + 4 * j) == pessoa) {
+        registro::linha(&format!("study: adding a person already in the squad\t{}\tclub {} {}\tperson {} age {}\tcalled from {:#x}",
+            crate::data_do_jogo(), d(clube), nome(clube), d(pessoa), b(pessoa + 0x18), retorno.wrapping_sub(5)));
+    }
+}
+
+#[unsafe(naked)]
+unsafe extern "C" fn entrada_add() {
+    // na entrada: [esp] retorno, [esp+4] clube, [esp+8] pessoa
+    core::arch::naked_asm!(
+        "pushad",
+        "push dword ptr [esp+40]",
+        "push dword ptr [esp+40]",
+        "push dword ptr [esp+40]",
+        "call {c}",
+        "add esp, 12",
+        "popad",
+        "jmp dword ptr [{t}]",
+        c = sym conferir,
+        t = sym TRAMPOLIM_ADD,
+    );
+}
+
+#[unsafe(naked)]
+unsafe extern "C" fn entrada_regen() {
+    // thiscall: [esp] retorno, [esp+4] pessoa, [esp+8] clube
+    core::arch::naked_asm!(
+        "pushad",
+        "push dword ptr [esp+36]",
+        "push dword ptr [esp+44]",
+        "push dword ptr [esp+40]",
+        "call {c}",
+        "add esp, 12",
+        "popad",
+        "jmp dword ptr [{t}]",
+        c = sym conferir,
+        t = sym TRAMPOLIM_REGEN,
+    );
+}
+
+pub(crate) unsafe fn instalar_conferencia() {
+    match crate::origem::trampolim(0x53bd10, &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00], entrada_add as *const () as usize) {
+        Some(t) => TRAMPOLIM_ADD = t,
+        None => registro::linha("study: 0x53bd10 differs; not watched"),
+    }
+    match crate::origem::trampolim(0x7a6f10, &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00], entrada_regen as *const () as usize) {
+        Some(t) => TRAMPOLIM_REGEN = t,
+        None => registro::linha("study: 0x7a6f10 differs; not watched"),
+    }
+    registro::linha("study: watching every addition to a squad (0x53bd10, 0x7a6f10) for repeated people");
 }
