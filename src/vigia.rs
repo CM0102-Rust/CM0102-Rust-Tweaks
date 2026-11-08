@@ -223,6 +223,9 @@ pub(crate) unsafe extern "C" fn caixa_de_mensagem(titulo: *const u8, texto: *con
         core::slice::from_raw_parts(p, n).iter().map(|&c| if c == b'\n' || c == b'\r' || c == b'\t' { ' ' } else { c as char }).collect()
     };
     registro::linha(&format!("msgbox\t{}\t{}\t{}", data_do_jogo(), ler(titulo), ler(texto)));
+    if crate::estudo::ligado() {
+        crate::estudo::caixa_da_escalacao(&ler(texto));
+    }
     // o detalhe que o jogo monta antes de algumas caixas (0xde1f64: "Only %d home players ** A v B..." em match_eng.cpp
     // 612, por exemplo); só se for texto legível
     let detalhe = ler(0xde1f64 as *const u8);

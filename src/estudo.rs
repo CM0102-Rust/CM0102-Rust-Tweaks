@@ -118,3 +118,61 @@ pub(crate) unsafe fn duplicados(data: &str) {
         gravar("estudo_duplicados.tsv", "data	clube	nome	pessoa	idade	clube_da_pessoa	tipo", &linhas);
     }
 }
+
+/// A comissão escalando agora (0x6dbc50), para a caixa "match_man.cpp 1225" dizer de que clube é.
+static mut ESCALANDO: usize = 0;
+
+/// Desvia as 5 chamadas da escalação automática (0x6dbc50) para anotar o clube; com o mesmo jogador duas vezes no
+/// elenco, uma linha antes de escalar.
+pub(crate) unsafe fn instalar() {
+    let sitios = [0x6db8fe, 0x6db91b, 0x6db973, 0x6db98d, 0x6dba73];
+    let chama = |de: usize| *(de as *const u8) == 0xe8 && (de + 5).wrapping_add(core::ptr::read_unaligned((de + 1) as *const i32) as usize) == 0x6dbc50;
+    if sitios.iter().all(|&de| chama(de)) {
+        for de in sitios {
+            chamar(de, escalar as *const () as usize);
+        }
+        registro::linha("study: watching the automatic team selection (0x6dbc50) for the repeated-player box");
+    }
+}
+
+unsafe fn elenco_repetido(c: usize) -> Vec<usize> {
+    let mut e: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| p != 0).collect();
+    e.sort_unstable();
+    e.windows(2).filter(|p| p[0] == p[1]).map(|p| p[0]).collect()
+}
+
+unsafe extern "thiscall" fn escalar(t: usize, outro: usize, modo: u32) {
+    let original: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6dbc50usize);
+    let c = d(t + 0x2f);
+    if c != 0 {
+        for p in elenco_repetido(c) {
+            registro::linha(&format!("study: repeated in the squad at selection	{}	club {} {}	person {} age {} points to club {}",
+                crate::data_do_jogo(), d(c), nome(c), d(p), b(p + 0x18), if d(p + 0x39) != 0 { d(d(p + 0x39)) as i64 } else { -1 }));
+        }
+    }
+    ESCALANDO = t;
+    original(t, outro, modo);
+    ESCALANDO = 0;
+}
+
+/// Chamada pela caixa de mensagem: se é a da escalação, o clube e o elenco inteiro.
+pub(crate) unsafe fn caixa_da_escalacao(texto: &str) {
+    if !texto.contains("match_man") || ESCALANDO == 0 {
+        return;
+    }
+    let t = ESCALANDO;
+    let c = d(t + 0x2f);
+    if c == 0 {
+        return;
+    }
+    let jogo = d(t + 0x37);
+    registro::linha(&format!("study: the box came while selecting club {} {} (staff {:#x}, match {:#x}, human {})", d(c), nome(c), t, jogo, *((t + 0x19) as *const u8)));
+    for j in 0..50 {
+        let p = d(c + 0xd7 + 4 * j);
+        if p != 0 {
+            let ficha = d(p + 0x61);
+            registro::linha(&format!("study: squad {}	person {}	age {}	club {}	player {}	ca {}", j, d(p), b(p + 0x18),
+                if d(p + 0x39) != 0 { d(d(p + 0x39)) as i64 } else { -1 }, (ficha != 0) as u8, if ficha != 0 { w(ficha + 5) } else { -1 }));
+        }
+    }
+}
