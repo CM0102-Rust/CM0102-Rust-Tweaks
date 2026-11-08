@@ -53,24 +53,29 @@ Per match (0x6d26b0) [observed]: the three reputations (home, current, world) mo
 
 **The stadium** (0x59cfa0) [observed]: owner, league and a balance above 5.25 million; a trigger of one league season above 92%; a 21,000-place build with a balance above 20 million, up to the ceiling and a third of it; no stadium above 125,000 expands; a cost of about 100 per place (875 for professional clubs, all seated). A real 2001 build cost, in order of magnitude, 1,000 to 3,500 pounds per place [inference, from memory].
 
-## 5. Proposed keys (design of 08/11, to be implemented)
+## 5. The keys (implemented on 08/11, `src/publico.rs`, branch `estudos`)
 
-Principle: attendance is **the support × the moment × the match**. It grows from what happens on the pitch and cools when performance returns to the expected; nothing grows without a cause. Every key starts at the original game's value, and the numbers live in `tweaks.cfg` to be tuned for each database (the 2001, 2026 and CLZ databases have very different economies).
+Principle: attendance is **the support × the moment × the match**. It grows from what happens on the pitch and cools when performance returns to the expected; nothing grows without a cause. **The default is ours** (08/11, Lucas): with a `tweaks.cfg`, each missing key takes our rule; to go back to the original game, write the value in the "original" column. With no `tweaks.cfg` at all, nothing changes.
 
-| Key | Original | What it does |
-|---|---|---|
-| `stadium_seating_growth` | `on` | `off`: converting to seats no longer adds to capacity |
-| `stadium_reputation_trigger` | `on` | `off`: removes the "reputation × 2 above capacity" trigger |
-| `attendance_league_caps` | `on` | `off`: removes the average's league caps and the weak-league cut per match |
-| `attendance_record` | `fixed` | `real`: the record becomes the largest crowd that actually came |
-| `pent_up_demand` | 0 | the share of a match's unmet demand (the formula asked for more than fit) that becomes a new record |
-| `tradition_weight` | 0 | how much the database's historical record speeds the support's return when the club gets going |
-| `knockout_ceiling` | `record` | `stadium`: in knockout rounds (round code) only the stadium limits |
-| `stadium_full_seasons` | 1 | consecutive seasons above 92% to become eligible to expand |
-| `stadium_occupancy` | `league` | `all`: occupancy counts every home match (league, cup, continental) |
-| `stadium_size` | `original` | `demand`: the build matches the measured demand, up to the ceiling |
-| `stadium_seat_cost` | `original` | the cost per new place, in the database's currency (original: about 100, or 875 for professional clubs) |
-| `stadium_ceiling_zero` | `original` | `demand`: for a stadium with no ceiling in the database, the ceiling becomes capacity plus the measured demand |
-| `stadium_max` | 125000 | the largest capacity that still expands |
+| Key | Our default | Original | What it does |
+|---|---|---|---|
+| `stadium_seating_growth` | `off` | `on` | converting to seats no longer adds to capacity |
+| `stadium_reputation_trigger` | `off` | `on` | removes the "reputation × 2 above capacity" trigger |
+| `attendance_league_caps` | `off` | `on` | removes the average's league caps and the weak-league cut per match |
+| `attendance_record` | `real` | `fixed` | the record becomes the largest crowd that actually came |
+| `pent_up_demand` | 0.1 | 0 | the share of a match's unmet demand that becomes a new record (10,000 people left out: the ceiling rises 1,000) |
+| `tradition_weight` | 0.5 | 0 | a club finishing 5 places above its prediction moves 25% of the way to its historical record |
+| `knockout_ceiling` | `stadium` | `record` | in knockout rounds (category and round code) only the stadium limits |
+| `title_race` | `on` | `off` | the big game by the table: both can still be champions; up to ×1.75 in the run-in of a 1st v 2nd, and another × 1.5 if it is a derby |
+| `stadium_full_seasons` | 2 | 1 | consecutive seasons above 92% to become eligible to expand |
+| `stadium_occupancy` | `all` | `league` | occupancy counts every home match (league, cup, continental) |
+| `stadium_size` | `demand` | `original` | the build matches the measured demand, up to the ceiling |
+| `stadium_seat_cost` | `auto` | `original` | the cost per new place, in the database's currency; `auto` = 1,500 in the 2001 database, in proportion to the median cash of the reputation 8,000+ clubs in the loaded database (15.4 million in 2001, 56 million in CLZ 6.1: 5,450 per place); a number fixes the value |
+| `stadium_ceiling_zero` | `demand` | `original` | for a stadium with no ceiling in the database, the ceiling becomes capacity plus the measured demand |
+| `stadium_max` | 125000 | 125000 | the largest capacity that still expands |
 
-A first configuration for the 2001 database, to tune in careers: everything on, `pent_up_demand = 0.25`, `tradition_weight = 0.5`, `stadium_full_seasons = 2`, `stadium_seat_cost = 1500`. Proof: a 10-season career in which clubs within expectations stay stable, those that climb or have a run grow and cool when they stop, and each new stadium has two full seasons behind it.
+With `log = 1`, three tables next to the exe: `publico_jogos.tsv` (each home match: demand, ceiling, crowd, record, title race), `publico_temporada.tsv` (each club at its league's season end: predicted, final, real attendance, average before and after) and `publico_estadio.tsv` (each build evaluation: occupancy, eligibility, demand, balance, places, cost and the reason).
+
+**Compatibility** [observed, 08/11]: no NickPatcher option or MiscPatches patch touches the three replaced calls (0x6b86bc, 0x5d5cfb, 0x59cee4); `protect_against_virtual_staff_195_error` changes 13 bytes at the end of the match attendance routine, and it keeps working (the tweak calls the whole routine). In the CLZ 6.1, CLZ 5.4 and NickPatcher demo exes, the calls are as in 3.9.68. Coexistence with the NickDLL at runtime is still to be tested in the game.
+
+The proof: 10-season careers with everything on (H), with the big game (I) and the control (the original only recording), compared season by season.

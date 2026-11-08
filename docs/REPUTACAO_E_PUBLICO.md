@@ -53,24 +53,29 @@ Por partida (0x6d26b0) [observado]: as três reputações (casa, atual, mundial)
 
 **O estádio** (0x59cfa0) [observado]: dono, liga e saldo acima de 5,25 milhões; gatilho de uma temporada da liga acima de 92%; obra de 21 mil lugares com saldo acima de 20 milhões, até o teto e um terço dele; nenhum estádio acima de 125 mil amplia; custo de uns 100 por lugar (875 no profissional, todo sentado). Uma obra real de 2001 custava, em ordem de grandeza, de 1.000 a 3.500 libras por lugar [inferência, de memória].
 
-## 5. Chaves propostas (desenho de 08/11, a implementar)
+## 5. As chaves (implementadas em 08/11, `src/publico.rs`, branch `estudos`)
 
-Princípio: o público é **a torcida × o momento × o jogo**. Cresce pelo que acontece em campo e esfria quando o desempenho volta ao esperado; nada cresce sem causa. Todas as chaves partem do valor do jogo original, e os números ficam no `tweaks.cfg` para ajustar a cada banco de dados (o banco de 2001, o de 2026 e o do CLZ têm economias muito diferentes).
+Princípio: o público é **a torcida × o momento × o jogo**. Cresce pelo que acontece em campo e esfria quando o desempenho volta ao esperado; nada cresce sem causa. **O padrão é o nosso** (08/11, Lucas): com um `tweaks.cfg`, cada chave ausente vale a nossa regra; para voltar ao jogo original, escrever o valor da coluna "original". Sem `tweaks.cfg` nenhum, nada muda.
 
-| Chave | Original | O que faz |
-|---|---|---|
-| `stadium_seating_growth` | `on` | `off`: a conversão em lugares sentados não soma mais na capacidade |
-| `stadium_reputation_trigger` | `on` | `off`: tira o gatilho "reputação × 2 acima da capacidade" |
-| `attendance_league_caps` | `on` | `off`: tira os tetos da média pela liga e o corte das ligas fracas no jogo |
-| `attendance_record` | `fixed` | `real`: o recorde passa a ser o maior público que de fato veio |
-| `pent_up_demand` | 0 | a fração da demanda que ficou de fora num jogo (a conta pediu mais do que coube) que vira recorde novo |
-| `tradition_weight` | 0 | o quanto o recorde histórico do banco acelera a volta da torcida quando o clube empolga |
-| `knockout_ceiling` | `record` | `stadium`: no mata-mata (código da rodada) só o estádio limita |
-| `stadium_full_seasons` | 1 | temporadas seguidas acima de 92% para ficar apto a ampliar |
-| `stadium_occupancy` | `league` | `all`: a ocupação conta todos os jogos em casa (liga, copa, continental) |
-| `stadium_size` | `original` | `demand`: a obra é do tamanho da demanda medida, até o teto |
-| `stadium_seat_cost` | `original` | o custo por lugar novo, na moeda do banco (original: uns 100, ou 875 no profissional) |
-| `stadium_ceiling_zero` | `original` | `demand`: no estádio sem teto no banco, o teto passa a ser a capacidade mais a demanda medida |
-| `stadium_max` | 125000 | a maior capacidade que ainda amplia |
+| Chave | Nosso padrão | Original | O que faz |
+|---|---|---|---|
+| `stadium_seating_growth` | `off` | `on` | a conversão em lugares sentados não soma mais na capacidade |
+| `stadium_reputation_trigger` | `off` | `on` | tira o gatilho "reputação × 2 acima da capacidade" |
+| `attendance_league_caps` | `off` | `on` | tira os tetos da média pela liga e o corte das ligas fracas no jogo |
+| `attendance_record` | `real` | `fixed` | o recorde passa a ser o maior público que de fato veio |
+| `pent_up_demand` | 0.1 | 0 | a fração da demanda que ficou de fora num jogo que vira recorde novo (10.000 pessoas de fora: o teto sobe 1.000) |
+| `tradition_weight` | 0.5 | 0 | quem termina 5 posições acima do previsto anda 25% do caminho até o recorde histórico |
+| `knockout_ceiling` | `stadium` | `record` | no mata-mata (categoria e código da rodada) só o estádio limita |
+| `title_race` | `on` | `off` | o jogo grande pela tabela: os dois ainda podem ser campeões; até ×1,75 na reta final de um 1º × 2º, e × 1,5 a mais se for clássico |
+| `stadium_full_seasons` | 2 | 1 | temporadas seguidas acima de 92% para ficar apto a ampliar |
+| `stadium_occupancy` | `all` | `league` | a ocupação conta todos os jogos em casa (liga, copa, continental) |
+| `stadium_size` | `demand` | `original` | a obra é do tamanho da demanda medida, até o teto |
+| `stadium_seat_cost` | `auto` | `original` | o custo por lugar novo, na moeda do banco; `auto` = 1.500 no banco de 2001, na proporção do caixa mediano dos clubes de reputação 8.000 ou mais do banco carregado (15,4 milhões no de 2001, 56 milhões no do CLZ 6.1: 5.450 por lugar); um número fixa o valor |
+| `stadium_ceiling_zero` | `demand` | `original` | no estádio sem teto no banco, o teto passa a ser a capacidade mais a demanda medida |
+| `stadium_max` | 125000 | 125000 | a maior capacidade que ainda amplia |
 
-Uma primeira configuração para o banco de 2001, a ajustar nas carreiras: tudo ligado, `pent_up_demand = 0.25`, `tradition_weight = 0.5`, `stadium_full_seasons = 2`, `stadium_seat_cost = 1500`. Prova: uma carreira de 10 temporadas em que os clubes dentro do esperado ficam estáveis, quem sobe ou faz campanha cresce e esfria quando para, e cada estádio novo tem duas temporadas cheias por trás.
+Com `log = 1`, três tabelas ao lado do exe: `publico_jogos.tsv` (cada jogo em casa: demanda, teto, público, recorde, disputa), `publico_temporada.tsv` (cada clube no fim da temporada da liga: previsto, final, público real, média antes e depois) e `publico_estadio.tsv` (cada avaliação de obra: ocupação, aptidão, demanda, saldo, lugares, custo e o motivo).
+
+**Compatibilidade** [observado, 08/11]: nenhuma opção do NickPatcher nem patch do MiscPatches toca as três chamadas trocadas (0x6b86bc, 0x5d5cfb, 0x59cee4); o `protect_against_virtual_staff_195_error` muda 13 bytes no fim da rotina do público do jogo, que continua valendo (o ajuste chama a rotina inteira). Nos exes do CLZ 6.1, do CLZ 5.4 e da demo do NickPatcher, as chamadas estão como no 3.9.68. A convivência com a NickDLL em tempo de execução ainda vai ser testada no jogo.
+
+A prova: carreiras de 10 temporadas com tudo ligado (H), com o jogo grande (I) e o controle (o original só registrando), comparadas temporada a temporada.

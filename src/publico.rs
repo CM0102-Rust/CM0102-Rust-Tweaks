@@ -46,37 +46,49 @@ pub(crate) struct Publico {
     disputa: bool,
 }
 
-const PADRAO: Publico = Publico {
+/// O jogo original (sem tweaks.cfg nenhum, nada muda).
+const ORIGINAL: Publico = Publico {
     sentados_crescem: true, gatilho_reputacao: true, tetos_da_liga: true, recorde_real: false, reprimida: 0.0, tradicao: 0.0,
     mata_estadio: false, temporadas_cheias: 1, ocupacao_tudo: false, obra_demanda: false, custo_lugar: 0.0, teto_demanda: false,
     maximo: 125_000, disputa: false,
 };
-static mut P: Publico = PADRAO;
+/// As nossas regras, o padrão de cada chave ausente de um tweaks.cfg (08/11, Lucas: o padrão é sempre o nosso). O custo
+/// por lugar −1 = `auto` (calibrado pelo caixa dos clubes do banco).
+const NOSSO: Publico = Publico {
+    sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.5,
+    mata_estadio: true, temporadas_cheias: 2, ocupacao_tudo: true, obra_demanda: true, custo_lugar: -1.0, teto_demanda: true,
+    maximo: 125_000, disputa: true,
+};
+static mut P: Publico = ORIGINAL;
 
 fn ler() -> Publico {
-    let mut p = PADRAO;
     let caminho = std::env::current_exe().map(|x| x.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
-    let Ok(texto) = std::fs::read_to_string(caminho) else { return p };
+    let Ok(texto) = std::fs::read_to_string(caminho) else { return ORIGINAL };
+    let mut p = NOSSO;
     for linha in texto.lines() {
         let linha = linha.split('#').next().unwrap_or("");
         let Some((k, v)) = linha.split_once('=') else { continue };
         let (k, v) = (k.trim(), v.trim());
         let n = v.parse::<f64>().ok();
         match k {
-            "stadium_seating_growth" => p.sentados_crescem = v != "off",
-            "stadium_reputation_trigger" => p.gatilho_reputacao = v != "off",
-            "attendance_league_caps" => p.tetos_da_liga = v != "off",
-            "attendance_record" => p.recorde_real = v == "real",
-            "pent_up_demand" => p.reprimida = n.unwrap_or(0.0).clamp(0.0, 1.0),
-            "tradition_weight" => p.tradicao = n.unwrap_or(0.0).clamp(0.0, 2.0),
-            "knockout_ceiling" => p.mata_estadio = v == "stadium",
-            "stadium_full_seasons" => p.temporadas_cheias = n.unwrap_or(1.0).clamp(1.0, 2.0) as u32,
-            "stadium_occupancy" => p.ocupacao_tudo = v == "all",
-            "stadium_size" => p.obra_demanda = v == "demand",
-            "stadium_seat_cost" => p.custo_lugar = n.unwrap_or(0.0).clamp(0.0, 1e7),
-            "stadium_ceiling_zero" => p.teto_demanda = v == "demand",
-            "title_race" => p.disputa = v == "on",
-            "stadium_max" => p.maximo = n.unwrap_or(125_000.0).clamp(1_000.0, 1e7) as i32,
+            "stadium_seating_growth" => p.sentados_crescem = v == "on",
+            "stadium_reputation_trigger" => p.gatilho_reputacao = v == "on",
+            "attendance_league_caps" => p.tetos_da_liga = v == "on",
+            "attendance_record" => p.recorde_real = v != "fixed",
+            "pent_up_demand" => p.reprimida = n.unwrap_or(p.reprimida).clamp(0.0, 1.0),
+            "tradition_weight" => p.tradicao = n.unwrap_or(p.tradicao).clamp(0.0, 2.0),
+            "knockout_ceiling" => p.mata_estadio = v != "record",
+            "stadium_full_seasons" => p.temporadas_cheias = n.unwrap_or(p.temporadas_cheias as f64).clamp(1.0, 2.0) as u32,
+            "stadium_occupancy" => p.ocupacao_tudo = v != "league",
+            "stadium_size" => p.obra_demanda = v != "original",
+            "stadium_seat_cost" => p.custo_lugar = match v {
+                "original" => 0.0,
+                "auto" => -1.0,
+                _ => n.map(|x| x.clamp(1.0, 1e7)).unwrap_or(p.custo_lugar),
+            },
+            "stadium_ceiling_zero" => p.teto_demanda = v != "original",
+            "title_race" => p.disputa = v != "off",
+            "stadium_max" => p.maximo = n.unwrap_or(p.maximo as f64).clamp(1_000.0, 1e7) as i32,
             _ => {}
         }
     }
@@ -91,7 +103,7 @@ impl Publico {
         !self.tetos_da_liga || self.tradicao > 0.0
     }
     fn assume_obra(&self) -> bool {
-        !self.gatilho_reputacao || self.temporadas_cheias != 1 || self.ocupacao_tudo || self.obra_demanda || self.custo_lugar > 0.0
+        !self.gatilho_reputacao || self.temporadas_cheias != 1 || self.ocupacao_tudo || self.obra_demanda || self.custo_lugar != 0.0
             || self.teto_demanda || self.maximo != 125_000
     }
 }
@@ -136,7 +148,7 @@ pub(crate) unsafe fn instalar() {
         trocar("stadium works", 0x59cee4, 0x59cfa0, estadio as *const () as usize, format!(
             "seating growth {}, reputation trigger {}, full seasons {}, occupancy {}, size {}, seat cost {}, zero ceiling {}, max {}",
             on(p.sentados_crescem), on(p.gatilho_reputacao), p.temporadas_cheias, if p.ocupacao_tudo { "all" } else { "league" },
-            if p.obra_demanda { "demand" } else { "original" }, if p.custo_lugar > 0.0 { p.custo_lugar.to_string() } else { "original".into() },
+            if p.obra_demanda { "demand" } else { "original" }, if p.custo_lugar > 0.0 { p.custo_lugar.to_string() } else if p.custo_lugar < 0.0 { "auto".into() } else { "original".into() },
             if p.teto_demanda { "demand" } else { "original" }, p.maximo));
     }
 }
@@ -527,6 +539,7 @@ unsafe extern "thiscall" fn estadio(this: usize, clube: usize) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let reserva = 5_250_000i64 - if humano(clube, 0, 1, 0, 0) != 0 { rep as i64 * 1000 } else { 0 };
     let profissional = *((clube + 0x64) as *const u8) == 1;
+    let unidade = if p.custo_lugar < 0.0 { custo_auto() } else { p.custo_lugar };
     let mut motivo = "ok";
     let mut n = 0i32;
     let mut custo = 0i64;
@@ -551,16 +564,16 @@ unsafe extern "thiscall" fn estadio(this: usize, clube: usize) {
         n = quer.min(teto - cap0).min(terco).min(p.maximo - cap0);
         // o custo por lugar: o da chave, ou o da original (profissional: ((n/1000+1)×6000 + n) × 125; senão (n + (n/1000+1)×1000) × 50)
         let custo_de = |n: i32| -> i64 {
-            if p.custo_lugar > 0.0 {
-                (n as f64 * p.custo_lugar) as i64
+            if unidade > 0.0 {
+                (n as f64 * unidade) as i64
             } else if profissional {
                 (((n / 1000 + 1) * 6000 + n) as i64) * 125
             } else {
                 ((n + (n / 1000 + 1) * 1000) as i64) * 50
             }
         };
-        if p.custo_lugar > 0.0 {
-            let cabe = ((saldo - reserva) as f64 / p.custo_lugar) as i32;
+        if unidade > 0.0 {
+            let cabe = ((saldo - reserva) as f64 / unidade) as i32;
             n = n.min(cabe);
         }
         n = n / 500 * 500;
@@ -587,6 +600,26 @@ unsafe extern "thiscall" fn estadio(this: usize, clube: usize) {
     if REGRAS.registrar {
         registro_obra(clube, cap0, teto0, sent0, media_t, jogos_t, antes, demanda, apto, saldo, n, custo, (ocup * 100.0) as i32, motivo);
     }
+}
+
+/// O custo por lugar `auto`: 1.500 no banco de 2001 (uma obra real da época, de 1.000 a 3.500 libras por lugar), na
+/// proporção do caixa mediano dos clubes de reputação 8.000 ou mais do banco carregado (+0x65 do clube; 15,4 milhões no
+/// de 2001; 56 milhões no do CLZ 6.1, 3,6 vezes). Calculado uma vez.
+unsafe fn custo_auto() -> f64 {
+    static mut VALOR: f64 = 0.0;
+    if VALOR > 0.0 {
+        return VALOR;
+    }
+    let (base, n) = (d(0xae23b4), d(0xae235c));
+    let mut caixas: Vec<i32> = (0..n.min(100_000)).map(|k| base + 0x245 * k)
+        .filter(|&c| w(c + 0x80) >= 8000 && i(c + 0x65) > 0).map(|c| i(c + 0x65)).collect();
+    caixas.sort_unstable();
+    let mediana = caixas.get(caixas.len() / 2).copied().unwrap_or(15_400_000);
+    let v = (1500.0 * mediana as f64 / 15_400_000.0).clamp(100.0, 1e6);
+    VALOR = v;
+    registro::linha(&format!("stadium seat cost auto: {:.0} per place (median cash of the {} clubs with reputation 8000+: {}; 2001 database: 15400000 -> 1500)",
+        v, caixas.len(), mediana));
+    v
 }
 
 #[allow(clippy::too_many_arguments)]
