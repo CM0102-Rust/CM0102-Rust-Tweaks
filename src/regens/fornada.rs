@@ -562,8 +562,11 @@ unsafe fn soltar(this: usize, da_nacao: &dyn Fn(usize) -> bool) {
                     None => *((p + 0x1e) as *mut usize) = antiga,
                 }
             }
-            // 5. as sobras do dia: a disputa normal da nação, entre os clubes com vaga (qualquer divisão)
-            if do_dia.contains(&p) {
+            // 5. as sobras do dia: a disputa normal da nação, entre os clubes com vaga (qualquer divisão). Só o jovem ainda
+            // sem clube: no clube humano, a 0x7a6f10 pode mandá-lo para o time B (move_to_reserves 0x4cc0f0), o +0x39 fica
+            // diferente de c e ele já está num elenco; assiná-lo de novo o punha em dois elencos, ou duas vezes no mesmo
+            // (a caixa "match_man.cpp 1225" da escalação automática; carreiras de 08/11 que caíram em 2005)
+            if do_dia.contains(&p) && livre(p) {
                 let da_nac: Vec<usize> = todos.iter().copied().filter(|&c| d(c + 0x53) == nac).collect();
                 if let Some(c) = sortear_clube(p, &da_nac) {
                     assinar(this, p, c);
