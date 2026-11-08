@@ -93,6 +93,9 @@ pub(crate) fn iniciar_batida() {
                 if mes == 6 {
                     unsafe { registrar_temporada(format!("{}-{:03}", ano, dia)) };
                 }
+                if crate::estudo::ligado() {
+                    unsafe { crate::estudo::medir(&format!("{}-{:03}", ano, dia), mes == 6) };
+                }
             }
         }
     });

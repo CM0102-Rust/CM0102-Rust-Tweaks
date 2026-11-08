@@ -71,6 +71,8 @@ mod regras;
 use regras::*;
 mod vigia;
 use vigia::*;
+mod estudo;
+mod sucesso;
 
 /// Os contadores de ramo do projeto: aqui não contam nada.
 mod comparacao {
@@ -231,6 +233,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
             registro::linha("intake: off (intake = 0)");
         }
         fornada::instalar_aposentadoria();
+        sucesso::instalar();
     }
     1
 }

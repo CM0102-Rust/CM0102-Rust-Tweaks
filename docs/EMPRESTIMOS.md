@@ -8,11 +8,11 @@ A reclamação mais repetida do mercado no fórum ([OPORTUNIDADES.md](OPORTUNIDA
 
 | Rotina | Nome (mapa da comunidade) | O que decide | Estado no projeto |
 |---|---|---|---|
-| 0x8c8090 | `TRANSFER_MANAGER::ai_respond_to_bid` | a resposta de um clube da IA a um lance | original |
+| 0x8c8090 | `TRANSFER_MANAGER::ai_respond_to_bid` | a resposta de um clube da IA a um lance | Rust |
 | 0x84af00 | `shortlist_manager_predict_selling_club_response` | a previsão: aceita, negocia ou recusa um lance ou um pedido de empréstimo | Rust |
-| 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` | a nota de vontade de uma pessoa de ir (ou ficar) num clube, com um motivo marcado por fator | original (13 KB, 3.881 instruções) |
+| 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` | a nota de vontade de uma pessoa de ir (ou ficar) num clube, com um motivo marcado por fator | Rust |
 | 0x842740 | `Shortlist_Manager::try_loan_offer_for_player` | a IA oferecer um empréstimo por um jogador da lista dela | Rust |
-| 0x84a020 | `Shortlist_Manager::make_club_bids` | a IA percorrer as 40 vagas da lista e fazer lances ou pedidos de empréstimo | original |
+| 0x84a020 | `Shortlist_Manager::make_club_bids` | a IA percorrer as 40 vagas da lista e fazer lances ou pedidos de empréstimo | Rust |
 | 0x8bed60 | `TRANSFER_MANAGER::make_loan_offer` | montar a oferta de empréstimo | Rust |
 | 0x8bfa30 | `TRANSFER_MANAGER::reject_loan_offer` | recusar e mandar a notícia | Rust |
 | 0x4d01e0 | `CONTRACT_MANAGER::sign_loan_contract` | assinar: o jogador vai para o elenco do clube que pegou | Rust |
@@ -21,7 +21,7 @@ A reclamação mais repetida do mercado no fórum ([OPORTUNIDADES.md](OPORTUNIDA
 
 ## O que o código diz
 
-1. **O clube da IA recusa todo lance de empréstimo que chega pela resposta a lances.** Logo no começo da 0x8c8090, uma oferta com `+0x1f = 1` (empréstimo) vai direto para `reject_loan_offer`, sem olhar o salário, o período ou o jogador [observado: o pseudocódigo da 0x8c8090, linhas 72–75].
+1. **Correção (07/11/2026):** a recusa de todo empréstimo no começo da 0x8c8090 (`+0x1f = 1` → `reject_loan_offer`) só é alcançada por chamadores de troca, sem empréstimo: é código praticamente morto. A oferta de empréstimo vencida vai, pelo `process_due_offer` (0x8c63a0) e pela resposta automática das férias (0x784100), direto para a 0x84af00, que é **quem decide** [observado]. Ver [MERCADO.md](MERCADO.md) §2.
 2. **Os empréstimos que acontecem passam pela previsão (0x84af00), que só aceita em poucos casos** [observado]:
    - o clube que empresta é humano;
    - o jogador está **na lista de empréstimos** do dono e a reputação de quem pede, vezes 1,25 (0x968928), passa a reputação atual do jogador (+0xb da ficha);
@@ -43,4 +43,4 @@ A reclamação mais repetida do mercado no fórum ([OPORTUNIDADES.md](OPORTUNIDA
    - **jovens para desenvolver:** o clube da IA põe na lista de empréstimos os jovens com pouco tempo de jogo e PA bem acima do CA;
    - os empréstimos presos no modo férias (item 88 do xeno): achar o estado em que a oferta fica parada.
 3. **As regras de cada país ficam** (janelas, limites por temporada).
-4. **Como entrar na rotina:** a 0x8c8090 trata todos os lances. O ajuste desvia a entrada, decide os lances de empréstimo pela regra nova e devolve os outros à rotina do exe, como o modo de observação da disputa faz hoje.
+4. **Como entrar na rotina:** embrulhar as 7 chamadas da 0x84af00: chamar a original e, quando ela recusa um empréstimo, aplicar a regra nova. É o que a chave experimental `loan_rule = squad` faz (branch `estudos`, [MERCADO.md](MERCADO.md) §5).

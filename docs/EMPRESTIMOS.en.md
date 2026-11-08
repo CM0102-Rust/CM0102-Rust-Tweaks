@@ -8,11 +8,11 @@ The market's most repeated complaint on the forum ([OPORTUNIDADES.en.md](OPORTUN
 
 | Routine | Name (community map) | What it decides | Status in the project |
 |---|---|---|---|
-| 0x8c8090 | `TRANSFER_MANAGER::ai_respond_to_bid` | an AI club's answer to a bid | original |
+| 0x8c8090 | `TRANSFER_MANAGER::ai_respond_to_bid` | an AI club's answer to a bid | Rust |
 | 0x84af00 | `shortlist_manager_predict_selling_club_response` | the prediction: accepts, haggles over or rejects a bid or loan request | Rust |
-| 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` | a person's willingness score to join (or stay at) a club, with a reason marked per factor | original (13 KB, 3,881 instructions) |
+| 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` | a person's willingness score to join (or stay at) a club, with a reason marked per factor | Rust |
 | 0x842740 | `Shortlist_Manager::try_loan_offer_for_player` | the AI making a loan offer for a player on its shortlist | Rust |
-| 0x84a020 | `Shortlist_Manager::make_club_bids` | the AI walking its 40 shortlist slots and making bids or loan requests | original |
+| 0x84a020 | `Shortlist_Manager::make_club_bids` | the AI walking its 40 shortlist slots and making bids or loan requests | Rust |
 | 0x8bed60 | `TRANSFER_MANAGER::make_loan_offer` | building the loan offer | Rust |
 | 0x8bfa30 | `TRANSFER_MANAGER::reject_loan_offer` | rejecting and posting the news | Rust |
 | 0x4d01e0 | `CONTRACT_MANAGER::sign_loan_contract` | signing: the player joins the borrowing club's squad | Rust |
@@ -21,7 +21,7 @@ The market's most repeated complaint on the forum ([OPORTUNIDADES.en.md](OPORTUN
 
 ## What the code says
 
-1. **An AI club rejects every loan bid that comes through the bid response.** Right at the start of 0x8c8090, an offer with `+0x1f = 1` (loan) goes straight to `reject_loan_offer`, without looking at wage, period or player [observed: the 0x8c8090 pseudocode, lines 72–75].
+1. **Correction (07/11/2026):** the rejection of every loan at the start of 0x8c8090 (`+0x1f = 1` → `reject_loan_offer`) is only reached by exchange callers, with no loan: it is practically dead code. A due loan offer goes, through `process_due_offer` (0x8c63a0) and the holiday auto-response (0x784100), straight to 0x84af00, which is **what decides** [observed]. See [MERCADO.en.md](MERCADO.en.md) §2.
 2. **The loans that do happen go through the prediction (0x84af00), which accepts only in a few cases** [observed]:
    - the lending club is human;
    - the player is **on the owner's loan list** and the requesting club's reputation times 1.25 (0x968928) exceeds the player's current reputation (+0xb of the record);
@@ -43,4 +43,4 @@ The market's most repeated complaint on the forum ([OPORTUNIDADES.en.md](OPORTUN
    - **youngsters for development:** the AI club loan-lists youngsters with little playing time and PA well above CA;
    - loans stuck in holiday mode (xeno's item 88): find the state in which the offer stalls.
 3. **Each country's rules stay** (windows, per-season limits).
-4. **How to hook in:** 0x8c8090 handles every bid. The tweak redirects its entry, decides loan bids by the new rule and passes the others back to the exe's routine, as the contest observation mode does today.
+4. **How to hook in:** wrap the 7 calls to 0x84af00: call the original and, when it rejects a loan, apply the new rule. That is what the experimental key `loan_rule = squad` does (branch `estudos`, [MERCADO.en.md](MERCADO.en.md) §5).
