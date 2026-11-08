@@ -244,9 +244,26 @@ unsafe fn objeto(comp: usize) -> usize {
     d(d(0xadadfc) + 4 * d(comp))
 }
 
+/// A original (0x85cba0) com a proteção do visitante sem nação: a distância da torcida (0x85d8a0) lê um byte da nação
+/// do clube de fora (+0x53, o estágio de desenvolvimento +0x7e) sem conferir; num banco com clube sem nação, o jogo cai
+/// (o erro "virtual staff 195" da comunidade, que o protect_against_virtual_staff_195_error do MiscPatches corrige no
+/// exe). Aqui, durante a chamada, o visitante sem nação usa a do mandante.
+unsafe fn original_protegida(this: usize, partida: usize, saida: *mut i32) -> i32 {
+    let original: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32 = core::mem::transmute(0x85cba0usize);
+    let (casa, fora) = if partida != 0 { (d(partida + 0x1c), d(partida + 0x20)) } else { (0, 0) };
+    if fora == 0 || d(fora + 0x53) != 0 || casa == 0 || d(casa + 0x53) == 0 {
+        return original(this, partida, saida);
+    }
+    pi(fora + 0x53, d(casa + 0x53) as i32);
+    let r = original(this, partida, saida);
+    pi(fora + 0x53, 0);
+    registro::linha(&format!("match attendance: away club {} has no nation; the home nation was used for the travel distance", d(fora)));
+    r
+}
+
 /// { 0x85cba0 } embrulhada: (this, partida, saída) -> total.
 unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -> i32 {
-    let original: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32 = core::mem::transmute(0x85cba0usize);
+    let original = |this: usize, partida: usize, saida: *mut i32| -> i32 { original_protegida(this, partida, saida) };
     if partida == 0 || saida.is_null() {
         return original(this, partida, saida);
     }
