@@ -151,6 +151,7 @@ unsafe extern "thiscall" fn escalar(t: usize, outro: usize, modo: u32) {
                 crate::data_do_jogo(), d(c), nome(c), d(p), b(p + 0x18), if d(p + 0x39) != 0 { d(d(p + 0x39)) as i64 } else { -1 }));
         }
     }
+    crate::elenco::limpar_clube(c, "before the team selection");
     ESCALANDO = t;
     original(t, outro, modo);
     ESCALANDO = 0;
@@ -230,6 +231,9 @@ unsafe extern "C" fn entrada_regen() {
 }
 
 pub(crate) unsafe fn instalar_conferencia() {
+    if crate::elenco::ligado() {
+        return; // a proteção do elenco já fica nessas entradas e registra cada cópia apagada
+    }
     match crate::origem::trampolim(0x53bd10, &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00], entrada_add as *const () as usize) {
         Some(t) => TRAMPOLIM_ADD = t,
         None => registro::linha("study: 0x53bd10 differs; not watched"),

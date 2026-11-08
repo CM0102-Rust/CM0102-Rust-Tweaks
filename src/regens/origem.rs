@@ -344,6 +344,7 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
             completar_reserva();
         }
         crate::publico::carregou(&c);
+        crate::elenco::carregou();
     }
     r
 }

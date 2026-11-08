@@ -36,6 +36,8 @@ use desvios::*;
 mod pasta;
 #[path = "jogo/instancias.rs"]
 mod instancias;
+#[path = "jogo/elenco.rs"]
+mod elenco;
 use instancias::*;
 #[path = "video/apresentacao.rs"]
 mod apresentacao;
@@ -236,6 +238,7 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
         fornada::instalar_aposentadoria();
         sucesso::instalar();
         publico::instalar();
+        elenco::instalar();
         if estudo::ligado() {
             estudo::instalar();
         }
