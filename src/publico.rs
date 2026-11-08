@@ -65,12 +65,16 @@ fn ler() -> Publico {
     let caminho = std::env::current_exe().map(|x| x.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
     let Ok(texto) = std::fs::read_to_string(caminho) else { return ORIGINAL };
     let mut p = NOSSO;
+    let (mut publico, mut estadio) = (true, true);
     for linha in texto.lines() {
         let linha = linha.split('#').next().unwrap_or("");
         let Some((k, v)) = linha.split_once('=') else { continue };
         let (k, v) = (k.trim(), v.trim());
         let n = v.parse::<f64>().ok();
         match k {
+            // os interruptores de cada ajuste (o switch do configurador): off = o jogo original, qualquer que seja o resto
+            "attendance" => publico = v != "off",
+            "stadium" => estadio = v != "off",
             "stadium_seating_growth" => p.sentados_crescem = v == "on",
             "stadium_reputation_trigger" => p.gatilho_reputacao = v == "on",
             "attendance_league_caps" => p.tetos_da_liga = v == "on",
@@ -91,6 +95,16 @@ fn ler() -> Publico {
             "stadium_max" => p.maximo = n.unwrap_or(p.maximo as f64).clamp(1_000.0, 1e7) as i32,
             _ => {}
         }
+    }
+    if !publico {
+        let o = ORIGINAL;
+        (p.tetos_da_liga, p.recorde_real, p.reprimida, p.tradicao, p.mata_estadio, p.disputa) =
+            (o.tetos_da_liga, o.recorde_real, o.reprimida, o.tradicao, o.mata_estadio, o.disputa);
+    }
+    if !estadio {
+        let o = ORIGINAL;
+        (p.sentados_crescem, p.gatilho_reputacao, p.temporadas_cheias, p.ocupacao_tudo, p.obra_demanda, p.custo_lugar, p.teto_demanda, p.maximo) =
+            (o.sentados_crescem, o.gatilho_reputacao, o.temporadas_cheias, o.ocupacao_tudo, o.obra_demanda, o.custo_lugar, o.teto_demanda, o.maximo);
     }
     p
 }

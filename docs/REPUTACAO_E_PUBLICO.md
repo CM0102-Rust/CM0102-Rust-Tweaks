@@ -59,6 +59,8 @@ Princípio: o público é **a torcida × o momento × o jogo**. Cresce pelo que 
 
 | Chave | Nosso padrão | Original | O que faz |
 |---|---|---|---|
+| `attendance` | `on` | `off` | o interruptor do público (as chaves de `attendance_league_caps` a `title_race`): `off` = o jogo original, qualquer que seja o resto |
+| `stadium` | `on` | `off` | o interruptor do estádio (as chaves `stadium_*`): `off` = o jogo original |
 | `stadium_seating_growth` | `off` | `on` | a conversão em lugares sentados não soma mais na capacidade |
 | `stadium_reputation_trigger` | `off` | `on` | tira o gatilho "reputação × 2 acima da capacidade" |
 | `attendance_league_caps` | `off` | `on` | tira os tetos da média pela liga e o corte das ligas fracas no jogo |

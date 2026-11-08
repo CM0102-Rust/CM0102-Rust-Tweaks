@@ -59,6 +59,8 @@ Principle: attendance is **the support × the moment × the match**. It grows fr
 
 | Key | Our default | Original | What it does |
 |---|---|---|---|
+| `attendance` | `on` | `off` | the attendance switch (the keys from `attendance_league_caps` to `title_race`): `off` = the original game, whatever the rest says |
+| `stadium` | `on` | `off` | the stadium switch (the `stadium_*` keys): `off` = the original game |
 | `stadium_seating_growth` | `off` | `on` | converting to seats no longer adds to capacity |
 | `stadium_reputation_trigger` | `off` | `on` | removes the "reputation × 2 above capacity" trigger |
 | `attendance_league_caps` | `off` | `on` | removes the average's league caps and the weak-league cut per match |
