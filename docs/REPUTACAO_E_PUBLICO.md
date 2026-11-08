@@ -32,10 +32,45 @@ Por partida (0x6d26b0) [observado]: as três reputações (casa, atual, mundial)
 - **a mundial** quase não anda em jogo de clube: peso 202 − 10 × nível;
 - passo máximo por jogo: 250 a 375 × (2 − reputação / 10.000).
 
-## 4. O que a carreira mediu
+## 4. O que a carreira e o levantamento mostraram
 
-*(a preencher com a carreira de 07/11)*
+**Carreira-base** (todas as ligas, 2001 a 2005) [medido]: ocupação média de 49% nos clubes de reputação até 2.000 e de 85% nos de 8.000 a 10.000; 153 dos 1.122 clubes terminam com a média presa no recorde. Uma carreira de teste que puxava a média pela reputação no fim da temporada soltou o recorde (60 presos), mas foi descartada: cresce sem causa em campo, e os pequenos quase não mudam.
 
-## 5. Chaves propostas
+**O banco de dados** [medido nas tabelas de 2001-052]:
+- o **recorde** (+0x7b) é o recorde histórico, não a torcida de hoje (Albion Rovers: média 250, recorde 18.321, estádio de 2.496); passa da capacidade em 415 dos 1.111 clubes;
+- a **média** é o retrato de hoje; em 150 clubes foi preenchida pela reputação (reputação² ÷ 2.000; quase todos esses, 128, também com o mínimo = média ÷ 5), como os grandes do Brasil;
+- **o teto de expansão do estádio** (+0x44) é 0 em 69% dos clubes das ligas de nível 16 a 20.
 
-*(a preencher)*
+**Crescimento artificial que já existe no jogo** [observado, e medido na base]: quando não amplia, o clube converte lugares em pé em sentados e soma os lugares novos também na capacidade total, então o estádio com espaço em pé cresce todo ano, por sorteio e saldo, sem olhar público nem teto. Na base, 34 dos 66 estádios que cresceram tinham teto 0 (Bahia: 115.000 → 134.000 com média de 21.125 → 4.225). O gatilho "reputação × 2 acima da capacidade" também amplia sem público.
+
+**O que o jogo já tem e que serve** [observado]:
+- a posição prevista de cada clube (+0x72 da ficha da competição) e a atual (+0x73);
+- no jogo, um bônus por ir melhor que o previsto; no fim da temporada, a média anda por (prevista − final + 1) e mistura o público real da temporada;
+- o público real por competição (+5 jogos em casa, +6 público somado [inferência]) e por temporada nos recordes do clube [inferência];
+- o código da rodada de cada jogo (120 quartas, 130 semifinal, 150 final) e o tipo da competição.
+
+**O que estraga** [observado]: o recorde fixo (corta o jogo e a média), os tetos da média pela liga (2.000, 3.000 ou 5.000 × nível) e, no jogo, o corte das ligas de nível até 4 (acima de 1.500 × nível, só 20% do excesso).
+
+**O estádio** (0x59cfa0) [observado]: dono, liga e saldo acima de 5,25 milhões; gatilho de uma temporada da liga acima de 92%; obra de 21 mil lugares com saldo acima de 20 milhões, até o teto e um terço dele; nenhum estádio acima de 125 mil amplia; custo de uns 100 por lugar (875 no profissional, todo sentado). Uma obra real de 2001 custava, em ordem de grandeza, de 1.000 a 3.500 libras por lugar [inferência, de memória].
+
+## 5. Chaves propostas (desenho de 08/11, a implementar)
+
+Princípio: o público é **a torcida × o momento × o jogo**. Cresce pelo que acontece em campo e esfria quando o desempenho volta ao esperado; nada cresce sem causa. Todas as chaves partem do valor do jogo original, e os números ficam no `tweaks.cfg` para ajustar a cada banco de dados (o banco de 2001, o de 2026 e o do CLZ têm economias muito diferentes).
+
+| Chave | Original | O que faz |
+|---|---|---|
+| `stadium_seating_growth` | `on` | `off`: a conversão em lugares sentados não soma mais na capacidade |
+| `stadium_reputation_trigger` | `on` | `off`: tira o gatilho "reputação × 2 acima da capacidade" |
+| `attendance_league_caps` | `on` | `off`: tira os tetos da média pela liga e o corte das ligas fracas no jogo |
+| `attendance_record` | `fixed` | `real`: o recorde passa a ser o maior público que de fato veio |
+| `pent_up_demand` | 0 | a fração da demanda que ficou de fora num jogo (a conta pediu mais do que coube) que vira recorde novo |
+| `tradition_weight` | 0 | o quanto o recorde histórico do banco acelera a volta da torcida quando o clube empolga |
+| `knockout_ceiling` | `record` | `stadium`: no mata-mata (código da rodada) só o estádio limita |
+| `stadium_full_seasons` | 1 | temporadas seguidas acima de 92% para ficar apto a ampliar |
+| `stadium_occupancy` | `league` | `all`: a ocupação conta todos os jogos em casa (liga, copa, continental) |
+| `stadium_size` | `original` | `demand`: a obra é do tamanho da demanda medida, até o teto |
+| `stadium_seat_cost` | `original` | o custo por lugar novo, na moeda do banco (original: uns 100, ou 875 no profissional) |
+| `stadium_ceiling_zero` | `original` | `demand`: no estádio sem teto no banco, o teto passa a ser a capacidade mais a demanda medida |
+| `stadium_max` | 125000 | a maior capacidade que ainda amplia |
+
+Uma primeira configuração para o banco de 2001, a ajustar nas carreiras: tudo ligado, `pent_up_demand = 0.25`, `tradition_weight = 0.5`, `stadium_full_seasons = 2`, `stadium_seat_cost = 1500`. Prova: uma carreira de 10 temporadas em que os clubes dentro do esperado ficam estáveis, quem sobe ou faz campanha cresce e esfria quando para, e cada estádio novo tem duas temporadas cheias por trás.
