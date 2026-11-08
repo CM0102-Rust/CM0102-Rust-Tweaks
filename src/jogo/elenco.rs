@@ -38,9 +38,16 @@ fn ler() -> bool {
     ligado
 }
 
+/// Um ponteiro de pessoa de verdade: dentro da tabela das pessoas ([0xae23bc], 110 bytes cada, [0xae2364] pessoas), no
+/// começo de um registro (durante a carga do banco, os elencos ainda têm ids e −1).
+pub(crate) unsafe fn pessoa_valida(p: usize) -> bool {
+    let (base, n) = (d(0xae23bc), d(0xae2364));
+    base != 0 && n < 2_000_000 && p >= base && p < base + 110 * n && (p - base) % 110 == 0
+}
+
 /// Apaga as cópias repetidas de `pessoa` no elenco de `clube` (fica a primeira); quantas apagou.
 unsafe fn limpar(clube: usize, pessoa: usize, onde: &str) -> usize {
-    if clube < 0x10000 || pessoa < 0x10000 {
+    if clube < 0x10000 || !pessoa_valida(pessoa) {
         return 0;
     }
     let mut achou = false;

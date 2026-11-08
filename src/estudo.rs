@@ -100,7 +100,7 @@ pub(crate) unsafe fn duplicados(data: &str) {
     let mut linhas = Vec::new();
     for k in 0..nc {
         let c = clubes + 0x245 * k;
-        let mut elenco: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| p != 0).collect();
+        let mut elenco: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| crate::elenco::pessoa_valida(p)).collect();
         elenco.sort_unstable();
         for par in elenco.windows(2) {
             if par[0] == par[1] && vistos.insert((d(c), par[0])) {
@@ -137,7 +137,7 @@ pub(crate) unsafe fn instalar() {
 }
 
 unsafe fn elenco_repetido(c: usize) -> Vec<usize> {
-    let mut e: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| p != 0).collect();
+    let mut e: Vec<usize> = (0..50).map(|j| d(c + 0xd7 + 4 * j)).filter(|&p| crate::elenco::pessoa_valida(p)).collect();
     e.sort_unstable();
     e.windows(2).filter(|p| p[0] == p[1]).map(|p| p[0]).collect()
 }
@@ -171,7 +171,7 @@ pub(crate) unsafe fn caixa_da_escalacao(texto: &str) {
     registro::linha(&format!("study: the box came while selecting club {} {} (staff {:#x}, match {:#x}, human {})", d(c), nome(c), t, jogo, *((t + 0x19) as *const u8)));
     for j in 0..50 {
         let p = d(c + 0xd7 + 4 * j);
-        if p != 0 {
+        if crate::elenco::pessoa_valida(p) {
             let ficha = d(p + 0x61);
             registro::linha(&format!("study: squad {}	person {}	age {}	club {}	player {}	ca {}", j, d(p), b(p + 0x18),
                 if d(p + 0x39) != 0 { d(d(p + 0x39)) as i64 } else { -1 }, (ficha != 0) as u8, if ficha != 0 { w(ficha + 5) } else { -1 }));
@@ -187,7 +187,7 @@ static mut TRAMPOLIM_ADD: usize = 0;
 static mut TRAMPOLIM_REGEN: usize = 0;
 
 unsafe extern "C" fn conferir(retorno: usize, clube: usize, pessoa: usize) {
-    if clube == 0 || pessoa == 0 || clube < 0x10000 || pessoa < 0x10000 {
+    if clube < 0x10000 || !crate::elenco::pessoa_valida(pessoa) {
         return;
     }
     if (0..50).any(|j| d(clube + 0xd7 + 4 * j) == pessoa) {
