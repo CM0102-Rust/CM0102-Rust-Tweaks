@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
     let teto = if mata && p.mata_estadio {
         cap
     } else if classico || disputa > 1.0 {
-        (recorde as f64 * disputa.max(if classico { 1.5 } else { 1.0 })) as i32
+        (recorde as f64 * disputa * if classico { 1.5 } else { 1.0 }) as i32
     } else {
         recorde
     };
@@ -301,7 +301,8 @@ unsafe fn eh_mata(partida: usize, da_liga: bool, codigo: i32) -> bool {
 
 /// O jogo grande pela tabela (title_race = on): os dois ainda podem ser campeões (melhor posição possível, +0x39 da
 /// linha da tabela, = 1). O fator cresce com a temporada, 1 + 0,5 × jogos feitos / jogos da temporada, e +0,25 com os
-/// dois nos dois primeiros: até 1,75 na reta final de um 1º × 2º (o clássico do banco é 1,5).
+/// dois nos dois primeiros: até 1,75 na reta final de um 1º × 2º. Soma ao clássico do banco (×1,5): um clássico
+/// valendo o título chega a 1,5 × 1,75.
 unsafe fn fator_disputa(liga: usize, casa: usize, fora: usize) -> f64 {
     if liga == 0 || d(liga + 0xb1) == 0 {
         return 1.0;
