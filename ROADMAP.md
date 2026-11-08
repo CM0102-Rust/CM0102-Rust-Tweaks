@@ -114,7 +114,7 @@ A single `.exe`, with its own interface (not copying NickPatcher's). It doesn't 
   - improves the quality and variety of staff in long-term saves;
   - to do: find the threshold in the code (the development of non-player attributes), check the routine and expose the age in the `.cfg` (`staff_development_age`), crediting him.
 - 💡 **Youngsters born without a club** go through the draw, only among lower-division clubs. Depends on the phase 2 measurement.
-- ⏳ **The Basque as a Spaniard in the whole game** (Lucas, 11/07): hook the foreigner routine (0x53d980) so that in Spain a Basque (first or second nationality) is not a foreigner in anything (line-ups, signings, regens), as the new NickDLL does. Its own key, off by default, and it yields to NickDLL when that already hooks the same place. Since 1.3 this already applies when choosing a regen's club (the contest and the intake).
+- ⏳ **The Basque as a Spaniard in the whole game** (Lucas, 11/07): hook the foreigner routine (0x53d980) so that in Spain a Basque (first or second nationality) is not a foreigner in anything (line-ups, signings, regens). Its own key, off by default, and it yields to another DLL that already hooks the same place. Since 1.3 this already applies when choosing a regen's club (the contest and the intake).
 - 💡 **Facilities on PA**: on signing, PA + (Training − 10) × 0.5 ± 2. Off by default.
 
 ## Phase 5: the release ⏳
