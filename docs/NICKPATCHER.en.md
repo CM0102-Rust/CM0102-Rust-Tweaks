@@ -35,8 +35,6 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 
 NickDLL changes the exe in memory after it opens. Those with the "extended resolution" (`"resolucao"` in `NickDLL_config.json`) take care of the resolution: with a resolution chosen there, our `resolution` stays out. It also replaces the B-team routine (the contest uses its version, no problem) and may hook the message box (our `log` chains; to be confirmed in the game). Details in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md).
 
-**Basque regens and the newest NickDLL (November 2026).** The Tweaks contest (`rule = new`) has its own rule for Basque regens: Basque by first or second nationality, and the original's 5 clubs (Athletic and its B team, Real Sociedad and its B team, Alavés) plus the ones the game itself marks as "signs only Basques" (Eibar, Barakaldo, Sestao and 18 more); when choosing a regen's club, a Basque is not a foreigner in Spain. We tested it with the newest NickDLL: the two coexist. With `rule = original`, the choice stays with the exe and whatever sits next to it.
-
 **NickPatcher v2.33** (11/04/2026): only international cups and the 2026 hosts; nothing in common with Tweaks' code.
 
 ## How to know what applies to your exe

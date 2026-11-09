@@ -35,8 +35,6 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 
 A NickDLL muda o exe em memória, depois de abrir. As que trazem a "resolução ampliada" (`"resolucao"` no `NickDLL_config.json`) cuidam da resolução: com uma resolução escolhida lá, a nossa `resolution` fica de fora. Ela também troca a rotina do time B (a disputa usa a dela, sem problema) e pode desviar a caixa de mensagem (o nosso `log` encadeia; a confirmar no jogo). Detalhes em [COMPATIBILIDADE.md](COMPATIBILIDADE.md).
 
-**Os regens bascos e a NickDLL mais nova (novembro de 2026).** A disputa do Tweaks (`rule = new`) tem a regra dela para os regens bascos: basco pela primeira ou pela segunda nacionalidade, e os 5 clubes da original (Athletic e o B, Real Sociedad e o B, Alavés) mais os que o próprio jogo marca como "só contrata bascos" (Eibar, Barakaldo, Sestao e mais 18); na escolha do clube do regen, o basco não é estrangeiro na Espanha. Testamos com a NickDLL mais nova: as duas convivem. Com `rule = original`, a escolha fica com o exe e com o que estiver ao lado dele.
-
 **NickPatcher v2.33** (04/11/2026): só copas internacionais e as sedes de 2026; nada em comum com os trechos do Tweaks.
 
 ## Como saber o que vale no seu exe
