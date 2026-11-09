@@ -31,7 +31,7 @@ When this repository goes public, it replaces `CM0102-Rust/cm0102-save2gb`, whic
 
 The plan is in [ROADMAP.md](ROADMAP.md).
 
-**Status: work in progress.** Version 1.3 is a pre-release ([Releases](https://github.com/CM0102-Rust/CM0102-Rust-Tweaks/releases): the DLL, the configurator, `tweaks.cfg` and the guides, plus the source code): improvements will come, and it needs testing by people who play. **Always back up your saves** before trying it, and send `tweaks.log` if something goes wrong. It has run in automatic careers of up to ten seasons on 3.9.68 and five on CLZ, with no crash; the numbers are in [docs/TESTES.en.md](docs/TESTES.en.md). The configurator is described in [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md).
+**Status: work in progress.** Version 1.4 is a pre-release ([Releases](https://github.com/CM0102-Rust/CM0102-Rust-Tweaks/releases): the DLL, the configurator, `tweaks.cfg` and the guides, plus the source code): improvements will come, and it needs testing by people who play. **Always back up your saves** before trying it, and send `tweaks.log` if something goes wrong. It has run in automatic careers of up to ten seasons on 3.9.68 and five on CLZ, with no crash; the numbers are in [docs/TESTES.en.md](docs/TESTES.en.md). The configurator is described in [docs/CONFIGURADOR.en.md](docs/CONFIGURADOR.en.md).
 
 **Install:** copy `ddraw.dll`, `tweaks.cfg` and `tweaks-config.exe` into the folder of `cm0102.exe` and open the configurator. **Remove:** delete `ddraw.dll`.
 
@@ -43,6 +43,7 @@ The plan is in [ROADMAP.md](ROADMAP.md).
 | ![Ages](assets/screenshots/en/03-ages.png) | ![Clubs' contest](assets/screenshots/en/04-contest.png) |
 | ![Retirement](assets/screenshots/en/05-retirement.png) | ![Regen origins](assets/screenshots/en/06-regen-origins.png) |
 | ![Grey players](assets/screenshots/en/07-grey-players.png) | |
+| ![Attendance (1.4 design)](assets/screenshots/en/09-attendance-light.png) | ![Stadium, dark mode (1.4 design)](assets/screenshots/en/10-stadium-dark.png) |
 
 ## Files
 

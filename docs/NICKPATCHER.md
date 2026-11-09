@@ -26,6 +26,10 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 | **Tapani's new regen code** (`tapaninewregencode`, **TurnOffTapaniRegens**, **Regens mega boost**): outro gerador de atributos no fim da criação do regen | convive; as nossas idades, a disputa e o `regen_origins` agem antes ou ao redor; os atributos finais são os do código do Tapani |
 | **UseCommonNamesForBrazilRegens**, **IncreasePregensMultiplier** | convivem (nomes; jogadores gerados no início da carreira) |
 | **NoCD** do NickPatcher | convive com o nosso `no_cd`: as checagens que o exe já tem ficam, a DLL completa as outras |
+| **protect_against_virtual_staff_195_error** (MiscPatches): protege o fim da rotina do público do jogo | convive com o público (`attendance`): a nossa regra chama a rotina inteira, com a proteção dentro, e protege também o visitante sem nação |
+| **match_eng_1225_error_turn_off** (MiscPatches): cala a caixa "match_man.cpp 1225" | convive com a proteção do elenco (`squad_guard`): a nossa tira as cópias repetidas antes da escalação, e a caixa deixa de ter motivo |
+
+**Público, estádio e proteção do elenco** (1.4): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos trechos deles (as chamadas trocadas do público e do estádio, as duas rotinas de entrada no elenco, a escalação automática e os ganchos de gravar e carregar o save). Nos exes do CLZ 6.1, do CLZ 5.4 e da demo do NickPatcher, esses trechos estão como no 3.9.68.
 
 ## A NickDLL (pacotes como o CLZ)
 

@@ -1649,7 +1649,7 @@ impl App {
         });
     }
 
-    /// A ponte das competições (ramo local, sem push): só com o `clz.dll` na pasta. O interruptor é a chave geral
+    /// A ponte das competições: só com o `clz.dll` na pasta. O interruptor é a chave geral
     /// `competitions` do `competitions.cfg` dele (gravada na hora, fora do Gravar do tweaks.cfg); o nome abre o
     /// configurador das competições na mesma pasta.
     fn linha_competicoes(&mut self, ui: &mut egui::Ui) {

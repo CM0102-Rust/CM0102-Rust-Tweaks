@@ -26,6 +26,10 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 | **Tapani's new regen code** (`tapaninewregencode`, **TurnOffTapaniRegens**, **Regens mega boost**): another attribute generator at the end of regen creation | works together; our ages, contest and `regen_origins` act before or around it; the final attributes are those of Tapani's code |
 | **UseCommonNamesForBrazilRegens**, **IncreasePregensMultiplier** | work together (names; players generated at the start of the career) |
 | NickPatcher's **NoCD** | works with our `no_cd`: the checks the exe already has stay, the DLL completes the others |
+| **protect_against_virtual_staff_195_error** (MiscPatches): protects the end of the game's attendance routine | works with attendance (`attendance`): our rule calls the whole routine, with the protection inside, and also protects an away club with no nation |
+| **match_eng_1225_error_turn_off** (MiscPatches): silences the "match_man.cpp 1225" box | works with the squad protection (`squad_guard`): ours removes the repeated copies before the team selection, so the box no longer has a reason to appear |
+
+**Attendance, stadium and squad protection** (1.4): no NickPatcher option or MiscPatches patch writes to their code spots (the replaced attendance and stadium calls, the two squad-entry routines, the automatic team selection and the save and load hooks). In the exes of CLZ 6.1, CLZ 5.4 and the NickPatcher demo, these spots are as in 3.9.68.
 
 ## NickDLL (packs like CLZ)
 

@@ -223,52 +223,6 @@ Sharpens (above 1) or softens (below 1) the weight differences between clubs. 1 
 
 Values: from … to …. Default: `1`.
 
-## Retirement
-
-Retiring clubless players nobody wants. Every regen is born from a retired player's record: retiring the idle veteran sooner means more youngsters are born, with the same total number of people and no change to the save format. The chart shows the chance of retiring by age, for an example player.
-
-- **Idle player**: a player without a club for a long time, whom no club signs.
-- **Check**: the game tests retirements four times a year (days 0, 80, 173 and 250). The chart's chance is per check.
-- **Reputation**: the player's fame, from 0 to 10000. Players with low reputation retire more easily.
-- **Example reputation**: an imaginary player, only for the chart: change the reputation to see the chance of retiring by age. It doesn't change the game.
-- **Original rule**: the dashed line: in 3.9.68, after 365 days without a club, the chance is 750 / reputation, at any age.
-
-### Retire idle players — `retire_idle_players`
-
-A clubless player nobody wants retires sooner, and his record becomes a regen a few weeks later. Result: more youngsters and fewer idle veterans on the market. In a pack that blocks retirements (NickPatcher's RetirePatchV4) it barely acts.
-
-Values: `1` on, `0` off. Default: `0`.
-
-### Days without a club — `idle_days`
-
-How many days without a club before the idle rule applies. Fewer days = faster retirements.
-
-Values: from 0 to … (whole number). Default: `180`.
-
-### Minimum age — `idle_min_age`
-
-From what age the idle rule applies. Below it, the game's original rule stays.
-
-Values: from 0 to 126 (whole number). Default: `28`.
-
-### Reputation threshold — `idle_rep`
-
-The reputation up to which an idle player retires: lower-reputation players almost always go; higher ones rarely. Higher = more retirements.
-
-Values: from 0 to …. Default: `1500`.
-
-### More per year of age — `idle_rep_per_year`
-
-How much the reputation threshold rises per year above the minimum age: older players retire more easily.
-
-Values: from 0 to …. Default: `250`.
-
-### Protect the young: under — `protect_young_unemployed`
-
-Below this age no clubless player retires by the idle rule. 0 = no protection (the default: the game already gives a clubless youngster 365 days). Protecting the young reduces recycling into regens.
-
-Values: from 0 to 126 (whole number). Default: `0`.
-
 ## Regen names
 
 Regen names. Names come from the database (first_names.dat and second_names.dat, each name with its nation and how common it is). The rule for when the game uses the country's own names is in the exe: only above 100 names. With fewer, it borrows from another country, and a Sierra Leone regen may get a name from somewhere else. Here the country uses its own names from a minimum.
@@ -288,28 +242,7 @@ How many of a country's names the database needs for it to use its own. The lowe
 
 Values: from 1 to 101 (whole number). Default: `20`.
 
-## Grey players
-
-Grey players. Before every match (and when you open a squad), the game fills short squads with virtual players, shown in grey, whom nobody can sign. The original gives them an ability taken from the club's reputation, by a formula that collapses: at mid-sized and small clubs it comes out negative, and the match engine treats that as the weakest possible player. Here they can come at the club's own level.
-
-- **Grey player**: a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again.
-- **CA**: Current Ability (1 to 200): how well the player plays today.
-- **Club's level**: the higher of two values: the average CA of the squad's 16 best real players (with at least 5), and a formula from the reputation that rises with it and is never negative (reputation × 0.016 + 20; national team, reputation / 100 + 40). The reputation keeps a big club from a league you didn't load strong, since it has few players in the database.
-- **Variation**: how far each grey player's CA can be above or below the club's level, drawn for each one.
-
-### The grey players' level — `grey_players`
-
-At the club's level: each grey player (the virtual ones the game adds to fill a squad before a match) gets the club's own level, within the variation chosen below. Original: the game's formula, which takes the level from the reputation and collapses at mid-sized and small clubs (in a test career, 63% of grey players got a negative CA, the weakest possible player). The same club still gets the same grey players: only the CA changes. It applies from the next match, in a career already under way too.
-
-Values: `original` (Original (the game's formula)), `squad` (At the club's level). Default: `original`.
-
-### Variation around the level — `grey_players_spread`
-
-How far each grey player's CA can be above or below the club's level. With ± 5, at a level-82 club the grey players come from 77 to 87. ± 0 makes them all equal to the level; more variation, grey players more different from each other. tweaks.cfg keeps the full width (± 5 = 10).
-
-Values: from 0 to 100 (whole number). Default: `10`.
-
-## Attendance and stadium
+## Attendance & stadium
 
 How many people go to the stadium and when the stadium grows. Attendance is the support × the moment × the match: it grows with what happens on the pitch and cools when the team is back to what was expected. The top part is the crowd of each match and season; the bottom part, the stadium works. Each part has its own switch: off, that part stays as in the original game. The example club at the end shows what the settings do, with numbers.
 
@@ -482,20 +415,72 @@ Above this capacity, a stadium doesn't expand any more. The game itself uses 125
 
 Values: from 1000 to 10000000 (whole number). Default: `125000`.
 
-## Regen origins
+## Retirement
 
-Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.
+Retiring clubless players nobody wants. Every regen is born from a retired player's record: retiring the idle veteran sooner means more youngsters are born, with the same total number of people and no change to the save format. The chart shows the chance of retiring by age, for an example player.
 
-- **Slot**: the retired person the game reuses for the regen: the id and personality come from him. The name, age and nation change.
-- **Player record**: another retiree's record, kept in a pool: the PA, positions, feet and attributes come from it. It's "whose" the regen is: Ronaldo's regen is whoever gets Ronaldo's record.
-- **regen_origins.csv**: the history, next to the exe: one line per regen, separated by semicolons. It opens in Excel with a double click and in Notepad. To share it, send the file.
-- **X.regens**: when you save the game, the DLL writes next to the save (X.sav) the owners of the records still in the pool, and reads it on load. Copy the save and the .regens together. If the .regens isn't from that save (the save re-saved with recording off, or a .regens from another save), the DLL ignores it, so no owner comes out wrong.
+- **Idle player**: a player without a club for a long time, whom no club signs.
+- **Check**: the game tests retirements four times a year (days 0, 80, 173 and 250). The chart's chance is per check.
+- **Reputation**: the player's fame, from 0 to 10000. Players with low reputation retire more easily.
+- **Example reputation**: an imaginary player, only for the chart: change the reputation to see the chance of retiring by age. It doesn't change the game.
+- **Original rule**: the dashed line: in 3.9.68, after 365 days without a club, the chance is 750 / reputation, at any age.
 
-### Record where each regen comes from — `regen_origins`
+### Retire idle players — `retire_idle_players`
 
-Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or "no club"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find "Ronaldo's regen". The game keeps this nowhere: only regens created with this option on are recorded. The file opens in Excel with a double click (UTF-8, columns separated by semicolons; in an English Excel, use Data > From Text/CSV). When you save the game, the DLL writes an X.regens next to the save with the owners of the records still waiting to become regens; when you load, it reads it. Copy both together: without the .regens, some of the first regens after loading may show an unknown owner.
+A clubless player nobody wants retires sooner, and his record becomes a regen a few weeks later. Result: more youngsters and fewer idle veterans on the market. In a pack that blocks retirements (NickPatcher's RetirePatchV4) it barely acts.
 
 Values: `1` on, `0` off. Default: `0`.
+
+### Days without a club — `idle_days`
+
+How many days without a club before the idle rule applies. Fewer days = faster retirements.
+
+Values: from 0 to … (whole number). Default: `180`.
+
+### Minimum age — `idle_min_age`
+
+From what age the idle rule applies. Below it, the game's original rule stays.
+
+Values: from 0 to 126 (whole number). Default: `28`.
+
+### Reputation threshold — `idle_rep`
+
+The reputation up to which an idle player retires: lower-reputation players almost always go; higher ones rarely. Higher = more retirements.
+
+Values: from 0 to …. Default: `1500`.
+
+### More per year of age — `idle_rep_per_year`
+
+How much the reputation threshold rises per year above the minimum age: older players retire more easily.
+
+Values: from 0 to …. Default: `250`.
+
+### Protect the young: under — `protect_young_unemployed`
+
+Below this age no clubless player retires by the idle rule. 0 = no protection (the default: the game already gives a clubless youngster 365 days). Protecting the young reduces recycling into regens.
+
+Values: from 0 to 126 (whole number). Default: `0`.
+
+## Grey players
+
+Grey players. Before every match (and when you open a squad), the game fills short squads with virtual players, shown in grey, whom nobody can sign. The original gives them an ability taken from the club's reputation, by a formula that collapses: at mid-sized and small clubs it comes out negative, and the match engine treats that as the weakest possible player. Here they can come at the club's own level.
+
+- **Grey player**: a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again.
+- **CA**: Current Ability (1 to 200): how well the player plays today.
+- **Club's level**: the higher of two values: the average CA of the squad's 16 best real players (with at least 5), and a formula from the reputation that rises with it and is never negative (reputation × 0.016 + 20; national team, reputation / 100 + 40). The reputation keeps a big club from a league you didn't load strong, since it has few players in the database.
+- **Variation**: how far each grey player's CA can be above or below the club's level, drawn for each one.
+
+### The grey players' level — `grey_players`
+
+At the club's level: each grey player (the virtual ones the game adds to fill a squad before a match) gets the club's own level, within the variation chosen below. Original: the game's formula, which takes the level from the reputation and collapses at mid-sized and small clubs (in a test career, 63% of grey players got a negative CA, the weakest possible player). The same club still gets the same grey players: only the CA changes. It applies from the next match, in a career already under way too.
+
+Values: `original` (Original (the game's formula)), `squad` (At the club's level). Default: `original`.
+
+### Variation around the level — `grey_players_spread`
+
+How far each grey player's CA can be above or below the club's level. With ± 5, at a level-82 club the grey players come from 77 to 87. ± 0 makes them all equal to the level; more variation, grey players more different from each other. tweaks.cfg keeps the full width (± 5 = 10).
+
+Values: from 0 to 100 (whole number). Default: `10`.
 
 ## Screen, save, folder
 
@@ -565,6 +550,21 @@ tweaks.log is the DLL's diary: the exe it found, what each tweak did and, with l
 ### Log (tweaks.log) — `log`
 
 Writes tweaks.log next to the exe: what each tweak did, each youngster and his club, error boxes and, every July, a picture of the population. For testing and to send when something goes wrong. Off in normal use.
+
+Values: `1` on, `0` off. Default: `0`.
+
+## Regen origins
+
+Where each regen comes from. The game keeps this nowhere: with the option on, the DLL notes each regen born, whom he inherited the slot from and whom he inherited the player record from, in a regen_origins.csv file next to the exe. Here you search that history.
+
+- **Slot**: the retired person the game reuses for the regen: the id and personality come from him. The name, age and nation change.
+- **Player record**: another retiree's record, kept in a pool: the PA, positions, feet and attributes come from it. It's "whose" the regen is: Ronaldo's regen is whoever gets Ronaldo's record.
+- **regen_origins.csv**: the history, next to the exe: one line per regen, separated by semicolons. It opens in Excel with a double click and in Notepad. To share it, send the file.
+- **X.regens**: when you save the game, the DLL writes next to the save (X.sav) the owners of the records still in the pool, and reads it on load. Copy the save and the .regens together. If the .regens isn't from that save (the save re-saved with recording off, or a .regens from another save), the DLL ignores it, so no owner comes out wrong.
+
+### Record where each regen comes from — `regen_origins`
+
+Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or "no club"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find "Ronaldo's regen". The game keeps this nowhere: only regens created with this option on are recorded. The file opens in Excel with a double click (UTF-8, columns separated by semicolons; in an English Excel, use Data > From Text/CSV). When you save the game, the DLL writes an X.regens next to the save with the owners of the records still waiting to become regens; when you load, it reads it. Copy both together: without the .regens, some of the first regens after loading may show an unknown owner.
 
 Values: `1` on, `0` off. Default: `0`.
 

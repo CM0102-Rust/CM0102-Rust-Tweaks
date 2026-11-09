@@ -43,7 +43,7 @@ pub const ABAS: [(Aba, &str, &str, &str, &str); 12] = [
     (Aba::Idades, "Idades dos regens", "Regen ages", "Regens", "Regens"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Regens", "Regens"),
     (Aba::Nomes, "Nomes dos regens", "Regen names", "Regens", "Regens"),
-    (Aba::Publico, "Público e estádio", "Attendance and stadium", "Carreira", "Career"),
+    (Aba::Publico, "Público e estádio", "Attendance & stadium", "Carreira", "Career"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Carreira", "Career"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Carreira", "Career"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),

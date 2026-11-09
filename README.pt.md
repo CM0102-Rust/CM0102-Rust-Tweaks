@@ -31,7 +31,7 @@ Quando este repositório for aberto, ele substitui o `CM0102-Rust/cm0102-save2gb
 
 O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 
-**Estado: trabalho em andamento.** A versão 1.3 é um pré-lançamento ([Releases](https://github.com/CM0102-Rust/CM0102-Rust-Tweaks/releases): a DLL, o configurador, o `tweaks.cfg` e os guias, e o código-fonte): melhorias vão surgir, e ela precisa de testes de quem joga. **Sempre faça backup dos seus saves** antes de experimentar, e mande o `tweaks.log` se algo der errado. Rodou em carreiras automáticas de até dez temporadas no 3.9.68 e cinco no CLZ, sem queda; os números estão em [docs/TESTES.md](docs/TESTES.md). O configurador está descrito em [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md).
+**Estado: trabalho em andamento.** A versão 1.4 é um pré-lançamento ([Releases](https://github.com/CM0102-Rust/CM0102-Rust-Tweaks/releases): a DLL, o configurador, o `tweaks.cfg` e os guias, e o código-fonte): melhorias vão surgir, e ela precisa de testes de quem joga. **Sempre faça backup dos seus saves** antes de experimentar, e mande o `tweaks.log` se algo der errado. Rodou em carreiras automáticas de até dez temporadas no 3.9.68 e cinco no CLZ, sem queda; os números estão em [docs/TESTES.md](docs/TESTES.md). O configurador está descrito em [docs/CONFIGURADOR.md](docs/CONFIGURADOR.md).
 
 **Instalar:** copie `ddraw.dll`, `tweaks.cfg` e `tweaks-config.exe` para a pasta do `cm0102.exe` e abra o configurador. **Tirar:** apague a `ddraw.dll`.
 
@@ -43,6 +43,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | ![Idades](assets/screenshots/pt/03-ages.png) | ![Disputa dos clubes](assets/screenshots/pt/04-contest.png) |
 | ![Aposentadoria](assets/screenshots/pt/05-retirement.png) | ![De quem é cada regen](assets/screenshots/pt/06-regen-origins.png) |
 | ![Jogadores cinzentos](assets/screenshots/pt/07-grey-players.png) | |
+| ![Público (desenho da 1.4, em inglês)](assets/screenshots/en/09-attendance-light.png) | ![Estádio, modo escuro (desenho da 1.4, em inglês)](assets/screenshots/en/10-stadium-dark.png) |
 
 ## Arquivos
 

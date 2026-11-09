@@ -262,7 +262,7 @@ dependencies = [
 
 [[package]]
 name = "configurador"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "eframe",
  "rfd",

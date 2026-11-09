@@ -223,52 +223,6 @@ Acentua (maior que 1) ou suaviza (menor que 1) as diferenças de peso entre os c
 
 Valores: de … a …. Padrão: `1`.
 
-## Aposentadoria
-
-A aposentadoria dos jogadores sem clube que ninguém quer. Todo regen nasce da ficha de um aposentado: aposentar mais cedo o veterano parado faz nascer mais jovens, sem mudar o total de pessoas nem o formato do save. O gráfico mostra a chance de aposentar por idade, para um jogador de exemplo.
-
-- **Inativo**: jogador sem clube há muito tempo, que nenhum clube contrata.
-- **Verificação**: o jogo testa as aposentadorias quatro vezes por ano (dias 0, 80, 173 e 250). A chance do gráfico é por verificação.
-- **Reputação**: a fama do jogador, de 0 a 10000. Quem tem reputação baixa se aposenta mais fácil.
-- **Reputação de exemplo**: um jogador imaginário, só para o gráfico: mude a reputação para ver a chance de aposentar por idade. Não muda o jogo.
-- **Regra original**: a linha tracejada: no 3.9.68, depois de 365 dias sem clube, a chance é 750 / reputação, em qualquer idade.
-
-### Aposentar os inativos — `retire_idle_players`
-
-O jogador sem clube que ninguém quer se aposenta mais cedo, e a ficha dele vira um regen semanas depois. Resultado: mais jovens e menos veteranos parados no mercado. Num pacote que barra aposentadorias (o RetirePatchV4 do NickPatcher), quase não age.
-
-Valores: `1` liga, `0` desliga. Padrão: `0`.
-
-### Dias sem clube — `idle_days`
-
-Quantos dias sem clube antes de a regra dos inativos valer. Menos dias = aposentadorias mais rápidas.
-
-Valores: de 0 a … (inteiro). Padrão: `180`.
-
-### Idade mínima — `idle_min_age`
-
-A partir de que idade a regra dos inativos vale. Abaixo dela, fica a regra original do jogo.
-
-Valores: de 0 a 126 (inteiro). Padrão: `28`.
-
-### Reputação-limite — `idle_rep`
-
-A reputação até a qual o inativo se aposenta: quem tem reputação menor sai quase sempre; quem tem mais, raramente. Mais alto = mais aposentadorias.
-
-Valores: de 0 a …. Padrão: `1500`.
-
-### A mais por ano de idade — `idle_rep_per_year`
-
-Quanto a reputação-limite sobe por ano acima da idade mínima: os mais velhos se aposentam mais fácil.
-
-Valores: de 0 a …. Padrão: `250`.
-
-### Proteger os jovens: menores de — `protect_young_unemployed`
-
-Abaixo desta idade, nenhum jogador sem clube se aposenta pela regra dos inativos. 0 = sem proteção (o padrão: o jogo já dá 365 dias ao jovem sem clube). Proteger os jovens diminui a reciclagem em regens.
-
-Valores: de 0 a 126 (inteiro). Padrão: `0`.
-
 ## Nomes dos regens
 
 Os nomes dos regens. Os nomes vêm do banco de dados (first_names.dat e second_names.dat, cada nome com a nação e o quanto é comum). A regra de quando o jogo usa os nomes do próprio país está no exe: só acima de 100 nomes. Com menos, ele pega emprestado de outro país, e o regen de Serra Leoa pode sair com nome de outro lugar. Aqui o país usa os próprios nomes a partir de um mínimo.
@@ -287,27 +241,6 @@ Valores: `original` (Original (só acima de 100 nomes)), `own` (Os da própria n
 Quantos nomes do país o banco precisa ter para ele usar os próprios. Quanto menor, mais países usam os próprios nomes; a lista da aba mostra quais. Abaixo do mínimo fica o empréstimo do original. Vale separado para o primeiro nome e o sobrenome.
 
 Valores: de 1 a 101 (inteiro). Padrão: `20`.
-
-## Jogadores cinzentos
-
-Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.
-
-- **Jogador cinzento**: um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.
-- **CA**: Current Ability, a habilidade atual (1 a 200): o quanto o jogador joga hoje.
-- **Nível do clube**: o maior entre dois valores: a média de CA dos 16 melhores jogadores de verdade do elenco (com pelo menos 5), e uma conta pela reputação que sobe com ela e nunca fica negativa (reputação × 0,016 + 20; seleção, reputação / 100 + 40). A reputação segura o clube grande de uma liga que você não carregou, que tem poucos jogadores no banco.
-- **Variação**: quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube, sorteado para cada um.
-
-### O nível dos cinzentos — `grey_players`
-
-No nível do clube: cada jogador cinzento (os virtuais que o jogo põe para completar o elenco antes da partida) tem o nível do próprio clube, com a variação escolhida abaixo. Original: a conta do jogo, que tira o nível da reputação e despenca nos clubes médios e pequenos (numa carreira de teste, 63% dos cinzentos saíram com CA negativo, o pior jogador possível). O mesmo clube continua recebendo os mesmos cinzentos: só o CA muda. Vale a partir da próxima partida, também num save em andamento.
-
-Valores: `original` (Original (a conta do jogo)), `squad` (No nível do clube). Padrão: `original`.
-
-### Variação em volta do nível — `grey_players_spread`
-
-Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com ± 5, num clube de nível 82 os cinzentos vêm de 77 a 87. ± 0 deixa todos iguais ao nível; mais variação, cinzentos mais diferentes entre si. No tweaks.cfg fica a largura total (± 5 = 10).
-
-Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ## Público e estádio
 
@@ -482,20 +415,72 @@ Acima desta capacidade, o estádio não amplia mais. O próprio jogo usa 125 mil
 
 Valores: de 1000 a 10000000 (inteiro). Padrão: `125000`.
 
-## De quem é cada regen
+## Aposentadoria
 
-De quem é cada regen. O jogo não guarda isso em lugar nenhum: com a opção ligada, a DLL anota cada regen que nasce, de quem ele herdou a vaga e de quem herdou a ficha de jogador, num arquivo regen_origins.csv ao lado do exe. Aqui você busca nesse histórico.
+A aposentadoria dos jogadores sem clube que ninguém quer. Todo regen nasce da ficha de um aposentado: aposentar mais cedo o veterano parado faz nascer mais jovens, sem mudar o total de pessoas nem o formato do save. O gráfico mostra a chance de aposentar por idade, para um jogador de exemplo.
 
-- **Vaga**: a pessoa aposentada que o jogo reaproveita para o regen: dela vêm o id e a personalidade. O nome, a idade e a nação mudam.
-- **Ficha de jogador**: a ficha de outro aposentado, guardada numa reserva: dela vêm o PA, as posições, os pés e os atributos. É o "de quem é" o regen: o regen do Ronaldo é quem recebe a ficha do Ronaldo.
-- **regen_origins.csv**: o histórico, ao lado do exe: uma linha por regen, separada por ponto e vírgula. Abre no Excel com dois cliques e no Bloco de Notas. Para compartilhar, mande o arquivo.
-- **X.regens**: ao gravar o jogo, a DLL grava ao lado do save (X.sav) os donos das fichas que ainda estão na reserva, e o lê ao carregar. Copie o save e o .regens juntos. Se o .regens não for dessa gravação (o save regravado com o registro desligado, ou um .regens de outro save), a DLL o ignora, para não dar dono errado.
+- **Inativo**: jogador sem clube há muito tempo, que nenhum clube contrata.
+- **Verificação**: o jogo testa as aposentadorias quatro vezes por ano (dias 0, 80, 173 e 250). A chance do gráfico é por verificação.
+- **Reputação**: a fama do jogador, de 0 a 10000. Quem tem reputação baixa se aposenta mais fácil.
+- **Reputação de exemplo**: um jogador imaginário, só para o gráfico: mude a reputação para ver a chance de aposentar por idade. Não muda o jogo.
+- **Regra original**: a linha tracejada: no 3.9.68, depois de 365 dias sem clube, a chance é 750 / reputação, em qualquer idade.
 
-### Registrar de quem é cada regen — `regen_origins`
+### Aposentar os inativos — `retire_idle_players`
 
-Grava no regen_origins.csv, ao lado do exe, cada regen que nasce: o nome, a idade, a posição, o PA, o CA e o clube que ganhou a disputa (ou "sem clube"), e de quem ele herdou: a vaga (o id e a personalidade) e a ficha de jogador (o PA, as posições e os atributos), com o nome, a idade, o CA e o PA do dono no momento da aposentadoria. Cada linha leva a data do jogo, a data do computador e a carreira (o save). Assim você acha "o regen do Ronaldo". O jogo não guarda isso em lugar nenhum: só os regens criados com esta opção ligada ficam registrados. O arquivo abre no Excel com dois cliques (UTF-8, colunas separadas por ponto e vírgula; num Excel em inglês, use Dados > De Texto/CSV). Ao gravar o jogo, a DLL grava ao lado do save um X.regens com os donos das fichas que ainda vão virar regen; ao carregar, ela o lê. Copie os dois juntos: sem o .regens, alguns dos primeiros regens depois da carga podem sair com o dono desconhecido.
+O jogador sem clube que ninguém quer se aposenta mais cedo, e a ficha dele vira um regen semanas depois. Resultado: mais jovens e menos veteranos parados no mercado. Num pacote que barra aposentadorias (o RetirePatchV4 do NickPatcher), quase não age.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+### Dias sem clube — `idle_days`
+
+Quantos dias sem clube antes de a regra dos inativos valer. Menos dias = aposentadorias mais rápidas.
+
+Valores: de 0 a … (inteiro). Padrão: `180`.
+
+### Idade mínima — `idle_min_age`
+
+A partir de que idade a regra dos inativos vale. Abaixo dela, fica a regra original do jogo.
+
+Valores: de 0 a 126 (inteiro). Padrão: `28`.
+
+### Reputação-limite — `idle_rep`
+
+A reputação até a qual o inativo se aposenta: quem tem reputação menor sai quase sempre; quem tem mais, raramente. Mais alto = mais aposentadorias.
+
+Valores: de 0 a …. Padrão: `1500`.
+
+### A mais por ano de idade — `idle_rep_per_year`
+
+Quanto a reputação-limite sobe por ano acima da idade mínima: os mais velhos se aposentam mais fácil.
+
+Valores: de 0 a …. Padrão: `250`.
+
+### Proteger os jovens: menores de — `protect_young_unemployed`
+
+Abaixo desta idade, nenhum jogador sem clube se aposenta pela regra dos inativos. 0 = sem proteção (o padrão: o jogo já dá 365 dias ao jovem sem clube). Proteger os jovens diminui a reciclagem em regens.
+
+Valores: de 0 a 126 (inteiro). Padrão: `0`.
+
+## Jogadores cinzentos
+
+Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.
+
+- **Jogador cinzento**: um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.
+- **CA**: Current Ability, a habilidade atual (1 a 200): o quanto o jogador joga hoje.
+- **Nível do clube**: o maior entre dois valores: a média de CA dos 16 melhores jogadores de verdade do elenco (com pelo menos 5), e uma conta pela reputação que sobe com ela e nunca fica negativa (reputação × 0,016 + 20; seleção, reputação / 100 + 40). A reputação segura o clube grande de uma liga que você não carregou, que tem poucos jogadores no banco.
+- **Variação**: quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube, sorteado para cada um.
+
+### O nível dos cinzentos — `grey_players`
+
+No nível do clube: cada jogador cinzento (os virtuais que o jogo põe para completar o elenco antes da partida) tem o nível do próprio clube, com a variação escolhida abaixo. Original: a conta do jogo, que tira o nível da reputação e despenca nos clubes médios e pequenos (numa carreira de teste, 63% dos cinzentos saíram com CA negativo, o pior jogador possível). O mesmo clube continua recebendo os mesmos cinzentos: só o CA muda. Vale a partir da próxima partida, também num save em andamento.
+
+Valores: `original` (Original (a conta do jogo)), `squad` (No nível do clube). Padrão: `original`.
+
+### Variação em volta do nível — `grey_players_spread`
+
+Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com ± 5, num clube de nível 82 os cinzentos vêm de 77 a 87. ± 0 deixa todos iguais ao nível; mais variação, cinzentos mais diferentes entre si. No tweaks.cfg fica a largura total (± 5 = 10).
+
+Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
 ## Tela, save e pasta
 
@@ -565,6 +550,21 @@ O tweaks.log é o diário da DLL: o exe que ela encontrou, o que cada ajuste fez
 ### Registro (tweaks.log) — `log`
 
 Grava o tweaks.log ao lado do exe: o que cada ajuste fez, cada jovem e o clube, as caixas de erro e, todo julho, o retrato da população. Para testar e para mandar quando algo der errado. Desligado no uso normal.
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+## De quem é cada regen
+
+De quem é cada regen. O jogo não guarda isso em lugar nenhum: com a opção ligada, a DLL anota cada regen que nasce, de quem ele herdou a vaga e de quem herdou a ficha de jogador, num arquivo regen_origins.csv ao lado do exe. Aqui você busca nesse histórico.
+
+- **Vaga**: a pessoa aposentada que o jogo reaproveita para o regen: dela vêm o id e a personalidade. O nome, a idade e a nação mudam.
+- **Ficha de jogador**: a ficha de outro aposentado, guardada numa reserva: dela vêm o PA, as posições, os pés e os atributos. É o "de quem é" o regen: o regen do Ronaldo é quem recebe a ficha do Ronaldo.
+- **regen_origins.csv**: o histórico, ao lado do exe: uma linha por regen, separada por ponto e vírgula. Abre no Excel com dois cliques e no Bloco de Notas. Para compartilhar, mande o arquivo.
+- **X.regens**: ao gravar o jogo, a DLL grava ao lado do save (X.sav) os donos das fichas que ainda estão na reserva, e o lê ao carregar. Copie o save e o .regens juntos. Se o .regens não for dessa gravação (o save regravado com o registro desligado, ou um .regens de outro save), a DLL o ignora, para não dar dono errado.
+
+### Registrar de quem é cada regen — `regen_origins`
+
+Grava no regen_origins.csv, ao lado do exe, cada regen que nasce: o nome, a idade, a posição, o PA, o CA e o clube que ganhou a disputa (ou "sem clube"), e de quem ele herdou: a vaga (o id e a personalidade) e a ficha de jogador (o PA, as posições e os atributos), com o nome, a idade, o CA e o PA do dono no momento da aposentadoria. Cada linha leva a data do jogo, a data do computador e a carreira (o save). Assim você acha "o regen do Ronaldo". O jogo não guarda isso em lugar nenhum: só os regens criados com esta opção ligada ficam registrados. O arquivo abre no Excel com dois cliques (UTF-8, colunas separadas por ponto e vírgula; num Excel em inglês, use Dados > De Texto/CSV). Ao gravar o jogo, a DLL grava ao lado do save um X.regens com os donos das fichas que ainda vão virar regen; ao carregar, ela o lê. Copie os dois juntos: sem o .regens, alguns dos primeiros regens depois da carga podem sair com o dono desconhecido.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 
