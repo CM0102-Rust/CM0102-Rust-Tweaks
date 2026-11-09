@@ -348,6 +348,7 @@ impl App {
         // TWEAKS_CONFIG_LANG=pt|en, para as capturas de tela)
         a.en = std::env::var("TWEAKS_CONFIG_LANG").ok().or_else(|| std::fs::read_to_string(arquivo_do_idioma()).ok())
             .map(|v| !v.trim().eq_ignore_ascii_case("pt")).unwrap_or(true);
+        a.sub_publico = std::env::var("TWEAKS_CONFIG_SUB").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
         a.foco = std::env::var("TWEAKS_CONFIG_FOCO").ok().and_then(|k| chaves::chave(&k)).map(|c| c.nome);
         a.busca = std::env::var("TWEAKS_CONFIG_BUSCA").unwrap_or_default();
         a
