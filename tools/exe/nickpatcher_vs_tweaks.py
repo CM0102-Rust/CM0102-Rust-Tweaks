@@ -10,12 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from retrato_exe import ler_catalogo  # noqa: E402
 
 BASE = 0x400000
-RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 
 
 def trechos_dos_ajustes():
     """(ajuste, início, fim) em VA: as bordas e o corpo de cada parte, as trocas da tela e do CD e os desvios avulsos."""
-    s = open(os.path.join(RAIZ, 'src', 'partes.rs'), encoding='utf-8').read()
+    s = open(os.path.join(RAIZ, 'src', 'exe', 'partes.rs'), encoding='utf-8').read()
     out = []
     for m in re.finditer(r'pub const (\w+): Parte = Parte \{\s*nome: "([^"]+)",\s*bordas: &\[(.*?)\],.*?corpo: &\[(.*?)\]', s, re.S):
         for grupo in (m.group(3), m.group(4)):
@@ -25,7 +25,7 @@ def trechos_dos_ajustes():
                 except Exception:
                     continue
                 out.append((m.group(2), int(a, 16), int(a, 16) + tam))
-    t = open(os.path.join(RAIZ, 'src', 'trocas.rs'), encoding='utf-8').read()
+    t = open(os.path.join(RAIZ, 'src', 'video', 'trocas.rs'), encoding='utf-8').read()
     for nome, chave in (('CD', 'no_cd'), ('RESOLUCAO', 'resolution')):
         bloco = t.split('pub const %s' % nome)[1].split('];')[0]
         for a, b in re.findall(r'\((0x[0-9a-f]+), &\[([^\]]*)\]', bloco):
