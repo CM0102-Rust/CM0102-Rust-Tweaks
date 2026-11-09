@@ -43,13 +43,13 @@ pub const ABAS: [(Aba, &str, &str, &str, &str); 12] = [
     (Aba::Idades, "Idades dos regens", "Regen ages", "Regens", "Regens"),
     (Aba::Disputa, "Disputa dos clubes", "Clubs' contest", "Regens", "Regens"),
     (Aba::Nomes, "Nomes dos regens", "Regen names", "Regens", "Regens"),
-    (Aba::Registro, "De quem é cada regen", "Regen origins", "Regens", "Regens"),
     (Aba::Publico, "Público e estádio", "Attendance and stadium", "Carreira", "Career"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Carreira", "Career"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Carreira", "Career"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),
-    (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos", "Files"),
-    (Aba::Log, "tweaks.log", "tweaks.log", "Arquivos", "Files"),
+    (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos e registros", "Files and records"),
+    (Aba::Log, "tweaks.log", "tweaks.log", "Arquivos e registros", "Files and records"),
+    (Aba::Registro, "De quem é cada regen", "Regen origins", "Arquivos e registros", "Files and records"),
 ];
 
 const fn num(min: f64, max: f64, b0: f64, b1: f64, inteiro: bool) -> Tipo {
@@ -172,7 +172,7 @@ pub fn ligado(nome: &str, valor: &str) -> bool {
 pub fn mestres(aba: Aba) -> &'static [(&'static str, &'static str, &'static str)] {
     match aba {
         Aba::Fornada => &[("intake", "1", "0")],
-        Aba::Idades => &[("ages", "custom", "original")],
+        Aba::Idades => &[("ages", "custom", "original"), ("ages_out_of_game", "table", "original"), ("unattached", "only_if_no_room", "original")],
         Aba::Disputa => &[("rule", "new", "original")],
         Aba::Inativos => &[("retire_idle_players", "1", "0")],
         Aba::Nomes => &[("regen_names", "own", "original")],

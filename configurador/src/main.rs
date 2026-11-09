@@ -1831,7 +1831,8 @@ impl eframe::App for App {
                     tudo = Some(false);
                 }
                 if let Some(on) = tudo {
-                    for (aba, ..) in ABAS {
+                    // o registro dos regens é uma anotação em arquivo, não uma regra: o "Ligar tudo" não o liga
+                    for (aba, ..) in ABAS.into_iter().filter(|a| !(on && a.0 == Aba::Registro)) {
                         for &(k, sim, nao) in chaves::mestres(aba) {
                             self.definir(k, if on { sim } else { nao });
                         }
@@ -2053,7 +2054,7 @@ mod testes {
         let mut a = App::new(pasta.clone());
         assert_eq!(a.mudancas(), 0);
         a.definir("log", "1");
-        a.definir("unattached", "only_if_no_room");
+        a.definir("unattached", "original");
         a.definir_idade(27, 1.5, -1);
         a.definir("sigma", "2500"); // igual ao que está: nada muda
         a.gravar();
