@@ -168,15 +168,17 @@ fn rotulo_fixo(ui: &mut egui::Ui, largura: f32, texto: impl Into<egui::WidgetTex
 }
 
 /// O "?" ao lado de uma opção ou de um termo: passe o mouse e a explicação aparece, sem clicar.
-fn ajuda_icone(ui: &mut egui::Ui, texto: &str) {
+fn ajuda_icone(ui: &mut egui::Ui, texto: &str) -> bool {
     if texto.is_empty() {
-        return;
+        return false;
     }
-    let (r, p) = ui.allocate_painter(Vec2::new(18.0, 18.0), Sense::hover());
+    let (r, p) = ui.allocate_painter(Vec2::new(20.0, 20.0), Sense::click());
     let cor = if r.hovered() { AMARELO() } else { AZUL() };
-    p.circle_stroke(r.rect.center(), 7.5, Stroke::new(1.5f32, cor));
-    p.text(r.rect.center(), Align2::CENTER_CENTER, "?", FontId::proportional(11.0), cor);
-    r.on_hover_text(texto);
+    p.circle_stroke(r.rect.center(), 8.5, Stroke::new(1.5f32, cor));
+    p.text(r.rect.center(), Align2::CENTER_CENTER, "?", FontId::proportional(12.5), cor);
+    let clicou = r.clicked();
+    r.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(texto);
+    clicou
 }
 
 fn nome_do_estado(e: Estado, en: bool) -> &'static str {
@@ -235,6 +237,8 @@ struct App {
     /// Os nomes por nação do banco da pasta (aba Nomes dos regens).
     nomes: Option<Vec<nomes::Nacao>>,
     limpar: bool,
+    /// A janela de ajuda aberta (o "?" clicado).
+    popup: Option<&'static str>,
     /// A subaba de Público e estádio: 0 público, 1 estádio, 2 exemplo.
     sub_publico: usize,
 }
@@ -260,6 +264,7 @@ impl App {
             pendente: None,
             busca: String::new(),
             limpar: false,
+            popup: None,
             sub_publico: 0,
             nomes: None,
         };
@@ -475,9 +480,13 @@ impl App {
                     r1.union(r2)
                 }
             }).inner).inner;
-            ajuda_icone(ui, texto_ajuda);
-            r
+            let clicou = ajuda_icone(ui, texto_ajuda);
+            (r, clicou)
         });
+        let (resp_r, clicou) = resp.inner;
+        if clicou {
+            self.popup = Some(nome);
+        }
         if let Some(v) = novo {
             self.definir(nome, &v);
         }
@@ -489,7 +498,7 @@ impl App {
             });
             ui.add_space(4.0);
         }
-        if resp.response.hovered() || resp.inner.hovered() || resp.inner.has_focus() {
+        if resp.response.hovered() || resp_r.hovered() || resp_r.has_focus() {
             self.foco = Some(nome);
         }
     }
@@ -713,15 +722,17 @@ impl App {
         let ingles = self.en;
         egui::Frame::group(ui.style()).fill(CARTAO()).inner_margin(10.0).show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.label(RichText::new(if ingles { en } else { pt }).size(13.5));
+            ui.label(RichText::new(if ingles { en } else { pt }).size(15.0));
             if !termos.is_empty() {
-                ui.add_space(6.0);
+                ui.add_space(4.0);
+                egui::CollapsingHeader::new(if ingles { "What each term means" } else { "O que quer dizer cada termo" }).id_salt(("termos_h", aba as u8)).show(ui, |ui| {
                 egui::Grid::new(("termos", aba as u8)).num_columns(2).spacing([12.0, 5.0]).show(ui, |ui| {
                     for &(n_pt, n_en, t_pt, t_en) in termos {
                         ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(AMARELO()));
                         ui.add(egui::Label::new(if ingles { t_en } else { t_pt }).wrap());
                         ui.end_row();
                     }
+                });
                 });
             }
         });
@@ -1775,39 +1786,40 @@ impl eframe::App for App {
                 ui.add_space(3.0);
             }
         });
-        egui::SidePanel::right("ajuda").resizable(true).default_width(340.0).show(ctx, |ui| {
-            egui::ScrollArea::vertical().show(ui, |ui| match self.foco {
-                Some(k) => {
-                    // o nome do que a opção faz, o texto prático e, embaixo, a chave e o comentário técnico do .cfg
-                    let guia_k = if k.starts_with("age_") { "age_NN" } else { k };
-                    let titulo = match chaves::chave(k) {
-                        Some(c) => if self.en { c.rotulo.1 } else { c.rotulo.0 }.to_string(),
-                        None => self.t("Tabela de idades", "Age table"),
-                    };
-                    ui.label(crate::titulo(titulo, 17.0).color(VERDE()));
-                    let (pt, en) = guia::ajuda(guia_k);
-                    ui.label(if self.en { en } else { pt });
-                    ui.add_space(6.0);
-                    egui::CollapsingHeader::new(self.t("Detalhe técnico (tweaks.cfg)", "Technical detail (tweaks.cfg)")).show(ui, |ui| {
-                        ui.label(RichText::new(if k.starts_with("age_") { "age_14 … age_35" } else { k }).monospace().color(CINZA()));
-                        ui.label(RichText::new(cfg::ajuda(k)).size(11.5).color(CINZA()));
-                    });
-                    let alvo = if k.starts_with("age_") { "ages" } else { k };
-                    if let Some(l) = estados.iter().find(|l| l.ajuste == alvo) {
-                        ui.add_space(8.0);
-                        ui.label(RichText::new(self.t("Neste exe:", "On this exe:")).strong());
-                        ui.horizontal(|ui| {
-                            bolinha(ui, cor(l.estado));
-                            ui.colored_label(cor(l.estado), nome_do_estado(l.estado, self.en));
+        if let Some(k) = self.popup {
+            // a ajuda completa: o texto prático, a chave e o comentário técnico do tweaks.cfg e, neste exe, o estado
+            let guia_k = if k.starts_with("age_") { "age_NN" } else { k };
+            let nome = match chaves::chave(k) {
+                Some(c) => if self.en { c.rotulo.1 } else { c.rotulo.0 }.to_string(),
+                None => self.t("Tabela de idades", "Age table"),
+            };
+            let mut aberta = true;
+            egui::Window::new(titulo(nome, 18.0).color(VERDE())).id(egui::Id::new("ajuda")).open(&mut aberta).collapsible(false).resizable(true)
+                .default_width(560.0).anchor(Align2::CENTER_CENTER, Vec2::ZERO).show(ctx, |ui| {
+                    egui::ScrollArea::vertical().max_height(520.0).show(ui, |ui| {
+                        let (pt, en) = guia::ajuda(guia_k);
+                        ui.label(RichText::new(if self.en { en } else { pt }).size(16.0));
+                        let alvo = if k.starts_with("age_") { "ages" } else { k };
+                        if let Some(l) = estados.iter().find(|l| l.ajuste == alvo) {
+                            ui.add_space(10.0);
+                            ui.horizontal(|ui| {
+                                ui.label(RichText::new(self.t("Neste exe:", "On this exe:")).strong());
+                                bolinha(ui, cor(l.estado));
+                                ui.colored_label(cor(l.estado), nome_do_estado(l.estado, self.en));
+                            });
+                            ui.label(if self.en { &l.motivo.1 } else { &l.motivo.0 });
+                        }
+                        ui.add_space(10.0);
+                        egui::CollapsingHeader::new(self.t("Detalhe técnico (tweaks.cfg)", "Technical detail (tweaks.cfg)")).show(ui, |ui| {
+                            ui.label(RichText::new(if k.starts_with("age_") { "age_14 … age_35" } else { k }).monospace().color(CINZA()));
+                            ui.label(RichText::new(cfg::ajuda(k)).size(13.0).color(CINZA()));
                         });
-                        ui.label(if self.en { &l.motivo.1 } else { &l.motivo.0 });
-                    }
-                }
-                None => {
-                    ui.label(self.t("Passe o mouse sobre uma opção para ver a ajuda (o comentário dela no tweaks.cfg).", "Hover an option to see its help (its comment in tweaks.cfg)."));
-                }
-            });
-        });
+                    });
+                });
+            if !aberta {
+                self.popup = None;
+            }
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut area = egui::ScrollArea::vertical().auto_shrink([false, false]);
             // só para as capturas de tela da documentação: começar rolado
