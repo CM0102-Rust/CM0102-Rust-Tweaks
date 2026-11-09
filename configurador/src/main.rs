@@ -1648,6 +1648,59 @@ impl App {
         });
     }
 
+    /// A ponte das competições (ramo local, sem push): só com o `clz.dll` na pasta. O interruptor é a chave geral
+    /// `competitions` do `competitions.cfg` dele (gravada na hora, fora do Gravar do tweaks.cfg); o nome abre o
+    /// configurador das competições na mesma pasta.
+    fn linha_competicoes(&mut self, ui: &mut egui::Ui) {
+        if !self.pasta.join("clz.dll").exists() {
+            return;
+        }
+        let cfg = self.pasta.join("competitions.cfg");
+        let conf = self.pasta.join("competitions-config.exe");
+        let texto = std::fs::read_to_string(&cfg).ok();
+        ui.add_space(12.0);
+        ui.label(RichText::new(self.t("COMPETIÇÕES", "COMPETITIONS")).size(11.0).color(CINZA()).extra_letter_spacing(1.6));
+        ui.add_space(2.0);
+        egui::Frame::new().corner_radius(14.0).inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                let dica = if conf.exists() {
+                    self.t("CLZ.DLL encontrada nesta pasta. Clique para abrir o configurador das competições (países, arquivos, validação).",
+                        "CLZ.DLL found in this folder. Click to open the competitions configurator (countries, files, validation).")
+                } else {
+                    self.t("CLZ.DLL encontrada, mas sem o competitions-config.exe nesta pasta.", "CLZ.DLL found, but no competitions-config.exe in this folder.")
+                };
+                let r = ui.add(egui::Label::new(RichText::new(self.t("Competições (CLZ.DLL) »", "Competitions (CLZ.DLL) »")).size(15.5)).sense(Sense::click()))
+                    .on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(dica);
+                if r.clicked() && conf.exists() {
+                    if let Err(e) = std::process::Command::new(&conf).arg(&self.pasta).current_dir(&self.pasta).spawn() {
+                        self.mensagem = format!("competitions-config.exe: {e}");
+                    }
+                }
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| match texto {
+                    Some(t) => {
+                        let on = clz_chave(&t);
+                        let dica = if on {
+                            self.t("Ligadas: os países marcados no competitions.cfg jogam pelos arquivos. Clique para desligar (grava na hora no competitions.cfg).",
+                                "On: the countries ticked in competitions.cfg play from the files. Click to turn off (writes competitions.cfg right away).")
+                        } else {
+                            self.t("Desligadas: todas as competições ficam as do exe. Clique para ligar (grava na hora no competitions.cfg; os países se escolhem no configurador das competições).",
+                                "Off: every competition stays the exe's. Click to turn on (writes competitions.cfg right away; countries are picked in the competitions configurator).")
+                        };
+                        if interruptor(ui, on).on_hover_text(dica).clicked() {
+                            if let Err(e) = std::fs::write(&cfg, clz_definir(&t, !on)) {
+                                self.mensagem = format!("competitions.cfg: {e}");
+                            }
+                        }
+                    }
+                    None => {
+                        ui.label(RichText::new(self.t("sem competitions.cfg", "no competitions.cfg")).size(12.0).color(CINZA()));
+                    }
+                });
+            });
+        });
+    }
+
     fn aba_registro(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Registro);
         self.historico(ui);
@@ -1878,6 +1931,7 @@ impl eframe::App for App {
                     });
                 });
             }
+            self.linha_competicoes(ui);
             });
             });
         });
@@ -1937,6 +1991,39 @@ impl eframe::App for App {
             });
         });
     }
+}
+
+/// A linha `competitions = N` do competitions.cfg (sem a linha, 0 = desligado, como na DLL).
+fn clz_linha(l: &str) -> Option<&str> {
+    let l = l.split('#').next()?.trim();
+    let (k, v) = l.split_once('=')?;
+    (k.trim() == "competitions").then(|| v.trim())
+}
+
+fn clz_chave(texto: &str) -> bool {
+    texto.lines().find_map(clz_linha).is_some_and(|v| v == "1")
+}
+
+/// O competitions.cfg com a chave geral trocada; o resto (comentários, países) fica como está.
+fn clz_definir(texto: &str, on: bool) -> String {
+    let nova = format!("competitions = {}", on as u8);
+    let mut achou = false;
+    let mut s: String = texto.lines().map(|l| if !achou && clz_linha(l).is_some() { achou = true; nova.clone() } else { l.to_string() })
+        .collect::<Vec<_>>().join("\r\n");
+    if !achou {
+        s = format!("{nova}\r\n{s}");
+    }
+    s + "\r\n"
+}
+
+#[test]
+fn competicoes_chave_geral() {
+    let t = "# competitions = 1 no comentário\r\ncompetitions = 0\r\nturkey = 1\r\n";
+    assert!(!clz_chave(t));
+    let l = clz_definir(t, true);
+    assert!(clz_chave(&l) && l.contains("turkey = 1") && l.starts_with("# competitions = 1 no"));
+    assert!(!clz_chave(&clz_definir(&l, false)));
+    assert!(clz_chave(&clz_definir("turkey = 1\n", true)));
 }
 
 /// O guia das chaves em Markdown, dos mesmos textos da interface: `tweaks-config.exe --guia pt|en ARQUIVO`.
