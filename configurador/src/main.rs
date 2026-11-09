@@ -16,23 +16,59 @@ use eframe::egui::{self, Align2, Color32, FontId, Pos2, Rect, RichText, Sense, S
 use exe::{Estado, Exe};
 use std::path::{Path, PathBuf};
 
-const VERDE: Color32 = Color32::from_rgb(0x4c, 0xc3, 0x6a);
-const AMARELO: Color32 = Color32::from_rgb(0xe8, 0xb9, 0x3c);
-const AZUL: Color32 = Color32::from_rgb(0x5a, 0x9b, 0xe8);
-const VERMELHO: Color32 = Color32::from_rgb(0xe0, 0x5a, 0x4f);
-const CINZA: Color32 = Color32::from_rgb(0x80, 0x88, 0x84);
-const FUNDO: Color32 = Color32::from_rgb(0x12, 0x1a, 0x16);
-const CARTAO: Color32 = Color32::from_rgb(0x1a, 0x25, 0x1f);
+/// O tema: claro ou escuro (a escolha fica em tweaks-config.tema, ao lado do configurador).
+static CLARO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+fn claro() -> bool {
+    CLARO.load(std::sync::atomic::Ordering::Relaxed)
+}
+fn arquivo_do_tema() -> PathBuf {
+    std::env::current_exe().map(|p| p.with_file_name("tweaks-config.tema")).unwrap_or_else(|_| PathBuf::from("tweaks-config.tema"))
+}
+#[allow(non_snake_case)]
+fn VERDE() -> Color32 { if claro() { Color32::from_rgb(0x1f, 0x7a, 0x3e) } else { Color32::from_rgb(0x4c, 0xc3, 0x6a) } }
+#[allow(non_snake_case)]
+fn AMARELO() -> Color32 { if claro() { Color32::from_rgb(0x8a, 0x5a, 0x00) } else { Color32::from_rgb(0xe8, 0xb9, 0x3c) } }
+#[allow(non_snake_case)]
+fn AZUL() -> Color32 { if claro() { Color32::from_rgb(0x1f, 0x5f, 0xb0) } else { Color32::from_rgb(0x5a, 0x9b, 0xe8) } }
+#[allow(non_snake_case)]
+fn VERMELHO() -> Color32 { if claro() { Color32::from_rgb(0xb0, 0x30, 0x28) } else { Color32::from_rgb(0xe0, 0x5a, 0x4f) } }
+#[allow(non_snake_case)]
+fn CINZA() -> Color32 { if claro() { Color32::from_rgb(0x6a, 0x72, 0x6e) } else { Color32::from_rgb(0x80, 0x88, 0x84) } }
+#[allow(non_snake_case)]
+fn FUNDO() -> Color32 { if claro() { Color32::from_rgb(0xf3, 0xf5, 0xf3) } else { Color32::from_rgb(0x12, 0x1a, 0x16) } }
+#[allow(non_snake_case)]
+fn CARTAO() -> Color32 { if claro() { Color32::from_rgb(0xff, 0xff, 0xff) } else { Color32::from_rgb(0x1a, 0x25, 0x1f) } }
 /// A frase "com este valor..." embaixo de cada opção.
-const FRASE: Color32 = Color32::from_rgb(0xb4, 0xc6, 0xbc);
+#[allow(non_snake_case)]
+fn FRASE() -> Color32 { if claro() { Color32::from_rgb(0x44, 0x4c, 0x48) } else { Color32::from_rgb(0xb4, 0xc6, 0xbc) } }
+/// O fundo do resultado da conta (em destaque).
+fn fundo_resultado() -> Color32 { if claro() { Color32::from_rgb(0xff, 0xf0, 0xc4) } else { Color32::from_rgb(0x33, 0x2b, 0x12) } }
+
+/// O visual do egui para o tema escolhido.
+fn visual() -> egui::Visuals {
+    let mut v = if claro() { egui::Visuals::light() } else { egui::Visuals::dark() };
+    v.panel_fill = FUNDO();
+    v.window_fill = FUNDO();
+    if !claro() {
+        v.extreme_bg_color = Color32::from_rgb(0x0c, 0x12, 0x0f);
+    }
+    v.selection.bg_fill = if claro() { Color32::from_rgb(0xc6, 0xe6, 0xcf) } else { Color32::from_rgb(0x2d, 0x7a, 0x45) };
+    v.hyperlink_color = VERDE();
+    v
+}
+
+/// Um título na fonte dos títulos (Archivo Black).
+fn titulo(texto: impl Into<String>, tam: f32) -> RichText {
+    RichText::new(texto.into()).family(egui::FontFamily::Name("titulo".into())).size(tam)
+}
 
 fn cor(e: Estado) -> Color32 {
     match e {
-        Estado::Compativel => VERDE,
-        Estado::Sobrescreve => AMARELO,
-        Estado::FicaComOutro => AZUL,
-        Estado::Desconhecido => VERMELHO,
-        Estado::Desligado => CINZA,
+        Estado::Compativel => VERDE(),
+        Estado::Sobrescreve => AMARELO(),
+        Estado::FicaComOutro => AZUL(),
+        Estado::Desconhecido => VERMELHO(),
+        Estado::Desligado => CINZA(),
     }
 }
 
@@ -80,8 +116,8 @@ fn interruptor(ui: &mut egui::Ui, on: bool) -> egui::Response {
 /// Um texto com as partes entre ⟦ ⟧ em destaque: o resultado da conta, que muda quando se mexe no controle.
 fn texto_com_resultado(texto: &str, tam: f32) -> egui::text::LayoutJob {
     let mut job = egui::text::LayoutJob::default();
-    let normal = egui::TextFormat { font_id: egui::FontId::proportional(tam), color: FRASE, ..Default::default() };
-    let destaque = egui::TextFormat { font_id: egui::FontId::proportional(tam + 0.5), color: AMARELO, background: Color32::from_rgb(0x33, 0x2b, 0x12), ..Default::default() };
+    let normal = egui::TextFormat { font_id: egui::FontId::proportional(tam), color: FRASE(), ..Default::default() };
+    let destaque = egui::TextFormat { font_id: egui::FontId::proportional(tam + 0.5), color: AMARELO(), background: fundo_resultado(), ..Default::default() };
     for (i, bloco) in texto.split('⟦').enumerate() {
         if i == 0 {
             job.append(bloco, 0.0, normal.clone());
@@ -103,6 +139,16 @@ fn unidade(nome: &str, en: bool) -> &'static str {
         "stadium_full_seasons" => t2(en, "temporada(s)", "season(s)"),
         "stadium_max" => t2(en, "lugares", "places"),
         "stadium_reserve" => t2(en, "no dinheiro do banco", "in the database's money"),
+        "younger_from_age" | "younger_by" | "contest_max_age" | "idle_min_age" | "protect_young_unemployed" => t2(en, "anos", "years"),
+        "idle_days" => t2(en, "dias", "days"),
+        "idle_rep" => t2(en, "de reputação (0 a 10.000)", "reputation (0 to 10,000)"),
+        "idle_rep_per_year" => t2(en, "de reputação por ano", "reputation per year"),
+        "squad_limit" => t2(en, "jogadores", "players"),
+        "season_cap" => t2(en, "jovens por ano", "youngsters a year"),
+        "intake_per_club" => t2(en, "regens por clube", "regens per club"),
+        "regen_names_min" => t2(en, "nomes", "names"),
+        "target_k" => t2(en, "de reputação por ponto de PA", "reputation per PA point"),
+        "sigma" | "sigma_below" => t2(en, "de reputação", "reputation"),
         _ => "",
     }
 }
@@ -127,7 +173,7 @@ fn ajuda_icone(ui: &mut egui::Ui, texto: &str) {
         return;
     }
     let (r, p) = ui.allocate_painter(Vec2::new(18.0, 18.0), Sense::hover());
-    let cor = if r.hovered() { AMARELO } else { AZUL };
+    let cor = if r.hovered() { AMARELO() } else { AZUL() };
     p.circle_stroke(r.rect.center(), 7.5, Stroke::new(1.5f32, cor));
     p.text(r.rect.center(), Align2::CENTER_CENTER, "?", FontId::proportional(11.0), cor);
     r.on_hover_text(texto);
@@ -189,6 +235,8 @@ struct App {
     /// Os nomes por nação do banco da pasta (aba Nomes dos regens).
     nomes: Option<Vec<nomes::Nacao>>,
     limpar: bool,
+    /// A subaba de Público e estádio: 0 público, 1 estádio, 2 exemplo.
+    sub_publico: usize,
 }
 
 impl App {
@@ -212,6 +260,7 @@ impl App {
             pendente: None,
             busca: String::new(),
             limpar: false,
+            sub_publico: 0,
             nomes: None,
         };
         a.abrir_pasta();
@@ -381,14 +430,14 @@ impl App {
                     let on = i == ligado_idx;
                     let r = interruptor(ui, on);
                     ui.label(RichText::new(rotulo).strong());
-                    ui.label(RichText::new(if en { op[i].2 } else { op[i].1 }).size(12.0).color(CINZA));
+                    ui.label(RichText::new(if en { op[i].2 } else { op[i].1 }).size(12.0).color(CINZA()));
                     if r.clicked() {
                         novo = Some(op[1 - i].0.into());
                     }
                     r
                 }
                 Tipo::Escolha(op) => {
-                    rotulo_fixo(ui, 260.0, rotulo);
+                    rotulo_fixo(ui, 320.0, rotulo);
                     let mut atual = op.iter().position(|o| o.0 == valor).unwrap_or(0);
                     let antes = atual;
                     let r = egui::ComboBox::from_id_salt(nome).width(300.0)
@@ -404,7 +453,7 @@ impl App {
                     r
                 }
                 Tipo::Numero { min, max, barra, inteiro } => {
-                    rotulo_fixo(ui, 260.0, rotulo);
+                    rotulo_fixo(ui, 320.0, rotulo);
                     let mut x: f64 = valor.parse().unwrap_or_else(|_| c.padrao.parse().unwrap_or(0.0));
                     let mut xb = x.clamp(barra.0, barra.1);
                     let r1 = ui.add(egui::Slider::new(&mut xb, barra.0..=barra.1).show_value(false));
@@ -418,7 +467,7 @@ impl App {
                         .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
                     let u = unidade(nome, en);
                     if !u.is_empty() {
-                        ui.label(RichText::new(u).color(CINZA));
+                        ui.label(RichText::new(u).color(CINZA()));
                     }
                     if r1.changed() || r2.changed() {
                         novo = Some(cfg::numero(if *inteiro { x.round() } else { x }));
@@ -436,7 +485,7 @@ impl App {
         if let Some(f) = self.frase(nome) {
             ui.horizontal(|ui| {
                 ui.add_space(22.0);
-                ui.add(egui::Label::new(texto_com_resultado(&f, 12.5)).wrap());
+                ui.add(egui::Label::new(texto_com_resultado(&f, 14.0)).wrap());
             });
             ui.add_space(4.0);
         }
@@ -585,8 +634,8 @@ impl App {
             }
             "attendance_toward_real" => f(format!("Média de 10.000 que levou 14.000 por jogo na temporada: passa a ⟦{}⟧ no ano seguinte.", self.milhar(10000.0 + 4000.0 * x / 100.0)),
                 format!("An average of 10,000 that drew 14,000 a match in the season: becomes ⟦{}⟧ the next year.", self.milhar(10000.0 + 4000.0 * x / 100.0))),
-            "attendance_per_place" => f(format!("4 posições acima do previsto: ⟦+{}%⟧ (10.000 → ⟦{}⟧); 4 abaixo: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x)),
-                format!("4 places above the prediction: ⟦+{}%⟧ (10,000 → ⟦{}⟧); 4 below: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x))),
+            "attendance_per_place" => f(format!("4 posições acima do previsto: ⟦+{}%⟧ (10.000 » ⟦{}⟧); 4 abaixo: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x)),
+                format!("4 places above the prediction: ⟦+{}%⟧ (10,000 » ⟦{}⟧); 4 below: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x))),
             "tradition_per_place" => if x <= 0.0 {
                 f("0: o recorde histórico não pesa.".into(), "0: the historical record doesn't count.".into())
             } else {
@@ -662,14 +711,14 @@ impl App {
         let (pt, en) = guia::intro(aba);
         let termos = guia::termos(aba);
         let ingles = self.en;
-        egui::Frame::group(ui.style()).fill(CARTAO).inner_margin(10.0).show(ui, |ui| {
+        egui::Frame::group(ui.style()).fill(CARTAO()).inner_margin(10.0).show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.label(RichText::new(if ingles { en } else { pt }).size(13.5));
             if !termos.is_empty() {
                 ui.add_space(6.0);
                 egui::Grid::new(("termos", aba as u8)).num_columns(2).spacing([12.0, 5.0]).show(ui, |ui| {
                     for &(n_pt, n_en, t_pt, t_en) in termos {
-                        ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(AMARELO));
+                        ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(AMARELO()));
                         ui.add(egui::Label::new(if ingles { t_en } else { t_pt }).wrap());
                         ui.end_row();
                     }
@@ -679,10 +728,10 @@ impl App {
         ui.add_space(10.0);
     }
 
-    fn cartao(ui: &mut egui::Ui, titulo: &str, corpo: impl FnOnce(&mut egui::Ui)) {
-        egui::Frame::group(ui.style()).fill(CARTAO).inner_margin(10.0).show(ui, |ui| {
+    fn cartao(ui: &mut egui::Ui, nome: &str, corpo: impl FnOnce(&mut egui::Ui)) {
+        egui::Frame::group(ui.style()).fill(CARTAO()).inner_margin(12.0).show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.label(RichText::new(titulo).strong().size(15.0).color(VERDE));
+            ui.label(titulo(nome, 17.0).color(VERDE()));
             ui.add_space(4.0);
             corpo(ui);
         });
@@ -699,7 +748,7 @@ impl App {
         let atual = self.exe.as_ref().map(|e| e.caminho.clone());
         App::cartao(ui, &self.t("O exe", "The exe"), |ui| {
             if exes.is_empty() {
-                ui.colored_label(AMARELO, if en { "No cm*.exe in this folder: open the game folder above." } else { "Nenhum cm*.exe nesta pasta: abra a pasta do jogo no topo." });
+                ui.colored_label(AMARELO(), if en { "No cm*.exe in this folder: open the game folder above." } else { "Nenhum cm*.exe nesta pasta: abra a pasta do jogo no topo." });
             }
             ui.horizontal_wrapped(|ui| {
                 for p in &exes {
@@ -738,8 +787,8 @@ impl App {
                 // o nome da opção como nas abas; a chave do tweaks.cfg em cinza, para quem edita à mão
                 let nome = chaves::chave(l.ajuste).map(|c| if en { c.rotulo.1 } else { c.rotulo.0 }).unwrap_or(l.ajuste);
                 ui.horizontal(|ui| {
-                    rotulo_fixo(ui, 260.0, nome);
-                    rotulo_fixo(ui, 135.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA));
+                    rotulo_fixo(ui, 320.0, nome);
+                    rotulo_fixo(ui, 135.0, RichText::new(l.ajuste).monospace().size(11.0).color(CINZA()));
                     bolinha(ui, cor(l.estado));
                     rotulo_fixo(ui, 115.0, RichText::new(nome_do_estado(l.estado, en)).color(cor(l.estado)));
                     ui.add(egui::Label::new(if en { &l.motivo.1 } else { &l.motivo.0 }).wrap());
@@ -750,17 +799,17 @@ impl App {
 
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Jogo);
-        ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE));
+        ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE()));
         for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes", "squad_guard"] {
             self.controle(ui, k, true);
         }
         ui.add_space(8.0);
-        ui.label(RichText::new(self.t("Tela e CD", "Screen and CD")).strong().size(15.0).color(VERDE));
+        ui.label(RichText::new(self.t("Tela e CD", "Screen and CD")).strong().size(15.0).color(VERDE()));
         self.controle(ui, "resolution", true);
         let pela_resolucao = self.ligado("resolution") && self.estados().iter().any(|l| l.ajuste == "resolution" && l.estado == Estado::Compativel);
         self.controle(ui, "video", !pela_resolucao);
         if pela_resolucao {
-            ui.colored_label(AZUL, self.t("O vídeo em janela vem ligado pela resolução.", "The windowed video is turned on by the resolution."));
+            ui.colored_label(AZUL(), self.t("O vídeo em janela vem ligado pela resolução.", "The windowed video is turned on by the resolution."));
         }
         self.controle(ui, "no_cd", true);
     }
@@ -770,7 +819,7 @@ impl App {
         self.controle(ui, "ages", true);
         let ativo = self.ligado("ages");
         if !ativo {
-            ui.colored_label(CINZA, self.t("A tabela não vale: o jogo usa as idades do 3.9.68.", "The table doesn't apply: the game uses 3.9.68's ages."));
+            ui.colored_label(CINZA(), self.t("A tabela não vale: o jogo usa as idades do 3.9.68.", "The table doesn't apply: the game uses 3.9.68's ages."));
         }
         // o gráfico: barras arrastáveis, escala de raiz quadrada
         let idades: Vec<(f64, i32)> = (14..36).map(|n| self.idade_de(n)).collect();
@@ -779,7 +828,7 @@ impl App {
         let largura = ui.available_width().min(900.0);
         let (resp, p) = ui.allocate_painter(Vec2::new(largura, 240.0), Sense::click_and_drag());
         let r = resp.rect;
-        p.rect_filled(r, 4, CARTAO);
+        p.rect_filled(r, 4, CARTAO());
         let base = r.bottom() - 34.0;
         let alto = base - r.top() - 18.0;
         let w = r.width() / 22.0;
@@ -796,15 +845,15 @@ impl App {
             let h = (x.0 / maior).sqrt() as f32 * alto;
             let x0 = r.left() + i as f32 * w;
             let barra = Rect::from_min_max(Pos2::new(x0 + 3.0, base - h), Pos2::new(x0 + w - 3.0, base));
-            let c = if !ativo { CINZA } else if i == self.idade - 14 { AMARELO } else { VERDE };
+            let c = if !ativo { CINZA() } else if i == self.idade - 14 { AMARELO() } else { VERDE() };
             p.rect_filled(barra, 2, c);
             if mais_novo_em > 0 && ativo {
                 let hf = (final_[i] / maior).sqrt() as f32 * alto;
-                p.rect_stroke(Rect::from_min_max(Pos2::new(x0 + 1.0, base - hf), Pos2::new(x0 + w - 1.0, base)), 2, Stroke::new(1.0f32, AZUL), egui::StrokeKind::Outside);
+                p.rect_stroke(Rect::from_min_max(Pos2::new(x0 + 1.0, base - hf), Pos2::new(x0 + w - 1.0, base)), 2, Stroke::new(1.0f32, AZUL()), egui::StrokeKind::Outside);
             }
             p.text(Pos2::new(x0 + w / 2.0, base + 2.0), Align2::CENTER_TOP, format!("{}", 14 + i), FontId::proportional(11.0), Color32::LIGHT_GRAY);
             if x.1 >= 0 {
-                p.text(Pos2::new(x0 + w / 2.0, base + 16.0), Align2::CENTER_TOP, format!("{}", x.1), FontId::proportional(9.0), CINZA);
+                p.text(Pos2::new(x0 + w / 2.0, base + 16.0), Align2::CENTER_TOP, format!("{}", x.1), FontId::proportional(9.0), CINZA());
             }
             if x.0 > 0.0 {
                 p.text(Pos2::new(x0 + w / 2.0, base - h - 2.0), Align2::CENTER_BOTTOM, format!("{:.1}%", 100.0 * x.0 / total), FontId::proportional(9.0), Color32::WHITE);
@@ -827,7 +876,7 @@ impl App {
         let resp = resp.on_hover_text(if self.en { guia::ajuda("age_NN").1 } else { guia::ajuda("age_NN").0 });
         let _ = resp;
         ui.label(RichText::new(self.t("Clique numa barra para escolher a idade e arraste para mudar a chance. Embaixo de cada barra: a idade e o teto do CA. O contorno azul é como fica a distribuição depois de \"regens mais novos\".",
-            "Click a bar to pick the age and drag to change the chance. Below each bar: the age and the CA cap. The blue outline is the distribution after \"younger regens\".")).size(11.5).color(CINZA));
+            "Click a bar to pick the age and drag to change the chance. Below each bar: the age and the CA cap. The blue outline is the distribution after \"younger regens\".")).size(11.5).color(CINZA()));
         ui.add_space(6.0);
         // a idade escolhida, por extenso
         let n = self.idade;
@@ -850,7 +899,7 @@ impl App {
                         format!("= {:.1}% of the table's regens (about 1 in {:.0})", pct, 100.0 / pct.max(1e-9))
                     } else {
                         format!("= {}% dos regens da tabela (cerca de 1 em {:.0})", format!("{:.1}", pct).replace('.', ","), 100.0 / pct.max(1e-9))
-                    }).color(CINZA));
+                    }).color(CINZA()));
                     ajuda_icone(ui, ajuda_chance);
                     if r.changed() {
                         mudou = Some((chance, teto));
@@ -866,7 +915,7 @@ impl App {
                     let r3 = ui.add_enabled(tem_teto, egui::DragValue::new(&mut t).range(1..=200));
                     ui.label(RichText::new(if tem_teto {
                         if en { format!("no {}-year-old regen is born with CA above {}", n, t) } else { format!("nenhum regen de {} anos nasce com CA acima de {}", n, t) }
-                    } else if en { "no cap: the CA comes from the game's formula".to_string() } else { "sem teto: o CA sai da fórmula do jogo".to_string() }).color(CINZA));
+                    } else if en { "no cap: the CA comes from the game's formula".to_string() } else { "sem teto: o CA sai da fórmula do jogo".to_string() }).color(CINZA()));
                     ajuda_icone(ui, ajuda_teto);
                     if r2.changed() || r3.changed() {
                         mudou = Some((chance, if tem_teto { t } else { -1 }));
@@ -875,7 +924,7 @@ impl App {
                 ui.horizontal(|ui| {
                     rotulo_fixo(ui, 150.0, t2(en, "No tweaks.cfg", "In tweaks.cfg"));
                     let linha = if teto >= 0 { format!("age_{} = {}, {}", n, cfg::numero(chance), teto) } else { format!("age_{} = {}", n, cfg::numero(chance)) };
-                    ui.label(RichText::new(linha).monospace().color(AMARELO));
+                    ui.label(RichText::new(linha).monospace().color(AMARELO()));
                     ajuda_icone(ui, ajuda_linha);
                 });
             });
@@ -913,18 +962,18 @@ impl App {
         let largura = ui.available_width().min(900.0);
         let (resp, p) = ui.allocate_painter(Vec2::new(largura, 220.0), Sense::hover());
         let r = resp.rect.shrink2(Vec2::new(34.0, 20.0));
-        p.rect_filled(resp.rect, 4, CARTAO);
+        p.rect_filled(resp.rect, 4, CARTAO());
         let x = |idade: f64| r.left() + ((idade - 18.0) / 22.0) as f32 * r.width();
         let y = |chance: f64| r.bottom() - chance.clamp(0.0, 1.0) as f32 * r.height();
         let original: Vec<Pos2> = (18..=40).map(|i| Pos2::new(x(i as f64), y((750.0 / rep_ex).min(1.0)))).collect();
-        p.extend(egui::Shape::dashed_line(&original, Stroke::new(1.5f32, CINZA), 6.0, 4.0));
+        p.extend(egui::Shape::dashed_line(&original, Stroke::new(1.5f32, CINZA()), 6.0, 4.0));
         if ativo {
             let nova: Vec<Pos2> = (18..=40).map(|i| {
                 let i = i as f64;
                 let c = if protege > 0.0 && i < protege { 0.0 } else if i >= idade_min { (rep + por_ano * (i - idade_min)) / rep_ex } else { 750.0 / rep_ex };
                 Pos2::new(x(i), y(c.min(1.0)))
             }).collect();
-            p.add(egui::Shape::line(nova, Stroke::new(2.5f32, VERDE)));
+            p.add(egui::Shape::line(nova, Stroke::new(2.5f32, VERDE())));
         }
         for i in (18..=40).step_by(2) {
             p.text(Pos2::new(x(i as f64), r.bottom() + 4.0), Align2::CENTER_TOP, format!("{}", i), FontId::proportional(10.0), Color32::LIGHT_GRAY);
@@ -933,7 +982,7 @@ impl App {
             p.text(Pos2::new(r.left() - 4.0, y(c)), Align2::RIGHT_CENTER, format!("{:.0}%", c * 100.0), FontId::proportional(10.0), Color32::LIGHT_GRAY);
         }
         ui.label(RichText::new(self.t("Chance de aposentar por verificação (dias 0, 80, 173 e 250 do ano), por idade, para a reputação de exemplo. Tracejado: a regra original (750 / reputação, depois de 365 dias sem clube).",
-            "Chance of retiring per check (days 0, 80, 173 and 250 of the year), by age, for the example reputation. Dashed: the original rule (750 / reputation, after 365 days without a club).")).size(11.0).color(CINZA));
+            "Chance of retiring per check (days 0, 80, 173 and 250 of the year), by age, for the example reputation. Dashed: the original rule (750 / reputation, after 365 days without a club).")).size(11.0).color(CINZA()));
     }
 
     /// O peso do clube para o jovem: a mesma conta de `peso()` em src/regens/disputa.rs.
@@ -964,11 +1013,11 @@ impl App {
         self.controle(ui, "rule", true);
         let ativo = self.ligado("rule");
         if !ativo {
-            ui.colored_label(CINZA, self.t("O jogo usa a disputa do 3.9.68.", "The game uses 3.9.68's contest."));
+            ui.colored_label(CINZA(), self.t("O jogo usa a disputa do 3.9.68.", "The game uses 3.9.68's contest."));
         }
         let fornada = self.fornada_ligada();
         if fornada {
-            ui.colored_label(AZUL, self.t("A fornada está ligada: esta curva decide para qual clube vai cada regen, mas o número de regens por clube é o da fornada. O máximo por ano e o teto do elenco não valem (aba Fornada).",
+            ui.colored_label(AZUL(), self.t("A fornada está ligada: esta curva decide para qual clube vai cada regen, mas o número de regens por clube é o da fornada. O máximo por ano e o teto do elenco não valem (aba Fornada).",
                 "The intake is on: this curve decides which club each regen goes to, but the number of regens per club is the intake's. The yearly maximum and the squad limit don't apply (Intake tab)."));
         }
         let rotulo = self.t("Jovem de exemplo: PA", "Example youngster: PA");
@@ -990,7 +1039,7 @@ impl App {
         let (sigma, abaixo, piso) = (g("sigma", 2500.0).max(1.0), g("sigma_below", 1200.0), g("level_floor", 0.002));
         let largura = ui.available_width().min(900.0);
         let (resp, p) = ui.allocate_painter(Vec2::new(largura, 200.0), Sense::hover());
-        p.rect_filled(resp.rect, 4, CARTAO);
+        p.rect_filled(resp.rect, 4, CARTAO());
         let r = resp.rect.shrink2(Vec2::new(34.0, 20.0));
         let x = |rep: f64| r.left() + (rep / 10000.0).clamp(0.0, 1.0) as f32 * r.width();
         let y = |v: f64| r.bottom() - v.clamp(0.0, 1.0) as f32 * r.height();
@@ -1001,17 +1050,17 @@ impl App {
         };
         p.rect_filled(Rect::from_min_max(Pos2::new(r.left(), y(piso)), r.right_bottom()), 0, Color32::from_rgba_unmultiplied(0x4c, 0xc3, 0x6a, 40));
         let curva: Vec<Pos2> = (0..=200).map(|i| Pos2::new(x(i as f64 * 50.0), y(nivel(i as f64 * 50.0)))).collect();
-        p.add(egui::Shape::line(curva, Stroke::new(2.5f32, if ativo { VERDE } else { CINZA })));
-        p.line_segment([Pos2::new(x(alvo), r.top()), Pos2::new(x(alvo), r.bottom())], Stroke::new(1.0f32, AMARELO));
-        p.text(Pos2::new(x(alvo) + 4.0, r.top()), Align2::LEFT_TOP, format!("{} {:.0}", self.t("alvo", "target"), alvo), FontId::proportional(11.0), AMARELO);
+        p.add(egui::Shape::line(curva, Stroke::new(2.5f32, if ativo { VERDE() } else { CINZA() })));
+        p.line_segment([Pos2::new(x(alvo), r.top()), Pos2::new(x(alvo), r.bottom())], Stroke::new(1.0f32, AMARELO()));
+        p.text(Pos2::new(x(alvo) + 4.0, r.top()), Align2::LEFT_TOP, format!("{} {:.0}", self.t("alvo", "target"), alvo), FontId::proportional(11.0), AMARELO());
         for c in &CLUBES {
-            p.circle_filled(Pos2::new(x(c.rep), y(nivel(c.rep))), 4.0, AZUL);
+            p.circle_filled(Pos2::new(x(c.rep), y(nivel(c.rep))), 4.0, AZUL());
         }
         for rep in [0, 2500, 5000, 7500, 10000] {
             p.text(Pos2::new(x(rep as f64), r.bottom() + 4.0), Align2::CENTER_TOP, format!("{}", rep), FontId::proportional(10.0), Color32::LIGHT_GRAY);
         }
         ui.label(RichText::new(self.t("O peso do nível pela reputação do clube (pontos azuis: os clubes de exemplo); a faixa clara é o piso.",
-            "The level weight by the club's reputation (blue dots: the example clubs); the light band is the floor.")).size(11.0).color(CINZA));
+            "The level weight by the club's reputation (blue dots: the example clubs); the light band is the floor.")).size(11.0).color(CINZA()));
         // as chances por clube
         let s = g("surprise", 15.0).clamp(0.0, 100.0) / 100.0;
         let normal: Vec<f64> = CLUBES.iter().map(|c| self.peso(c, false) * c.vezes).collect();
@@ -1024,8 +1073,8 @@ impl App {
                 ui.horizontal(|ui| {
                     rotulo_fixo(ui, 230.0, if en { c.nome.1 } else { c.nome.0 });
                     let (rr, pp) = ui.allocate_painter(Vec2::new(300.0, 14.0), Sense::hover());
-                    pp.rect_filled(rr.rect, 2, FUNDO);
-                    pp.rect_filled(Rect::from_min_size(rr.rect.min, Vec2::new(rr.rect.width() * ch as f32, rr.rect.height())), 2, if ativo { VERDE } else { CINZA });
+                    pp.rect_filled(rr.rect, 2, FUNDO());
+                    pp.rect_filled(Rect::from_min_size(rr.rect.min, Vec2::new(rr.rect.width() * ch as f32, rr.rect.height())), 2, if ativo { VERDE() } else { CINZA() });
                     ui.label(format!("{:.1}%", 100.0 * ch));
                 });
             }
@@ -1038,13 +1087,13 @@ impl App {
         // o ajuste fino fica fechado: a predefinição Equilibrado já o deixa certo (03/11, Lucas)
         egui::CollapsingHeader::new(RichText::new(self.t("Avançado: o ajuste fino do sorteio", "Advanced: fine-tuning the draw")).strong()).default_open(std::env::var("TWEAKS_CONFIG_AVANCADO").is_ok()).show(ui, |ui| {
             ui.label(RichText::new(self.t("Quase ninguém precisa mexer aqui: a predefinição Equilibrado já deixa estes valores certos. Cada um diz embaixo o que faz.",
-                "Almost nobody needs to change these: the Balanced preset already sets them right. Each one says below what it does.")).size(12.0).color(CINZA));
+                "Almost nobody needs to change these: the Balanced preset already sets them right. Each one says below what it does.")).size(12.0).color(CINZA()));
             for k in ["sigma", "sigma_below", "level_floor", "facilities_base", "facilities_k", "staff_min", "staff_max", "squad_exp", "temperature"] {
                 self.controle(ui, k, ativo);
             }
         });
         if self.valor("staff_max").parse::<f64>().unwrap_or(1.2) < self.valor("staff_min").parse::<f64>().unwrap_or(0.8) {
-            ui.colored_label(AMARELO, self.t("staff_max está abaixo de staff_min.", "staff_max is below staff_min."));
+            ui.colored_label(AMARELO(), self.t("staff_max está abaixo de staff_min.", "staff_max is below staff_min."));
         }
     }
 
@@ -1089,13 +1138,13 @@ impl App {
                         ui.label(n.primeiros.to_string());
                         ui.label(n.segundos.to_string());
                         ui.label(if proprios {
-                            RichText::new(t2(en, "os próprios", "its own")).color(if ativo { VERDE } else { CINZA })
+                            RichText::new(t2(en, "os próprios", "its own")).color(if ativo { VERDE() } else { CINZA() })
                         } else if n.grupo == 0 {
-                            RichText::new(t2(en, "qualquer país (tabela certa)", "any country (right table)")).color(CINZA)
+                            RichText::new(t2(en, "qualquer país (tabela certa)", "any country (right table)")).color(CINZA())
                         } else {
-                            RichText::new(t2(en, "igual (poucos nomes)", "the same (too few names)")).color(CINZA)
+                            RichText::new(t2(en, "igual (poucos nomes)", "the same (too few names)")).color(CINZA())
                         });
-                        ui.label(RichText::new(nomes::de_onde(n, lista, en)).color(AMARELO));
+                        ui.label(RichText::new(nomes::de_onde(n, lista, en)).color(AMARELO()));
                         ui.end_row();
                     }
                 });
@@ -1116,7 +1165,7 @@ impl App {
         let mut mudou = false;
         let r = ui.horizontal(|ui| {
             let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| {
-                rotulo_fixo(ui, 260.0, rotulo);
+                rotulo_fixo(ui, 320.0, rotulo);
                 let r = ui.add(egui::Slider::new(&mut mais_menos, 0..=25).show_value(false));
                 ui.label(RichText::new(format!("± {}", mais_menos)).strong());
                 mudou = r.changed();
@@ -1140,7 +1189,7 @@ impl App {
                 format!("± {m}: each grey player comes with a CA from {m} below to {m} above the club's level. At a level-82 club: from {} to {}.", 82 - m, 82 + m)
             } else {
                 format!("± {m}: cada cinzento vem com um CA de {m} abaixo a {m} acima do nível do clube. Num clube de nível 82: de {} a {}.", 82 - m, 82 + m)
-            }).size(12.5).color(FRASE)).wrap());
+            }).size(12.5).color(FRASE())).wrap());
         });
         ui.add_space(10.0);
         App::cartao(ui, &self.t("Exemplos (de uma carreira de teste, Inglaterra carregada, 2001)", "Examples (from a test career, England loaded, 2001)"), |ui| {
@@ -1153,12 +1202,12 @@ impl App {
                     ui.label(if clube == "Tonga" { t2(en, "Tonga (seleção)", "Tonga (national team)") } else { clube });
                     ui.label(rep.to_string());
                     ui.label(format!("{} ({})", nivel, if fonte == 0 { t2(en, "elenco", "squad") } else { t2(en, "reputação", "reputation") }));
-                    ui.label(RichText::new(orig.to_string()).color(if orig < 0 { VERMELHO } else { Color32::LIGHT_GRAY }));
-                    ui.label(RichText::new(if m == 0 { nivel.to_string() } else { format!("{} {} {}", nivel - m, t2(en, "a", "to"), nivel + m) }).color(if ativo { VERDE } else { CINZA }));
+                    ui.label(RichText::new(orig.to_string()).color(if orig < 0 { VERMELHO() } else { Color32::LIGHT_GRAY }));
+                    ui.label(RichText::new(if m == 0 { nivel.to_string() } else { format!("{} {} {}", nivel - m, t2(en, "a", "to"), nivel + m) }).color(if ativo { VERDE() } else { CINZA() }));
                     ui.end_row();
                 }
             });
-            ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA));
+            ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA()));
         });
     }
 
@@ -1198,7 +1247,7 @@ impl App {
                     ui.end_row();
                     for c in achadas {
                         ui.label(c[1]);
-                        ui.label(RichText::new(c[5]).color(VERDE));
+                        ui.label(RichText::new(c[5]).color(VERDE()));
                         ui.label(c[6]);
                         ui.label(c[8]);
                         ui.label(c[9]);
@@ -1212,9 +1261,9 @@ impl App {
                         } else {
                             "?".into()
                         };
-                        ui.label(RichText::new(ficha).color(AMARELO));
+                        ui.label(RichText::new(ficha).color(AMARELO()));
                         ui.label(format!("{} ({})", c[13], match (en, c[15]) { (false, "player") => "jogador", (false, "non-player") => "não jogador", (_, x) => x }));
-                        ui.label(RichText::new(c[2]).size(10.5).color(CINZA));
+                        ui.label(RichText::new(c[2]).size(10.5).color(CINZA()));
                         ui.end_row();
                     }
                 });
@@ -1268,7 +1317,7 @@ impl App {
         self.cabecalho(ui, Aba::Fornada);
         self.controle(ui, "intake", true);
         let ativo = self.fornada_ligada();
-        ui.colored_label(if ativo { AZUL } else { CINZA }, if ativo {
+        ui.colored_label(if ativo { AZUL() } else { CINZA() }, if ativo {
             self.t("Ligada. Regen é regen: os regens só nascem no dia da fornada, e cada clube com vaga recebe o número abaixo. Para qual clube vai cada um, quem decide é a curva da aba Disputa dos clubes. O máximo por ano e o teto do elenco da aba Disputa dos clubes não valem.",
                 "On. A regen is a regen: regens are only born on intake day, and every club with room gets the number below. Which club each one goes to is up to the Clubs' contest tab's curve. The Clubs' contest tab's yearly maximum and squad limit don't apply.")
         } else {
@@ -1318,7 +1367,7 @@ impl App {
         let (a_pt, a_en) = guia::ajuda("stadium_seat_cost");
         let r = ui.horizontal(|ui| {
             let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| {
-                rotulo_fixo(ui, 260.0, t2(en, "Custo por lugar novo", "Cost per new place"));
+                rotulo_fixo(ui, 320.0, t2(en, "Custo por lugar novo", "Cost per new place"));
                 let r = egui::ComboBox::from_id_salt("stadium_seat_cost").width(300.0).selected_text(nomes[modo]).show_ui(ui, |ui| {
                     for (i, n) in nomes.iter().enumerate() {
                         ui.selectable_value(&mut modo, i, *n);
@@ -1349,7 +1398,7 @@ impl App {
         };
         ui.horizontal(|ui| {
             ui.add_space(22.0);
-            ui.add(egui::Label::new(RichText::new(frase).size(12.5).color(FRASE)).wrap());
+            ui.add(egui::Label::new(RichText::new(frase).size(12.5).color(FRASE())).wrap());
         });
         ui.add_space(4.0);
     }
@@ -1357,12 +1406,30 @@ impl App {
     fn aba_publico(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Publico);
         let en = self.en;
-        // ---- o público ----
         let p = self.ligado("attendance");
-        let titulo = self.t("O público", "Attendance");
-        App::cartao(ui, &titulo, |_| {});
+        let e = self.ligado("stadium");
+        // as subabas: Público e Estádio, cada uma com o seu interruptor; Exemplo
+        ui.horizontal(|ui| {
+            for (i, nome, chave) in [(0usize, self.t("Público", "Attendance"), Some("attendance")), (1, self.t("Estádio", "Stadium"), Some("stadium")), (2, self.t("Exemplo", "Example"), None)] {
+                let atual = self.sub_publico == i;
+                let r = ui.selectable_label(atual, titulo(nome, 17.0).color(if atual { VERDE() } else { CINZA() }));
+                if r.clicked() {
+                    self.sub_publico = i;
+                }
+                if let Some(k) = chave {
+                    let on = self.ligado(k);
+                    if interruptor(ui, on).clicked() {
+                        self.definir(k, if on { "off" } else { "on" });
+                    }
+                }
+                ui.add_space(22.0);
+            }
+        });
+        ui.separator();
+        ui.add_space(6.0);
+        if self.sub_publico == 0 {
         self.controle(ui, "attendance", true);
-        ui.colored_label(if p { AZUL } else { CINZA }, if p {
+        ui.colored_label(if p { AZUL() } else { CINZA() }, if p {
             self.t("Ligado: quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde o que ganhou por esta regra.",
                 "On: a club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse loses what it gained by this rule.")
         } else {
@@ -1391,13 +1458,10 @@ impl App {
         for k in ["title_race_max", "title_race_top2"] {
             self.controle(ui, k, grande);
         }
-        ui.add_space(14.0);
-        // ---- o estádio ----
-        let e = self.ligado("stadium");
-        let titulo = self.t("O estádio", "The stadium");
-        App::cartao(ui, &titulo, |_| {});
+        }
+        if self.sub_publico == 1 {
         self.controle(ui, "stadium", true);
-        ui.colored_label(if e { AZUL } else { CINZA }, if e {
+        ui.colored_label(if e { AZUL() } else { CINZA() }, if e {
             self.t("Ligado: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade.",
                 "On: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price.")
         } else {
@@ -1420,7 +1484,10 @@ impl App {
         for k in ["stadium_ceiling_zero", "stadium_max"] {
             self.controle(ui, k, e);
         }
-        ui.add_space(10.0);
+        }
+        if self.sub_publico != 2 {
+            return;
+        }
         // ---- o clube de exemplo ----
         let g = |s: &App, k: &str| s.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
         let (trad, reprimida, por_pos, piso) = (g(self, "tradition_per_place") / 100.0, g(self, "pent_up_demand") / 100.0, g(self, "attendance_per_place") / 100.0, self.ligado("attendance_floor"));
@@ -1468,18 +1535,18 @@ impl App {
             else { format!("Obras: depois de {} temporada(s) seguida(s) acima de {}% de ocupação ({} por jogo), com uns {} lugares a mais de demanda, constrói por uns {} (se tiver isso acima da reserva).", temp, self.n(occ), um(cap * occ / 100.0), um(lugares), um(lugares * custo)) }
         };
         App::cartao(ui, &titulo, |ui| {
-            ui.label(RichText::new(descr).size(12.5).color(FRASE));
+            ui.label(RichText::new(descr).size(12.5).color(FRASE()));
             ui.add_space(4.0);
             egui::Grid::new("publico_exemplo").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
                 for (a, b) in &linhas {
                     ui.label(a);
-                    ui.label(RichText::new(b).strong().color(if p { AMARELO } else { CINZA }));
+                    ui.label(RichText::new(b).strong().color(if p { AMARELO() } else { CINZA() }));
                     ui.end_row();
                 }
             });
             ui.add_space(4.0);
-            ui.label(RichText::new(obra).size(12.5).color(if e { AMARELO } else { CINZA }));
-            ui.label(RichText::new(t2(en, "Conta simplificada, para dar a ideia: no jogo, cada partida também pesa o adversário, a distância e a fase da temporada.", "A simplified sum, to give the idea: in the game, each match also weighs the opponent, the distance and the stage of the season.")).size(11.5).color(CINZA));
+            ui.label(RichText::new(obra).size(12.5).color(if e { AMARELO() } else { CINZA() }));
+            ui.label(RichText::new(t2(en, "Conta simplificada, para dar a ideia: no jogo, cada partida também pesa o adversário, a distância e a fase da temporada.", "A simplified sum, to give the idea: in the game, each match also weighs the opponent, the distance and the stage of the season.")).size(11.5).color(CINZA()));
         });
     }
 
@@ -1513,11 +1580,11 @@ impl App {
                 self.cfg = Cfg::ler(&self.lido);
             }
         });
-        egui::Frame::group(ui.style()).fill(FUNDO).show(ui, |ui| {
+        egui::Frame::group(ui.style()).fill(FUNDO()).show(ui, |ui| {
             for (i, l) in texto.lines().enumerate() {
                 let mudou = antes.get(i).map(String::as_str) != Some(l);
                 let rt = RichText::new(l).monospace().size(11.5);
-                ui.label(if mudou { rt.color(AMARELO).strong() } else if l.trim_start().starts_with('#') { rt.color(CINZA) } else { rt });
+                ui.label(if mudou { rt.color(AMARELO()).strong() } else if l.trim_start().starts_with('#') { rt.color(CINZA()) } else { rt });
             }
         });
     }
@@ -1530,7 +1597,7 @@ impl eframe::App for App {
         egui::TopBottomPanel::top("topo").show(ctx, |ui| {
             ui.add_space(4.0);
             ui.horizontal(|ui| {
-                ui.label(RichText::new("CM0102 Rust Tweaks").strong().size(18.0).color(VERDE));
+                ui.label(titulo("CM0102 Rust Tweaks", 20.0).color(VERDE()));
                 ui.separator();
                 ui.label(self.t("Pasta do jogo:", "Game folder:"));
                 ui.add(egui::TextEdit::singleline(&mut self.pasta_digitada).desired_width(320.0));
@@ -1586,11 +1653,22 @@ impl eframe::App for App {
                 if self.en != antes {
                     std::fs::write(arquivo_do_idioma(), if self.en { "en" } else { "pt" }).ok();
                 }
+                let mut c = claro();
+                let antes = c;
+                egui::ComboBox::from_id_salt("tema").width(110.0).selected_text(if c { self.t("Claro", "Light") } else { self.t("Escuro", "Dark") }).show_ui(ui, |ui| {
+                    ui.selectable_value(&mut c, true, self.t("Claro", "Light"));
+                    ui.selectable_value(&mut c, false, self.t("Escuro", "Dark"));
+                });
+                if c != antes {
+                    CLARO.store(c, std::sync::atomic::Ordering::Relaxed);
+                    std::fs::write(arquivo_do_tema(), if c { "light" } else { "dark" }).ok();
+                    ui.ctx().set_visuals(visual());
+                }
             });
             if !alerta.is_empty() {
                 egui::Frame::new().fill(Color32::from_rgb(0x4a, 0x3a, 0x12)).inner_margin(6.0).show(ui, |ui| {
                     ui.set_width(ui.available_width());
-                    ui.colored_label(AMARELO, format!("{} {}: {}", alerta.len(),
+                    ui.colored_label(AMARELO(), format!("{} {}: {}", alerta.len(),
                         self.t("ajuste(s) pedem atenção ou não são compatíveis com este exe/patch", "tweak(s) need attention or are not compatible with this exe/patch"), alerta.join(", ")));
                 });
             }
@@ -1603,7 +1681,7 @@ impl eframe::App for App {
                     ui.label(format!("{} — {} {}", if self.en { PREDEFINICOES[i].1 } else { PREDEFINICOES[i].0 }, lista.len(), self.t("valor(es) vão mudar:", "value(s) will change:")));
                     egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
                         for (k, a, b) in &lista {
-                            ui.label(RichText::new(format!("{:<26} {}  →  {}", k, a, b)).monospace());
+                            ui.label(RichText::new(format!("{:<26} {}  »  {}", k, a, b)).monospace());
                         }
                     });
                     ui.horizontal(|ui| {
@@ -1636,11 +1714,11 @@ impl eframe::App for App {
                 ui.label(format!("{}{}", self.pasta.join("tweaks.cfg").display(), if self.existe { "" } else if self.en { " (new: from the distributed file)" } else { " (novo: a partir do distribuído)" }));
                 if !self.mensagem.is_empty() {
                     ui.separator();
-                    ui.colored_label(AMARELO, &self.mensagem);
+                    ui.colored_label(AMARELO(), &self.mensagem);
                 }
             });
         });
-        egui::SidePanel::left("abas").resizable(false).exact_width(270.0).show(ctx, |ui| {
+        egui::SidePanel::left("abas").resizable(false).exact_width(300.0).show(ctx, |ui| {
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 let mut tudo: Option<bool> = None;
@@ -1666,7 +1744,7 @@ impl eframe::App for App {
                 if grupo != grupo_atual {
                     grupo_atual = grupo;
                     ui.add_space(8.0);
-                    ui.label(RichText::new(grupo.to_uppercase()).size(11.5).strong().color(CINZA));
+                    ui.label(RichText::new(grupo.to_uppercase()).size(12.5).color(CINZA()));
                     ui.add_space(2.0);
                 }
                 let pior = CHAVES.iter().filter(|c| c.aba == aba).filter_map(|c| estados.iter().find(|l| l.ajuste == c.nome)).map(|l| l.estado)
@@ -1686,7 +1764,7 @@ impl eframe::App for App {
                             }
                         }
                     }
-                    if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(14.5)).clicked() {
+                    if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(16.0)).clicked() {
                         self.aba = aba;
                     }
                     if let Some(e) = pior {
@@ -1706,13 +1784,13 @@ impl eframe::App for App {
                         Some(c) => if self.en { c.rotulo.1 } else { c.rotulo.0 }.to_string(),
                         None => self.t("Tabela de idades", "Age table"),
                     };
-                    ui.label(RichText::new(titulo).strong().size(15.0).color(VERDE));
+                    ui.label(crate::titulo(titulo, 17.0).color(VERDE()));
                     let (pt, en) = guia::ajuda(guia_k);
                     ui.label(if self.en { en } else { pt });
                     ui.add_space(6.0);
                     egui::CollapsingHeader::new(self.t("Detalhe técnico (tweaks.cfg)", "Technical detail (tweaks.cfg)")).show(ui, |ui| {
-                        ui.label(RichText::new(if k.starts_with("age_") { "age_14 … age_35" } else { k }).monospace().color(CINZA));
-                        ui.label(RichText::new(cfg::ajuda(k)).size(11.5).color(CINZA));
+                        ui.label(RichText::new(if k.starts_with("age_") { "age_14 … age_35" } else { k }).monospace().color(CINZA()));
+                        ui.label(RichText::new(cfg::ajuda(k)).size(11.5).color(CINZA()));
                     });
                     let alvo = if k.starts_with("age_") { "ages" } else { k };
                     if let Some(l) = estados.iter().find(|l| l.ajuste == alvo) {
@@ -1823,14 +1901,33 @@ fn main() -> eframe::Result {
         },
         ..Default::default()
     };
+    CLARO.store(std::fs::read_to_string(arquivo_do_tema()).map(|t| t.trim() == "light").unwrap_or(false), std::sync::atomic::Ordering::Relaxed);
     eframe::run_native("CM0102 Rust Tweaks", opcoes, Box::new(move |cc| {
-        let mut v = egui::Visuals::dark();
-        v.panel_fill = FUNDO;
-        v.window_fill = FUNDO;
-        v.extreme_bg_color = Color32::from_rgb(0x0c, 0x12, 0x0f);
-        v.selection.bg_fill = Color32::from_rgb(0x2d, 0x7a, 0x45);
-        v.hyperlink_color = VERDE;
-        cc.egui_ctx.set_visuals(v);
+        // as fontes: Archivo nos textos, Archivo Black nos títulos, IBM Plex Mono nos números (licença OFL, configurador/fontes);
+        // as do egui ficam atrás, para os símbolos que elas não têm
+        let mut f = egui::FontDefinitions::default();
+        for (nome, dados) in [("archivo", &include_bytes!("../fontes/Archivo-Regular.ttf")[..]), ("archivo_black", &include_bytes!("../fontes/ArchivoBlack-Regular.ttf")[..]),
+            ("plex", &include_bytes!("../fontes/IBMPlexMono-Regular.ttf")[..])] {
+            f.font_data.insert(nome.into(), std::sync::Arc::new(egui::FontData::from_static(dados)));
+        }
+        f.families.entry(egui::FontFamily::Proportional).or_default().insert(0, "archivo".into());
+        f.families.entry(egui::FontFamily::Monospace).or_default().insert(0, "plex".into());
+        let mut t = vec!["archivo_black".to_string()];
+        t.extend(f.families.get(&egui::FontFamily::Proportional).cloned().unwrap_or_default());
+        f.families.insert(egui::FontFamily::Name("titulo".into()), t);
+        cc.egui_ctx.set_fonts(f);
+        cc.egui_ctx.style_mut(|s| {
+            use egui::TextStyle::*;
+            s.text_styles.insert(Body, FontId::proportional(16.0));
+            s.text_styles.insert(Button, FontId::proportional(15.5));
+            s.text_styles.insert(Small, FontId::proportional(13.0));
+            s.text_styles.insert(Heading, FontId::new(22.0, egui::FontFamily::Name("titulo".into())));
+            s.text_styles.insert(Monospace, FontId::monospace(15.0));
+            s.spacing.item_spacing = Vec2::new(10.0, 7.0);
+            s.spacing.button_padding = Vec2::new(10.0, 5.0);
+            s.spacing.interact_size.y = 26.0;
+        });
+        cc.egui_ctx.set_visuals(visual());
         // as dicas do "?" trazem explicações de várias linhas: mais largas que o padrão
         cc.egui_ctx.style_mut(|s| s.spacing.tooltip_width = 480.0);
         Ok(Box::new(App::new(pasta)))
