@@ -62,6 +62,57 @@ fn bolinha(ui: &mut egui::Ui, c: Color32) {
     p.circle_filled(r.rect.center(), 5.0, c);
 }
 
+/// Um interruptor de verdade (o desenho de liga/desliga): verde e bolinha à direita = ligado. Devolve a resposta; o
+/// clique troca o estado.
+fn interruptor(ui: &mut egui::Ui, on: bool) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(Vec2::new(38.0, 20.0), Sense::click());
+    if ui.is_rect_visible(rect) {
+        let t = ui.ctx().animate_bool(resp.id, on);
+        let fundo = if on { Color32::from_rgb(0x2d, 0x9a, 0x52) } else { Color32::from_rgb(0x4a, 0x52, 0x4e) };
+        let r = rect.height() / 2.0;
+        ui.painter().rect_filled(rect, r, fundo);
+        let x = egui::lerp((rect.left() + r)..=(rect.right() - r), t);
+        ui.painter().circle_filled(egui::pos2(x, rect.center().y), r - 3.0, Color32::WHITE);
+    }
+    resp.on_hover_cursor(egui::CursorIcon::PointingHand)
+}
+
+/// Um texto com as partes entre ⟦ ⟧ em destaque: o resultado da conta, que muda quando se mexe no controle.
+fn texto_com_resultado(texto: &str, tam: f32) -> egui::text::LayoutJob {
+    let mut job = egui::text::LayoutJob::default();
+    let normal = egui::TextFormat { font_id: egui::FontId::proportional(tam), color: FRASE, ..Default::default() };
+    let destaque = egui::TextFormat { font_id: egui::FontId::proportional(tam + 0.5), color: AMARELO, background: Color32::from_rgb(0x33, 0x2b, 0x12), ..Default::default() };
+    for (i, bloco) in texto.split('⟦').enumerate() {
+        if i == 0 {
+            job.append(bloco, 0.0, normal.clone());
+        } else {
+            let (d, resto) = bloco.split_once('⟧').unwrap_or((bloco, ""));
+            job.append(d, 0.0, destaque.clone());
+            job.append(resto, 0.0, normal.clone());
+        }
+    }
+    job
+}
+
+/// A unidade do número de uma chave, escrita ao lado do campo.
+fn unidade(nome: &str, en: bool) -> &'static str {
+    match nome {
+        "attendance_toward_real" | "attendance_per_place" | "tradition_per_place" | "weak_league_keep" | "pent_up_demand" | "title_race_max"
+        | "title_race_top2" | "stadium_occupancy_min" => "%",
+        "attendance_cap_weak" | "attendance_cap_mid" | "attendance_cap_strong" | "weak_league_limit" => t2(en, "pessoas por ponto de nível", "people per level point"),
+        "stadium_full_seasons" => t2(en, "temporada(s)", "season(s)"),
+        "stadium_max" => t2(en, "lugares", "places"),
+        "stadium_reserve" => t2(en, "no dinheiro do banco", "in the database's money"),
+        _ => "",
+    }
+}
+
+/// A chave que se mostra como interruptor: um liga/desliga de duas posições (on/off, 1/0) ou a chave de uma aba.
+fn como_interruptor(nome: &str, op: &[(&str, &str, &str)]) -> bool {
+    op.len() == 2 && (matches!((op[0].0, op[1].0), ("off", "on") | ("on", "off") | ("0", "1"))
+        || chaves::ABAS.iter().any(|a| chaves::mestres(a.0).iter().any(|m| m.0 == nome)))
+}
+
 /// Um texto numa largura fixa, alinhado à esquerda (o `add_sized` do egui centraliza).
 fn rotulo_fixo(ui: &mut egui::Ui, largura: f32, texto: impl Into<egui::WidgetText>) -> egui::Response {
     ui.allocate_ui_with_layout(Vec2::new(largura, 18.0), egui::Layout::left_to_right(egui::Align::Center), |ui| {
@@ -315,10 +366,24 @@ impl App {
         let resp = ui.horizontal(|ui| {
             let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| match &c.tipo {
                 Tipo::Liga => {
-                    let mut on = chaves::ligado(nome, &valor);
-                    let r = ui.checkbox(&mut on, rotulo);
-                    if r.changed() {
-                        novo = Some(if on { "1" } else { "0" }.into());
+                    let on = chaves::ligado(nome, &valor);
+                    let r = interruptor(ui, on);
+                    ui.label(rotulo);
+                    if r.clicked() {
+                        novo = Some(if on { "0" } else { "1" }.into());
+                    }
+                    r
+                }
+                Tipo::Escolha(op) if como_interruptor(nome, op) => {
+                    let i = op.iter().position(|o| o.0 == valor).unwrap_or(0);
+                    // ligado = a opção que não é a do jogo original (a segunda), ou "on"/"1"
+                    let ligado_idx = if op[0].0 == "on" { 0 } else { 1 };
+                    let on = i == ligado_idx;
+                    let r = interruptor(ui, on);
+                    ui.label(RichText::new(rotulo).strong());
+                    ui.label(RichText::new(if en { op[i].2 } else { op[i].1 }).size(12.0).color(CINZA));
+                    if r.clicked() {
+                        novo = Some(op[1 - i].0.into());
                     }
                     r
                 }
@@ -351,6 +416,10 @@ impl App {
                     let r2 = ui.add(egui::DragValue::new(&mut x).range(*min..=*max).speed(passo).max_decimals(if *inteiro { 0 } else { 4 })
                         .custom_formatter(move |v, _| { let s = format!("{:.4}", v); let s = s.trim_end_matches('0').trim_end_matches('.'); if en { s.to_string() } else { s.replace('.', ",") } })
                         .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
+                    let u = unidade(nome, en);
+                    if !u.is_empty() {
+                        ui.label(RichText::new(u).color(CINZA));
+                    }
                     if r1.changed() || r2.changed() {
                         novo = Some(cfg::numero(if *inteiro { x.round() } else { x }));
                     }
@@ -367,7 +436,7 @@ impl App {
         if let Some(f) = self.frase(nome) {
             ui.horizontal(|ui| {
                 ui.add_space(22.0);
-                ui.add(egui::Label::new(RichText::new(f).size(12.5).color(FRASE)).wrap());
+                ui.add(egui::Label::new(texto_com_resultado(&f, 12.5)).wrap());
             });
             ui.add_space(4.0);
         }
@@ -514,30 +583,71 @@ impl App {
                       format!("{}: a club with twice the weight has ×{} the other's chance ({}).", self.n(x), self.n(r), if x > 1.0 { "sharper differences" } else { "softer differences" }))
                 }
             }
+            "attendance_toward_real" => f(format!("Média de 10.000 que levou 14.000 por jogo na temporada: passa a ⟦{}⟧ no ano seguinte.", self.milhar(10000.0 + 4000.0 * x / 100.0)),
+                format!("An average of 10,000 that drew 14,000 a match in the season: becomes ⟦{}⟧ the next year.", self.milhar(10000.0 + 4000.0 * x / 100.0))),
+            "attendance_per_place" => f(format!("4 posições acima do previsto: ⟦+{}%⟧ (10.000 → ⟦{}⟧); 4 abaixo: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x)),
+                format!("4 places above the prediction: ⟦+{}%⟧ (10,000 → ⟦{}⟧); 4 below: ⟦-{}%⟧.", self.n(4.0 * x), self.milhar(10000.0 * (1.0 + 0.04 * x)), self.n(4.0 * x))),
+            "tradition_per_place" => if x <= 0.0 {
+                f("0: o recorde histórico não pesa.".into(), "0: the historical record doesn't count.".into())
+            } else {
+                f(format!("{}% × 5 posições acima = ⟦{}%⟧ da distância até o recorde histórico. Média de 12.000 e recorde histórico de 26.000 (distância de 14.000): voltam ⟦{}⟧ pessoas.", self.n(x), self.n((5.0 * x).min(100.0)), self.milhar(14000.0 * (5.0 * x / 100.0).min(1.0))),
+                    format!("{}% × 5 places above = ⟦{}%⟧ of the distance to the historical record. Average 12,000 and historical record 26,000 (a distance of 14,000): ⟦{}⟧ people come back.", self.n(x), self.n((5.0 * x).min(100.0)), self.milhar(14000.0 * (5.0 * x / 100.0).min(1.0))))
+            },
+            "attendance_floor" => if self.ligado(nome) {
+                f("Clube que cresceu de 10.000 para 16.000 e foi rebaixado: pode voltar até ⟦uns 10.000⟧ (o que o jogo original daria), nunca abaixo.".into(),
+                    "A club that grew from 10,000 to 16,000 and was relegated: it can go back to ⟦about 10,000⟧ (what the original game would give), never below.".into())
+            } else {
+                f("Sem piso: quem vai mal cai pelo valor por posição, mesmo abaixo do que o jogo original daria.".into(), "No floor: a club doing badly falls by the per-place value, even below what the original game would give.".into())
+            },
+            "attendance_cap_weak" | "attendance_cap_mid" | "attendance_cap_strong" => {
+                let nivel = match nome { "attendance_cap_weak" => 3.0, "attendance_cap_mid" => 10.0, _ => 16.0 };
+                if x <= 0.0 {
+                    f("⟦Sem teto⟧: a média sobe o quanto o desempenho levar.".into(), "⟦No cap⟧: the average goes as high as performance takes it.".into())
+                } else {
+                    f(format!("Numa divisão de nível {}: a média não passa de ⟦{}⟧ pessoas.", nivel, self.milhar(x * nivel)), format!("In a level-{} division: the average doesn't go past ⟦{}⟧ people.", nivel, self.milhar(x * nivel)))
+                }
+            }
+            "weak_league_limit" => if x <= 0.0 {
+                f("⟦Sem corte⟧: o clube popular de divisão baixa pode encher o estádio.".into(), "⟦No cut⟧: a popular low-division club can fill its stadium.".into())
+            } else {
+                f(format!("Numa divisão de nível 3: acima de ⟦{}⟧ pessoas, o público de cada jogo é cortado.", self.milhar(3.0 * x)), format!("In a level-3 division: above ⟦{}⟧ people, each match crowd is cut.", self.milhar(3.0 * x)))
+            },
+            "weak_league_keep" => {
+                let lim = 3.0 * g("weak_league_limit");
+                if lim <= 0.0 {
+                    f("Só vale com o corte acima ligado (maior que 0).".into(), "Only applies with the cut above on (above 0).".into())
+                } else {
+                    let vai = lim + (10000.0 - lim).max(0.0) * x / 100.0;
+                    f(format!("10.000 pessoas querendo ir a um jogo com limite de {}: vão ⟦{}⟧.", self.milhar(lim), self.milhar(vai.min(10000.0))),
+                        format!("10,000 people wanting to go to a match with a {} limit: ⟦{}⟧ go.", self.milhar(lim), self.milhar(vai.min(10000.0))))
+                }
+            }
             "pent_up_demand" => if x <= 0.0 {
                 f("0: o recorde só muda como no original.".into(), "0: the record only changes as in the original.".into())
             } else {
-                f(format!("Se 10.000 pessoas ficarem de fora de um jogo, o teto do clube sobe {:.0} para os próximos.", 10000.0 * x),
-                    format!("If 10,000 people are left out of a match, the club's ceiling rises by {:.0} for the next ones.", 10000.0 * x))
+                f(format!("10.000 pessoas de fora de um jogo sobem o teto do clube em ⟦{}⟧ para os próximos.", self.milhar(100.0 * x)),
+                    format!("10,000 people left out of a match raise the club's ceiling by ⟦{}⟧ for the next ones.", self.milhar(100.0 * x)))
             },
-            "tradition_weight" => if x <= 0.0 {
-                f("0: o recorde histórico não pesa.".into(), "0: the historical record doesn't count.".into())
-            } else {
-                f(format!("Um clube que termina 5 posições acima do previsto recupera {}% da distância até o seu maior público histórico; com 2 acima, {}%.", self.n(50.0 * x), self.n(20.0 * x)),
-                    format!("A club finishing 5 places above its prediction gets back {}% of the way to its biggest historical crowd; 2 above, {}%.", self.n(50.0 * x), self.n(20.0 * x)))
-            },
-            "stadium_full_seasons" => if x < 1.5 {
-                f("1 temporada acima de 92% já deixa o clube apto a ampliar (como o original).".into(), "1 season above 92% already makes a club able to expand (as the original).".into())
-            } else {
-                f("2 temporadas seguidas acima de 92%: um ano bom não basta, é preciso sustentar.".into(), "2 seasons in a row above 92%: one good year isn't enough, it has to last.".into())
-            },
-            "stadium_max" => f(format!("Um estádio com mais de {} lugares não amplia mais.", self.milhar(x)), format!("A stadium with more than {} places doesn't expand any more.", self.milhar(x))),
-            "title_race" => if self.ligado(nome) {
-                f("Um 1º × 2º na reta final leva até 1,75 vezes o público de um jogo comum; se também for clássico, até 2,6 vezes (sempre até a capacidade do estádio).".into(),
-                    "A 1st v 2nd in the run-in draws up to 1.75 times an ordinary match crowd; if it is also a derby, up to 2.6 times (always up to the stadium's capacity).".into())
-            } else {
-                f("Só o clássico do banco aumenta o público (1,5 vez), como no original.".into(), "Only the database's derby raises the crowd (1.5 times), as in the original.".into())
-            },
+            "title_race" => {
+                let tot = g("title_race_max") + g("title_race_top2");
+                if self.ligado(nome) {
+                    f(format!("Um 1º × 2º na reta final: ⟦+{}%⟧ de público; se também for clássico: ⟦+{}%⟧ (sempre até a capacidade do estádio).", self.n(tot), self.n((1.5 * (1.0 + tot / 100.0) - 1.0) * 100.0)),
+                        format!("A 1st v 2nd in the run-in: ⟦+{}%⟧ crowd; if it is also a derby: ⟦+{}%⟧ (always up to the stadium's capacity).", self.n(tot), self.n((1.5 * (1.0 + tot / 100.0) - 1.0) * 100.0)))
+                } else {
+                    f("Só o clássico do jogo aumenta o público (+50%), como no original.".into(), "Only the game's derby raises the crowd (+50%), as in the original.".into())
+                }
+            }
+            "title_race_max" => f(format!("Jogo de 20.000 entre dois candidatos ao título: ⟦{}⟧ na última rodada, ⟦{}⟧ no meio da temporada.", self.milhar(20000.0 * (1.0 + x / 100.0)), self.milhar(20000.0 * (1.0 + x / 200.0))),
+                format!("A 20,000 match between two title candidates: ⟦{}⟧ in the last round, ⟦{}⟧ half way through the season.", self.milhar(20000.0 * (1.0 + x / 100.0)), self.milhar(20000.0 * (1.0 + x / 200.0)))),
+            "title_race_top2" => f(format!("Num 1º × 2º na última rodada: ⟦+{}%⟧ no total (o de cima mais este).", self.n(g("title_race_max") + x)),
+                format!("In a 1st v 2nd in the last round: ⟦+{}%⟧ in all (the one above plus this).", self.n(g("title_race_max") + x))),
+            "stadium_occupancy_min" => f(format!("Estádio de 30.000: precisa de média de ⟦{}⟧ por jogo para a temporada contar como cheia.", self.milhar(300.0 * x)),
+                format!("A 30,000 stadium: needs an average of ⟦{}⟧ a match for the season to count as full.", self.milhar(300.0 * x))),
+            "stadium_full_seasons" => f(format!("⟦{}⟧ temporada(s) seguida(s) acima de {}% antes de poder ampliar.", x as i32, self.n(g("stadium_occupancy_min"))),
+                format!("⟦{}⟧ season(s) in a row above {}% before it can expand.", x as i32, self.n(g("stadium_occupancy_min")))),
+            "stadium_reserve" => f(format!("Clube com saldo de 20 milhões: a obra pode usar até ⟦{}⟧.", self.milhar((20_000_000.0 - x).max(0.0))),
+                format!("A club with a 20 million balance: the build can use up to ⟦{}⟧.", self.milhar((20_000_000.0 - x).max(0.0)))),
+            "stadium_max" => f(format!("Um estádio com mais de ⟦{}⟧ lugares não amplia mais.", self.milhar(x)), format!("A stadium with more than ⟦{}⟧ places doesn't expand any more.", self.milhar(x))),
             _ => None,
         }
     }
@@ -1248,47 +1358,62 @@ impl App {
         self.cabecalho(ui, Aba::Publico);
         let en = self.en;
         // ---- o público ----
-        ui.label(RichText::new(self.t("O público", "Attendance")).strong().size(16.0).color(VERDE));
-        self.controle(ui, "attendance", true);
         let p = self.ligado("attendance");
+        let titulo = self.t("O público", "Attendance");
+        App::cartao(ui, &titulo, |_| {});
+        self.controle(ui, "attendance", true);
         ui.colored_label(if p { AZUL } else { CINZA }, if p {
-            self.t("Ligado: quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde só o que ganhou por esta regra, nunca ficando abaixo do que o jogo original daria.",
-                "On: a club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse only loses what it gained by this rule, never going below what the original game would give.")
+            self.t("Ligado: quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde o que ganhou por esta regra.",
+                "On: a club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse loses what it gained by this rule.")
         } else {
-            self.t("Desligado: o público de cada jogo e da temporada é o do jogo original.", "Off: every match and season crowd is the original game's.")
+            self.t("Desligado: o público de cada jogo e da temporada é o do jogo original; os controles abaixo ficam sem efeito.", "Off: every match and season crowd is the original game's; the controls below have no effect.")
         });
+        ui.add_space(8.0);
+        ui.strong(self.t("A média da temporada (no fim de cada temporada da liga)", "The season average (at the end of each league season)"));
+        for k in ["attendance_toward_real", "attendance_per_place", "tradition_per_place", "attendance_floor"] {
+            self.controle(ui, k, p);
+        }
         ui.add_space(6.0);
-        ui.strong(self.t("A temporada", "The season"));
-        for k in ["attendance_league_caps", "attendance_record", "tradition_weight"] {
+        ui.strong(self.t("Tetos pela divisão (0 = sem teto; o jogo original usa 2.000, 3.000 e 5.000)", "Caps by division (0 = no cap; the original game uses 2,000, 3,000 and 5,000)"));
+        for k in ["attendance_cap_weak", "attendance_cap_mid", "attendance_cap_strong"] {
             self.controle(ui, k, p);
         }
-        ui.add_space(4.0);
+        ui.add_space(6.0);
         ui.strong(self.t("Cada jogo", "Each match"));
-        for k in ["pent_up_demand", "knockout_ceiling", "title_race"] {
+        for k in ["attendance_record", "pent_up_demand", "weak_league_limit"] {
             self.controle(ui, k, p);
         }
-        ui.add_space(12.0);
+        let corte = p && self.valor("weak_league_limit").parse::<f64>().unwrap_or(0.0) > 0.0;
+        self.controle(ui, "weak_league_keep", corte);
+        self.controle(ui, "knockout_ceiling", p);
+        self.controle(ui, "title_race", p);
+        let grande = p && self.ligado("title_race");
+        for k in ["title_race_max", "title_race_top2"] {
+            self.controle(ui, k, grande);
+        }
+        ui.add_space(14.0);
         // ---- o estádio ----
-        ui.label(RichText::new(self.t("O estádio", "The stadium")).strong().size(16.0).color(VERDE));
-        self.controle(ui, "stadium", true);
         let e = self.ligado("stadium");
+        let titulo = self.t("O estádio", "The stadium");
+        App::cartao(ui, &titulo, |_| {});
+        self.controle(ui, "stadium", true);
         ui.colored_label(if e { AZUL } else { CINZA }, if e {
             self.t("Ligado: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade.",
                 "On: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price.")
         } else {
-            self.t("Desligado: as obras do estádio são as do jogo original.", "Off: stadium works are the original game's.")
+            self.t("Desligado: as obras do estádio são as do jogo original; os controles abaixo ficam sem efeito.", "Off: stadium works are the original game's; the controls below have no effect.")
         });
-        ui.add_space(6.0);
+        ui.add_space(8.0);
         ui.strong(self.t("O que o jogo faz sem motivo", "What the game does for no reason"));
         for k in ["stadium_seating_growth", "stadium_reputation_trigger"] {
             self.controle(ui, k, e);
         }
-        ui.add_space(4.0);
+        ui.add_space(6.0);
         ui.strong(self.t("Quando pode ampliar", "When it can expand"));
-        for k in ["stadium_full_seasons", "stadium_occupancy"] {
+        for k in ["stadium_occupancy_min", "stadium_full_seasons", "stadium_occupancy", "stadium_reserve"] {
             self.controle(ui, k, e);
         }
-        ui.add_space(4.0);
+        ui.add_space(6.0);
         ui.strong(self.t("A obra", "The build"));
         self.controle(ui, "stadium_size", e);
         self.controle_custo(ui, e);
@@ -1298,52 +1423,49 @@ impl App {
         ui.add_space(10.0);
         // ---- o clube de exemplo ----
         let g = |s: &App, k: &str| s.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
-        let (trad, reprimida) = (g(self, "tradition_weight"), g(self, "pent_up_demand"));
-        let (sem_tetos, recorde_real, mata, grande) = (p && !self.ligado("attendance_league_caps") , p && self.ligado("attendance_record"), p && self.ligado("knockout_ceiling"), p && self.ligado("title_race"));
-        let _ = (sem_tetos, recorde_real);
+        let (trad, reprimida, por_pos, piso) = (g(self, "tradition_per_place") / 100.0, g(self, "pent_up_demand") / 100.0, g(self, "attendance_per_place") / 100.0, self.ligado("attendance_floor"));
+        let (mata, grande) = (p && self.ligado("knockout_ceiling"), p && self.ligado("title_race"));
+        let extra = 1.0 + (g(self, "title_race_max") + g(self, "title_race_top2")) / 100.0;
         let (cap, media, recorde, historico) = (30000.0f64, 12000.0f64, 18000.0f64, 26000.0f64);
-        let linhas: Vec<(String, String)> = {
-            let mut v = Vec::new();
-            let um = |x: f64| self.milhar(x);
-            // a temporada seguinte, pelo desempenho contra o previsto
-            for (dif, pt, en_) in [(0i32, "Terminou onde se previa", "Finished where predicted"), (4, "Terminou 4 posições acima", "Finished 4 places above"), (-4, "Terminou 4 posições abaixo", "Finished 4 places below")] {
-                let r = if !p {
-                    match dif { 0 => um(media * 1.025), d if d > 0 => um(media * 1.08), _ => um(media) }
-                } else {
-                    let mut nova = media * (1.0 + 0.03 * dif as f64);
-                    if dif >= 2 && trad > 0.0 {
-                        nova += trad * (historico - nova) * dif as f64 / 10.0;
-                    }
-                    if dif < 0 {
-                        nova = nova.max(media.min(media * 1.025)); // o piso: o que o original daria (aqui, sem o que a nossa regra deu antes)
-                    }
-                    um(nova.min(cap))
-                };
-                v.push((t2(en, pt, en_).to_string(), r));
-            }
-            let cl = if grande { (recorde * 1.5 * 1.75).min(cap) } else { (recorde * 1.5).min(cap) };
-            v.push((t2(en, "Teto de um jogo comum de liga", "Ceiling of an ordinary league match").to_string(), um(recorde)));
-            v.push((t2(en, "Clássico valendo o título", "Derby deciding the title").to_string(), um(cl)));
-            v.push((t2(en, "Semifinal de copa", "Cup semi-final").to_string(), um(if mata { cap } else { recorde })));
-            if reprimida > 0.0 && p {
-                v.push((t2(en, "Jogo com 6.000 pessoas de fora", "Match with 6,000 people left out").to_string(),
-                    if en { format!("record goes from {} to {}", um(recorde), um(recorde + 6000.0 * reprimida)) } else { format!("recorde vai de {} a {}", um(recorde), um(recorde + 6000.0 * reprimida)) }));
-            }
-            v
-        };
+        let um = |x: f64| self.milhar(x);
+        let mut linhas: Vec<(String, String)> = Vec::new();
+        for (dif, pt, en_) in [(0i32, "Terminou onde se previa", "Finished where predicted"), (4, "Terminou 4 posições acima", "Finished 4 places above"), (-4, "Terminou 4 posições abaixo", "Finished 4 places below")] {
+            let r = if !p {
+                match dif { 0 => um(media * 1.025), d if d > 0 => um(media * 1.08), _ => um(media) }
+            } else {
+                let mut nova = media * (1.0 + por_pos * dif as f64);
+                if dif >= 2 && trad > 0.0 {
+                    nova += (trad * dif as f64).min(1.0) * (historico - nova);
+                }
+                if dif < 0 && piso {
+                    nova = nova.max(media); // o piso: este clube ainda não tinha ganho nada pela nossa regra
+                }
+                um(nova.min(cap))
+            };
+            linhas.push((t2(en, pt, en_).to_string(), r));
+        }
+        let cl = if grande { (recorde * 1.5 * extra).min(cap) } else { (recorde * 1.5).min(cap) };
+        linhas.push((t2(en, "Teto de um jogo comum de liga", "Ceiling of an ordinary league match").to_string(), um(recorde)));
+        linhas.push((t2(en, "Clássico valendo o título", "Derby deciding the title").to_string(), um(cl)));
+        linhas.push((t2(en, "Semifinal de copa", "Cup semi-final").to_string(), um(if mata { cap } else { recorde })));
+        if reprimida > 0.0 && p {
+            linhas.push((t2(en, "Jogo com 6.000 pessoas de fora", "Match with 6,000 people left out").to_string(),
+                if en { format!("record goes from {} to {}", um(recorde), um(recorde + 6000.0 * reprimida)) } else { format!("recorde vai de {} a {}", um(recorde), um(recorde + 6000.0 * reprimida)) }));
+        }
         let custo = match self.valor("stadium_seat_cost").as_str() { "original" => 100.0, "auto" => 1500.0, x => x.parse().unwrap_or(1500.0) };
         let titulo = self.t("Um clube de exemplo", "An example club");
         let descr = if en {
-            format!("Stadium of {} places, average crowd of {}, record of {} and a historical record of {}. Approximate values for the next season, with the settings above.", self.milhar(cap), self.milhar(media), self.milhar(recorde), self.milhar(historico))
+            format!("Stadium of {} places, average crowd of {}, record of {} and a historical record of {}. Approximate values for the next season, with the settings above.", um(cap), um(media), um(recorde), um(historico))
         } else {
-            format!("Estádio de {} lugares, média de {} pessoas, recorde de {} e recorde histórico de {}. Valores aproximados da temporada seguinte, com os ajustes acima.", self.milhar(cap), self.milhar(media), self.milhar(recorde), self.milhar(historico))
+            format!("Estádio de {} lugares, média de {} pessoas, recorde de {} e recorde histórico de {}. Valores aproximados da temporada seguinte, com os ajustes acima.", um(cap), um(media), um(recorde), um(historico))
         };
         let obra = if !e {
             t2(en, "Obras: as do jogo original (pode ampliar só pela reputação, e o estádio com lugares em pé cresce todo ano).", "Works: the original game's (it can expand on reputation alone, and a stadium with standing room grows every year).").to_string()
         } else {
             let lugares = 8000.0;
-            if en { format!("Works: after {} season(s) above 92% full, wanting about {} more places, it builds them for about {} (if it has the money).", g(self, "stadium_full_seasons"), self.milhar(lugares), self.milhar(lugares * custo)) }
-            else { format!("Obras: depois de {} temporada(s) acima de 92% de ocupação, com uns {} lugares a mais de demanda, constrói por uns {} (se tiver o dinheiro).", g(self, "stadium_full_seasons"), self.milhar(lugares), self.milhar(lugares * custo)) }
+            let (temp, occ) = (g(self, "stadium_full_seasons"), g(self, "stadium_occupancy_min"));
+            if en { format!("Works: after {} season(s) in a row above {}% full ({} a match), wanting about {} more places, it builds them for about {} (if it has that above its reserve).", temp, self.n(occ), um(cap * occ / 100.0), um(lugares), um(lugares * custo)) }
+            else { format!("Obras: depois de {} temporada(s) seguida(s) acima de {}% de ocupação ({} por jogo), com uns {} lugares a mais de demanda, constrói por uns {} (se tiver isso acima da reserva).", temp, self.n(occ), um(cap * occ / 100.0), um(lugares), um(lugares * custo)) }
         };
         App::cartao(ui, &titulo, |ui| {
             ui.label(RichText::new(descr).size(12.5).color(FRASE));
@@ -1351,12 +1473,12 @@ impl App {
             egui::Grid::new("publico_exemplo").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
                 for (a, b) in &linhas {
                     ui.label(a);
-                    ui.label(RichText::new(b).strong().color(if p { VERDE } else { CINZA }));
+                    ui.label(RichText::new(b).strong().color(if p { AMARELO } else { CINZA }));
                     ui.end_row();
                 }
             });
             ui.add_space(4.0);
-            ui.label(RichText::new(obra).size(12.5).color(if e { VERDE } else { CINZA }));
+            ui.label(RichText::new(obra).size(12.5).color(if e { AMARELO } else { CINZA }));
             ui.label(RichText::new(t2(en, "Conta simplificada, para dar a ideia: no jogo, cada partida também pesa o adversário, a distância e a fase da temporada.", "A simplified sum, to give the idea: in the game, each match also weighs the opponent, the distance and the stage of the season.")).size(11.5).color(CINZA));
         });
     }
@@ -1518,8 +1640,26 @@ impl eframe::App for App {
                 }
             });
         });
-        egui::SidePanel::left("abas").resizable(false).exact_width(215.0).show(ctx, |ui| {
+        egui::SidePanel::left("abas").resizable(false).exact_width(270.0).show(ctx, |ui| {
             ui.add_space(8.0);
+            ui.horizontal(|ui| {
+                let mut tudo: Option<bool> = None;
+                if ui.button(self.t("Ligar tudo", "Turn all on")).on_hover_text(self.t("Liga todos os ajustes da carreira e a correção do elenco, com os nossos valores.", "Turns on every career tweak and the squad fix, with our values.")).clicked() {
+                    tudo = Some(true);
+                }
+                if ui.button(self.t("Desligar tudo", "Turn all off")).on_hover_text(self.t("Desliga todos os ajustes da carreira e a correção do elenco: o jogo fica como o original. A instalação (save, pasta, tela) fica como está.", "Turns off every career tweak and the squad fix: the game stays as the original. The install (save, folder, screen) stays as it is.")).clicked() {
+                    tudo = Some(false);
+                }
+                if let Some(on) = tudo {
+                    for (aba, ..) in ABAS {
+                        for &(k, sim, nao) in chaves::mestres(aba) {
+                            self.definir(k, if on { sim } else { nao });
+                        }
+                    }
+                    self.definir("squad_guard", if on { "1" } else { "0" });
+                }
+            });
+            ui.add_space(4.0);
             let mut grupo_atual = "";
             for (aba, pt, en, g_pt, g_en) in ABAS {
                 let grupo = if self.en { g_en } else { g_pt };
@@ -1533,11 +1673,25 @@ impl eframe::App for App {
                     .filter(|e| *e != Estado::Desligado).max();
                 ui.horizontal(|ui| {
                     if !grupo.is_empty() {
-                        ui.add_space(6.0);
+                        ui.add_space(4.0);
                     }
-                    bolinha(ui, pior.map(cor).unwrap_or(Color32::TRANSPARENT));
+                    let mestres = chaves::mestres(aba);
+                    if mestres.is_empty() {
+                        ui.add_space(42.0);
+                    } else {
+                        let on = mestres.iter().any(|&(k, ..)| chaves::ligado(k, &self.valor(k)));
+                        if interruptor(ui, on).on_hover_text(if on { self.t("Ligado: clique para desligar (fica como o jogo original).", "On: click to turn off (stays as the original game).") } else { self.t("Desligado: clique para ligar com os nossos valores.", "Off: click to turn on with our values.") }).clicked() {
+                            for &(k, sim, nao) in mestres {
+                                self.definir(k, if on { nao } else { sim });
+                            }
+                        }
+                    }
                     if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(14.5)).clicked() {
                         self.aba = aba;
+                    }
+                    if let Some(e) = pior {
+                        bolinha(ui, cor(e));
+                        ui.label("").on_hover_text(nome_do_estado(e, self.en));
                     }
                 });
                 ui.add_space(3.0);

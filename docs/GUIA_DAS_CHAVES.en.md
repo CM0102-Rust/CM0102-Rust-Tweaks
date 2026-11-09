@@ -326,11 +326,59 @@ Turns on our attendance rule: it grows with what happens on the pitch and cools 
 
 Values: `off` (Off (the original game)), `on` (On (our rule)). Default: `on`.
 
-### Caps by division — `attendance_league_caps`
+### How far the average moves to the real crowd — `attendance_toward_real`
 
-The original game keeps each club's average crowd under a cap set by its division, and in the weakest divisions it cuts every match crowd above a limit (only 20% of the excess stays). That is what stops a popular club in a low division from filling its stadium. Without the caps, performance decides.
+At the end of each season, the club's average moves towards the crowd that really came. This is the share of the way: with 50%, a club averaging 10,000 that drew 14,000 a match moves to 12,000. 100% = the average becomes the season's crowd; 0% = it doesn't move. Derbies and big matches count without their extra, so they don't push the average.
 
-Values: `on` (With the game's caps), `off` (Without the caps (our rule)). Default: `off`.
+Values: from 0 to 100 (whole number). Default: `50`.
+
+### How much each place is worth — `attendance_per_place`
+
+How much each place above or below the game's prediction adds to or takes from next year's average. With 3%, finishing 4 places above gives +12%, and 4 below gives -12% (with the original floor, a falling club doesn't go below what the game would give).
+
+Values: from 0 to 20. Default: `3`.
+
+### Historical crowd coming back, per place — `tradition_per_place`
+
+The database's historical record shows the crowd a club once had. When a club finishes 2 or more places above the prediction, part of the distance between its average and that record comes back, per place. With 2.5%: 5 places above = 12.5% of the distance. A club averaging 12,000 with a historical record of 26,000 (a distance of 14,000) gains 1,750 people.
+
+Values: from 0 to 50. Default: `2.5`.
+
+### The original game's floor — `attendance_floor`
+
+On: a club doing badly loses what it gained by this rule, but never goes below the average it would have in the original game. That original average is worked out season by season and kept in a file next to the save (.publico). Off, a club doing badly falls by the per-place value, even below the original.
+
+Values: `off` (Off), `on` (On). Default: `on`.
+
+### Cap: weak divisions (level up to 7) — `attendance_cap_weak`
+
+The most the season average can reach in weak divisions (level up to 7), in people per point of the division's level. With 2,000 in a level-3 division, the cap is 6,000. 0 = no cap. The original game uses 2,000.
+
+Values: from 0 to 1000000 (whole number). Default: `0`.
+
+### Cap: middle divisions (level 8 to 12) — `attendance_cap_mid`
+
+The same cap for middle divisions (level 8 to 12). With 3,000 in a level-10 division, the cap is 30,000. 0 = no cap. The original uses 3,000.
+
+Values: from 0 to 1000000 (whole number). Default: `0`.
+
+### Cap: strong divisions (level 13 or more) — `attendance_cap_strong`
+
+The same cap for strong divisions (level 13 or more). With 5,000 in a level-16 division, the cap is 80,000. 0 = no cap. The original uses 5,000.
+
+Values: from 0 to 1000000 (whole number). Default: `0`.
+
+### Cut in divisions of level up to 4 — `weak_league_limit`
+
+In divisions of level 4 or lower, each match crowd above this limit (in people per level point) is cut: only the share chosen below stays. With 1,500 in a level-3 division, the limit is 4,500. It is what stops a popular low-division club from filling its stadium. 0 = no cut. The original uses 1,500.
+
+Values: from 0 to 1000000 (whole number). Default: `0`.
+
+### What stays above the cut — `weak_league_keep`
+
+How much of the crowd above the cut still goes to the match. With 20% (the original), 10,000 people wanting to go to a match with a 4,500 limit become 4,500 + 20% of 5,500 = 5,600.
+
+Values: from 0 to 100 (whole number). Default: `20`.
 
 ### The club's record — `attendance_record`
 
@@ -338,17 +386,11 @@ The club's record is the ceiling of an ordinary match crowd. In the original it 
 
 Values: `fixed` (The database's (only a title or promotion raises it)), `real` (The largest crowd that really came). Default: `real`.
 
-### People left out become a record — `pent_up_demand`
+### People left out becoming a record — `pent_up_demand`
 
-When more people wanted to come than the record allowed, part of that demand becomes a new record. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.
+When more people wanted to come to a match than the record allowed, this share of those left out becomes a new record for the next matches. With 10%, 10,000 people left out raise the ceiling by 1,000. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.
 
-Values: from 0 to 1. Default: `0.1`.
-
-### Weight of tradition — `tradition_weight`
-
-The database's historical record shows the crowd a club once had. When a club with tradition does well again (2 or more places above the prediction), part of that crowd comes back faster. A club without a big past hardly changes.
-
-Values: from 0 to 2. Default: `0.25`.
+Values: from 0 to 100. Default: `10`.
 
 ### Knockout ceiling — `knockout_ceiling`
 
@@ -361,6 +403,18 @@ Values: `record` (The club's record (as in an ordinary match)), `stadium` (Only 
 A league match between two clubs that can still be champions draws more people, more and more towards the end of the season. If it is also a derby, the two effects add up. No rivals need setting: the table decides.
 
 Values: `off` (Off), `on` (On). Default: `on`.
+
+### More in the last round — `title_race_max`
+
+How many more go to a league match between two clubs that can still be champions, in the last round. The extra grows through the season: half way, it is half. With 50%, a 20,000 match goes to 30,000 in the run-in.
+
+Values: from 0 to 300 (whole number). Default: `50`.
+
+### More in a 1st v 2nd — `title_race_top2`
+
+The extra when the two are 1st and 2nd. It adds to the one above: 50% + 25% = up to 75% more. If the match is also a derby, the game's derby extra (50%) multiplies on top.
+
+Values: from 0 to 300 (whole number). Default: `25`.
 
 ### Stadium — `stadium`
 
@@ -380,17 +434,29 @@ In the original, a high-reputation club expands its stadium even with no crowd f
 
 Values: `on` (Expands on reputation alone (original)), `off` (Only by occupancy). Default: `off`.
 
-### Full seasons to be able to expand — `stadium_full_seasons`
+### Occupancy for a season to count as full — `stadium_occupancy_min`
 
-How many seasons in a row the stadium must be above 92% full for the club to be able to expand. With 2, one good season isn't enough: it has to last. Being able to expand isn't expanding: money is still needed.
+The average occupancy a season needs to count as full. The original uses 92%. With 80%, less crowded stadiums also become able to expand.
 
-Values: from 1 to 2 (whole number). Default: `2`.
+Values: from 10 to 100 (whole number). Default: `92`.
+
+### Full seasons in a row to be able to expand — `stadium_full_seasons`
+
+How many full seasons in a row a club needs to be able to expand (1 to 10). The original uses 1. With 2, one good season isn't enough: it has to last. The count goes in the file next to the save. Being able to expand isn't expanding: money above the reserve is still needed.
+
+Values: from 1 to 10 (whole number). Default: `2`.
 
 ### What counts for occupancy — `stadium_occupancy`
 
 What goes into the occupancy count. "Every home match" also counts cups and continental competitions: a club that fills its ground in a continental knockout counts that towards a new stadium.
 
 Values: `league` (League matches only (original)), `all` (Every home match). Default: `all`.
+
+### Cash reserve the build won't touch — `stadium_reserve`
+
+The money the club keeps: a build only uses the balance above it. The original uses 5.25 million. In a database with more money (like CLZ's), raise it in the same proportion.
+
+Values: from 0 to … (whole number). Default: `5250000`.
 
 ### Size of the build — `stadium_size`
 

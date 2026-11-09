@@ -45,20 +45,42 @@ pub(crate) struct Publico {
     teto_demanda: bool,
     maximo: i32,
     disputa: bool,
+    /// os tetos da média da temporada, em pessoas por ponto de nível da divisão (0 = sem teto): divisões de nível até 7,
+    /// de 8 a 12 e acima (o original: 2.000, 3.000 e 5.000)
+    teto_fraco: f64,
+    teto_medio: f64,
+    teto_forte: f64,
+    /// o corte do público de cada jogo nas divisões de nível até 4: o limite em pessoas por ponto de nível (0 = sem corte)
+    /// e quanto do excesso fica, em % (o original: 1.500 e 20%)
+    fraca_limite: f64,
+    fraca_fica: f64,
+    /// a média do fim da temporada: quanto anda na direção do público real (%) e quanto vale cada posição acima ou abaixo
+    /// do previsto (%); o piso do original (a sombra)
+    rumo_real: f64,
+    por_posicao: f64,
+    piso: bool,
+    /// o jogo grande: o acréscimo na última rodada (%) e o do 1º × 2º (%)
+    disputa_max: f64,
+    disputa_top2: f64,
+    /// o estádio: a ocupação mínima (%) e a reserva de caixa que a obra não toca
+    ocupacao_min: f64,
+    reserva: f64,
 }
 
 /// O jogo original (sem tweaks.cfg nenhum, nada muda).
 const ORIGINAL: Publico = Publico {
     sentados_crescem: true, gatilho_reputacao: true, tetos_da_liga: true, recorde_real: false, reprimida: 0.0, tradicao: 0.0,
     mata_estadio: false, temporadas_cheias: 1, ocupacao_tudo: false, obra_demanda: false, custo_lugar: 0.0, teto_demanda: false,
-    maximo: 125_000, disputa: false,
+    maximo: 125_000, disputa: false, teto_fraco: 2000.0, teto_medio: 3000.0, teto_forte: 5000.0, fraca_limite: 1500.0, fraca_fica: 20.0,
+    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0,
 };
 /// As nossas regras, o padrão de cada chave ausente de um tweaks.cfg (08/11, Lucas: o padrão é sempre o nosso). O custo
 /// por lugar −1 = `auto` (calibrado pelo caixa dos clubes do banco).
 const NOSSO: Publico = Publico {
-    sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.25,
+    sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.025,
     mata_estadio: true, temporadas_cheias: 2, ocupacao_tudo: true, obra_demanda: true, custo_lugar: -1.0, teto_demanda: true,
-    maximo: 125_000, disputa: true,
+    maximo: 125_000, disputa: true, teto_fraco: 0.0, teto_medio: 0.0, teto_forte: 0.0, fraca_limite: 0.0, fraca_fica: 20.0,
+    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0,
 };
 static mut P: Publico = ORIGINAL;
 
@@ -78,12 +100,25 @@ fn ler() -> Publico {
             "stadium" => estadio = v != "off",
             "stadium_seating_growth" => p.sentados_crescem = v == "on",
             "stadium_reputation_trigger" => p.gatilho_reputacao = v == "on",
-            "attendance_league_caps" => p.tetos_da_liga = v == "on",
             "attendance_record" => p.recorde_real = v != "fixed",
-            "pent_up_demand" => p.reprimida = n.unwrap_or(p.reprimida).clamp(0.0, 1.0),
-            "tradition_weight" => p.tradicao = n.unwrap_or(p.tradicao).clamp(0.0, 2.0),
+            // em %: 10 = 10% de quem ficou de fora vira recorde
+            "pent_up_demand" => p.reprimida = n.map(|x| x / 100.0).unwrap_or(p.reprimida).clamp(0.0, 1.0),
+            // em % da distância até o recorde histórico, por posição acima do previsto
+            "tradition_per_place" => p.tradicao = n.map(|x| x / 100.0).unwrap_or(p.tradicao).clamp(0.0, 0.5),
+            "attendance_cap_weak" => p.teto_fraco = n.unwrap_or(p.teto_fraco).max(0.0),
+            "attendance_cap_mid" => p.teto_medio = n.unwrap_or(p.teto_medio).max(0.0),
+            "attendance_cap_strong" => p.teto_forte = n.unwrap_or(p.teto_forte).max(0.0),
+            "weak_league_limit" => p.fraca_limite = n.unwrap_or(p.fraca_limite).max(0.0),
+            "weak_league_keep" => p.fraca_fica = n.unwrap_or(p.fraca_fica).clamp(0.0, 100.0),
+            "attendance_toward_real" => p.rumo_real = n.unwrap_or(p.rumo_real).clamp(0.0, 100.0),
+            "attendance_per_place" => p.por_posicao = n.unwrap_or(p.por_posicao).clamp(0.0, 20.0),
+            "attendance_floor" => p.piso = v != "off",
+            "title_race_max" => p.disputa_max = n.unwrap_or(p.disputa_max).clamp(0.0, 300.0),
+            "title_race_top2" => p.disputa_top2 = n.unwrap_or(p.disputa_top2).clamp(0.0, 300.0),
+            "stadium_occupancy_min" => p.ocupacao_min = n.unwrap_or(p.ocupacao_min).clamp(10.0, 100.0),
+            "stadium_reserve" => p.reserva = n.unwrap_or(p.reserva).max(0.0),
             "knockout_ceiling" => p.mata_estadio = v != "record",
-            "stadium_full_seasons" => p.temporadas_cheias = n.unwrap_or(p.temporadas_cheias as f64).clamp(1.0, 2.0) as u32,
+            "stadium_full_seasons" => p.temporadas_cheias = n.unwrap_or(p.temporadas_cheias as f64).clamp(1.0, 10.0) as u32,
             "stadium_occupancy" => p.ocupacao_tudo = v != "league",
             "stadium_size" => p.obra_demanda = v != "original",
             "stadium_seat_cost" => p.custo_lugar = match v {
@@ -119,7 +154,7 @@ impl Publico {
     }
     fn assume_obra(&self) -> bool {
         !self.gatilho_reputacao || self.temporadas_cheias != 1 || self.ocupacao_tudo || self.obra_demanda || self.custo_lugar != 0.0
-            || self.teto_demanda || self.maximo != 125_000
+            || self.teto_demanda || self.maximo != 125_000 || self.ocupacao_min != 92.0 || self.reserva != 5_250_000.0
     }
 }
 
@@ -227,7 +262,13 @@ unsafe fn sombra() -> &'static mut HashMap<usize, i32> {
     (*core::ptr::addr_of_mut!(SOMBRA)).get_or_insert_with(HashMap::new)
 }
 
-const MARCA_SOMBRA: &[u8; 8] = b"CMRTPUB1";
+const MARCA_SOMBRA: &[u8; 8] = b"CMRTPUB2";
+/// As temporadas seguidas com o estádio acima da ocupação mínima, por clube (vão no mesmo arquivo).
+static mut CHEIAS: Option<HashMap<usize, u32>> = None;
+
+unsafe fn cheias() -> &'static mut HashMap<usize, u32> {
+    (*core::ptr::addr_of_mut!(CHEIAS)).get_or_insert_with(HashMap::new)
+}
 
 /// Depois da carga de um save: a sombra dele, se houver o arquivo; sem ele, cada clube começa na média de agora.
 pub(crate) unsafe fn carregou(save: &std::path::Path) {
@@ -243,12 +284,22 @@ pub(crate) unsafe fn carregou(save: &std::path::Path) {
         }
         return;
     };
-    if v.len() < 8 || &v[..8] != MARCA_SOMBRA || (v.len() - 8) % 8 != 0 {
+    cheias().clear();
+    let antigo = v.len() >= 8 && &v[..8] == b"CMRTPUB1" && (v.len() - 8) % 8 == 0;
+    if antigo {
+        for r in v[8..].chunks_exact(8) {
+            m.insert(u32::from_le_bytes([r[0], r[1], r[2], r[3]]) as usize, i32::from_le_bytes([r[4], r[5], r[6], r[7]]));
+        }
+        return;
+    }
+    if v.len() < 8 || &v[..8] != MARCA_SOMBRA || (v.len() - 8) % 12 != 0 {
         registro::linha("season attendance: the .publico file next to the save is not valid; ignored");
         return;
     }
-    for r in v[8..].chunks_exact(8) {
-        m.insert(u32::from_le_bytes([r[0], r[1], r[2], r[3]]) as usize, i32::from_le_bytes([r[4], r[5], r[6], r[7]]));
+    for r in v[8..].chunks_exact(12) {
+        let id = u32::from_le_bytes([r[0], r[1], r[2], r[3]]) as usize;
+        m.insert(id, i32::from_le_bytes([r[4], r[5], r[6], r[7]]));
+        cheias().insert(id, u32::from_le_bytes([r[8], r[9], r[10], r[11]]));
     }
     registro::linha(&format!("season attendance: loaded the original-game floor of {} clubs", m.len()));
 }
@@ -265,6 +316,7 @@ pub(crate) unsafe fn gravou(save: &std::path::Path) {
     for (&id, &x) in ids {
         v.extend_from_slice(&(id as u32).to_le_bytes());
         v.extend_from_slice(&x.to_le_bytes());
+        v.extend_from_slice(&cheias().get(&id).copied().unwrap_or(0).to_le_bytes());
     }
     if std::fs::write(save.with_extension("publico"), &v).is_err() {
         registro::linha("season attendance: could not write the .publico file next to the save");
@@ -274,6 +326,7 @@ pub(crate) unsafe fn gravou(save: &std::path::Path) {
 /// O jogo apagou a carreira: a próxima começa do zero.
 pub(crate) unsafe fn liberou() {
     sombra().clear();
+    cheias().clear();
     somas().clear();
     ultima().clear();
     medias_antes().clear();
@@ -360,7 +413,7 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
     let da_liga = comp != 0 && d(casa + 0x57) == comp;
     pi(casa + 0x7b, 50_000_000);
     pi(est + 0x3c, 50_000_000);
-    if !p.tetos_da_liga && da_liga && nivel <= 4 {
+    if da_liga && nivel <= 4 {
         *((casa + 0x6d) as *mut u8) = 0; // o corte das ligas fracas só vale para o dono do estádio
     }
     let mut s = [0i32; 3];
@@ -372,6 +425,13 @@ unsafe extern "thiscall" fn jogo(this: usize, partida: usize, saida: *mut i32) -
     let codigo = w(partida + 0x30) as u16 as i32;
     let mata = eh_mata(partida, da_liga, codigo);
     let classico = rival(casa, fora);
+    let mut dem_casa = dem_casa;
+    if da_liga && nivel <= 4 && p.fraca_limite > 0.0 {
+        let lim = (p.fraca_limite * nivel.max(1) as f64) as i32;
+        if dem_casa > lim {
+            dem_casa = lim + ((dem_casa - lim) as f64 * p.fraca_fica / 100.0) as i32;
+        }
+    }
     let disputa = if p.disputa && da_liga { fator_disputa(objeto(comp), casa, fora) } else { 1.0 };
     let dem_casa = (dem_casa as f64 * disputa) as i32;
     let teto = if mata && p.mata_estadio {
@@ -440,9 +500,9 @@ unsafe fn fator_disputa(liga: usize, casa: usize, fora: usize) -> f64 {
         return 1.0;
     }
     let feitos = w(a + 0x11).max(w(b + 0x11)) as f64;
-    let mut f = 1.0 + 0.5 * (feitos / total).clamp(0.0, 1.0);
+    let mut f = 1.0 + P.disputa_max / 100.0 * (feitos / total).clamp(0.0, 1.0);
     if pos(a) <= 2 && pos(b) <= 2 {
-        f += 0.25;
+        f += P.disputa_top2 / 100.0;
     }
     f
 }
@@ -558,11 +618,16 @@ unsafe extern "C" fn media(liga: usize) {
         let mut nova = if p.tetos_da_liga {
             da_original as f64
         } else {
-            (real + a.media) as f64 / 2.0 * (1.0 + 0.03 * dif as f64)
+            (a.media as f64 + (real - a.media) as f64 * p.rumo_real / 100.0) * (1.0 + p.por_posicao / 100.0 * dif as f64)
         };
-        // a tradição só para quem terminou 2 posições ou mais acima do previsto
+        // a tradição só para quem terminou 2 posições ou mais acima do previsto: % da distância por posição
         if p.tradicao > 0.0 && dif >= 2 && (recorde as f64) > nova {
-            nova += p.tradicao * (recorde as f64 - nova) * dif as f64 / 10.0;
+            nova += (p.tradicao * dif as f64).min(1.0) * (recorde as f64 - nova);
+        }
+        // os tetos da média pela divisão (0 = sem teto)
+        let teto_div = if nivel <= 7 { p.teto_fraco } else if nivel <= 12 { p.teto_medio } else { p.teto_forte };
+        if teto_div > 0.0 {
+            nova = nova.min(teto_div * nivel.max(1) as f64);
         }
         let mut teto = recorde;
         if cap > 0 {
@@ -570,7 +635,7 @@ unsafe extern "C" fn media(liga: usize) {
         }
         // o piso da queda: o que o jogo original daria (a sombra), nunca abaixo; quem já estava abaixo dela não cai mais
         let mut nova = nova as i32;
-        if usa_sombra && nova < a.media {
+        if usa_sombra && p.piso && nova < a.media {
             nova = nova.max(sombra_nova[k].min(a.media));
         }
         let piso = a.minimo.max(500);
@@ -661,7 +726,11 @@ unsafe extern "thiscall" fn estadio(this: usize, clube: usize) {
     let antes = medias_antes().remove(&d(clube)).unwrap_or(i(clube + 0x73));
     let ocup_antes = if cap0 > 0 { antes as f64 / cap0 as f64 } else { 0.0 };
     let rep = w(clube + 0x80) as i32;
-    let mut apto = jogos_t > 0 && ocup >= 0.92 && (p.temporadas_cheias <= 1 || ocup_antes >= 0.92);
+    let cheia = jogos_t > 0 && ocup * 100.0 >= p.ocupacao_min;
+    let seguidas = if cheia { cheias().get(&d(clube)).copied().unwrap_or(0) + 1 } else { 0 };
+    cheias().insert(d(clube), seguidas);
+    let _ = ocup_antes;
+    let mut apto = cheia && seguidas >= p.temporadas_cheias;
     if p.gatilho_reputacao && rep * 2 > cap0 && rep > 4250 {
         apto = true;
     }
@@ -675,7 +744,7 @@ unsafe extern "thiscall" fn estadio(this: usize, clube: usize) {
     let fin = d(this) + (i(quem) as u32 as usize) * 0x167;
     let saldo = core::ptr::read_unaligned(fin as *const i64);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let reserva = 5_250_000i64 - if humano(clube, 0, 1, 0, 0) != 0 { rep as i64 * 1000 } else { 0 };
+    let reserva = p.reserva as i64 - if humano(clube, 0, 1, 0, 0) != 0 { rep as i64 * 1000 } else { 0 };
     let profissional = *((clube + 0x64) as *const u8) == 1;
     let unidade = if p.custo_lugar < 0.0 { custo_auto() } else { p.custo_lugar };
     let mut motivo = "ok";

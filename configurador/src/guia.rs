@@ -204,21 +204,69 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "Liga a nossa regra do público: ele cresce com o que acontece em campo e esfria quando o time volta ao esperado. Quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde só o que ganhou por esta regra, nunca ficando abaixo do que o jogo original daria. Desligado, o público é o do jogo original, qualquer que seja o resto desta parte.",
             "Turns on our attendance rule: it grows with what happens on the pitch and cools when the team is back to what was expected. A club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse only loses what it gained by this rule, never going below what the original game would give. Off, attendance is the original game's, whatever the rest of this part says.",
         ),
-        "attendance_league_caps" => (
-            "O jogo original segura a média de público de cada clube abaixo de um teto pela divisão, e nas divisões mais fracas corta o público de cada jogo acima de um limite (fica só 20% do que passa). É isso que impede um clube popular de divisão baixa de encher o estádio. Sem os tetos, quem decide é o desempenho.",
-            "The original game keeps each club's average crowd under a cap set by its division, and in the weakest divisions it cuts every match crowd above a limit (only 20% of the excess stays). That is what stops a popular club in a low division from filling its stadium. Without the caps, performance decides.",
-        ),
         "attendance_record" => (
             "O recorde do clube é o teto do público de um jogo comum. No original ele é o do banco de dados e só sobe com título ou acesso: o clube que faz uma ótima temporada sem ganhar nada fica preso nele. Com \"o maior público que de fato veio\", o recorde acompanha os jogos de verdade (clássicos, mata-matas e jogos grandes passam do recorde e o levantam).",
             "The club's record is the ceiling of an ordinary match crowd. In the original it is the database's and only a title or a promotion raises it: a club with a great season that wins nothing is stuck under it. With \"the largest crowd that really came\", the record follows the real matches (derbies, knockouts and big matches go past it and lift it).",
         ),
-        "pent_up_demand" => (
-            "Quando mais gente quis vir do que o recorde deixou, parte dessa demanda vira recorde novo. É assim que um clube em ascensão vai abrindo espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.",
-            "When more people wanted to come than the record allowed, part of that demand becomes a new record. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.",
+        "attendance_toward_real" => (
+            "No fim de cada temporada, a média do clube anda na direção do público que de fato veio. Esta é a fração do caminho: com 50%, um clube de média 10.000 que levou 14.000 por jogo passa a 12.000. 100% = a média vira o público da temporada; 0% = não anda. Clássicos e jogos grandes entram sem o acréscimo deles, para não empurrar a média.",
+            "At the end of each season, the club's average moves towards the crowd that really came. This is the share of the way: with 50%, a club averaging 10,000 that drew 14,000 a match moves to 12,000. 100% = the average becomes the season's crowd; 0% = it doesn't move. Derbies and big matches count without their extra, so they don't push the average.",
         ),
-        "tradition_weight" => (
-            "O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube de tradição volta a ir bem (2 posições ou mais acima do previsto), parte dessa torcida volta mais rápido. Um clube sem passado grande quase não muda.",
-            "The database's historical record shows the crowd a club once had. When a club with tradition does well again (2 or more places above the prediction), part of that crowd comes back faster. A club without a big past hardly changes.",
+        "attendance_per_place" => (
+            "Quanto cada posição acima ou abaixo da prevista pelo jogo soma ou tira da média do ano seguinte. Com 3%, terminar 4 posições acima dá +12%, e 4 abaixo dá -12% (com o piso do original, quem cai não fica abaixo do que o jogo daria).",
+            "How much each place above or below the game's prediction adds to or takes from next year's average. With 3%, finishing 4 places above gives +12%, and 4 below gives -12% (with the original floor, a falling club doesn't go below what the game would give).",
+        ),
+        "tradition_per_place" => (
+            "O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube termina 2 posições ou mais acima do previsto, parte da distância entre a média e esse recorde volta, por posição. Com 2,5%: 5 posições acima = 12,5% da distância. Um clube de média 12.000 e recorde histórico de 26.000 (distância de 14.000) ganha 1.750 pessoas.",
+            "The database's historical record shows the crowd a club once had. When a club finishes 2 or more places above the prediction, part of the distance between its average and that record comes back, per place. With 2.5%: 5 places above = 12.5% of the distance. A club averaging 12,000 with a historical record of 26,000 (a distance of 14,000) gains 1,750 people.",
+        ),
+        "attendance_floor" => (
+            "Ligado: quem vai mal perde o que ganhou por esta regra, mas nunca fica abaixo da média que teria no jogo original. Essa média do original é calculada temporada a temporada e guardada num arquivo ao lado do save (.publico). Desligado, quem vai mal cai pelo valor por posição, mesmo abaixo do original.",
+            "On: a club doing badly loses what it gained by this rule, but never goes below the average it would have in the original game. That original average is worked out season by season and kept in a file next to the save (.publico). Off, a club doing badly falls by the per-place value, even below the original.",
+        ),
+        "attendance_cap_weak" => (
+            "O máximo que a média da temporada pode chegar nas divisões fracas (nível até 7), em pessoas por ponto de nível da divisão. Com 2.000 numa divisão de nível 3, o teto é 6.000. 0 = sem teto. O jogo original usa 2.000.",
+            "The most the season average can reach in weak divisions (level up to 7), in people per point of the division's level. With 2,000 in a level-3 division, the cap is 6,000. 0 = no cap. The original game uses 2,000.",
+        ),
+        "attendance_cap_mid" => (
+            "O mesmo teto para as divisões médias (nível 8 a 12). Com 3.000 numa divisão de nível 10, o teto é 30.000. 0 = sem teto. O original usa 3.000.",
+            "The same cap for middle divisions (level 8 to 12). With 3,000 in a level-10 division, the cap is 30,000. 0 = no cap. The original uses 3,000.",
+        ),
+        "attendance_cap_strong" => (
+            "O mesmo teto para as divisões fortes (nível 13 ou mais). Com 5.000 numa divisão de nível 16, o teto é 80.000. 0 = sem teto. O original usa 5.000.",
+            "The same cap for strong divisions (level 13 or more). With 5,000 in a level-16 division, the cap is 80,000. 0 = no cap. The original uses 5,000.",
+        ),
+        "weak_league_limit" => (
+            "Nas divisões de nível 4 ou menos, o público de cada jogo acima deste limite (em pessoas por ponto de nível) é cortado: fica só a parte escolhida abaixo. Com 1.500 numa divisão de nível 3, o limite é 4.500. É o que impede um clube popular de divisão baixa de encher o estádio. 0 = sem corte. O original usa 1.500.",
+            "In divisions of level 4 or lower, each match crowd above this limit (in people per level point) is cut: only the share chosen below stays. With 1,500 in a level-3 division, the limit is 4,500. It is what stops a popular low-division club from filling its stadium. 0 = no cut. The original uses 1,500.",
+        ),
+        "weak_league_keep" => (
+            "Quanto do público acima do corte continua indo ao jogo. Com 20% (o original), 10.000 pessoas querendo ir a um jogo com limite de 4.500 viram 4.500 + 20% de 5.500 = 5.600.",
+            "How much of the crowd above the cut still goes to the match. With 20% (the original), 10,000 people wanting to go to a match with a 4,500 limit become 4,500 + 20% of 5,500 = 5,600.",
+        ),
+        "pent_up_demand" => (
+            "Quando mais gente quis vir a um jogo do que o recorde deixou, esta parte de quem ficou de fora vira recorde novo para os próximos jogos. Com 10%, 10.000 pessoas de fora sobem o teto em 1.000. É assim que um clube em ascensão abre espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.",
+            "When more people wanted to come to a match than the record allowed, this share of those left out becomes a new record for the next matches. With 10%, 10,000 people left out raise the ceiling by 1,000. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.",
+        ),
+        "title_race_max" => (
+            "Quanto a mais vai a um jogo de liga entre dois clubes que ainda podem ser campeões, na última rodada. O acréscimo cresce ao longo da temporada: no meio dela, é a metade. Com 50%, um jogo de 20.000 pessoas vai a 30.000 na reta final.",
+            "How many more go to a league match between two clubs that can still be champions, in the last round. The extra grows through the season: half way, it is half. With 50%, a 20,000 match goes to 30,000 in the run-in.",
+        ),
+        "title_race_top2" => (
+            "O acréscimo extra quando os dois são o 1º e o 2º. Soma-se ao de cima: 50% + 25% = até 75% a mais. Se o jogo também for clássico, o acréscimo do clássico do jogo (50%) multiplica por cima.",
+            "The extra when the two are 1st and 2nd. It adds to the one above: 50% + 25% = up to 75% more. If the match is also a derby, the game's derby extra (50%) multiplies on top.",
+        ),
+        "stadium_occupancy_min" => (
+            "A ocupação média que uma temporada precisa ter para contar como cheia. O original usa 92%. Com 80%, estádios menos lotados também ficam aptos a ampliar.",
+            "The average occupancy a season needs to count as full. The original uses 92%. With 80%, less crowded stadiums also become able to expand.",
+        ),
+        "stadium_full_seasons" => (
+            "Quantas temporadas cheias seguidas o clube precisa para poder ampliar (de 1 a 10). O original usa 1. Com 2, uma temporada boa não basta: é preciso sustentar. A contagem vai no arquivo ao lado do save. Poder ampliar não é ampliar: ainda é preciso dinheiro acima da reserva.",
+            "How many full seasons in a row a club needs to be able to expand (1 to 10). The original uses 1. With 2, one good season isn't enough: it has to last. The count goes in the file next to the save. Being able to expand isn't expanding: money above the reserve is still needed.",
+        ),
+        "stadium_reserve" => (
+            "O dinheiro que o clube guarda: a obra só usa o saldo acima disso. O original usa 5,25 milhões. Num banco com mais dinheiro (como o do CLZ), vale subir na mesma proporção.",
+            "The money the club keeps: a build only uses the balance above it. The original uses 5.25 million. In a database with more money (like CLZ's), raise it in the same proportion.",
         ),
         "knockout_ceiling" => (
             "Num mata-mata (copa nacional, fases finais, continental) o interesse é maior. \"Só o estádio\" deixa o público ir até a capacidade; com \"o recorde do clube\", o mata-mata fica preso ao mesmo teto de um jogo comum, como no original.",
@@ -239,10 +287,6 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
         "stadium_reputation_trigger" => (
             "No original, um clube de reputação alta amplia o estádio mesmo sem público para isso. \"Só por ocupação\" deixa a ampliação depender só do estádio cheio.",
             "In the original, a high-reputation club expands its stadium even with no crowd for it. \"Only by occupancy\" makes expansion depend on a full stadium alone.",
-        ),
-        "stadium_full_seasons" => (
-            "Quantas temporadas seguidas o estádio precisa ficar acima de 92% de ocupação para o clube poder ampliar. Com 2, uma temporada boa não basta: é preciso sustentar. Poder ampliar não é ampliar: ainda é preciso dinheiro.",
-            "How many seasons in a row the stadium must be above 92% full for the club to be able to expand. With 2, one good season isn't enough: it has to last. Being able to expand isn't expanding: money is still needed.",
         ),
         "stadium_occupancy" => (
             "O que entra na conta da ocupação. \"Todos os jogos em casa\" conta também copas e competições continentais: o clube que lota o mata-mata da Libertadores conta isso a favor do estádio novo.",

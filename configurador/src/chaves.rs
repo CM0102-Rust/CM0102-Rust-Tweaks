@@ -108,17 +108,28 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "intake_news", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("1", "Mensagem na caixa de entrada", "Inbox message"), ("0", "Sem mensagem", "No message")]), padrao: "1", rotulo: ("Mensagem da fornada", "Intake message") },
     Chave { nome: "intake_news_numbers", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("0", "Só o parecer do treinador", "Only the coach's view"), ("1", "Parecer, CA e PA", "View, CA and PA")]), padrao: "0", rotulo: ("Na mensagem", "In the message") },
     Chave { nome: "attendance", aba: Aba::Publico, tipo: Tipo::Escolha(&[("off", "Desligado (o jogo original)", "Off (the original game)"), ("on", "Ligado (a nossa regra)", "On (our rule)")]), padrao: "on", rotulo: ("Público", "Attendance") },
-    Chave { nome: "attendance_league_caps", aba: Aba::Publico, tipo: Tipo::Escolha(&[("on", "Com os tetos do jogo", "With the game's caps"), ("off", "Sem os tetos (a nossa regra)", "Without the caps (our rule)")]), padrao: "off", rotulo: ("Tetos pela divisão", "Caps by division") },
+    Chave { nome: "attendance_toward_real", aba: Aba::Publico, tipo: num(0.0, 100.0, 0.0, 100.0, true), padrao: "50", rotulo: ("Quanto a média anda até o público real", "How far the average moves to the real crowd") },
+    Chave { nome: "attendance_per_place", aba: Aba::Publico, tipo: num(0.0, 20.0, 0.0, 10.0, false), padrao: "3", rotulo: ("Quanto vale cada posição", "How much each place is worth") },
+    Chave { nome: "tradition_per_place", aba: Aba::Publico, tipo: num(0.0, 50.0, 0.0, 10.0, false), padrao: "2.5", rotulo: ("A torcida histórica que volta, por posição", "Historical crowd coming back, per place") },
+    Chave { nome: "attendance_floor", aba: Aba::Publico, tipo: Tipo::Escolha(&[("off", "Desligado", "Off"), ("on", "Ligado", "On")]), padrao: "on", rotulo: ("Piso do jogo original", "The original game's floor") },
+    Chave { nome: "attendance_cap_weak", aba: Aba::Publico, tipo: num(0.0, 1e6, 0.0, 10000.0, true), padrao: "0", rotulo: ("Teto: divisões fracas (nível até 7)", "Cap: weak divisions (level up to 7)") },
+    Chave { nome: "attendance_cap_mid", aba: Aba::Publico, tipo: num(0.0, 1e6, 0.0, 10000.0, true), padrao: "0", rotulo: ("Teto: divisões médias (nível 8 a 12)", "Cap: middle divisions (level 8 to 12)") },
+    Chave { nome: "attendance_cap_strong", aba: Aba::Publico, tipo: num(0.0, 1e6, 0.0, 10000.0, true), padrao: "0", rotulo: ("Teto: divisões fortes (nível 13 ou mais)", "Cap: strong divisions (level 13 or more)") },
+    Chave { nome: "weak_league_limit", aba: Aba::Publico, tipo: num(0.0, 1e6, 0.0, 5000.0, true), padrao: "0", rotulo: ("Corte nas divisões de nível até 4", "Cut in divisions of level up to 4") },
+    Chave { nome: "weak_league_keep", aba: Aba::Publico, tipo: num(0.0, 100.0, 0.0, 100.0, true), padrao: "20", rotulo: ("O que fica acima do corte", "What stays above the cut") },
     Chave { nome: "attendance_record", aba: Aba::Publico, tipo: Tipo::Escolha(&[("fixed", "O do banco (só título ou acesso o sobem)", "The database's (only a title or promotion raises it)"), ("real", "O maior público que de fato veio", "The largest crowd that really came")]), padrao: "real", rotulo: ("Recorde do clube", "The club's record") },
-    Chave { nome: "pent_up_demand", aba: Aba::Publico, tipo: num(0.0, 1.0, 0.0, 0.5, false), padrao: "0.1", rotulo: ("Gente que ficou de fora vira recorde", "People left out become a record") },
-    Chave { nome: "tradition_weight", aba: Aba::Publico, tipo: num(0.0, 2.0, 0.0, 1.0, false), padrao: "0.25", rotulo: ("Peso da tradição", "Weight of tradition") },
+    Chave { nome: "pent_up_demand", aba: Aba::Publico, tipo: num(0.0, 100.0, 0.0, 50.0, false), padrao: "10", rotulo: ("Gente de fora que vira recorde", "People left out becoming a record") },
     Chave { nome: "knockout_ceiling", aba: Aba::Publico, tipo: Tipo::Escolha(&[("record", "O recorde do clube (como num jogo comum)", "The club's record (as in an ordinary match)"), ("stadium", "Só o estádio", "Only the stadium")]), padrao: "stadium", rotulo: ("Teto do mata-mata", "Knockout ceiling") },
     Chave { nome: "title_race", aba: Aba::Publico, tipo: Tipo::Escolha(&[("off", "Desligado", "Off"), ("on", "Ligado", "On")]), padrao: "on", rotulo: ("Jogo grande pela tabela", "Big match by the table") },
+    Chave { nome: "title_race_max", aba: Aba::Publico, tipo: num(0.0, 300.0, 0.0, 150.0, true), padrao: "50", rotulo: ("A mais na última rodada", "More in the last round") },
+    Chave { nome: "title_race_top2", aba: Aba::Publico, tipo: num(0.0, 300.0, 0.0, 100.0, true), padrao: "25", rotulo: ("A mais num 1º × 2º", "More in a 1st v 2nd") },
     Chave { nome: "stadium", aba: Aba::Publico, tipo: Tipo::Escolha(&[("off", "Desligado (o jogo original)", "Off (the original game)"), ("on", "Ligado (a nossa regra)", "On (our rule)")]), padrao: "on", rotulo: ("Estádio", "Stadium") },
     Chave { nome: "stadium_seating_growth", aba: Aba::Publico, tipo: Tipo::Escolha(&[("on", "Cresce sozinho, mesmo vazio (original)", "Grows on its own, even empty (original)"), ("off", "Não cresce sozinho", "Doesn't grow on its own")]), padrao: "off", rotulo: ("Lugares sentados somam na capacidade", "Seats add to the capacity") },
     Chave { nome: "stadium_reputation_trigger", aba: Aba::Publico, tipo: Tipo::Escolha(&[("on", "Amplia só pela reputação (original)", "Expands on reputation alone (original)"), ("off", "Só por ocupação", "Only by occupancy")]), padrao: "off", rotulo: ("Ampliar pela reputação", "Expand by reputation") },
-    Chave { nome: "stadium_full_seasons", aba: Aba::Publico, tipo: num(1.0, 2.0, 1.0, 2.0, true), padrao: "2", rotulo: ("Temporadas lotado para poder ampliar", "Full seasons to be able to expand") },
+    Chave { nome: "stadium_occupancy_min", aba: Aba::Publico, tipo: num(10.0, 100.0, 50.0, 100.0, true), padrao: "92", rotulo: ("Ocupação para a temporada contar como cheia", "Occupancy for a season to count as full") },
+    Chave { nome: "stadium_full_seasons", aba: Aba::Publico, tipo: num(1.0, 10.0, 1.0, 10.0, true), padrao: "2", rotulo: ("Temporadas cheias seguidas para poder ampliar", "Full seasons in a row to be able to expand") },
     Chave { nome: "stadium_occupancy", aba: Aba::Publico, tipo: Tipo::Escolha(&[("league", "Só os jogos da liga (original)", "League matches only (original)"), ("all", "Todos os jogos em casa", "Every home match")]), padrao: "all", rotulo: ("O que conta na ocupação", "What counts for occupancy") },
+    Chave { nome: "stadium_reserve", aba: Aba::Publico, tipo: num(0.0, 1e10, 0.0, 50_000_000.0, true), padrao: "5250000", rotulo: ("Reserva de caixa que a obra não toca", "Cash reserve the build won't touch") },
     Chave { nome: "stadium_size", aba: Aba::Publico, tipo: Tipo::Escolha(&[("original", "O tamanho fixo do jogo", "The game's fixed size"), ("demand", "O que a demanda medida pede", "What the measured demand asks for")]), padrao: "demand", rotulo: ("Tamanho da obra", "Size of the build") },
     Chave { nome: "stadium_seat_cost", aba: Aba::Publico, tipo: Tipo::Escolha(&[("original", "O do jogo (uns 100 por lugar)", "The game's (about 100 a place)"), ("auto", "Automático, pelo caixa do banco", "Automatic, by the database's money")]), padrao: "auto", rotulo: ("Custo por lugar novo", "Cost per new place") },
     Chave { nome: "stadium_ceiling_zero", aba: Aba::Publico, tipo: Tipo::Escolha(&[("original", "Sobe 1.500 por ano (original)", "Rises 1,500 a year (original)"), ("demand", "Pela demanda medida", "By the measured demand")]), padrao: "demand", rotulo: ("Estádio sem teto no banco", "Stadium with no ceiling in the database") },
@@ -147,6 +158,22 @@ pub fn ligado(nome: &str, valor: &str) -> bool {
         Some(Tipo::Liga) => valor == "1",
         Some(Tipo::Escolha(op)) => op.iter().skip(1).any(|o| o.0 == valor),
         _ => false,
+    }
+}
+
+/// O interruptor de cada aba no menu: as chaves que ela liga e desliga, com o valor ligado e o desligado (o do jogo
+/// original). As abas sem interruptor (Início, Tela, save e pasta, os arquivos) não aparecem aqui.
+pub fn mestres(aba: Aba) -> &'static [(&'static str, &'static str, &'static str)] {
+    match aba {
+        Aba::Fornada => &[("intake", "1", "0")],
+        Aba::Idades => &[("ages", "custom", "original")],
+        Aba::Disputa => &[("rule", "new", "original")],
+        Aba::Inativos => &[("retire_idle_players", "1", "0")],
+        Aba::Nomes => &[("regen_names", "own", "original")],
+        Aba::Cinzentos => &[("grey_players", "squad", "original")],
+        Aba::Publico => &[("attendance", "on", "off"), ("stadium", "on", "off")],
+        Aba::Registro => &[("regen_origins", "1", "0")],
+        _ => &[],
     }
 }
 

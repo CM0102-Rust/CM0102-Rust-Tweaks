@@ -326,11 +326,59 @@ Liga a nossa regra do público: ele cresce com o que acontece em campo e esfria 
 
 Valores: `off` (Desligado (o jogo original)), `on` (Ligado (a nossa regra)). Padrão: `on`.
 
-### Tetos pela divisão — `attendance_league_caps`
+### Quanto a média anda até o público real — `attendance_toward_real`
 
-O jogo original segura a média de público de cada clube abaixo de um teto pela divisão, e nas divisões mais fracas corta o público de cada jogo acima de um limite (fica só 20% do que passa). É isso que impede um clube popular de divisão baixa de encher o estádio. Sem os tetos, quem decide é o desempenho.
+No fim de cada temporada, a média do clube anda na direção do público que de fato veio. Esta é a fração do caminho: com 50%, um clube de média 10.000 que levou 14.000 por jogo passa a 12.000. 100% = a média vira o público da temporada; 0% = não anda. Clássicos e jogos grandes entram sem o acréscimo deles, para não empurrar a média.
 
-Valores: `on` (Com os tetos do jogo), `off` (Sem os tetos (a nossa regra)). Padrão: `off`.
+Valores: de 0 a 100 (inteiro). Padrão: `50`.
+
+### Quanto vale cada posição — `attendance_per_place`
+
+Quanto cada posição acima ou abaixo da prevista pelo jogo soma ou tira da média do ano seguinte. Com 3%, terminar 4 posições acima dá +12%, e 4 abaixo dá -12% (com o piso do original, quem cai não fica abaixo do que o jogo daria).
+
+Valores: de 0 a 20. Padrão: `3`.
+
+### A torcida histórica que volta, por posição — `tradition_per_place`
+
+O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube termina 2 posições ou mais acima do previsto, parte da distância entre a média e esse recorde volta, por posição. Com 2,5%: 5 posições acima = 12,5% da distância. Um clube de média 12.000 e recorde histórico de 26.000 (distância de 14.000) ganha 1.750 pessoas.
+
+Valores: de 0 a 50. Padrão: `2.5`.
+
+### Piso do jogo original — `attendance_floor`
+
+Ligado: quem vai mal perde o que ganhou por esta regra, mas nunca fica abaixo da média que teria no jogo original. Essa média do original é calculada temporada a temporada e guardada num arquivo ao lado do save (.publico). Desligado, quem vai mal cai pelo valor por posição, mesmo abaixo do original.
+
+Valores: `off` (Desligado), `on` (Ligado). Padrão: `on`.
+
+### Teto: divisões fracas (nível até 7) — `attendance_cap_weak`
+
+O máximo que a média da temporada pode chegar nas divisões fracas (nível até 7), em pessoas por ponto de nível da divisão. Com 2.000 numa divisão de nível 3, o teto é 6.000. 0 = sem teto. O jogo original usa 2.000.
+
+Valores: de 0 a 1000000 (inteiro). Padrão: `0`.
+
+### Teto: divisões médias (nível 8 a 12) — `attendance_cap_mid`
+
+O mesmo teto para as divisões médias (nível 8 a 12). Com 3.000 numa divisão de nível 10, o teto é 30.000. 0 = sem teto. O original usa 3.000.
+
+Valores: de 0 a 1000000 (inteiro). Padrão: `0`.
+
+### Teto: divisões fortes (nível 13 ou mais) — `attendance_cap_strong`
+
+O mesmo teto para as divisões fortes (nível 13 ou mais). Com 5.000 numa divisão de nível 16, o teto é 80.000. 0 = sem teto. O original usa 5.000.
+
+Valores: de 0 a 1000000 (inteiro). Padrão: `0`.
+
+### Corte nas divisões de nível até 4 — `weak_league_limit`
+
+Nas divisões de nível 4 ou menos, o público de cada jogo acima deste limite (em pessoas por ponto de nível) é cortado: fica só a parte escolhida abaixo. Com 1.500 numa divisão de nível 3, o limite é 4.500. É o que impede um clube popular de divisão baixa de encher o estádio. 0 = sem corte. O original usa 1.500.
+
+Valores: de 0 a 1000000 (inteiro). Padrão: `0`.
+
+### O que fica acima do corte — `weak_league_keep`
+
+Quanto do público acima do corte continua indo ao jogo. Com 20% (o original), 10.000 pessoas querendo ir a um jogo com limite de 4.500 viram 4.500 + 20% de 5.500 = 5.600.
+
+Valores: de 0 a 100 (inteiro). Padrão: `20`.
 
 ### Recorde do clube — `attendance_record`
 
@@ -338,17 +386,11 @@ O recorde do clube é o teto do público de um jogo comum. No original ele é o 
 
 Valores: `fixed` (O do banco (só título ou acesso o sobem)), `real` (O maior público que de fato veio). Padrão: `real`.
 
-### Gente que ficou de fora vira recorde — `pent_up_demand`
+### Gente de fora que vira recorde — `pent_up_demand`
 
-Quando mais gente quis vir do que o recorde deixou, parte dessa demanda vira recorde novo. É assim que um clube em ascensão vai abrindo espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.
+Quando mais gente quis vir a um jogo do que o recorde deixou, esta parte de quem ficou de fora vira recorde novo para os próximos jogos. Com 10%, 10.000 pessoas de fora sobem o teto em 1.000. É assim que um clube em ascensão abre espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.
 
-Valores: de 0 a 1. Padrão: `0.1`.
-
-### Peso da tradição — `tradition_weight`
-
-O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube de tradição volta a ir bem (2 posições ou mais acima do previsto), parte dessa torcida volta mais rápido. Um clube sem passado grande quase não muda.
-
-Valores: de 0 a 2. Padrão: `0.25`.
+Valores: de 0 a 100. Padrão: `10`.
 
 ### Teto do mata-mata — `knockout_ceiling`
 
@@ -361,6 +403,18 @@ Valores: `record` (O recorde do clube (como num jogo comum)), `stadium` (Só o e
 O jogo de liga entre dois clubes que ainda podem ser campeões leva mais gente, cada vez mais perto do fim da temporada. Se o jogo também for clássico, os dois efeitos se somam. Ninguém precisa configurar rivais: quem decide é a tabela.
 
 Valores: `off` (Desligado), `on` (Ligado). Padrão: `on`.
+
+### A mais na última rodada — `title_race_max`
+
+Quanto a mais vai a um jogo de liga entre dois clubes que ainda podem ser campeões, na última rodada. O acréscimo cresce ao longo da temporada: no meio dela, é a metade. Com 50%, um jogo de 20.000 pessoas vai a 30.000 na reta final.
+
+Valores: de 0 a 300 (inteiro). Padrão: `50`.
+
+### A mais num 1º × 2º — `title_race_top2`
+
+O acréscimo extra quando os dois são o 1º e o 2º. Soma-se ao de cima: 50% + 25% = até 75% a mais. Se o jogo também for clássico, o acréscimo do clássico do jogo (50%) multiplica por cima.
+
+Valores: de 0 a 300 (inteiro). Padrão: `25`.
 
 ### Estádio — `stadium`
 
@@ -380,17 +434,29 @@ No original, um clube de reputação alta amplia o estádio mesmo sem público p
 
 Valores: `on` (Amplia só pela reputação (original)), `off` (Só por ocupação). Padrão: `off`.
 
-### Temporadas lotado para poder ampliar — `stadium_full_seasons`
+### Ocupação para a temporada contar como cheia — `stadium_occupancy_min`
 
-Quantas temporadas seguidas o estádio precisa ficar acima de 92% de ocupação para o clube poder ampliar. Com 2, uma temporada boa não basta: é preciso sustentar. Poder ampliar não é ampliar: ainda é preciso dinheiro.
+A ocupação média que uma temporada precisa ter para contar como cheia. O original usa 92%. Com 80%, estádios menos lotados também ficam aptos a ampliar.
 
-Valores: de 1 a 2 (inteiro). Padrão: `2`.
+Valores: de 10 a 100 (inteiro). Padrão: `92`.
+
+### Temporadas cheias seguidas para poder ampliar — `stadium_full_seasons`
+
+Quantas temporadas cheias seguidas o clube precisa para poder ampliar (de 1 a 10). O original usa 1. Com 2, uma temporada boa não basta: é preciso sustentar. A contagem vai no arquivo ao lado do save. Poder ampliar não é ampliar: ainda é preciso dinheiro acima da reserva.
+
+Valores: de 1 a 10 (inteiro). Padrão: `2`.
 
 ### O que conta na ocupação — `stadium_occupancy`
 
 O que entra na conta da ocupação. "Todos os jogos em casa" conta também copas e competições continentais: o clube que lota o mata-mata da Libertadores conta isso a favor do estádio novo.
 
 Valores: `league` (Só os jogos da liga (original)), `all` (Todos os jogos em casa). Padrão: `all`.
+
+### Reserva de caixa que a obra não toca — `stadium_reserve`
+
+O dinheiro que o clube guarda: a obra só usa o saldo acima disso. O original usa 5,25 milhões. Num banco com mais dinheiro (como o do CLZ), vale subir na mesma proporção.
+
+Valores: de 0 a … (inteiro). Padrão: `5250000`.
 
 ### Tamanho da obra — `stadium_size`
 
