@@ -25,7 +25,7 @@ fn arquivo_do_tema() -> PathBuf {
     std::env::current_exe().map(|p| p.with_file_name("tweaks-config.tema")).unwrap_or_else(|_| PathBuf::from("tweaks-config.tema"))
 }
 #[allow(non_snake_case)]
-fn VERDE() -> Color32 { if claro() { Color32::from_rgb(0x1f, 0x7a, 0x3e) } else { Color32::from_rgb(0x4c, 0xc3, 0x6a) } }
+fn VERDE() -> Color32 { if claro() { Color32::from_rgb(0x2e, 0x8b, 0x57) } else { Color32::from_rgb(0x4c, 0xc3, 0x6a) } }
 #[allow(non_snake_case)]
 fn AMARELO() -> Color32 { if claro() { Color32::from_rgb(0x8a, 0x5a, 0x00) } else { Color32::from_rgb(0xe8, 0xb9, 0x3c) } }
 #[allow(non_snake_case)]
@@ -35,9 +35,9 @@ fn VERMELHO() -> Color32 { if claro() { Color32::from_rgb(0xb0, 0x30, 0x28) } el
 #[allow(non_snake_case)]
 fn CINZA() -> Color32 { if claro() { Color32::from_rgb(0x6a, 0x72, 0x6e) } else { Color32::from_rgb(0x80, 0x88, 0x84) } }
 #[allow(non_snake_case)]
-fn FUNDO() -> Color32 { if claro() { Color32::from_rgb(0xf3, 0xf5, 0xf3) } else { Color32::from_rgb(0x12, 0x1a, 0x16) } }
+fn FUNDO() -> Color32 { if claro() { Color32::from_rgb(0xee, 0xf0, 0xee) } else { Color32::from_rgb(0x0e, 0x12, 0x10) } }
 #[allow(non_snake_case)]
-fn CARTAO() -> Color32 { if claro() { Color32::from_rgb(0xff, 0xff, 0xff) } else { Color32::from_rgb(0x1a, 0x25, 0x1f) } }
+fn CARTAO() -> Color32 { if claro() { Color32::from_rgb(0xff, 0xff, 0xff) } else { Color32::from_rgb(0x18, 0x1e, 0x1b) } }
 /// A frase "com este valor..." embaixo de cada opção.
 #[allow(non_snake_case)]
 fn FRASE() -> Color32 { if claro() { Color32::from_rgb(0x44, 0x4c, 0x48) } else { Color32::from_rgb(0xb4, 0xc6, 0xbc) } }
@@ -54,7 +54,75 @@ fn visual() -> egui::Visuals {
     }
     v.selection.bg_fill = if claro() { Color32::from_rgb(0xc6, 0xe6, 0xcf) } else { Color32::from_rgb(0x2d, 0x7a, 0x45) };
     v.hyperlink_color = VERDE();
+    for w in [&mut v.widgets.inactive, &mut v.widgets.hovered, &mut v.widgets.active, &mut v.widgets.open, &mut v.widgets.noninteractive] {
+        w.corner_radius = egui::CornerRadius::same(10);
+    }
+    v.window_corner_radius = egui::CornerRadius::same(20);
     v
+}
+
+/// Um cartão flutuante: cantos grandes, sombra difusa e uma linha quase invisível. `escuro` = o cartão de destaque.
+fn painel(ui: &mut egui::Ui, escuro: bool, corpo: impl FnOnce(&mut egui::Ui)) {
+    let fill = if escuro { if claro() { Color32::from_rgb(0x14, 0x18, 0x15) } else { Color32::from_rgb(0x22, 0x2a, 0x26) } } else { CARTAO() };
+    egui::Frame::new().fill(fill).corner_radius(22.0).inner_margin(egui::Margin::same(22))
+        .shadow(egui::epaint::Shadow { offset: [0, 10], blur: 34, spread: 0, color: Color32::from_black_alpha(if claro() { 22 } else { 80 }) })
+        .stroke(Stroke::new(1.0f32, if claro() { Color32::from_black_alpha(10) } else { Color32::from_white_alpha(12) }))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            if escuro {
+                ui.visuals_mut().override_text_color = Some(Color32::from_rgb(0xe8, 0xec, 0xe9));
+            }
+            corpo(ui)
+        });
+}
+
+/// Uma etiqueta pequena em pílula (o "eyebrow").
+fn etiqueta(ui: &mut egui::Ui, texto: &str, fundo: Color32, cor: Color32) {
+    egui::Frame::new().fill(fundo).corner_radius(99.0).inner_margin(egui::Margin::symmetric(10, 3)).show(ui, |ui| {
+        ui.label(RichText::new(texto.to_uppercase()).size(11.0).color(cor).extra_letter_spacing(1.6));
+    });
+}
+
+/// A frase-título de cada aba.
+fn manchete(aba: Aba, en: bool) -> &'static str {
+    match aba {
+        Aba::Inicio => t2(en, "Os ajustes do CM 01/02.", "The CM 01/02 tweaks."),
+        Aba::Fornada => t2(en, "Os regens chegam de uma vez.", "Regens arrive all at once."),
+        Aba::Idades => t2(en, "Com que idade nasce cada regen.", "At what age each regen is born."),
+        Aba::Disputa => t2(en, "Para qual clube vai o jovem.", "Which club the youngster goes to."),
+        Aba::Nomes => t2(en, "De onde vêm os nomes.", "Where the names come from."),
+        Aba::Registro => t2(en, "De quem é cada regen.", "Where each regen comes from."),
+        Aba::Publico => t2(en, "Quanta gente vai ao estádio.", "How many people go to the stadium."),
+        Aba::Inativos => t2(en, "Quem pendura as chuteiras.", "Who hangs up their boots."),
+        Aba::Cinzentos => t2(en, "Os jogadores que completam o elenco.", "The players who fill the squad."),
+        Aba::Jogo => t2(en, "O save, a tela e a pasta.", "The save, the screen and the folder."),
+        Aba::Cfg => t2(en, "O arquivo tweaks.cfg.", "The tweaks.cfg file."),
+        Aba::Log => t2(en, "O diário da DLL.", "The DLL's diary."),
+    }
+}
+
+/// O valor do jogo original de uma chave (para o "diferente do original"), quando ele é conhecido.
+fn original_de(nome: &str) -> Option<&'static str> {
+    Some(match nome {
+        "attendance" | "stadium" | "title_race" | "attendance_floor" => "off",
+        "attendance_toward_real" => "50",
+        "attendance_per_place" | "tradition_per_place" | "pent_up_demand" => "0",
+        "attendance_cap_weak" => "2000",
+        "attendance_cap_mid" => "3000",
+        "attendance_cap_strong" => "5000",
+        "weak_league_limit" => "1500",
+        "weak_league_keep" => "20",
+        "stadium_occupancy_min" => "92",
+        "stadium_full_seasons" => "1",
+        "stadium_reserve" => "5250000",
+        "stadium_max" => "125000",
+        "attendance_record" => "fixed",
+        "knockout_ceiling" => "record",
+        "stadium_seating_growth" | "stadium_reputation_trigger" => "on",
+        "stadium_occupancy" => "league",
+        "stadium_size" | "stadium_seat_cost" | "stadium_ceiling_zero" => "original",
+        _ => return None,
+    })
 }
 
 /// Um título na fonte dos títulos (Archivo Black).
@@ -93,9 +161,10 @@ fn hoje_no_computador() -> String {
 }
 
 /// Uma bolinha da cor do estado, desenhada (a fonte padrão do egui não tem o "●").
-fn bolinha(ui: &mut egui::Ui, c: Color32) {
+fn bolinha(ui: &mut egui::Ui, c: Color32) -> egui::Response {
     let (r, p) = ui.allocate_painter(Vec2::new(12.0, 12.0), Sense::hover());
-    p.circle_filled(r.rect.center(), 5.0, c);
+    p.circle_filled(r.rect.center(), 4.0, c);
+    r
 }
 
 /// Um interruptor de verdade (o desenho de liga/desliga): verde e bolinha à direita = ligado. Devolve a resposta; o
@@ -239,7 +308,7 @@ struct App {
     limpar: bool,
     /// A janela de ajuda aberta (o "?" clicado).
     popup: Option<&'static str>,
-    /// A subaba de Público e estádio: 0 público, 1 estádio, 2 exemplo.
+    /// A subaba de Público e estádio: 0 público, 1 estádio.
     sub_publico: usize,
 }
 
@@ -416,91 +485,102 @@ impl App {
         let en = self.en;
         let (a_pt, a_en) = guia::ajuda(nome);
         let texto_ajuda = if en { a_en } else { a_pt };
-        // o "?" fica fora da parte desligável: a explicação aparece mesmo com a opção cinza
-        let resp = ui.horizontal(|ui| {
-            let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| match &c.tipo {
-                Tipo::Liga => {
-                    let on = chaves::ligado(nome, &valor);
-                    let r = interruptor(ui, on);
-                    ui.label(rotulo);
-                    if r.clicked() {
-                        novo = Some(if on { "0" } else { "1" }.into());
-                    }
-                    r
-                }
-                Tipo::Escolha(op) if como_interruptor(nome, op) => {
-                    let i = op.iter().position(|o| o.0 == valor).unwrap_or(0);
-                    // ligado = a opção que não é a do jogo original (a segunda), ou "on"/"1"
-                    let ligado_idx = if op[0].0 == "on" { 0 } else { 1 };
-                    let on = i == ligado_idx;
-                    let r = interruptor(ui, on);
-                    ui.label(RichText::new(rotulo).strong());
-                    ui.label(RichText::new(if en { op[i].2 } else { op[i].1 }).size(12.0).color(CINZA()));
-                    if r.clicked() {
-                        novo = Some(op[1 - i].0.into());
-                    }
-                    r
-                }
-                Tipo::Escolha(op) => {
-                    rotulo_fixo(ui, 320.0, rotulo);
-                    let mut atual = op.iter().position(|o| o.0 == valor).unwrap_or(0);
-                    let antes = atual;
-                    let r = egui::ComboBox::from_id_salt(nome).width(300.0)
-                        .selected_text(if en { op[atual].2 } else { op[atual].1 })
-                        .show_ui(ui, |ui| {
-                            for (i, o) in op.iter().enumerate() {
-                                ui.selectable_value(&mut atual, i, if en { o.2 } else { o.1 });
-                            }
-                        }).response;
-                    if atual != antes {
-                        novo = Some(op[atual].0.into());
-                    }
-                    r
-                }
-                Tipo::Numero { min, max, barra, inteiro } => {
-                    rotulo_fixo(ui, 320.0, rotulo);
-                    let mut x: f64 = valor.parse().unwrap_or_else(|_| c.padrao.parse().unwrap_or(0.0));
-                    let mut xb = x.clamp(barra.0, barra.1);
-                    let r1 = ui.add(egui::Slider::new(&mut xb, barra.0..=barra.1).show_value(false));
-                    if r1.changed() {
-                        x = xb;
-                    }
-                    let passo = if *inteiro { 0.2 } else { ((barra.1 - barra.0) / 300.0).max(0.0001) };
-                    // o número como se lê: "2" e não "2.00"; no português, com vírgula (e a vírgula também vale ao digitar)
-                    let r2 = ui.add(egui::DragValue::new(&mut x).range(*min..=*max).speed(passo).max_decimals(if *inteiro { 0 } else { 4 })
-                        .custom_formatter(move |v, _| { let s = format!("{:.4}", v); let s = s.trim_end_matches('0').trim_end_matches('.'); if en { s.to_string() } else { s.replace('.', ",") } })
-                        .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
-                    let u = unidade(nome, en);
-                    if !u.is_empty() {
-                        ui.label(RichText::new(u).color(CINZA()));
-                    }
-                    if r1.changed() || r2.changed() {
-                        novo = Some(cfg::numero(if *inteiro { x.round() } else { x }));
-                    }
-                    r1.union(r2)
-                }
-            }).inner).inner;
-            let clicou = ajuda_icone(ui, texto_ajuda);
-            (r, clicou)
+        // o que o valor quer dizer no jogo, por extenso (03/11, Lucas: nenhum número sem explicação)
+        let frase = self.frase(nome);
+        let diferente = original_de(nome).is_some_and(|o| match (o.parse::<f64>(), valor.parse::<f64>()) {
+            (Ok(a), Ok(b)) => (a - b).abs() > 1e-9,
+            _ => o != valor,
         });
-        let (resp_r, clicou) = resp.inner;
+        let original = original_de(nome).map(|o| match (o, c.tipo_nome()) {
+            (_, "escolha") => match &c.tipo { Tipo::Escolha(op) => op.iter().find(|x| x.0 == o).map(|x| if en { x.2 } else { x.1 }).unwrap_or(o).to_string(), _ => o.to_string() },
+            _ => o.to_string(),
+        });
+        let largura_valor = 330.0;
+        let mut clicou = false;
+        let resp = ui.horizontal(|ui| {
+            let esq = (ui.available_width() - largura_valor).max(220.0);
+            ui.allocate_ui_with_layout(Vec2::new(esq, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(esq);
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(rotulo).size(16.0).color(if ativo { ui.visuals().strong_text_color() } else { CINZA() }));
+                    clicou = ajuda_icone(ui, texto_ajuda);
+                });
+                if let Some(f) = &frase {
+                    ui.add(egui::Label::new(texto_com_resultado(f, 13.5)).wrap());
+                }
+                if diferente {
+                    if let Some(o) = &original {
+                        ui.label(RichText::new(format!("{} {}", t2(en, "original:", "original:"), o)).size(12.0).color(CINZA()));
+                    }
+                }
+            });
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.add_enabled_ui(ativo, |ui| match &c.tipo {
+                    Tipo::Liga => {
+                        let on = chaves::ligado(nome, &valor);
+                        if interruptor(ui, on).clicked() {
+                            novo = Some(if on { "0" } else { "1" }.into());
+                        }
+                    }
+                    Tipo::Escolha(op) if como_interruptor(nome, op) => {
+                        let i = op.iter().position(|o| o.0 == valor).unwrap_or(0);
+                        let ligado_idx = if op[0].0 == "on" { 0 } else { 1 };
+                        if interruptor(ui, i == ligado_idx).clicked() {
+                            novo = Some(op[1 - i].0.into());
+                        }
+                        ui.label(RichText::new(if en { op[i].2 } else { op[i].1 }).size(13.0).color(CINZA()));
+                    }
+                    Tipo::Escolha(op) => {
+                        let mut atual = op.iter().position(|o| o.0 == valor).unwrap_or(0);
+                        let antes = atual;
+                        egui::ComboBox::from_id_salt(nome).width(largura_valor - 20.0)
+                            .selected_text(if en { op[atual].2 } else { op[atual].1 })
+                            .show_ui(ui, |ui| {
+                                for (i, o) in op.iter().enumerate() {
+                                    ui.selectable_value(&mut atual, i, if en { o.2 } else { o.1 });
+                                }
+                            });
+                        if atual != antes {
+                            novo = Some(op[atual].0.into());
+                        }
+                    }
+                    Tipo::Numero { min, max, barra, inteiro } => {
+                        let mut x: f64 = valor.parse().unwrap_or_else(|_| c.padrao.parse().unwrap_or(0.0));
+                        let u = unidade(nome, en);
+                        if !u.is_empty() {
+                            ui.label(RichText::new(u).size(12.5).color(CINZA()));
+                        }
+                        let passo = if *inteiro { 0.2 } else { ((barra.1 - barra.0) / 300.0).max(0.0001) };
+                        let r2 = ui.add(egui::DragValue::new(&mut x).range(*min..=*max).speed(passo).max_decimals(if *inteiro { 0 } else { 4 })
+                            .custom_formatter(move |v, _| { let s = format!("{:.4}", v); let s = s.trim_end_matches('0').trim_end_matches('.'); if en { s.to_string() } else { s.replace('.', ",") } })
+                            .custom_parser(|s| s.trim().replace(',', ".").parse::<f64>().ok()));
+                        let mut xb = x.clamp(barra.0, barra.1);
+                        ui.spacing_mut().slider_width = 120.0;
+                        let r1 = ui.add(egui::Slider::new(&mut xb, barra.0..=barra.1).show_value(false));
+                        if r1.changed() {
+                            x = xb;
+                        }
+                        if r1.changed() || r2.changed() {
+                            novo = Some(cfg::numero(if *inteiro { x.round() } else { x }));
+                        }
+                    }
+                });
+            });
+        });
         if clicou {
             self.popup = Some(nome);
         }
         if let Some(v) = novo {
             self.definir(nome, &v);
         }
-        // o que o valor quer dizer no jogo, por extenso (03/11, Lucas: nenhum número sem explicação)
-        if let Some(f) = self.frase(nome) {
-            ui.horizontal(|ui| {
-                ui.add_space(22.0);
-                ui.add(egui::Label::new(texto_com_resultado(&f, 14.0)).wrap());
-            });
-            ui.add_space(4.0);
-        }
-        if resp.response.hovered() || resp_r.hovered() || resp_r.has_focus() {
+        if resp.response.hovered() {
             self.foco = Some(nome);
         }
+        // a linha fina entre os controles
+        let r = ui.available_rect_before_wrap();
+        ui.add_space(6.0);
+        ui.painter().hline(r.left()..=r.right(), r.top() + 3.0, Stroke::new(1.0f32, if claro() { Color32::from_black_alpha(14) } else { Color32::from_white_alpha(14) }));
+        ui.add_space(6.0);
     }
 
     /// Um número no jeito do idioma (vírgula no português), sem zeros sobrando.
@@ -720,33 +800,36 @@ impl App {
         let (pt, en) = guia::intro(aba);
         let termos = guia::termos(aba);
         let ingles = self.en;
-        egui::Frame::group(ui.style()).fill(CARTAO()).inner_margin(10.0).show(ui, |ui| {
-            ui.set_width(ui.available_width());
-            ui.label(RichText::new(if ingles { en } else { pt }).size(15.0));
-            if !termos.is_empty() {
-                ui.add_space(4.0);
-                egui::CollapsingHeader::new(if ingles { "What each term means" } else { "O que quer dizer cada termo" }).id_salt(("termos_h", aba as u8)).show(ui, |ui| {
-                egui::Grid::new(("termos", aba as u8)).num_columns(2).spacing([12.0, 5.0]).show(ui, |ui| {
-                    for &(n_pt, n_en, t_pt, t_en) in termos {
-                        ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(AMARELO()));
-                        ui.add(egui::Label::new(if ingles { t_en } else { t_pt }).wrap());
-                        ui.end_row();
-                    }
+        let (grupo, nome) = ABAS.iter().find(|x| x.0 == aba).map(|x| if ingles { (x.4, x.2) } else { (x.3, x.1) }).unwrap_or(("", ""));
+        ui.add_space(6.0);
+        etiqueta(ui, &if grupo.is_empty() { nome.to_string() } else { format!("{} · {}", grupo, nome) },
+            if claro() { Color32::from_rgb(0xe3, 0xee, 0xe6) } else { Color32::from_rgb(0x1f, 0x33, 0x27) }, VERDE());
+        ui.add_space(4.0);
+        ui.label(titulo(manchete(aba, ingles), 44.0).color(ui.visuals().strong_text_color()));
+        ui.add_space(2.0);
+        ui.add(egui::Label::new(RichText::new(if ingles { en } else { pt }).size(16.0).color(FRASE())).wrap());
+        if !termos.is_empty() {
+            egui::CollapsingHeader::new(RichText::new(if ingles { "What each term means" } else { "O que quer dizer cada termo" }).size(14.0).color(CINZA()))
+                .id_salt(("termos_h", aba as u8)).show(ui, |ui| {
+                    egui::Grid::new(("termos", aba as u8)).num_columns(2).spacing([14.0, 6.0]).show(ui, |ui| {
+                        for &(n_pt, n_en, t_pt, t_en) in termos {
+                            ui.label(RichText::new(if ingles { n_en } else { n_pt }).strong().color(VERDE()));
+                            ui.add(egui::Label::new(if ingles { t_en } else { t_pt }).wrap());
+                            ui.end_row();
+                        }
+                    });
                 });
-                });
-            }
-        });
-        ui.add_space(10.0);
+        }
+        ui.add_space(14.0);
     }
 
     fn cartao(ui: &mut egui::Ui, nome: &str, corpo: impl FnOnce(&mut egui::Ui)) {
-        egui::Frame::group(ui.style()).fill(CARTAO()).inner_margin(12.0).show(ui, |ui| {
-            ui.set_width(ui.available_width());
-            ui.label(titulo(nome, 17.0).color(VERDE()));
-            ui.add_space(4.0);
+        painel(ui, false, |ui| {
+            ui.label(titulo(nome, 19.0).color(ui.visuals().strong_text_color()));
+            ui.add_space(6.0);
             corpo(ui);
         });
-        ui.add_space(8.0);
+        ui.add_space(14.0);
     }
 
     // ---------- abas ----------
@@ -1417,147 +1500,151 @@ impl App {
     fn aba_publico(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Publico);
         let en = self.en;
+        // as subabas em pílula, cada uma com o seu interruptor
+        egui::Frame::new().fill(CARTAO()).corner_radius(99.0).inner_margin(egui::Margin::same(5))
+            .stroke(Stroke::new(1.0f32, if claro() { Color32::from_black_alpha(10) } else { Color32::from_white_alpha(12) })).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    for (i, nome, k) in [(0usize, self.t("Público", "Attendance"), "attendance"), (1, self.t("Estádio", "Stadium"), "stadium")] {
+                        let atual = self.sub_publico == i;
+                        let b = egui::Button::new(RichText::new(nome).size(15.0).color(if atual { Color32::WHITE } else { CINZA() }))
+                            .fill(if atual { Color32::from_rgb(0x14, 0x18, 0x15) } else { Color32::TRANSPARENT }).corner_radius(99.0).min_size(Vec2::new(110.0, 32.0));
+                        if ui.add(b).clicked() {
+                            self.sub_publico = i;
+                        }
+                        let on = self.ligado(k);
+                        if interruptor(ui, on).clicked() {
+                            self.definir(k, if on { "off" } else { "on" });
+                        }
+                        ui.add_space(10.0);
+                    }
+                });
+            });
+        ui.add_space(16.0);
         let p = self.ligado("attendance");
         let e = self.ligado("stadium");
-        // as subabas: Público e Estádio, cada uma com o seu interruptor; Exemplo
-        ui.horizontal(|ui| {
-            for (i, nome, chave) in [(0usize, self.t("Público", "Attendance"), Some("attendance")), (1, self.t("Estádio", "Stadium"), Some("stadium")), (2, self.t("Exemplo", "Example"), None)] {
-                let atual = self.sub_publico == i;
-                let r = ui.selectable_label(atual, titulo(nome, 17.0).color(if atual { VERDE() } else { CINZA() }));
-                if r.clicked() {
-                    self.sub_publico = i;
-                }
-                if let Some(k) = chave {
-                    let on = self.ligado(k);
-                    if interruptor(ui, on).clicked() {
-                        self.definir(k, if on { "off" } else { "on" });
-                    }
-                }
-                ui.add_space(22.0);
-            }
-        });
-        ui.separator();
-        ui.add_space(6.0);
-        if self.sub_publico == 0 {
-        self.controle(ui, "attendance", true);
-        ui.colored_label(if p { AZUL() } else { CINZA() }, if p {
-            self.t("Ligado: quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde o que ganhou por esta regra.",
-                "On: a club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse loses what it gained by this rule.")
-        } else {
-            self.t("Desligado: o público de cada jogo e da temporada é o do jogo original; os controles abaixo ficam sem efeito.", "Off: every match and season crowd is the original game's; the controls below have no effect.")
-        });
-        ui.add_space(8.0);
-        ui.strong(self.t("A média da temporada (no fim de cada temporada da liga)", "The season average (at the end of each league season)"));
-        for k in ["attendance_toward_real", "attendance_per_place", "tradition_per_place", "attendance_floor"] {
-            self.controle(ui, k, p);
-        }
-        ui.add_space(6.0);
-        ui.strong(self.t("Tetos pela divisão (0 = sem teto; o jogo original usa 2.000, 3.000 e 5.000)", "Caps by division (0 = no cap; the original game uses 2,000, 3,000 and 5,000)"));
-        for k in ["attendance_cap_weak", "attendance_cap_mid", "attendance_cap_strong"] {
-            self.controle(ui, k, p);
-        }
-        ui.add_space(6.0);
-        ui.strong(self.t("Cada jogo", "Each match"));
-        for k in ["attendance_record", "pent_up_demand", "weak_league_limit"] {
-            self.controle(ui, k, p);
-        }
-        let corte = p && self.valor("weak_league_limit").parse::<f64>().unwrap_or(0.0) > 0.0;
-        self.controle(ui, "weak_league_keep", corte);
-        self.controle(ui, "knockout_ceiling", p);
-        self.controle(ui, "title_race", p);
-        let grande = p && self.ligado("title_race");
-        for k in ["title_race_max", "title_race_top2"] {
-            self.controle(ui, k, grande);
-        }
-        }
-        if self.sub_publico == 1 {
-        self.controle(ui, "stadium", true);
-        ui.colored_label(if e { AZUL() } else { CINZA() }, if e {
-            self.t("Ligado: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade.",
-                "On: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price.")
-        } else {
-            self.t("Desligado: as obras do estádio são as do jogo original; os controles abaixo ficam sem efeito.", "Off: stadium works are the original game's; the controls below have no effect.")
-        });
-        ui.add_space(8.0);
-        ui.strong(self.t("O que o jogo faz sem motivo", "What the game does for no reason"));
-        for k in ["stadium_seating_growth", "stadium_reputation_trigger"] {
-            self.controle(ui, k, e);
-        }
-        ui.add_space(6.0);
-        ui.strong(self.t("Quando pode ampliar", "When it can expand"));
-        for k in ["stadium_occupancy_min", "stadium_full_seasons", "stadium_occupancy", "stadium_reserve"] {
-            self.controle(ui, k, e);
-        }
-        ui.add_space(6.0);
-        ui.strong(self.t("A obra", "The build"));
-        self.controle(ui, "stadium_size", e);
-        self.controle_custo(ui, e);
-        for k in ["stadium_ceiling_zero", "stadium_max"] {
-            self.controle(ui, k, e);
-        }
-        }
-        if self.sub_publico != 2 {
-            return;
-        }
-        // ---- o clube de exemplo ----
-        let g = |s: &App, k: &str| s.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
-        let (trad, reprimida, por_pos, piso) = (g(self, "tradition_per_place") / 100.0, g(self, "pent_up_demand") / 100.0, g(self, "attendance_per_place") / 100.0, self.ligado("attendance_floor"));
-        let (mata, grande) = (p && self.ligado("knockout_ceiling"), p && self.ligado("title_race"));
-        let extra = 1.0 + (g(self, "title_race_max") + g(self, "title_race_top2")) / 100.0;
-        let (cap, media, recorde, historico) = (30000.0f64, 12000.0f64, 18000.0f64, 26000.0f64);
-        let um = |x: f64| self.milhar(x);
-        let mut linhas: Vec<(String, String)> = Vec::new();
-        for (dif, pt, en_) in [(0i32, "Terminou onde se previa", "Finished where predicted"), (4, "Terminou 4 posições acima", "Finished 4 places above"), (-4, "Terminou 4 posições abaixo", "Finished 4 places below")] {
-            let r = if !p {
-                match dif { 0 => um(media * 1.025), d if d > 0 => um(media * 1.08), _ => um(media) }
-            } else {
-                let mut nova = media * (1.0 + por_pos * dif as f64);
-                if dif >= 2 && trad > 0.0 {
-                    nova += (trad * dif as f64).min(1.0) * (historico - nova);
-                }
-                if dif < 0 && piso {
-                    nova = nova.max(media); // o piso: este clube ainda não tinha ganho nada pela nossa regra
-                }
-                um(nova.min(cap))
-            };
-            linhas.push((t2(en, pt, en_).to_string(), r));
-        }
-        let cl = if grande { (recorde * 1.5 * extra).min(cap) } else { (recorde * 1.5).min(cap) };
-        linhas.push((t2(en, "Teto de um jogo comum de liga", "Ceiling of an ordinary league match").to_string(), um(recorde)));
-        linhas.push((t2(en, "Clássico valendo o título", "Derby deciding the title").to_string(), um(cl)));
-        linhas.push((t2(en, "Semifinal de copa", "Cup semi-final").to_string(), um(if mata { cap } else { recorde })));
-        if reprimida > 0.0 && p {
-            linhas.push((t2(en, "Jogo com 6.000 pessoas de fora", "Match with 6,000 people left out").to_string(),
-                if en { format!("record goes from {} to {}", um(recorde), um(recorde + 6000.0 * reprimida)) } else { format!("recorde vai de {} a {}", um(recorde), um(recorde + 6000.0 * reprimida)) }));
-        }
-        let custo = match self.valor("stadium_seat_cost").as_str() { "original" => 100.0, "auto" => 1500.0, x => x.parse().unwrap_or(1500.0) };
-        let titulo = self.t("Um clube de exemplo", "An example club");
-        let descr = if en {
-            format!("Stadium of {} places, average crowd of {}, record of {} and a historical record of {}. Approximate values for the next season, with the settings above.", um(cap), um(media), um(recorde), um(historico))
-        } else {
-            format!("Estádio de {} lugares, média de {} pessoas, recorde de {} e recorde histórico de {}. Valores aproximados da temporada seguinte, com os ajustes acima.", um(cap), um(media), um(recorde), um(historico))
-        };
-        let obra = if !e {
-            t2(en, "Obras: as do jogo original (pode ampliar só pela reputação, e o estádio com lugares em pé cresce todo ano).", "Works: the original game's (it can expand on reputation alone, and a stadium with standing room grows every year).").to_string()
-        } else {
-            let lugares = 8000.0;
-            let (temp, occ) = (g(self, "stadium_full_seasons"), g(self, "stadium_occupancy_min"));
-            if en { format!("Works: after {} season(s) in a row above {}% full ({} a match), wanting about {} more places, it builds them for about {} (if it has that above its reserve).", temp, self.n(occ), um(cap * occ / 100.0), um(lugares), um(lugares * custo)) }
-            else { format!("Obras: depois de {} temporada(s) seguida(s) acima de {}% de ocupação ({} por jogo), com uns {} lugares a mais de demanda, constrói por uns {} (se tiver isso acima da reserva).", temp, self.n(occ), um(cap * occ / 100.0), um(lugares), um(lugares * custo)) }
-        };
-        App::cartao(ui, &titulo, |ui| {
-            ui.label(RichText::new(descr).size(12.5).color(FRASE()));
-            ui.add_space(4.0);
-            egui::Grid::new("publico_exemplo").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
-                for (a, b) in &linhas {
-                    ui.label(a);
-                    ui.label(RichText::new(b).strong().color(if p { AMARELO() } else { CINZA() }));
-                    ui.end_row();
+        let total = ui.available_width();
+        let esq = (total * 0.62).max(560.0);
+        ui.horizontal_top(|ui| {
+            ui.allocate_ui_with_layout(Vec2::new(esq, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(esq);
+                if self.sub_publico == 0 {
+                    let t = self.t("A média da temporada", "The season average");
+                    App::cartao(ui, &t, |ui| {
+                        for k in ["attendance_toward_real", "attendance_per_place", "tradition_per_place", "attendance_floor"] {
+                            self.controle(ui, k, p);
+                        }
+                    });
+                    let t = self.t("Tetos pela divisão", "Caps by division");
+                    App::cartao(ui, &t, |ui| {
+                        for k in ["attendance_cap_weak", "attendance_cap_mid", "attendance_cap_strong"] {
+                            self.controle(ui, k, p);
+                        }
+                    });
+                    let t = self.t("Cada jogo", "Each match");
+                    App::cartao(ui, &t, |ui| {
+                        for k in ["attendance_record", "pent_up_demand", "weak_league_limit"] {
+                            self.controle(ui, k, p);
+                        }
+                        let corte = p && self.valor("weak_league_limit").parse::<f64>().unwrap_or(0.0) > 0.0;
+                        self.controle(ui, "weak_league_keep", corte);
+                        self.controle(ui, "knockout_ceiling", p);
+                        self.controle(ui, "title_race", p);
+                        let grande = p && self.ligado("title_race");
+                        for k in ["title_race_max", "title_race_top2"] {
+                            self.controle(ui, k, grande);
+                        }
+                    });
+                } else {
+                    let t = self.t("O que o jogo faz sem motivo", "What the game does for no reason");
+                    App::cartao(ui, &t, |ui| {
+                        for k in ["stadium_seating_growth", "stadium_reputation_trigger"] {
+                            self.controle(ui, k, e);
+                        }
+                    });
+                    let t = self.t("Quando pode ampliar", "When it can expand");
+                    App::cartao(ui, &t, |ui| {
+                        for k in ["stadium_occupancy_min", "stadium_full_seasons", "stadium_occupancy", "stadium_reserve"] {
+                            self.controle(ui, k, e);
+                        }
+                    });
+                    let t = self.t("A obra", "The build");
+                    App::cartao(ui, &t, |ui| {
+                        self.controle(ui, "stadium_size", e);
+                        self.controle_custo(ui, e);
+                        for k in ["stadium_ceiling_zero", "stadium_max"] {
+                            self.controle(ui, k, e);
+                        }
+                    });
                 }
             });
+            ui.add_space(18.0);
+            let dir = ui.available_width();
+            ui.allocate_ui_with_layout(Vec2::new(dir, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(dir);
+                self.ao_vivo(ui, p, e);
+                ui.add_space(16.0);
+                // o que está diferente do jogo original nesta página
+                let chaves_da_aba: Vec<&chaves::Chave> = chaves::CHAVES.iter().filter(|c| c.aba == Aba::Publico).collect();
+                let difs: Vec<&str> = chaves_da_aba.iter().filter(|c| original_de(c.nome).is_some_and(|o| {
+                    let v = self.valor(c.nome);
+                    match (o.parse::<f64>(), v.parse::<f64>()) { (Ok(a), Ok(b)) => (a - b).abs() > 1e-9, _ => o != v }
+                })).map(|c| if en { c.rotulo.1 } else { c.rotulo.0 }).collect();
+                painel(ui, true, |ui| {
+                    etiqueta(ui, t2(en, "diferente do original", "different from the original"), Color32::from_white_alpha(18), Color32::from_rgb(0x9f, 0xd3, 0xb2));
+                    ui.horizontal(|ui| {
+                        ui.label(titulo(difs.len().to_string(), 52.0));
+                        ui.label(RichText::new(t2(en, "valores nesta página", "values on this page")).size(15.0).color(Color32::from_rgb(0x9a, 0xa3, 0x9e)));
+                    });
+                    ui.add(egui::Label::new(RichText::new(difs.join(" · ")).size(13.0).color(Color32::from_rgb(0x9a, 0xa3, 0x9e))).wrap());
+                });
+            });
+        });
+    }
+
+    /// O cartão "ao vivo": o clube de exemplo responde aos ajustes enquanto se mexe.
+    fn ao_vivo(&self, ui: &mut egui::Ui, p: bool, e: bool) {
+        let en = self.en;
+        let g = |k: &str| self.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
+        let um = |x: f64| self.milhar(x);
+        let (cap, media, recorde, historico) = (30000.0f64, 12000.0f64, 18000.0f64, 26000.0f64);
+        let mut linhas: Vec<(String, String, i8)> = Vec::new();
+        if self.sub_publico == 0 {
+            let (trad, por_pos, piso) = (g("tradition_per_place") / 100.0, g("attendance_per_place") / 100.0, self.ligado("attendance_floor"));
+            for (dif, pt, en_) in [(4i32, "Terminou 4 acima", "Finished 4 above"), (0, "Terminou no previsto", "Finished as predicted"), (-4, "Terminou 4 abaixo", "Finished 4 below")] {
+                let v = if !p { match dif { 0 => media * 1.025, d if d > 0 => media * 1.08, _ => media } } else {
+                    let mut nova = media * (1.0 + por_pos * dif as f64);
+                    if dif >= 2 && trad > 0.0 { nova += (trad * dif as f64).min(1.0) * (historico - nova); }
+                    if dif < 0 && piso { nova = nova.max(media); }
+                    nova.min(cap)
+                };
+                linhas.push((t2(en, pt, en_).to_string(), um(v), if v > media * 1.01 { 1 } else if v < media * 0.99 { -1 } else { 0 }));
+            }
+            let extra = 1.0 + (g("title_race_max") + g("title_race_top2")) / 100.0;
+            let cl = if p && self.ligado("title_race") { (recorde * 1.5 * extra).min(cap) } else { (recorde * 1.5).min(cap) };
+            linhas.push((t2(en, "Clássico valendo o título", "Derby deciding the title").to_string(), um(cl), 1));
+            linhas.push((t2(en, "Semifinal de copa", "Cup semi-final").to_string(), um(if p && self.ligado("knockout_ceiling") { cap } else { recorde }), 0));
+        } else {
+            let occ = g("stadium_occupancy_min");
+            let custo = match self.valor("stadium_seat_cost").as_str() { "original" => 100.0, "auto" => 1500.0, x => x.parse().unwrap_or(1500.0) };
+            linhas.push((t2(en, "Média para a temporada contar", "Average for the season to count").to_string(), um(cap * occ / 100.0), 0));
+            linhas.push((t2(en, "Temporadas cheias seguidas", "Full seasons in a row").to_string(), format!("{}", g("stadium_full_seasons") as i32), 0));
+            linhas.push((t2(en, "8.000 lugares novos custam", "8,000 new places cost").to_string(), um(8000.0 * if e { custo } else { 100.0 }), 0));
+            linhas.push((t2(en, "Reserva que a obra não toca", "Reserve the build won't touch").to_string(), um(g("stadium_reserve")), 0));
+        }
+        painel(ui, false, |ui| {
+            etiqueta(ui, t2(en, "ao vivo · clube de exemplo", "live · example club"), fundo_resultado(), AMARELO());
             ui.add_space(4.0);
-            ui.label(RichText::new(obra).size(12.5).color(if e { AMARELO() } else { CINZA() }));
-            ui.label(RichText::new(t2(en, "Conta simplificada, para dar a ideia: no jogo, cada partida também pesa o adversário, a distância e a fase da temporada.", "A simplified sum, to give the idea: in the game, each match also weighs the opponent, the distance and the stage of the season.")).size(11.5).color(CINZA()));
+            ui.label(RichText::new(if en { format!("Stadium of {} · average of {}", um(cap), um(media)) } else { format!("Estádio de {} · média de {}", um(cap), um(media)) }).size(13.0).color(CINZA()));
+            ui.add_space(6.0);
+            for (a, b, sinal) in &linhas {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(a).size(14.0).color(FRASE()));
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(RichText::new(b).monospace().size(22.0).color(match sinal { 1 => VERDE(), -1 => VERMELHO(), _ => ui.visuals().strong_text_color() }));
+                    });
+                });
+                ui.add_space(6.0);
+            }
         });
     }
 
@@ -1605,13 +1692,13 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let estados = self.estados();
         let alerta: Vec<&str> = estados.iter().filter(|l| matches!(l.estado, Estado::Sobrescreve | Estado::Desconhecido)).map(|l| l.ajuste).collect();
-        egui::TopBottomPanel::top("topo").show(ctx, |ui| {
+        egui::TopBottomPanel::top("topo").frame(egui::Frame::new().fill(FUNDO()).inner_margin(egui::Margin { left: 22, right: 22, top: 14, bottom: 10 })).show(ctx, |ui| {
             ui.add_space(4.0);
             ui.horizontal(|ui| {
                 ui.label(titulo("CM0102 Rust Tweaks", 20.0).color(VERDE()));
                 ui.separator();
                 ui.label(self.t("Pasta do jogo:", "Game folder:"));
-                ui.add(egui::TextEdit::singleline(&mut self.pasta_digitada).desired_width(320.0));
+                ui.add(egui::TextEdit::singleline(&mut self.pasta_digitada).desired_width(220.0));
                 if ui.button("…").on_hover_text(self.t("Escolher a pasta do jogo", "Choose the game folder")).clicked() {
                     if let Some(p) = rfd::FileDialog::new().set_directory(&self.pasta).pick_folder() {
                         self.pasta_digitada = p.display().to_string();
@@ -1631,7 +1718,7 @@ impl eframe::App for App {
                 };
                 let mut escolha = None;
                 let en = self.en;
-                egui::ComboBox::from_id_salt("predef").width(240.0).selected_text(rotulo).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("predef").width(190.0).selected_text(rotulo).show_ui(ui, |ui| {
                     for (i, p) in PREDEFINICOES.iter().enumerate() {
                         if ui.selectable_label(atual == Some(i), if en { p.1 } else { p.0 }).clicked() {
                             escolha = Some(i);
@@ -1653,11 +1740,13 @@ impl eframe::App for App {
                 }
                 ui.separator();
                 let m = self.mudancas();
-                if ui.add_enabled(m > 0 || !self.existe, egui::Button::new(RichText::new(self.t("Gravar", "Save")).strong())).clicked() {
+                let rotulo_gravar = if m > 0 { if self.en { format!("Save {} change(s)", m) } else { format!("Gravar {} alteração(ões)", m) } } else { self.t("Gravar", "Save") };
+                if ui.add_enabled(m > 0 || !self.existe, egui::Button::new(RichText::new(rotulo_gravar).size(15.0).color(Color32::WHITE))
+                    .fill(Color32::from_rgb(0x14, 0x18, 0x15)).corner_radius(99.0).min_size(Vec2::new(150.0, 34.0))).clicked() {
                     self.gravar();
                 }
                 let antes = self.en;
-                egui::ComboBox::from_id_salt("idioma").width(110.0).selected_text(if self.en { "English" } else { "Português" }).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("idioma").width(100.0).selected_text(if self.en { "English" } else { "Português" }).show_ui(ui, |ui| {
                     ui.selectable_value(&mut self.en, true, "English");
                     ui.selectable_value(&mut self.en, false, "Português");
                 });
@@ -1666,7 +1755,7 @@ impl eframe::App for App {
                 }
                 let mut c = claro();
                 let antes = c;
-                egui::ComboBox::from_id_salt("tema").width(110.0).selected_text(if c { self.t("Claro", "Light") } else { self.t("Escuro", "Dark") }).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("tema").width(90.0).selected_text(if c { self.t("Claro", "Light") } else { self.t("Escuro", "Dark") }).show_ui(ui, |ui| {
                     ui.selectable_value(&mut c, true, self.t("Claro", "Light"));
                     ui.selectable_value(&mut c, false, self.t("Escuro", "Dark"));
                 });
@@ -1717,7 +1806,7 @@ impl eframe::App for App {
                 self.pendente = None;
             }
         }
-        egui::TopBottomPanel::bottom("rodape").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom("rodape").frame(egui::Frame::new().fill(FUNDO()).inner_margin(egui::Margin::symmetric(22, 8))).show(ctx, |ui| {
             ui.horizontal(|ui| {
                 let m = self.mudancas();
                 ui.label(format!("{} {}", m, self.t("linha(s) não gravada(s)", "unsaved line(s)")));
@@ -1729,14 +1818,16 @@ impl eframe::App for App {
                 }
             });
         });
-        egui::SidePanel::left("abas").resizable(false).exact_width(300.0).show(ctx, |ui| {
-            ui.add_space(8.0);
+        egui::SidePanel::left("abas").resizable(false).exact_width(300.0).frame(egui::Frame::new().fill(FUNDO()).inner_margin(egui::Margin { left: 22, right: 12, top: 6, bottom: 16 })).show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+            painel(ui, false, |ui| {
             ui.horizontal(|ui| {
                 let mut tudo: Option<bool> = None;
-                if ui.button(self.t("Ligar tudo", "Turn all on")).on_hover_text(self.t("Liga todos os ajustes da carreira e a correção do elenco, com os nossos valores.", "Turns on every career tweak and the squad fix, with our values.")).clicked() {
+                let pilula = |t: String| egui::Button::new(RichText::new(t).size(13.5)).corner_radius(99.0).min_size(Vec2::new(0.0, 28.0));
+                if ui.add(pilula(self.t("Ligar tudo", "Turn all on"))).on_hover_text(self.t("Liga todos os ajustes da carreira e a correção do elenco, com os nossos valores.", "Turns on every career tweak and the squad fix, with our values.")).clicked() {
                     tudo = Some(true);
                 }
-                if ui.button(self.t("Desligar tudo", "Turn all off")).on_hover_text(self.t("Desliga todos os ajustes da carreira e a correção do elenco: o jogo fica como o original. A instalação (save, pasta, tela) fica como está.", "Turns off every career tweak and the squad fix: the game stays as the original. The install (save, folder, screen) stays as it is.")).clicked() {
+                if ui.add(pilula(self.t("Desligar tudo", "Turn all off"))).on_hover_text(self.t("Desliga todos os ajustes da carreira e a correção do elenco: o jogo fica como o original. A instalação (save, pasta, tela) fica como está.", "Turns off every career tweak and the squad fix: the game stays as the original. The install (save, folder, screen) stays as it is.")).clicked() {
                     tudo = Some(false);
                 }
                 if let Some(on) = tudo {
@@ -1748,43 +1839,46 @@ impl eframe::App for App {
                     self.definir("squad_guard", if on { "1" } else { "0" });
                 }
             });
-            ui.add_space(4.0);
             let mut grupo_atual = "";
             for (aba, pt, en, g_pt, g_en) in ABAS {
                 let grupo = if self.en { g_en } else { g_pt };
                 if grupo != grupo_atual {
                     grupo_atual = grupo;
-                    ui.add_space(8.0);
-                    ui.label(RichText::new(grupo.to_uppercase()).size(12.5).color(CINZA()));
+                    ui.add_space(12.0);
+                    ui.label(RichText::new(grupo.to_uppercase()).size(11.0).color(CINZA()).extra_letter_spacing(1.6));
                     ui.add_space(2.0);
                 }
                 let pior = CHAVES.iter().filter(|c| c.aba == aba).filter_map(|c| estados.iter().find(|l| l.ajuste == c.nome)).map(|l| l.estado)
                     .filter(|e| *e != Estado::Desligado).max();
-                ui.horizontal(|ui| {
-                    if !grupo.is_empty() {
-                        ui.add_space(4.0);
-                    }
-                    let mestres = chaves::mestres(aba);
-                    if mestres.is_empty() {
-                        ui.add_space(42.0);
-                    } else {
-                        let on = mestres.iter().any(|&(k, ..)| chaves::ligado(k, &self.valor(k)));
-                        if interruptor(ui, on).on_hover_text(if on { self.t("Ligado: clique para desligar (fica como o jogo original).", "On: click to turn off (stays as the original game).") } else { self.t("Desligado: clique para ligar com os nossos valores.", "Off: click to turn on with our values.") }).clicked() {
-                            for &(k, sim, nao) in mestres {
-                                self.definir(k, if on { nao } else { sim });
-                            }
+                let atual = self.aba == aba;
+                let fundo = if atual { if claro() { Color32::from_rgb(0xee, 0xf3, 0xef) } else { Color32::from_rgb(0x24, 0x2d, 0x28) } } else { Color32::TRANSPARENT };
+                egui::Frame::new().fill(fundo).corner_radius(14.0).inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        let r = ui.add(egui::Label::new(RichText::new(if self.en { en } else { pt }).size(15.5)).sense(Sense::click()))
+                            .on_hover_cursor(egui::CursorIcon::PointingHand);
+                        if r.clicked() {
+                            self.aba = aba;
                         }
-                    }
-                    if ui.selectable_label(self.aba == aba, RichText::new(if self.en { en } else { pt }).size(16.0)).clicked() {
-                        self.aba = aba;
-                    }
-                    if let Some(e) = pior {
-                        bolinha(ui, cor(e));
-                        ui.label("").on_hover_text(nome_do_estado(e, self.en));
-                    }
+                        if let Some(e) = pior {
+                            bolinha(ui, cor(e)).on_hover_text(nome_do_estado(e, self.en));
+                        }
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            let mestres = chaves::mestres(aba);
+                            if !mestres.is_empty() {
+                                let on = mestres.iter().any(|&(k, ..)| chaves::ligado(k, &self.valor(k)));
+                                if interruptor(ui, on).on_hover_text(if on { self.t("Ligado: clique para desligar (fica como o jogo original).", "On: click to turn off (stays as the original game).") } else { self.t("Desligado: clique para ligar com os nossos valores.", "Off: click to turn on with our values.") }).clicked() {
+                                    for &(k, sim, nao) in mestres {
+                                        self.definir(k, if on { nao } else { sim });
+                                    }
+                                }
+                            }
+                        });
+                    });
                 });
-                ui.add_space(3.0);
             }
+            });
+            });
         });
         if let Some(k) = self.popup {
             // a ajuda completa: o texto prático, a chave e o comentário técnico do tweaks.cfg e, neste exe, o estado
@@ -1820,7 +1914,7 @@ impl eframe::App for App {
                 self.popup = None;
             }
         }
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().frame(egui::Frame::new().fill(FUNDO()).inner_margin(egui::Margin { left: 10, right: 26, top: 6, bottom: 6 })).show(ctx, |ui| {
             let mut area = egui::ScrollArea::vertical().auto_shrink([false, false]);
             // só para as capturas de tela da documentação: começar rolado
             if let Some(y) = std::env::var("TWEAKS_CONFIG_ROLAR").ok().and_then(|v| v.parse::<f32>().ok()) {
@@ -1904,7 +1998,7 @@ fn main() -> eframe::Result {
         .unwrap_or_else(|| PathBuf::from("."));
     let opcoes = eframe::NativeOptions {
         viewport: {
-            let v = egui::ViewportBuilder::default().with_inner_size([1280.0, 820.0]).with_title("CM0102 Rust Tweaks");
+            let v = egui::ViewportBuilder::default().with_inner_size([1440.0, 900.0]).with_title("CM0102 Rust Tweaks");
             // o ícone da janela (o do exe vem do build.rs)
             match eframe::icon_data::from_png_bytes(include_bytes!("../../assets/icon/cm0102-rust-tweaks-icon-256px.png")) {
                 Ok(i) => v.with_icon(std::sync::Arc::new(i)),
@@ -1937,7 +2031,8 @@ fn main() -> eframe::Result {
             s.text_styles.insert(Monospace, FontId::monospace(15.0));
             s.spacing.item_spacing = Vec2::new(10.0, 7.0);
             s.spacing.button_padding = Vec2::new(10.0, 5.0);
-            s.spacing.interact_size.y = 26.0;
+            s.spacing.interact_size.y = 28.0;
+
         });
         cc.egui_ctx.set_visuals(visual());
         // as dicas do "?" trazem explicações de várias linhas: mais largas que o padrão

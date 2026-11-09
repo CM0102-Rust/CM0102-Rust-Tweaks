@@ -146,6 +146,12 @@ pub const IDADES_PADRAO: [(f64, i32); 22] = [
     (0.0, -1), (0.0, -1), (0.0, -1),
 ];
 
+impl Chave {
+    pub fn tipo_nome(&self) -> &'static str {
+        match self.tipo { Tipo::Liga => "liga", Tipo::Escolha(_) => "escolha", Tipo::Numero { .. } => "numero" }
+    }
+}
+
 pub fn chave(nome: &str) -> Option<&'static Chave> {
     CHAVES.iter().find(|c| c.nome == nome)
 }
