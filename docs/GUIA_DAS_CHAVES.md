@@ -4,6 +4,56 @@
 
 Cada opção: o que faz, quando usar e o que acontece no jogo. Sem a linha no `tweaks.cfg`, vale o padrão indicado (o da DLL). O comentário de cada linha do `tweaks.cfg` traz o detalhe técnico.
 
+## Fornada de regens
+
+A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol). Com ela ligada, você joga de outro jeito: os regens chegam todos de uma vez, num dia do ano, e todo clube com vaga recebe o mesmo número deles. Regen é regen: venha de um aposentado ou criado pela DLL, todos nascem pela rotina do jogo e vão para os clubes pela curva da aba Disputa dos clubes. O máximo por ano e o teto do elenco da aba Disputa dos clubes deixam de valer, porque a cota da fornada é o limite. O seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
+
+- **Regens criados**: quando as aposentadorias não bastam para a cota de todos os clubes, a DLL cria os que faltam: a pessoa vem de uma reserva criada junto com a carreira nova (até 50 mil, conforme a folga do banco), e a ficha é a mistura de duas fichas de aposentados do país na mesma posição (as posições e os pés de uma, cada atributo de uma das duas, o PA entre os dois). Depois, nascem pela mesma rotina do jogo que qualquer regen.
+- **Cota**: quantos regens um clube recebe na fornada: o número escolhido, limitado às vagas do elenco (50) no dia.
+- **Fim da temporada**: o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.
+
+### Fornada — `intake`
+
+Liga a fornada, o "Youth Intake" do Football Manager. Regen é regen: a fornada muda só duas coisas. A data: os regens só nascem no dia da fornada (quem se aposenta espera na fila do jogo até lá). A quantidade: todo clube com vaga no elenco recebe o número escolhido abaixo. Para qual clube vai cada regen, quem decide é a curva da aba Disputa dos clubes (nível, instalações, comissão, surpresa, temperatura); o máximo por ano e o teto do elenco da aba Disputa dos clubes não valem, porque a cota da fornada é o limite. Quando as aposentadorias não bastam para todos, a DLL cria os regens que faltam, com pessoas criadas junto com a carreira e a ficha misturada de dois aposentados do país na mesma posição. Só numa carreira nova.
+
+Valores: `0` (Desligada (regens ao longo da temporada)), `1` (Ligada (só numa carreira nova)). Padrão: `0`.
+
+### Regens por clube em cada fornada — `intake_per_club`
+
+Quantos regens cada clube recebe em cada fornada, limitado às vagas do elenco (50): com 2 vagas, chegam 2; sem vaga, nenhum, e o seu clube recebe uma mensagem dizendo isso. A vaga é contada no próprio dia: dá para liberar jogadores até a véspera. O seu clube recebe pela mesma regra. Os regens de um país são distribuídos do maior PA para o menor, cada um sorteado pela curva entre os clubes que ainda têm vaga na cota; os que sobram vão para a disputa normal do país.
+
+Valores: de 1 a 20 (inteiro). Padrão: `3`.
+
+### Dia da fornada — `intake_day`
+
+O dia em que os regens chegam. No fim da temporada (o padrão), cada país quando a temporada dele acaba (o Brasil no começo do ano, a Inglaterra e a Itália no meio); os países fora da lista dos 35 principais do jogo recebem no dia 181. Num dia fixo (contado de 0 = 1º de janeiro; 181 = 1º de julho), todos os países juntos. No tweaks.cfg vale qualquer dia de 0 a 365.
+
+Valores: `season_end` (Fim da temporada de cada nação), `181` (1º de julho (dia 181), para todos), `0` (1º de janeiro (dia 0), para todos). Padrão: `season_end`.
+
+### Clubes que recebem — `intake_clubs`
+
+Quais clubes recebem a cota: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira. Os países de fora seguem o caminho original do jogo.
+
+Valores: `playable` (Ligas jogáveis), `selected` (Também as ligas de fundo). Padrão: `playable`.
+
+### Dia das aposentadorias — `retire_day`
+
+O dia do ano das aposentadorias de jogadores. No jogo original, cada um se aposenta numa data própria (em geral o fim da temporada do país). Com um dia (contado de 0 = 1º de janeiro), todas as aposentadorias marcadas a partir de agora acontecem nele; um pouco antes da fornada, quem se aposenta já nasce na fornada seguinte. Vale com ou sem a fornada. No tweaks.cfg vale qualquer dia de 0 a 365.
+
+Valores: `original` (Datas do próprio jogo), `174` (24 de junho (dia 174, uma semana antes do 1º de julho)), `358` (24 de dezembro (dia 358)). Padrão: `original`.
+
+### Mensagem da fornada — `intake_news`
+
+No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com todos os regens que chegaram e o parecer sobre cada um (ou o aviso de que ninguém pôde chegar por falta de vaga): se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo. As frases ficam no intake_news.txt, ao lado do exe, uma seção para cada uma das 19 línguas do jogo: dá para editar ou traduzir (português, espanhol, inglês, francês, alemão, italiano, holandês, dinamarquês, norueguês e sueco já vêm traduzidos). Sem a DLL, a mensagem aparece numa linha curta.
+
+Valores: `1` (Mensagem na caixa de entrada), `0` (Sem mensagem). Padrão: `1`.
+
+### Na mensagem — `intake_news_numbers`
+
+Mostrar também o CA e o PA de cada jovem na mensagem. Desligado, fica só o parecer do treinador, e a graça é descobrir o jogador.
+
+Valores: `0` (Só o parecer do treinador), `1` (Parecer, CA e PA). Padrão: `0`.
+
 ## Idades dos regens
 
 Com que idade nasce cada regen, e com quanto CA. As barras são as idades de 14 a 35: a altura é a chance de nascer com aquela idade, e o número embaixo é o teto do CA. Clique numa barra para escolhê-la e arraste para mudar a chance. Os ajustes valem para os regens que nascerem dali em diante, também num save em andamento.
@@ -259,55 +309,112 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
-## Fornada de regens
+## Público e estádio
 
-A fornada de regens (o Youth Intake do Football Manager; hornada no espanhol). Com ela ligada, você joga de outro jeito: os regens chegam todos de uma vez, num dia do ano, e todo clube com vaga recebe o mesmo número deles. Regen é regen: venha de um aposentado ou criado pela DLL, todos nascem pela rotina do jogo e vão para os clubes pela curva da aba Disputa dos clubes. O máximo por ano e o teto do elenco da aba Disputa dos clubes deixam de valer, porque a cota da fornada é o limite. O seu clube recebe uma mensagem do treinador da base. Só vale numa carreira NOVA.
+Quanta gente vai ao estádio e quando o estádio cresce. O público é a torcida × o momento × o jogo: cresce pelo que acontece em campo e esfria quando o time volta ao esperado. A parte de cima é o público de cada jogo e da temporada; a de baixo, as obras do estádio. Cada parte tem o seu interruptor: desligado, aquela parte fica como no jogo original. O clube de exemplo no fim mostra o que os ajustes fazem com números.
 
-- **Regens criados**: quando as aposentadorias não bastam para a cota de todos os clubes, a DLL cria os que faltam: a pessoa vem de uma reserva criada junto com a carreira nova (até 50 mil, conforme a folga do banco), e a ficha é a mistura de duas fichas de aposentados do país na mesma posição (as posições e os pés de uma, cada atributo de uma das duas, o PA entre os dois). Depois, nascem pela mesma rotina do jogo que qualquer regen.
-- **Cota**: quantos regens um clube recebe na fornada: o número escolhido, limitado às vagas do elenco (50) no dia.
-- **Fim da temporada**: o dia em que o jogo fecha a temporada de cada nação (a mesma data das finanças e das obras do estádio). Na Inglaterra é perto de junho; no Brasil, de dezembro.
+- **Média de público**: quantas pessoas o clube leva por jogo, em média. É a base de cada jogo e muda no fim de cada temporada.
+- **Esperado**: a posição que o próprio jogo prevê para cada clube no começo da temporada, pela força dos elencos. Ir melhor ou pior que o previsto é o que move o público.
+- **Recorde**: o teto do público de um jogo comum. Clássicos, mata-matas e jogos grandes podem passar dele.
+- **Piso do original**: a média que o clube teria no jogo original, calculada temporada a temporada. Quem vai mal perde o que ganhou pela nossa regra, mas nunca fica abaixo dela. Ela é guardada num arquivo ao lado do save (.publico).
+- **Demanda**: quanta gente quis vir a um jogo, antes de o recorde e o estádio cortarem. É a medida de quem ficou de fora.
+- **Ocupação**: o público dividido pela capacidade do estádio. 92% ou mais por duas temporadas deixam o clube apto a ampliar.
 
-### Fornada — `intake`
+### Público — `attendance`
 
-Liga a fornada, o "Youth Intake" do Football Manager. Regen é regen: a fornada muda só duas coisas. A data: os regens só nascem no dia da fornada (quem se aposenta espera na fila do jogo até lá). A quantidade: todo clube com vaga no elenco recebe o número escolhido abaixo. Para qual clube vai cada regen, quem decide é a curva da aba Disputa dos clubes (nível, instalações, comissão, surpresa, temperatura); o máximo por ano e o teto do elenco da aba Disputa dos clubes não valem, porque a cota da fornada é o limite. Quando as aposentadorias não bastam para todos, a DLL cria os regens que faltam, com pessoas criadas junto com a carreira e a ficha misturada de dois aposentados do país na mesma posição. Só numa carreira nova.
+Liga a nossa regra do público: ele cresce com o que acontece em campo e esfria quando o time volta ao esperado. Quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde só o que ganhou por esta regra, nunca ficando abaixo do que o jogo original daria. Desligado, o público é o do jogo original, qualquer que seja o resto desta parte.
 
-Valores: `0` (Desligada (regens ao longo da temporada)), `1` (Ligada (só numa carreira nova)). Padrão: `0`.
+Valores: `off` (Desligado (o jogo original)), `on` (Ligado (a nossa regra)). Padrão: `on`.
 
-### Regens por clube em cada fornada — `intake_per_club`
+### Tetos pela divisão — `attendance_league_caps`
 
-Quantos regens cada clube recebe em cada fornada, limitado às vagas do elenco (50): com 2 vagas, chegam 2; sem vaga, nenhum, e o seu clube recebe uma mensagem dizendo isso. A vaga é contada no próprio dia: dá para liberar jogadores até a véspera. O seu clube recebe pela mesma regra. Os regens de um país são distribuídos do maior PA para o menor, cada um sorteado pela curva entre os clubes que ainda têm vaga na cota; os que sobram vão para a disputa normal do país.
+O jogo original segura a média de público de cada clube abaixo de um teto pela divisão, e nas divisões mais fracas corta o público de cada jogo acima de um limite (fica só 20% do que passa). É isso que impede um clube popular de divisão baixa de encher o estádio. Sem os tetos, quem decide é o desempenho.
 
-Valores: de 1 a 20 (inteiro). Padrão: `3`.
+Valores: `on` (Com os tetos do jogo), `off` (Sem os tetos (a nossa regra)). Padrão: `off`.
 
-### Dia da fornada — `intake_day`
+### Recorde do clube — `attendance_record`
 
-O dia em que os regens chegam. No fim da temporada (o padrão), cada país quando a temporada dele acaba (o Brasil no começo do ano, a Inglaterra e a Itália no meio); os países fora da lista dos 35 principais do jogo recebem no dia 181. Num dia fixo (contado de 0 = 1º de janeiro; 181 = 1º de julho), todos os países juntos. No tweaks.cfg vale qualquer dia de 0 a 365.
+O recorde do clube é o teto do público de um jogo comum. No original ele é o do banco de dados e só sobe com título ou acesso: o clube que faz uma ótima temporada sem ganhar nada fica preso nele. Com "o maior público que de fato veio", o recorde acompanha os jogos de verdade (clássicos, mata-matas e jogos grandes passam do recorde e o levantam).
 
-Valores: `season_end` (Fim da temporada de cada nação), `181` (1º de julho (dia 181), para todos), `0` (1º de janeiro (dia 0), para todos). Padrão: `season_end`.
+Valores: `fixed` (O do banco (só título ou acesso o sobem)), `real` (O maior público que de fato veio). Padrão: `real`.
 
-### Clubes que recebem — `intake_clubs`
+### Gente que ficou de fora vira recorde — `pent_up_demand`
 
-Quais clubes recebem a cota: os das ligas jogáveis, ou também os das ligas de fundo que você escolheu ao criar a carreira. Os países de fora seguem o caminho original do jogo.
+Quando mais gente quis vir do que o recorde deixou, parte dessa demanda vira recorde novo. É assim que um clube em ascensão vai abrindo espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.
 
-Valores: `playable` (Ligas jogáveis), `selected` (Também as ligas de fundo). Padrão: `playable`.
+Valores: de 0 a 1. Padrão: `0.1`.
 
-### Dia das aposentadorias — `retire_day`
+### Peso da tradição — `tradition_weight`
 
-O dia do ano das aposentadorias de jogadores. No jogo original, cada um se aposenta numa data própria (em geral o fim da temporada do país). Com um dia (contado de 0 = 1º de janeiro), todas as aposentadorias marcadas a partir de agora acontecem nele; um pouco antes da fornada, quem se aposenta já nasce na fornada seguinte. Vale com ou sem a fornada. No tweaks.cfg vale qualquer dia de 0 a 365.
+O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube de tradição volta a ir bem (2 posições ou mais acima do previsto), parte dessa torcida volta mais rápido. Um clube sem passado grande quase não muda.
 
-Valores: `original` (Datas do próprio jogo), `174` (24 de junho (dia 174, uma semana antes do 1º de julho)), `358` (24 de dezembro (dia 358)). Padrão: `original`.
+Valores: de 0 a 2. Padrão: `0.25`.
 
-### Mensagem da fornada — `intake_news`
+### Teto do mata-mata — `knockout_ceiling`
 
-No dia da fornada, o seu clube recebe na caixa de entrada uma mensagem do treinador da base com todos os regens que chegaram e o parecer sobre cada um (ou o aviso de que ninguém pôde chegar por falta de vaga): se já está pronto para o time principal (comparado com o seu elenco) e até onde pode chegar. Sai na língua do jogo. As frases ficam no intake_news.txt, ao lado do exe, uma seção para cada uma das 19 línguas do jogo: dá para editar ou traduzir (português, espanhol, inglês, francês, alemão, italiano, holandês, dinamarquês, norueguês e sueco já vêm traduzidos). Sem a DLL, a mensagem aparece numa linha curta.
+Num mata-mata (copa nacional, fases finais, continental) o interesse é maior. "Só o estádio" deixa o público ir até a capacidade; com "o recorde do clube", o mata-mata fica preso ao mesmo teto de um jogo comum, como no original.
 
-Valores: `1` (Mensagem na caixa de entrada), `0` (Sem mensagem). Padrão: `1`.
+Valores: `record` (O recorde do clube (como num jogo comum)), `stadium` (Só o estádio). Padrão: `stadium`.
 
-### Na mensagem — `intake_news_numbers`
+### Jogo grande pela tabela — `title_race`
 
-Mostrar também o CA e o PA de cada jovem na mensagem. Desligado, fica só o parecer do treinador, e a graça é descobrir o jogador.
+O jogo de liga entre dois clubes que ainda podem ser campeões leva mais gente, cada vez mais perto do fim da temporada. Se o jogo também for clássico, os dois efeitos se somam. Ninguém precisa configurar rivais: quem decide é a tabela.
 
-Valores: `0` (Só o parecer do treinador), `1` (Parecer, CA e PA). Padrão: `0`.
+Valores: `off` (Desligado), `on` (Ligado). Padrão: `on`.
+
+### Estádio — `stadium`
+
+Liga a nossa regra do estádio: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade. Desligado, o estádio é o do jogo original.
+
+Valores: `off` (Desligado (o jogo original)), `on` (Ligado (a nossa regra)). Padrão: `on`.
+
+### Lugares sentados somam na capacidade — `stadium_seating_growth`
+
+No original, quando um clube não amplia, ele converte lugares em pé em sentados, e o jogo soma os lugares novos também na capacidade: o estádio com espaço em pé cresce todo ano sozinho, mesmo vazio (nas nossas carreiras, o do Bahia passou de 115 mil para 134 mil com o público caindo). "Não cresce sozinho" tira esse crescimento.
+
+Valores: `on` (Cresce sozinho, mesmo vazio (original)), `off` (Não cresce sozinho). Padrão: `off`.
+
+### Ampliar pela reputação — `stadium_reputation_trigger`
+
+No original, um clube de reputação alta amplia o estádio mesmo sem público para isso. "Só por ocupação" deixa a ampliação depender só do estádio cheio.
+
+Valores: `on` (Amplia só pela reputação (original)), `off` (Só por ocupação). Padrão: `off`.
+
+### Temporadas lotado para poder ampliar — `stadium_full_seasons`
+
+Quantas temporadas seguidas o estádio precisa ficar acima de 92% de ocupação para o clube poder ampliar. Com 2, uma temporada boa não basta: é preciso sustentar. Poder ampliar não é ampliar: ainda é preciso dinheiro.
+
+Valores: de 1 a 2 (inteiro). Padrão: `2`.
+
+### O que conta na ocupação — `stadium_occupancy`
+
+O que entra na conta da ocupação. "Todos os jogos em casa" conta também copas e competições continentais: o clube que lota o mata-mata da Libertadores conta isso a favor do estádio novo.
+
+Valores: `league` (Só os jogos da liga (original)), `all` (Todos os jogos em casa). Padrão: `all`.
+
+### Tamanho da obra — `stadium_size`
+
+Quantos lugares a obra acrescenta. "O que a demanda medida pede": a média de gente que quis vir nos jogos em casa, até o teto do estádio. O tamanho fixo do jogo dá 21 mil lugares a quem tem dinheiro, precise ou não.
+
+Valores: `original` (O tamanho fixo do jogo), `demand` (O que a demanda medida pede). Padrão: `demand`.
+
+### Custo por lugar novo — `stadium_seat_cost`
+
+Quanto custa cada lugar novo, no dinheiro do banco que você joga. Automático: 1.500 por lugar no banco de 2001 (uma obra real da época custava de 1.000 a 3.500 libras por lugar), na proporção do caixa dos clubes grandes do banco carregado; num banco com o triplo de dinheiro, a obra custa o triplo. Um número fixa o valor por lugar. O do jogo (uns 100 por lugar) é tão barato que qualquer clube rico amplia sem sentir.
+
+Valores: `original` (O do jogo (uns 100 por lugar)), `auto` (Automático, pelo caixa do banco). Padrão: `auto`.
+
+### Estádio sem teto no banco — `stadium_ceiling_zero`
+
+Cada estádio tem no banco um teto de expansão (o que a cidade comporta), mas a maioria vem com zero. No original, esse teto sobe 1.500 por ano sem critério. "Pela demanda medida": o teto passa a ser a capacidade mais o que a demanda justifica.
+
+Valores: `original` (Sobe 1.500 por ano (original)), `demand` (Pela demanda medida). Padrão: `demand`.
+
+### Maior estádio que ainda amplia — `stadium_max`
+
+Acima desta capacidade, o estádio não amplia mais. O próprio jogo usa 125 mil.
+
+Valores: de 1000 a 10000000 (inteiro). Padrão: `125000`.
 
 ## De quem é cada regen
 
@@ -335,7 +442,7 @@ O save, a instalação, a tela e o CD. Estes ajustes não mudam as regras do jog
 
 Permite gravar e carregar saves acima de 2 GB (até 4 GB). Ligue se o seu save é grande (muitas ligas, carreira longa) ou se o jogo dá erro ao carregar. Desligado, um save acima de 2 GB não carrega. Não muda nada na carreira.
 
-Valores: `1` liga, `0` desliga. Padrão: `0` sem a linha; o `tweaks.cfg` distribuído vem com `1` (desde a 1.3).
+Valores: `1` liga, `0` desliga. Padrão: `0`.
 
 ### Pasta portátil (sem SetupReg) — `portable_folder`
 
@@ -378,6 +485,12 @@ Valores: `original` (A do exe), `1080` (1920×1080). Padrão: `original`.
 O jogo roda sem o CD. Se você já usa um NoCD (a LaMOHatesCD do CLZ, um exe sem CD), fica com ele.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+### Proteção do elenco (jogador repetido) — `squad_guard`
+
+Corrige um defeito do jogo: ele pode pôr no elenco um jogador que já está lá (visto ao mandar jogadores entre o clube e o time B). As cópias se acumulam até a escalação automática colocar o mesmo jogador em duas posições e mostrar a caixa "match_man.cpp 1225". A proteção apaga a cópia repetida na hora, antes de cada escalação e ao carregar um save (limpa também saves antigos). Cada cópia apagada vai para o tweaks.log.
+
+Valores: `1` liga, `0` desliga. Padrão: `1`.
 
 ## tweaks.log
 

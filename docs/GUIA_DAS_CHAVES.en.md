@@ -4,6 +4,56 @@
 
 Each option: what it does, when to use it and what happens in the game. Without the line in `tweaks.cfg`, the default shown applies (the DLL's). Each `tweaks.cfg` line's comment has the technical detail.
 
+## Youth intake
+
+The regen intake (Football Manager's Youth Intake; hornada in Spanish). With it on, you play a different way: regens all arrive at once, on one day of the year, and every club with room gets the same number of them. A regen is a regen: whether from a retired player or created by the DLL, they're all born through the game's routine and go to the clubs by the Clubs' contest tab's curve. The Clubs' contest tab's yearly maximum and squad limit stop applying, because the intake's quota is the limit. Your club gets a message from the youth coach. It only works in a NEW career.
+
+- **Created regens**: when retirements aren't enough for every club's quota, the DLL creates the missing ones: the person comes from a reserve created with the new career (up to 50 thousand, as the database's room allows), and the record is a mix of two records of the country's retired players in the same position (positions and feet from one, each attribute from one of the two, the PA between the two). Then they're born through the same game routine as any regen.
+- **Quota**: how many regens a club gets in the intake: the number chosen, limited to the squad's room (50) on the day.
+- **Season end**: the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December.
+
+### Intake — `intake`
+
+Turns on the intake, Football Manager's "Youth Intake". A regen is a regen: the intake changes only two things. The date: regens are only born on intake day (whoever retires waits in the game's queue until then). The number: every club with squad room gets the number chosen below. Which club each regen goes to is up to the Clubs' contest tab's curve (level, facilities, staff, surprise, temperature); the Clubs' contest tab's yearly maximum and squad limit don't apply, because the intake's quota is the limit. When retirements aren't enough for everyone, the DLL creates the missing regens, with people created along with the career and a record mixed from two of the country's retired players of the same position. New career only.
+
+Values: `0` (Off (regens through the season)), `1` (On (new career only)). Default: `0`.
+
+### Regens per club per intake — `intake_per_club`
+
+How many regens each club gets per intake, limited to the room in the squad (50): with 2 places, 2 arrive; with none, none, and your club gets a message saying so. Room is counted on the day itself: you can release players up to the day before. Your club gets them by the same rule. A country's regens are handed out from the highest PA down, each drawn by the curve among the clubs that still have a place in their quota; the ones left over go to the country's normal contest.
+
+Values: from 1 to 20 (whole number). Default: `3`.
+
+### Intake day — `intake_day`
+
+The day the regens arrive. At season end (the default), each country when its season ends (Brazil early in the year, England and Italy mid-year); countries outside the game's list of 35 main ones receive on day 181. On a fixed day (counted from 0 = 1 January; 181 = 1 July), every country at once. In tweaks.cfg any day from 0 to 365 works.
+
+Values: `season_end` (Each nation's season end), `181` (1 July (day 181), for everyone), `0` (1 January (day 0), for everyone). Default: `season_end`.
+
+### Clubs that get them — `intake_clubs`
+
+Which clubs get the quota: those of the playable leagues, or also those of the background leagues you chose when creating the career. The countries left out follow the game's original path.
+
+Values: `playable` (Playable leagues), `selected` (Background leagues too). Default: `playable`.
+
+### Retirement day — `retire_day`
+
+The day of the year for player retirements. In the original game each one retires on a date of its own (usually the country's season end). With a day (counted from 0 = 1 January), every retirement set from then on happens on it; a little before the intake, whoever retires is born in the next intake. Works with or without the intake. In tweaks.cfg any day from 0 to 365 works.
+
+Values: `original` (The game's own dates), `174` (24 June (day 174, a week before 1 July)), `358` (24 December (day 358)). Default: `original`.
+
+### Intake message — `intake_news`
+
+On intake day your club gets an inbox message from the youth coach with every regen who arrived and his view of each one (or the notice that nobody could come for lack of room): whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language. The phrases are in intake_news.txt, next to the exe, one section for each of the game's 19 languages: you can edit or translate them (Portuguese, Spanish, English, French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated). Without the DLL the message shows as one short line.
+
+Values: `1` (Inbox message), `0` (No message). Default: `1`.
+
+### In the message — `intake_news_numbers`
+
+Also show each youngster's CA and PA in the message. Off, there's only the coach's view, and the fun is finding out about the player.
+
+Values: `0` (Only the coach's view), `1` (View, CA and PA). Default: `0`.
+
 ## Regen ages
 
 At what age each regen is born, and with how much CA. The bars are the ages 14 to 35: the height is the chance of being born at that age, and the number below is the CA cap. Click a bar to pick it and drag to change the chance. The settings apply to regens born from then on, in a save in progress too.
@@ -259,55 +309,112 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
-## Youth intake
+## Attendance and stadium
 
-The regen intake (Football Manager's Youth Intake; hornada in Spanish). With it on, you play a different way: regens all arrive at once, on one day of the year, and every club with room gets the same number of them. A regen is a regen: whether from a retired player or created by the DLL, they're all born through the game's routine and go to the clubs by the Clubs' contest tab's curve. The Clubs' contest tab's yearly maximum and squad limit stop applying, because the intake's quota is the limit. Your club gets a message from the youth coach. It only works in a NEW career.
+How many people go to the stadium and when the stadium grows. Attendance is the support × the moment × the match: it grows with what happens on the pitch and cools when the team is back to what was expected. The top part is the crowd of each match and season; the bottom part, the stadium works. Each part has its own switch: off, that part stays as in the original game. The example club at the end shows what the settings do, with numbers.
 
-- **Created regens**: when retirements aren't enough for every club's quota, the DLL creates the missing ones: the person comes from a reserve created with the new career (up to 50 thousand, as the database's room allows), and the record is a mix of two records of the country's retired players in the same position (positions and feet from one, each attribute from one of the two, the PA between the two). Then they're born through the same game routine as any regen.
-- **Quota**: how many regens a club gets in the intake: the number chosen, limited to the squad's room (50) on the day.
-- **Season end**: the day the game closes each nation's season (the same date as finances and stadium works). In England it's around June; in Brazil, around December.
+- **Average crowd**: how many people the club draws per match, on average. It is the base of every match and changes at the end of each season.
+- **Expected**: the position the game itself predicts for each club at the start of the season, from the squads' strength. Doing better or worse than predicted is what moves the crowd.
+- **Record**: the ceiling of an ordinary match crowd. Derbies, knockouts and big matches can go past it.
+- **Original floor**: the average the club would have in the original game, worked out season by season. A club doing badly loses what it gained by our rule, but never goes below it. It is kept in a file next to the save (.publico).
+- **Demand**: how many people wanted to come to a match, before the record and the stadium cut it. It measures who was left outside.
+- **Occupancy**: the crowd divided by the stadium's capacity. 92% or more for two seasons makes a club able to expand.
 
-### Intake — `intake`
+### Attendance — `attendance`
 
-Turns on the intake, Football Manager's "Youth Intake". A regen is a regen: the intake changes only two things. The date: regens are only born on intake day (whoever retires waits in the game's queue until then). The number: every club with squad room gets the number chosen below. Which club each regen goes to is up to the Clubs' contest tab's curve (level, facilities, staff, surprise, temperature); the Clubs' contest tab's yearly maximum and squad limit don't apply, because the intake's quota is the limit. When retirements aren't enough for everyone, the DLL creates the missing regens, with people created along with the career and a record mixed from two of the country's retired players of the same position. New career only.
+Turns on our attendance rule: it grows with what happens on the pitch and cools when the team is back to what was expected. A club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse only loses what it gained by this rule, never going below what the original game would give. Off, attendance is the original game's, whatever the rest of this part says.
 
-Values: `0` (Off (regens through the season)), `1` (On (new career only)). Default: `0`.
+Values: `off` (Off (the original game)), `on` (On (our rule)). Default: `on`.
 
-### Regens per club per intake — `intake_per_club`
+### Caps by division — `attendance_league_caps`
 
-How many regens each club gets per intake, limited to the room in the squad (50): with 2 places, 2 arrive; with none, none, and your club gets a message saying so. Room is counted on the day itself: you can release players up to the day before. Your club gets them by the same rule. A country's regens are handed out from the highest PA down, each drawn by the curve among the clubs that still have a place in their quota; the ones left over go to the country's normal contest.
+The original game keeps each club's average crowd under a cap set by its division, and in the weakest divisions it cuts every match crowd above a limit (only 20% of the excess stays). That is what stops a popular club in a low division from filling its stadium. Without the caps, performance decides.
 
-Values: from 1 to 20 (whole number). Default: `3`.
+Values: `on` (With the game's caps), `off` (Without the caps (our rule)). Default: `off`.
 
-### Intake day — `intake_day`
+### The club's record — `attendance_record`
 
-The day the regens arrive. At season end (the default), each country when its season ends (Brazil early in the year, England and Italy mid-year); countries outside the game's list of 35 main ones receive on day 181. On a fixed day (counted from 0 = 1 January; 181 = 1 July), every country at once. In tweaks.cfg any day from 0 to 365 works.
+The club's record is the ceiling of an ordinary match crowd. In the original it is the database's and only a title or a promotion raises it: a club with a great season that wins nothing is stuck under it. With "the largest crowd that really came", the record follows the real matches (derbies, knockouts and big matches go past it and lift it).
 
-Values: `season_end` (Each nation's season end), `181` (1 July (day 181), for everyone), `0` (1 January (day 0), for everyone). Default: `season_end`.
+Values: `fixed` (The database's (only a title or promotion raises it)), `real` (The largest crowd that really came). Default: `real`.
 
-### Clubs that get them — `intake_clubs`
+### People left out become a record — `pent_up_demand`
 
-Which clubs get the quota: those of the playable leagues, or also those of the background leagues you chose when creating the career. The countries left out follow the game's original path.
+When more people wanted to come than the record allowed, part of that demand becomes a new record. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.
 
-Values: `playable` (Playable leagues), `selected` (Background leagues too). Default: `playable`.
+Values: from 0 to 1. Default: `0.1`.
 
-### Retirement day — `retire_day`
+### Weight of tradition — `tradition_weight`
 
-The day of the year for player retirements. In the original game each one retires on a date of its own (usually the country's season end). With a day (counted from 0 = 1 January), every retirement set from then on happens on it; a little before the intake, whoever retires is born in the next intake. Works with or without the intake. In tweaks.cfg any day from 0 to 365 works.
+The database's historical record shows the crowd a club once had. When a club with tradition does well again (2 or more places above the prediction), part of that crowd comes back faster. A club without a big past hardly changes.
 
-Values: `original` (The game's own dates), `174` (24 June (day 174, a week before 1 July)), `358` (24 December (day 358)). Default: `original`.
+Values: from 0 to 2. Default: `0.25`.
 
-### Intake message — `intake_news`
+### Knockout ceiling — `knockout_ceiling`
 
-On intake day your club gets an inbox message from the youth coach with every regen who arrived and his view of each one (or the notice that nobody could come for lack of room): whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language. The phrases are in intake_news.txt, next to the exe, one section for each of the game's 19 languages: you can edit or translate them (Portuguese, Spanish, English, French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated). Without the DLL the message shows as one short line.
+In a knockout round (domestic cup, final stages, continental) interest is higher. "Only the stadium" lets the crowd go up to capacity; with "the club's record", the knockout is stuck under the same ceiling as an ordinary match, as in the original.
 
-Values: `1` (Inbox message), `0` (No message). Default: `1`.
+Values: `record` (The club's record (as in an ordinary match)), `stadium` (Only the stadium). Default: `stadium`.
 
-### In the message — `intake_news_numbers`
+### Big match by the table — `title_race`
 
-Also show each youngster's CA and PA in the message. Off, there's only the coach's view, and the fun is finding out about the player.
+A league match between two clubs that can still be champions draws more people, more and more towards the end of the season. If it is also a derby, the two effects add up. No rivals need setting: the table decides.
 
-Values: `0` (Only the coach's view), `1` (View, CA and PA). Default: `0`.
+Values: `off` (Off), `on` (On). Default: `on`.
+
+### Stadium — `stadium`
+
+Turns on our stadium rule: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price. Off, the stadium is the original game's.
+
+Values: `off` (Off (the original game)), `on` (On (our rule)). Default: `on`.
+
+### Seats add to the capacity — `stadium_seating_growth`
+
+In the original, when a club doesn't expand it converts standing places into seats, and the game also adds the new places to the capacity: a stadium with standing room grows every year on its own, even empty (in our careers, Bahia's went from 115,000 to 134,000 while its crowd fell). "Doesn't grow on its own" removes that growth.
+
+Values: `on` (Grows on its own, even empty (original)), `off` (Doesn't grow on its own). Default: `off`.
+
+### Expand by reputation — `stadium_reputation_trigger`
+
+In the original, a high-reputation club expands its stadium even with no crowd for it. "Only by occupancy" makes expansion depend on a full stadium alone.
+
+Values: `on` (Expands on reputation alone (original)), `off` (Only by occupancy). Default: `off`.
+
+### Full seasons to be able to expand — `stadium_full_seasons`
+
+How many seasons in a row the stadium must be above 92% full for the club to be able to expand. With 2, one good season isn't enough: it has to last. Being able to expand isn't expanding: money is still needed.
+
+Values: from 1 to 2 (whole number). Default: `2`.
+
+### What counts for occupancy — `stadium_occupancy`
+
+What goes into the occupancy count. "Every home match" also counts cups and continental competitions: a club that fills its ground in a continental knockout counts that towards a new stadium.
+
+Values: `league` (League matches only (original)), `all` (Every home match). Default: `all`.
+
+### Size of the build — `stadium_size`
+
+How many places the build adds. "What the measured demand asks for": the average number of people who wanted to come to the home matches, up to the stadium's ceiling. The game's fixed size gives 21,000 places to whoever has the money, needed or not.
+
+Values: `original` (The game's fixed size), `demand` (What the measured demand asks for). Default: `demand`.
+
+### Cost per new place — `stadium_seat_cost`
+
+How much each new place costs, in the money of the database you play. Automatic: 1,500 a place in the 2001 database (a real build of the time cost 1,000 to 3,500 pounds a place), in proportion to the money of the big clubs in the loaded database; in a database with three times the money, a build costs three times as much. A number fixes the cost per place. The game's (about 100 a place) is so cheap that any rich club expands without noticing.
+
+Values: `original` (The game's (about 100 a place)), `auto` (Automatic, by the database's money). Default: `auto`.
+
+### Stadium with no ceiling in the database — `stadium_ceiling_zero`
+
+Each stadium has an expansion ceiling in the database (what the city can hold), but most come with zero. In the original, that ceiling rises 1,500 a year for no reason. "By the measured demand": the ceiling becomes the capacity plus what the demand justifies.
+
+Values: `original` (Rises 1,500 a year (original)), `demand` (By the measured demand). Default: `demand`.
+
+### Largest stadium that still expands — `stadium_max`
+
+Above this capacity, a stadium doesn't expand any more. The game itself uses 125,000.
+
+Values: from 1000 to 10000000 (whole number). Default: `125000`.
 
 ## Regen origins
 
@@ -335,7 +442,7 @@ The save, the install, the screen and the CD. These tweaks don't change the game
 
 Lets the game save and load saves above 2 GB (up to 4 GB). Turn it on if your save is large (many leagues, a long career) or the game errors when loading. Off, a save above 2 GB won't load. It changes nothing in the career.
 
-Values: `1` on, `0` off. Default: `0` without the line; the distributed `tweaks.cfg` comes with `1` (since 1.3).
+Values: `1` on, `0` off. Default: `0`.
 
 ### Portable folder (no SetupReg) — `portable_folder`
 
@@ -378,6 +485,12 @@ Values: `original` (The exe's), `1080` (1920×1080). Default: `original`.
 The game runs without the CD. If you already use a NoCD (CLZ's LaMOHatesCD, a no-CD exe), that one stays.
 
 Values: `1` on, `0` off. Default: `0`.
+
+### Squad guard (repeated player) — `squad_guard`
+
+Fixes a game defect: it can put in a squad a player who is already in it (seen when moving players between a club and its B team). The copies pile up until the automatic team selection puts the same player in two positions and shows the "match_man.cpp 1225" box. The guard removes the repeated copy at once, before every team selection and when a save is loaded (it also cleans old saves). Each copy removed goes to tweaks.log.
+
+Values: `1` on, `0` off. Default: `1`.
 
 ## tweaks.log
 

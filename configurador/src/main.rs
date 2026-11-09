@@ -514,6 +514,30 @@ impl App {
                       format!("{}: a club with twice the weight has ×{} the other's chance ({}).", self.n(x), self.n(r), if x > 1.0 { "sharper differences" } else { "softer differences" }))
                 }
             }
+            "pent_up_demand" => if x <= 0.0 {
+                f("0: o recorde só muda como no original.".into(), "0: the record only changes as in the original.".into())
+            } else {
+                f(format!("Se 10.000 pessoas ficarem de fora de um jogo, o teto do clube sobe {:.0} para os próximos.", 10000.0 * x),
+                    format!("If 10,000 people are left out of a match, the club's ceiling rises by {:.0} for the next ones.", 10000.0 * x))
+            },
+            "tradition_weight" => if x <= 0.0 {
+                f("0: o recorde histórico não pesa.".into(), "0: the historical record doesn't count.".into())
+            } else {
+                f(format!("Um clube que termina 5 posições acima do previsto recupera {}% da distância até o seu maior público histórico; com 2 acima, {}%.", self.n(50.0 * x), self.n(20.0 * x)),
+                    format!("A club finishing 5 places above its prediction gets back {}% of the way to its biggest historical crowd; 2 above, {}%.", self.n(50.0 * x), self.n(20.0 * x)))
+            },
+            "stadium_full_seasons" => if x < 1.5 {
+                f("1 temporada acima de 92% já deixa o clube apto a ampliar (como o original).".into(), "1 season above 92% already makes a club able to expand (as the original).".into())
+            } else {
+                f("2 temporadas seguidas acima de 92%: um ano bom não basta, é preciso sustentar.".into(), "2 seasons in a row above 92%: one good year isn't enough, it has to last.".into())
+            },
+            "stadium_max" => f(format!("Um estádio com mais de {} lugares não amplia mais.", self.milhar(x)), format!("A stadium with more than {} places doesn't expand any more.", self.milhar(x))),
+            "title_race" => if self.ligado(nome) {
+                f("Um 1º × 2º na reta final leva até 1,75 vezes o público de um jogo comum; se também for clássico, até 2,6 vezes (sempre até a capacidade do estádio).".into(),
+                    "A 1st v 2nd in the run-in draws up to 1.75 times an ordinary match crowd; if it is also a derby, up to 2.6 times (always up to the stadium's capacity).".into())
+            } else {
+                f("Só o clássico do banco aumenta o público (1,5 vez), como no original.".into(), "Only the database's derby raises the crowd (1.5 times), as in the original.".into())
+            },
             _ => None,
         }
     }
@@ -617,7 +641,7 @@ impl App {
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Jogo);
         ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE));
-        for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes"] {
+        for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes", "squad_guard"] {
             self.controle(ui, k, true);
         }
         ui.add_space(8.0);
@@ -1157,6 +1181,186 @@ impl App {
         }
     }
 
+    /// Um número inteiro com separador de milhar no jeito do idioma.
+    fn milhar(&self, x: f64) -> String {
+        let n = x.round() as i64;
+        let d = n.abs().to_string();
+        let mut out = String::new();
+        for (i, c) in d.chars().enumerate() {
+            if i > 0 && (d.len() - i) % 3 == 0 {
+                out.push(if self.en { ',' } else { '.' });
+            }
+            out.push(c);
+        }
+        if n < 0 { format!("-{}", out) } else { out }
+    }
+
+    /// O custo por lugar: o do jogo, automático (pelo caixa do banco) ou um número fixo.
+    fn controle_custo(&mut self, ui: &mut egui::Ui, ativo: bool) {
+        let en = self.en;
+        let v = self.valor("stadium_seat_cost");
+        let numero = v.parse::<f64>().ok();
+        let mut modo = if numero.is_some() { 2 } else if v == "original" { 0 } else { 1 };
+        let antes = modo;
+        let nomes = [t2(en, "O do jogo (uns 100 por lugar)", "The game's (about 100 a place)"), t2(en, "Automático, pelo caixa do banco", "Automatic, by the database's money"), t2(en, "Um valor fixo por lugar", "A fixed value per place")];
+        let mut x = numero.unwrap_or(1500.0);
+        let mut mudou_x = false;
+        let (a_pt, a_en) = guia::ajuda("stadium_seat_cost");
+        let r = ui.horizontal(|ui| {
+            let r = ui.add_enabled_ui(ativo, |ui| ui.horizontal(|ui| {
+                rotulo_fixo(ui, 260.0, t2(en, "Custo por lugar novo", "Cost per new place"));
+                let r = egui::ComboBox::from_id_salt("stadium_seat_cost").width(300.0).selected_text(nomes[modo]).show_ui(ui, |ui| {
+                    for (i, n) in nomes.iter().enumerate() {
+                        ui.selectable_value(&mut modo, i, *n);
+                    }
+                }).response;
+                if modo == 2 {
+                    mudou_x = ui.add(egui::DragValue::new(&mut x).range(1.0..=1e7).speed(10.0).max_decimals(0)).changed();
+                }
+                r
+            }).inner).inner;
+            ajuda_icone(ui, if en { a_en } else { a_pt });
+            r
+        });
+        if modo != antes || mudou_x {
+            let novo = match modo { 0 => "original".to_string(), 1 => "auto".to_string(), _ => cfg::numero(x.round()) };
+            self.definir("stadium_seat_cost", &novo);
+        }
+        if r.response.hovered() || r.inner.hovered() {
+            self.foco = Some("stadium_seat_cost");
+        }
+        let frase = match modo {
+            0 => t2(en, "Uns 100 por lugar (875 num clube profissional): 21 mil lugares saem por uns 2 milhões, e qualquer clube rico amplia sem sentir.",
+                "About 100 a place (875 for a professional club): 21,000 places cost about 2 million, and any rich club expands without noticing.").to_string(),
+            1 => t2(en, "1.500 por lugar no banco de 2001 (10 mil lugares: 15 milhões, mais ou menos o caixa de um clube grande da época). Num banco com o triplo de dinheiro, como o do CLZ, a obra custa o triplo. O valor calculado aparece no tweaks.log.",
+                "1,500 a place in the 2001 database (10,000 places: 15 million, about a big club's balance of the time). In a database with three times the money, like CLZ's, a build costs three times as much. The worked-out value shows in tweaks.log.").to_string(),
+            _ => if en { format!("{} a place, in the money of the database you play: 10,000 places cost {}.", self.milhar(x), self.milhar(x * 10000.0)) }
+                else { format!("{} por lugar, no dinheiro do banco que você joga: 10 mil lugares custam {}.", self.milhar(x), self.milhar(x * 10000.0)) },
+        };
+        ui.horizontal(|ui| {
+            ui.add_space(22.0);
+            ui.add(egui::Label::new(RichText::new(frase).size(12.5).color(FRASE)).wrap());
+        });
+        ui.add_space(4.0);
+    }
+
+    fn aba_publico(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Publico);
+        let en = self.en;
+        // ---- o público ----
+        ui.label(RichText::new(self.t("O público", "Attendance")).strong().size(16.0).color(VERDE));
+        self.controle(ui, "attendance", true);
+        let p = self.ligado("attendance");
+        ui.colored_label(if p { AZUL } else { CINZA }, if p {
+            self.t("Ligado: quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde só o que ganhou por esta regra, nunca ficando abaixo do que o jogo original daria.",
+                "On: a club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse only loses what it gained by this rule, never going below what the original game would give.")
+        } else {
+            self.t("Desligado: o público de cada jogo e da temporada é o do jogo original.", "Off: every match and season crowd is the original game's.")
+        });
+        ui.add_space(6.0);
+        ui.strong(self.t("A temporada", "The season"));
+        for k in ["attendance_league_caps", "attendance_record", "tradition_weight"] {
+            self.controle(ui, k, p);
+        }
+        ui.add_space(4.0);
+        ui.strong(self.t("Cada jogo", "Each match"));
+        for k in ["pent_up_demand", "knockout_ceiling", "title_race"] {
+            self.controle(ui, k, p);
+        }
+        ui.add_space(12.0);
+        // ---- o estádio ----
+        ui.label(RichText::new(self.t("O estádio", "The stadium")).strong().size(16.0).color(VERDE));
+        self.controle(ui, "stadium", true);
+        let e = self.ligado("stadium");
+        ui.colored_label(if e { AZUL } else { CINZA }, if e {
+            self.t("Ligado: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade.",
+                "On: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price.")
+        } else {
+            self.t("Desligado: as obras do estádio são as do jogo original.", "Off: stadium works are the original game's.")
+        });
+        ui.add_space(6.0);
+        ui.strong(self.t("O que o jogo faz sem motivo", "What the game does for no reason"));
+        for k in ["stadium_seating_growth", "stadium_reputation_trigger"] {
+            self.controle(ui, k, e);
+        }
+        ui.add_space(4.0);
+        ui.strong(self.t("Quando pode ampliar", "When it can expand"));
+        for k in ["stadium_full_seasons", "stadium_occupancy"] {
+            self.controle(ui, k, e);
+        }
+        ui.add_space(4.0);
+        ui.strong(self.t("A obra", "The build"));
+        self.controle(ui, "stadium_size", e);
+        self.controle_custo(ui, e);
+        for k in ["stadium_ceiling_zero", "stadium_max"] {
+            self.controle(ui, k, e);
+        }
+        ui.add_space(10.0);
+        // ---- o clube de exemplo ----
+        let g = |s: &App, k: &str| s.valor(k).parse::<f64>().unwrap_or_else(|_| chaves::chave(k).and_then(|c| c.padrao.parse().ok()).unwrap_or(0.0));
+        let (trad, reprimida) = (g(self, "tradition_weight"), g(self, "pent_up_demand"));
+        let (sem_tetos, recorde_real, mata, grande) = (p && !self.ligado("attendance_league_caps") , p && self.ligado("attendance_record"), p && self.ligado("knockout_ceiling"), p && self.ligado("title_race"));
+        let _ = (sem_tetos, recorde_real);
+        let (cap, media, recorde, historico) = (30000.0f64, 12000.0f64, 18000.0f64, 26000.0f64);
+        let linhas: Vec<(String, String)> = {
+            let mut v = Vec::new();
+            let um = |x: f64| self.milhar(x);
+            // a temporada seguinte, pelo desempenho contra o previsto
+            for (dif, pt, en_) in [(0i32, "Terminou onde se previa", "Finished where predicted"), (4, "Terminou 4 posições acima", "Finished 4 places above"), (-4, "Terminou 4 posições abaixo", "Finished 4 places below")] {
+                let r = if !p {
+                    match dif { 0 => um(media * 1.025), d if d > 0 => um(media * 1.08), _ => um(media) }
+                } else {
+                    let mut nova = media * (1.0 + 0.03 * dif as f64);
+                    if dif >= 2 && trad > 0.0 {
+                        nova += trad * (historico - nova) * dif as f64 / 10.0;
+                    }
+                    if dif < 0 {
+                        nova = nova.max(media.min(media * 1.025)); // o piso: o que o original daria (aqui, sem o que a nossa regra deu antes)
+                    }
+                    um(nova.min(cap))
+                };
+                v.push((t2(en, pt, en_).to_string(), r));
+            }
+            let cl = if grande { (recorde * 1.5 * 1.75).min(cap) } else { (recorde * 1.5).min(cap) };
+            v.push((t2(en, "Teto de um jogo comum de liga", "Ceiling of an ordinary league match").to_string(), um(recorde)));
+            v.push((t2(en, "Clássico valendo o título", "Derby deciding the title").to_string(), um(cl)));
+            v.push((t2(en, "Semifinal de copa", "Cup semi-final").to_string(), um(if mata { cap } else { recorde })));
+            if reprimida > 0.0 && p {
+                v.push((t2(en, "Jogo com 6.000 pessoas de fora", "Match with 6,000 people left out").to_string(),
+                    if en { format!("record goes from {} to {}", um(recorde), um(recorde + 6000.0 * reprimida)) } else { format!("recorde vai de {} a {}", um(recorde), um(recorde + 6000.0 * reprimida)) }));
+            }
+            v
+        };
+        let custo = match self.valor("stadium_seat_cost").as_str() { "original" => 100.0, "auto" => 1500.0, x => x.parse().unwrap_or(1500.0) };
+        let titulo = self.t("Um clube de exemplo", "An example club");
+        let descr = if en {
+            format!("Stadium of {} places, average crowd of {}, record of {} and a historical record of {}. Approximate values for the next season, with the settings above.", self.milhar(cap), self.milhar(media), self.milhar(recorde), self.milhar(historico))
+        } else {
+            format!("Estádio de {} lugares, média de {} pessoas, recorde de {} e recorde histórico de {}. Valores aproximados da temporada seguinte, com os ajustes acima.", self.milhar(cap), self.milhar(media), self.milhar(recorde), self.milhar(historico))
+        };
+        let obra = if !e {
+            t2(en, "Obras: as do jogo original (pode ampliar só pela reputação, e o estádio com lugares em pé cresce todo ano).", "Works: the original game's (it can expand on reputation alone, and a stadium with standing room grows every year).").to_string()
+        } else {
+            let lugares = 8000.0;
+            if en { format!("Works: after {} season(s) above 92% full, wanting about {} more places, it builds them for about {} (if it has the money).", g(self, "stadium_full_seasons"), self.milhar(lugares), self.milhar(lugares * custo)) }
+            else { format!("Obras: depois de {} temporada(s) acima de 92% de ocupação, com uns {} lugares a mais de demanda, constrói por uns {} (se tiver o dinheiro).", g(self, "stadium_full_seasons"), self.milhar(lugares), self.milhar(lugares * custo)) }
+        };
+        App::cartao(ui, &titulo, |ui| {
+            ui.label(RichText::new(descr).size(12.5).color(FRASE));
+            ui.add_space(4.0);
+            egui::Grid::new("publico_exemplo").striped(true).spacing([18.0, 4.0]).show(ui, |ui| {
+                for (a, b) in &linhas {
+                    ui.label(a);
+                    ui.label(RichText::new(b).strong().color(if p { VERDE } else { CINZA }));
+                    ui.end_row();
+                }
+            });
+            ui.add_space(4.0);
+            ui.label(RichText::new(obra).size(12.5).color(if e { VERDE } else { CINZA }));
+            ui.label(RichText::new(t2(en, "Conta simplificada, para dar a ideia: no jogo, cada partida também pesa o adversário, a distância e a fase da temporada.", "A simplified sum, to give the idea: in the game, each match also weighs the opponent, the distance and the stage of the season.")).size(11.5).color(CINZA));
+        });
+    }
+
     fn aba_registro(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Registro);
         self.historico(ui);
@@ -1386,6 +1590,7 @@ impl eframe::App for App {
                 Aba::Disputa => self.aba_disputa(ui),
                 Aba::Cinzentos => self.aba_cinzentos(ui),
                 Aba::Nomes => self.aba_nomes(ui),
+                Aba::Publico => self.aba_publico(ui),
                 Aba::Fornada => self.aba_fornada(ui),
                 Aba::Registro => self.aba_registro(ui),
                 Aba::Cfg => self.aba_cfg(ui),

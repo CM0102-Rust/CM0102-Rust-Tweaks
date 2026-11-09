@@ -200,6 +200,74 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "O dia do ano das aposentadorias de jogadores. No jogo original, cada um se aposenta numa data própria (em geral o fim da temporada do país). Com um dia (contado de 0 = 1º de janeiro), todas as aposentadorias marcadas a partir de agora acontecem nele; um pouco antes da fornada, quem se aposenta já nasce na fornada seguinte. Vale com ou sem a fornada. No tweaks.cfg vale qualquer dia de 0 a 365.",
             "The day of the year for player retirements. In the original game each one retires on a date of its own (usually the country's season end). With a day (counted from 0 = 1 January), every retirement set from then on happens on it; a little before the intake, whoever retires is born in the next intake. Works with or without the intake. In tweaks.cfg any day from 0 to 365 works.",
         ),
+        "attendance" => (
+            "Liga a nossa regra do público: ele cresce com o que acontece em campo e esfria quando o time volta ao esperado. Quem termina onde se previa mantém o público; quem vai melhor cresce; quem vai pior perde só o que ganhou por esta regra, nunca ficando abaixo do que o jogo original daria. Desligado, o público é o do jogo original, qualquer que seja o resto desta parte.",
+            "Turns on our attendance rule: it grows with what happens on the pitch and cools when the team is back to what was expected. A club that finishes where it was predicted keeps its crowd; one that does better grows; one that does worse only loses what it gained by this rule, never going below what the original game would give. Off, attendance is the original game's, whatever the rest of this part says.",
+        ),
+        "attendance_league_caps" => (
+            "O jogo original segura a média de público de cada clube abaixo de um teto pela divisão, e nas divisões mais fracas corta o público de cada jogo acima de um limite (fica só 20% do que passa). É isso que impede um clube popular de divisão baixa de encher o estádio. Sem os tetos, quem decide é o desempenho.",
+            "The original game keeps each club's average crowd under a cap set by its division, and in the weakest divisions it cuts every match crowd above a limit (only 20% of the excess stays). That is what stops a popular club in a low division from filling its stadium. Without the caps, performance decides.",
+        ),
+        "attendance_record" => (
+            "O recorde do clube é o teto do público de um jogo comum. No original ele é o do banco de dados e só sobe com título ou acesso: o clube que faz uma ótima temporada sem ganhar nada fica preso nele. Com \"o maior público que de fato veio\", o recorde acompanha os jogos de verdade (clássicos, mata-matas e jogos grandes passam do recorde e o levantam).",
+            "The club's record is the ceiling of an ordinary match crowd. In the original it is the database's and only a title or a promotion raises it: a club with a great season that wins nothing is stuck under it. With \"the largest crowd that really came\", the record follows the real matches (derbies, knockouts and big matches go past it and lift it).",
+        ),
+        "pent_up_demand" => (
+            "Quando mais gente quis vir do que o recorde deixou, parte dessa demanda vira recorde novo. É assim que um clube em ascensão vai abrindo espaço jogo a jogo, sem crescer do nada: só cresce quem tem gente ficando de fora.",
+            "When more people wanted to come than the record allowed, part of that demand becomes a new record. That is how a rising club makes room match by match without growing out of nothing: only clubs with people left outside grow.",
+        ),
+        "tradition_weight" => (
+            "O recorde histórico do banco mostra a torcida que o clube já teve. Quando um clube de tradição volta a ir bem (2 posições ou mais acima do previsto), parte dessa torcida volta mais rápido. Um clube sem passado grande quase não muda.",
+            "The database's historical record shows the crowd a club once had. When a club with tradition does well again (2 or more places above the prediction), part of that crowd comes back faster. A club without a big past hardly changes.",
+        ),
+        "knockout_ceiling" => (
+            "Num mata-mata (copa nacional, fases finais, continental) o interesse é maior. \"Só o estádio\" deixa o público ir até a capacidade; com \"o recorde do clube\", o mata-mata fica preso ao mesmo teto de um jogo comum, como no original.",
+            "In a knockout round (domestic cup, final stages, continental) interest is higher. \"Only the stadium\" lets the crowd go up to capacity; with \"the club's record\", the knockout is stuck under the same ceiling as an ordinary match, as in the original.",
+        ),
+        "title_race" => (
+            "O jogo de liga entre dois clubes que ainda podem ser campeões leva mais gente, cada vez mais perto do fim da temporada. Se o jogo também for clássico, os dois efeitos se somam. Ninguém precisa configurar rivais: quem decide é a tabela.",
+            "A league match between two clubs that can still be champions draws more people, more and more towards the end of the season. If it is also a derby, the two effects add up. No rivals need setting: the table decides.",
+        ),
+        "stadium" => (
+            "Liga a nossa regra do estádio: só amplia quem lota de forma sustentada e tem dinheiro, do tamanho que a demanda pede e pagando um preço de verdade. Desligado, o estádio é o do jogo original.",
+            "Turns on our stadium rule: only clubs that fill their ground steadily and have the money expand, by what the demand asks for and paying a real price. Off, the stadium is the original game's.",
+        ),
+        "stadium_seating_growth" => (
+            "No original, quando um clube não amplia, ele converte lugares em pé em sentados, e o jogo soma os lugares novos também na capacidade: o estádio com espaço em pé cresce todo ano sozinho, mesmo vazio (nas nossas carreiras, o do Bahia passou de 115 mil para 134 mil com o público caindo). \"Não cresce sozinho\" tira esse crescimento.",
+            "In the original, when a club doesn't expand it converts standing places into seats, and the game also adds the new places to the capacity: a stadium with standing room grows every year on its own, even empty (in our careers, Bahia's went from 115,000 to 134,000 while its crowd fell). \"Doesn't grow on its own\" removes that growth.",
+        ),
+        "stadium_reputation_trigger" => (
+            "No original, um clube de reputação alta amplia o estádio mesmo sem público para isso. \"Só por ocupação\" deixa a ampliação depender só do estádio cheio.",
+            "In the original, a high-reputation club expands its stadium even with no crowd for it. \"Only by occupancy\" makes expansion depend on a full stadium alone.",
+        ),
+        "stadium_full_seasons" => (
+            "Quantas temporadas seguidas o estádio precisa ficar acima de 92% de ocupação para o clube poder ampliar. Com 2, uma temporada boa não basta: é preciso sustentar. Poder ampliar não é ampliar: ainda é preciso dinheiro.",
+            "How many seasons in a row the stadium must be above 92% full for the club to be able to expand. With 2, one good season isn't enough: it has to last. Being able to expand isn't expanding: money is still needed.",
+        ),
+        "stadium_occupancy" => (
+            "O que entra na conta da ocupação. \"Todos os jogos em casa\" conta também copas e competições continentais: o clube que lota o mata-mata da Libertadores conta isso a favor do estádio novo.",
+            "What goes into the occupancy count. \"Every home match\" also counts cups and continental competitions: a club that fills its ground in a continental knockout counts that towards a new stadium.",
+        ),
+        "stadium_size" => (
+            "Quantos lugares a obra acrescenta. \"O que a demanda medida pede\": a média de gente que quis vir nos jogos em casa, até o teto do estádio. O tamanho fixo do jogo dá 21 mil lugares a quem tem dinheiro, precise ou não.",
+            "How many places the build adds. \"What the measured demand asks for\": the average number of people who wanted to come to the home matches, up to the stadium's ceiling. The game's fixed size gives 21,000 places to whoever has the money, needed or not.",
+        ),
+        "stadium_seat_cost" => (
+            "Quanto custa cada lugar novo, no dinheiro do banco que você joga. Automático: 1.500 por lugar no banco de 2001 (uma obra real da época custava de 1.000 a 3.500 libras por lugar), na proporção do caixa dos clubes grandes do banco carregado; num banco com o triplo de dinheiro, a obra custa o triplo. Um número fixa o valor por lugar. O do jogo (uns 100 por lugar) é tão barato que qualquer clube rico amplia sem sentir.",
+            "How much each new place costs, in the money of the database you play. Automatic: 1,500 a place in the 2001 database (a real build of the time cost 1,000 to 3,500 pounds a place), in proportion to the money of the big clubs in the loaded database; in a database with three times the money, a build costs three times as much. A number fixes the cost per place. The game's (about 100 a place) is so cheap that any rich club expands without noticing.",
+        ),
+        "stadium_ceiling_zero" => (
+            "Cada estádio tem no banco um teto de expansão (o que a cidade comporta), mas a maioria vem com zero. No original, esse teto sobe 1.500 por ano sem critério. \"Pela demanda medida\": o teto passa a ser a capacidade mais o que a demanda justifica.",
+            "Each stadium has an expansion ceiling in the database (what the city can hold), but most come with zero. In the original, that ceiling rises 1,500 a year for no reason. \"By the measured demand\": the ceiling becomes the capacity plus what the demand justifies.",
+        ),
+        "stadium_max" => (
+            "Acima desta capacidade, o estádio não amplia mais. O próprio jogo usa 125 mil.",
+            "Above this capacity, a stadium doesn't expand any more. The game itself uses 125,000.",
+        ),
+        "squad_guard" => (
+            "Corrige um defeito do jogo: ele pode pôr no elenco um jogador que já está lá (visto ao mandar jogadores entre o clube e o time B). As cópias se acumulam até a escalação automática colocar o mesmo jogador em duas posições e mostrar a caixa \"match_man.cpp 1225\". A proteção apaga a cópia repetida na hora, antes de cada escalação e ao carregar um save (limpa também saves antigos). Cada cópia apagada vai para o tweaks.log.",
+            "Fixes a game defect: it can put in a squad a player who is already in it (seen when moving players between a club and its B team). The copies pile up until the automatic team selection puts the same player in two positions and shows the \"match_man.cpp 1225\" box. The guard removes the repeated copy at once, before every team selection and when a save is loaded (it also cleans old saves). Each copy removed goes to tweaks.log.",
+        ),
         "regen_origins" => (
             "Grava no regen_origins.csv, ao lado do exe, cada regen que nasce: o nome, a idade, a posição, o PA, o CA e o clube que ganhou a disputa (ou \"sem clube\"), e de quem ele herdou: a vaga (o id e a personalidade) e a ficha de jogador (o PA, as posições e os atributos), com o nome, a idade, o CA e o PA do dono no momento da aposentadoria. Cada linha leva a data do jogo, a data do computador e a carreira (o save). Assim você acha \"o regen do Ronaldo\". O jogo não guarda isso em lugar nenhum: só os regens criados com esta opção ligada ficam registrados. O arquivo abre no Excel com dois cliques (UTF-8, colunas separadas por ponto e vírgula; num Excel em inglês, use Dados > De Texto/CSV). Ao gravar o jogo, a DLL grava ao lado do save um X.regens com os donos das fichas que ainda vão virar regen; ao carregar, ela o lê. Copie os dois juntos: sem o .regens, alguns dos primeiros regens depois da carga podem sair com o dono desconhecido.",
             "Writes to regen_origins.csv, next to the exe, every regen born: his name, age, position, PA, CA and the club that won the contest (or \"no club\"), and whom he inherited from: the slot (the id and personality) and the player record (the PA, positions and attributes), with the owner's name, age, CA and PA at retirement. Each line has the game date, the computer's date and the career (the save). So you can find \"Ronaldo's regen\". The game keeps this nowhere: only regens created with this option on are recorded. The file opens in Excel with a double click (UTF-8, columns separated by semicolons; in an English Excel, use Data > From Text/CSV). When you save the game, the DLL writes an X.regens next to the save with the owners of the records still waiting to become regens; when you load, it reads it. Copy both together: without the .regens, some of the first regens after loading may show an unknown owner.",
@@ -247,6 +315,10 @@ pub fn intro(aba: Aba) -> (&'static str, &'static str) {
         Aba::Nomes => (
             "Os nomes dos regens. Os nomes vêm do banco de dados (first_names.dat e second_names.dat, cada nome com a nação e o quanto é comum). A regra de quando o jogo usa os nomes do próprio país está no exe: só acima de 100 nomes. Com menos, ele pega emprestado de outro país, e o regen de Serra Leoa pode sair com nome de outro lugar. Aqui o país usa os próprios nomes a partir de um mínimo.",
             "Regen names. Names come from the database (first_names.dat and second_names.dat, each name with its nation and how common it is). The rule for when the game uses the country's own names is in the exe: only above 100 names. With fewer, it borrows from another country, and a Sierra Leone regen may get a name from somewhere else. Here the country uses its own names from a minimum.",
+        ),
+        Aba::Publico => (
+            "Quanta gente vai ao estádio e quando o estádio cresce. O público é a torcida × o momento × o jogo: cresce pelo que acontece em campo e esfria quando o time volta ao esperado. A parte de cima é o público de cada jogo e da temporada; a de baixo, as obras do estádio. Cada parte tem o seu interruptor: desligado, aquela parte fica como no jogo original. O clube de exemplo no fim mostra o que os ajustes fazem com números.",
+            "How many people go to the stadium and when the stadium grows. Attendance is the support × the moment × the match: it grows with what happens on the pitch and cools when the team is back to what was expected. The top part is the crowd of each match and season; the bottom part, the stadium works. Each part has its own switch: off, that part stays as in the original game. The example club at the end shows what the settings do, with numbers.",
         ),
         Aba::Cinzentos => (
             "Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.",
@@ -313,6 +385,14 @@ pub fn termos(aba: Aba) -> &'static [Termo] {
         Aba::Nomes => &[
             ("Pegar emprestado", "Borrowing", "quando o país tem 100 nomes ou menos no banco, o jogo não usa os dele: tira o nome de um país de referência da mesma língua (por exemplo, da Espanha para os de língua espanhola). Alguns países não têm país de referência: o jogo sorteia 40 vezes entre todos os países atrás de um da mesma língua e, se não achar, fica com um país qualquer. A lista abaixo mostra, país por país, de onde vêm hoje.", "when a country has 100 names or fewer in the database, the game doesn't use its own: it takes the name from a reference country of the same language (for example, from Spain for Spanish-speaking ones). Some countries have no reference country: the game draws 40 times among all countries looking for one of the same language and, if it finds none, keeps any country. The list below shows, country by country, where they come from today."),
             ("Pessoas novas", "New people", "os regens, e também a comissão e os árbitros que o jogo cria: todos passam pela mesma regra de nomes.", "regens, and also the staff and referees the game creates: they all go through the same name rule."),
+        ],
+        Aba::Publico => &[
+            ("Média de público", "Average crowd", "quantas pessoas o clube leva por jogo, em média. É a base de cada jogo e muda no fim de cada temporada.", "how many people the club draws per match, on average. It is the base of every match and changes at the end of each season."),
+            ("Esperado", "Expected", "a posição que o próprio jogo prevê para cada clube no começo da temporada, pela força dos elencos. Ir melhor ou pior que o previsto é o que move o público.", "the position the game itself predicts for each club at the start of the season, from the squads' strength. Doing better or worse than predicted is what moves the crowd."),
+            ("Recorde", "Record", "o teto do público de um jogo comum. Clássicos, mata-matas e jogos grandes podem passar dele.", "the ceiling of an ordinary match crowd. Derbies, knockouts and big matches can go past it."),
+            ("Piso do original", "Original floor", "a média que o clube teria no jogo original, calculada temporada a temporada. Quem vai mal perde o que ganhou pela nossa regra, mas nunca fica abaixo dela. Ela é guardada num arquivo ao lado do save (.publico).", "the average the club would have in the original game, worked out season by season. A club doing badly loses what it gained by our rule, but never goes below it. It is kept in a file next to the save (.publico)."),
+            ("Demanda", "Demand", "quanta gente quis vir a um jogo, antes de o recorde e o estádio cortarem. É a medida de quem ficou de fora.", "how many people wanted to come to a match, before the record and the stadium cut it. It measures who was left outside."),
+            ("Ocupação", "Occupancy", "o público dividido pela capacidade do estádio. 92% ou mais por duas temporadas deixam o clube apto a ampliar.", "the crowd divided by the stadium's capacity. 92% or more for two seasons makes a club able to expand."),
         ],
         Aba::Cinzentos => &[
             ("Jogador cinzento", "Grey player", "um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.", "a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again."),

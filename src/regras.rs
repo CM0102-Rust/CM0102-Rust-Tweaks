@@ -268,6 +268,7 @@ mod catalogo {
         let codigo = [
             include_str!("regras.rs"), include_str!("regens/fornada.rs"), include_str!("regens/nomes.rs"),
             include_str!("regens/cinzentos.rs"), include_str!("regens/origem.rs"), include_str!("lib.rs"),
+            include_str!("publico.rs"), include_str!("jogo/elenco.rs"),
         ]
         .concat();
         let configurador = [include_str!("../configurador/src/chaves.rs"), include_str!("../configurador/src/cfg.rs")].concat();
