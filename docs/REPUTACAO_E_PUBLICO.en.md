@@ -53,31 +53,37 @@ Per match (0x6d26b0) [observed]: the three reputations (home, current, world) mo
 
 **The stadium** (0x59cfa0) [observed]: owner, league and a balance above 5.25 million; a trigger of one league season above 92%; a 21,000-place build with a balance above 20 million, up to the ceiling and a third of it; no stadium above 125,000 expands; a cost of about 100 per place (875 for professional clubs, all seated). A real 2001 build cost, in order of magnitude, 1,000 to 3,500 pounds per place [inference, from memory].
 
-## 5. The keys (implemented on 08/11, `src/publico.rs`, branch `estudos`)
+## 5. The keys (08/11; `src/publico.rs`)
 
-Principle: attendance is **the support × the moment × the match**. It grows from what happens on the pitch and cools when performance returns to the expected; nothing grows without a cause. **The default is ours** (08/11, Lucas): with a `tweaks.cfg`, each missing key takes our rule; to go back to the original game, write the value in the "original" column. With no `tweaks.cfg` at all, nothing changes.
+Principle: attendance is **the support × the moment × the match**. It grows with what happens on the pitch and cools when performance is back to the expected; nothing grows without a cause. **The default is ours**: with a `tweaks.cfg`, each missing key takes our rule; with no `tweaks.cfg` at all, nothing changes. The numbers are in percent or in people, and the configurator shows each one's sum (Attendance and stadium tab).
 
 | Key | Our default | Original | What it does |
 |---|---|---|---|
-| `attendance` | `on` | `off` | the attendance switch (the keys from `attendance_league_caps` to `title_race`): `off` = the original game, whatever the rest says |
-| `stadium` | `on` | `off` | the stadium switch (the `stadium_*` keys): `off` = the original game |
+| `attendance` | `on` | `off` | the attendance switch |
+| `attendance_toward_real` | 50 | 50 | how far (%) the average moves to the season's real crowd (derbies and big matches count without their extra) |
+| `attendance_per_place` | 3 | — | how much (%) each place above or below the prediction is worth |
+| `tradition_per_place` | 2.5 | 0 | how much (%) of the distance to the historical record comes back per place, with 2 or more above the prediction |
+| `attendance_floor` | `on` | — | the original floor: a falling club doesn't go below what the original game would give (`.publico` next to the save) |
+| `attendance_cap_weak` / `_mid` / `_strong` | 0 | 2000 / 3000 / 5000 | the average's cap in people per division level point (up to 7, 8 to 12, above); 0 = no cap |
+| `weak_league_limit` / `weak_league_keep` | 0 / 20 | 1500 / 20 | the match crowd cut in divisions of level up to 4 (people per level) and how much (%) stays above it |
+| `attendance_record` | `real` | `fixed` | the club's record is the largest crowd that really came |
+| `pent_up_demand` | 10 | 0 | how much (%) of those left out becomes a new record |
+| `knockout_ceiling` | `stadium` | `record` | in knockouts, only the stadium limits |
+| `title_race`, `title_race_max`, `title_race_top2` | `on`, 50, 25 | `off` | the big match by the table: extra (%) in the last round and in a 1st v 2nd; the derby (the game's +50%) on top |
+| `stadium` | `on` | `off` | the stadium switch |
 | `stadium_seating_growth` | `off` | `on` | converting to seats no longer adds to capacity |
-| `stadium_reputation_trigger` | `off` | `on` | removes the "reputation × 2 above capacity" trigger |
-| `attendance_league_caps` | `off` | `on` | removes the average's league caps and the weak-league cut per match; the season-end average moves half the way to the real attendance of the league's ordinary matches (no derbies, no big games), ±3% per place above or below the prediction |
-| `attendance_record` | `real` | `fixed` | the record becomes the largest crowd that actually came |
-| `pent_up_demand` | 0.1 | 0 | the share of a match's unmet demand that becomes a new record (10,000 people left out: the ceiling rises 1,000) |
-| `tradition_weight` | 0.25 | 0 | only for clubs finishing 2 or more places above their prediction: 5 above moves 12.5% of the way to the historical record |
-| `knockout_ceiling` | `stadium` | `record` | in knockout rounds (category and round code) only the stadium limits |
-| `title_race` | `on` | `off` | the big game by the table: both can still be champions; up to ×1.75 in the run-in of a 1st v 2nd, and another × 1.5 if it is a derby |
-| `stadium_full_seasons` | 2 | 1 | consecutive seasons above 92% to become eligible to expand |
-| `stadium_occupancy` | `all` | `league` | occupancy counts every home match (league, cup, continental) |
-| `stadium_size` | `demand` | `original` | the build matches the measured demand, up to the ceiling |
-| `stadium_seat_cost` | `auto` | `original` | the cost per new place, in the database's currency; `auto` = 1,500 in the 2001 database, in proportion to the median cash of the reputation 8,000+ clubs in the loaded database (15.4 million in 2001, 56 million in CLZ 6.1: 5,450 per place); a number fixes the value |
-| `stadium_ceiling_zero` | `demand` | `original` | for a stadium with no ceiling in the database, the ceiling becomes capacity plus the measured demand |
+| `stadium_reputation_trigger` | `off` | `on` | no "reputation × 2 above capacity" trigger |
+| `stadium_occupancy_min` | 92 | 92 | the occupancy (%) for a season to count as full |
+| `stadium_full_seasons` | 2 | 1 | full seasons in a row (1 to 10) to be able to expand; the count goes in the `.publico` file |
+| `stadium_occupancy` | `all` | `league` | occupancy counts every home match |
+| `stadium_reserve` | 5250000 | 5250000 | the money a build won't touch |
+| `stadium_size` | `demand` | `original` | the build matches the measured demand |
+| `stadium_seat_cost` | `auto` | `original` | the cost per place: `auto` = 1,500 in the 2001 database, in proportion to the big clubs' money in the loaded database; or a number |
+| `stadium_ceiling_zero` | `demand` | `original` | for a stadium with no ceiling in the database, the ceiling by the measured demand |
 | `stadium_max` | 125000 | 125000 | the largest capacity that still expands |
 
-With `log = 1`, three tables next to the exe: `publico_jogos.tsv` (each home match: demand, ceiling, crowd, record, title race), `publico_temporada.tsv` (each club at its league's season end: predicted, final, real attendance, average before and after) and `publico_estadio.tsv` (each build evaluation: occupancy, eligibility, demand, balance, places, cost and the reason).
+With `log = 1`: `publico_jogos.tsv`, `publico_temporada.tsv` and `publico_estadio.tsv` next to the exe.
 
-**Compatibility** [observed, 08/11]: no NickPatcher option or MiscPatches patch touches the three replaced calls (0x6b86bc, 0x5d5cfb, 0x59cee4); `protect_against_virtual_staff_195_error` changes 13 bytes at the end of the match attendance routine, and it keeps working (the tweak calls the whole routine). In the CLZ 6.1, CLZ 5.4 and NickPatcher demo exes, the calls are as in 3.9.68. Coexistence with the NickDLL at runtime is still to be tested in the game.
+**Compatibility** [observed, 08/11]: no NickPatcher option or MiscPatches patch touches the three replaced calls (0x6b86bc, 0x5d5cfb, 0x59cee4); `protect_against_virtual_staff_195_error` changes 13 bytes at the end of the match attendance routine, and it keeps working (the tweak calls the whole routine and also guards the away club with no nation). In the CLZ 6.1, CLZ 5.4 and NickPatcher demo exes, the calls are as in 3.9.68.
 
-The proof: 10-season careers with everything on (H), with the big game (I) and the control (the original only recording), compared season by season.
+**The test careers** (every league, 2001 to 2011, compared with the original game only recording): with the default, a club finishing as expected stays stable; one doing well grows 30% to 55% in a season, less as years go by; one doing badly doesn't go below the original; league occupancy goes from 60% to 76% in 9 seasons; 85 builds in 10 seasons (the original: 184, several in empty stadiums), all with two full seasons behind them.
