@@ -272,6 +272,74 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "Num mata-mata (copa nacional, fases finais, continental) o interesse é maior. \"Só o estádio\" deixa o público ir até a capacidade; com \"o recorde do clube\", o mata-mata fica preso ao mesmo teto de um jogo comum, como no original.",
             "In a knockout round (domestic cup, final stages, continental) interest is higher. \"Only the stadium\" lets the crowd go up to capacity; with \"the club's record\", the knockout is stuck under the same ceiling as an ordinary match, as in the original.",
         ),
+        "loans" => (
+            "Liga as nossas regras de empréstimo. O dono da IA empresta quem sobra: o jovem que não é titular vai para onde joga, o jogador do elenco vai quando há quem o cubra, e quem está fora do país pode voltar para casa. O titular absoluto (Key) nunca sai. As decisões do seu clube continuam suas. Desligado, os empréstimos são os do jogo original, em que o dono quase sempre recusa.",
+            "Turns on our loan rules. The AI owner lends whoever is spare: a youngster who isn't first team goes where he plays, a squad player goes when someone can cover him, and a player abroad can go back home. A Key player never goes. Your club's decisions stay yours. Off, loans are the original game's, where the owner almost always refuses.",
+        ),
+        "loan_youth_age" => (
+            "Até esta idade, o jogador que não é titular absoluto conta como jovem: a ideia é rodar, então ele sai sem o dono precisar de cobertura no elenco. Mesmo assim, só vai para onde jogaria (as duas chaves de baixo) e para um treino não muito pior.",
+            "Up to this age, a player who isn't a Key player counts as a youngster: the idea is to get games, so he goes without the owner needing cover in the squad. Even so, he only goes where he'd play (the two keys below) and to Training not much worse.",
+        ),
+        "loan_youth_top" => (
+            "O jovem só vai para um clube onde seria um dos N melhores da linha dele (goleiro, defesa, meio ou ataque), pelo CA. Com 2, ele seria o primeiro ou o segundo da posição: vai jogar. Com 1, só onde seria titular. É também quem a procura por jovens favorece.",
+            "A youngster only goes to a club where he'd be one of the N best of his line (goalkeeper, defence, midfield or attack), by CA. With 2, he'd be first or second choice: he'll play. With 1, only where he'd start. It's also who the demand for youngsters favours.",
+        ),
+        "loan_others_top" => (
+            "O mesmo para os mais velhos: o jogador só vai para um clube onde seria um dos N melhores da linha. Ninguém vai emprestado para sentar no banco.",
+            "The same for older players: a player only goes to a club where he'd be one of the N best of his line. Nobody goes on loan to sit on the bench.",
+        ),
+        "loan_training_margin" => (
+            "O treino forma o jogador mais que os jogos (é o que as carreiras de teste mostram). O jovem só vai para um clube com Treino de ao menos o do dono menos este número. Com 3, um jovem do Flamengo (Treino 15) pode ir para um clube de Treino 12. Com 0, só para treino igual ou melhor: menos jovens emprestados, cada um num lugar melhor. A volta para casa não olha o treino.",
+            "Training develops a player more than matches do (that is what the test careers show). A youngster only goes to a club with Training of at least the owner's minus this number. With 3, a youngster from a Training 15 club can go to a Training 12 club. With 0, only to equal or better Training: fewer youngsters loaned, each one to a better place. Going back home ignores Training.",
+        ),
+        "loan_cover_regular" => (
+            "Para emprestar um titular (Regular starter), o dono precisa ficar com este número de jogadores da mesma linha à altura dele (veja a chave de baixo). É o caso do Flamengo com três volantes bons: um deles pode sair.",
+            "To lend a Regular starter, the owner must keep this many players of the same line up to his level (see the key below). It's the case of a club with three good defensive midfielders: one of them can go.",
+        ),
+        "loan_cover_backup" => (
+            "O mesmo para o jogador de rotação ou reserva: quantos da mesma linha à altura dele o dono precisa manter. A volta para casa precisa de um a menos.",
+            "The same for a rotation or backup player: how many of the same line up to his level the owner must keep. A loan back home needs one fewer.",
+        ),
+        "loan_cover_ratio" => (
+            "O que é \"à altura dele\": quem cobre precisa de CA de ao menos esta porcentagem do CA do jogador emprestado. Com 90, quem cobre um jogador de CA 120 precisa de CA 108 ou mais.",
+            "What \"up to his level\" means: whoever covers needs CA of at least this percentage of the loaned player's CA. With 90, whoever covers a CA 120 player needs CA 108 or more.",
+        ),
+        "loan_squad_min" => (
+            "O piso do elenco: com este número de jogadores ou menos no clube, o dono não empresta (nem põe na lista de empréstimos). Sem ele (0), as carreiras de teste caíram: um clube emprestou até ficar sem time e o jogo parou com \"Only 10 away players\".",
+            "The squad floor: with this many players or fewer at the club, the owner doesn't lend (nor list for loan). Without it (0), the test careers crashed: a club lent until it had no team and the game stopped with \"Only 10 away players\".",
+        ),
+        "loan_request_willingness" => (
+            "A IA só pede um jogador emprestado se a vontade dele de ir for ao menos este número (a mesma nota de vontade do jogo, de 0 a 10). O original pede 3,5. Mais baixo, mais pedidos chegam ao dono.",
+            "The AI only asks for a player on loan if his willingness to go is at least this number (the game's own willingness score, 0 to 10). The original needs 3.5. Lower, more requests reach the owner.",
+        ),
+        "loan_requests" => (
+            "Quantas vezes mais a IA tenta pedir empréstimo, comparado com o original (1, 2, 4, 8...: o sorteio só aceita potências de 2). Com 2, o dobro de tentativas.",
+            "How many times more the AI tries to ask for a loan, compared with the original (1, 2, 4, 8...: the draw only takes powers of 2). With 2, twice the attempts.",
+        ),
+        "loan_home" => (
+            "O jogador que está fora do país topa mais ir emprestado para um clube da nação dele: o brasileiro na Europa que volta ao Brasil. A volta para casa também precisa de um a menos de cobertura e não olha o treino. 1 = o original.",
+            "A player abroad is more willing to go on loan to a club of his own nation: the Brazilian in Europe who goes back to Brazil. A loan back home also needs one less cover and ignores Training. 1 = the original.",
+        ),
+        "loan_playing_time" => (
+            "O jogador topa mais ir emprestado para onde seria o primeiro ou o segundo da linha: minutos. 1 = o original.",
+            "A player is more willing to go on loan where he'd be first or second choice of his line: minutes. 1 = the original.",
+        ),
+        "loan_youth_demand" => (
+            "Quando um clube da IA escolhe quem pedir numa vaga de empréstimo, o jovem que jogaria ali (entre os primeiros da linha, indo para casa ou para um treino dentro da margem) vale este tanto a mais na nota. Sem isso, os adultos que sobram ganham as vagas e os jovens emprestados caem pela metade. 1 = o original.",
+            "When an AI club picks whom to ask for in a loan slot, a youngster who would play there (among the first of his line, going home or to Training within the margin) scores this much more. Without it, spare adults win the slots and youth loans fall by half. 1 = the original.",
+        ),
+        "loan_unhappiness" => (
+            "O caso do jogador que quer ir e o dono não deixa: quando um clube bem maior pede emprestado um titular (Key ou Regular starter) e o dono recusa, o jogador perde esta felicidade no contrato. Infeliz, ele fica mais perto de pedir para sair, e o mercado se mexe. 0 = nada acontece, como no original. Hoje é raro (6 casos em duas temporadas de teste), porque o clube maior quase nunca pede um titular emprestado: o número vale para quando isso acontecer mais.",
+            "The case of the player who wants to go and the owner won't let him: when a much bigger club asks for a starter (Key or Regular starter) on loan and the owner refuses, the player loses this much contract happiness. Unhappy, he gets closer to asking to leave, and the market moves. 0 = nothing happens, as in the original. It's rare today (6 cases in two test seasons), because a bigger club hardly ever asks for a starter on loan: the number is there for when it happens more.",
+        ),
+        "loan_unhappiness_gap" => (
+            "Quanto maior, em reputação, o clube que pede precisa ser para o titular se chatear com a recusa. Com 1.000, o titular de um clube de 6.000 se chateia com um pedido de um clube de 7.000 ou mais.",
+            "How much bigger, in reputation, the asking club must be for the starter to get upset at the refusal. With 1,000, a 6,000 club's starter gets upset with a request from a club of 7,000 or more.",
+        ),
+        "budget_caps" => (
+            "No jogo original, a verba de transferências de algumas nações é comprimida: Alemanha, França, Escócia e Holanda só usam 25% do que passa de 17,5 milhões; Brasil, os nórdicos e outros, só uma parte acima de 2,5 milhões. Inglaterra, Espanha e Itália não têm freio. Sem freio, todo clube usa a verba inteira, como os ingleses. Nas carreiras de teste os clubes ricos alemães e franceses gastaram mais, e as finanças não mudaram.",
+            "In the original game, some nations' transfer budget is compressed: Germany, France, Scotland and the Netherlands only use 25% of what's above 17.5 million; Brazil, the Nordic nations and others, only part above 2.5 million. England, Spain and Italy have no brake. With no brake, every club uses its whole budget, like the English. In the test careers rich German and French clubs spent more, and finances didn't change.",
+        ),
         "title_race" => (
             "O jogo de liga entre dois clubes que ainda podem ser campeões leva mais gente, cada vez mais perto do fim da temporada. Se o jogo também for clássico, os dois efeitos se somam. Ninguém precisa configurar rivais: quem decide é a tabela.",
             "A league match between two clubs that can still be champions draws more people, more and more towards the end of the season. If it is also a derby, the two effects add up. No rivals need setting: the table decides.",
@@ -364,6 +432,10 @@ pub fn intro(aba: Aba) -> (&'static str, &'static str) {
             "Quanta gente vai ao estádio e quando o estádio cresce. O público é a torcida × o momento × o jogo: cresce pelo que acontece em campo e esfria quando o time volta ao esperado. A parte de cima é o público de cada jogo e da temporada; a de baixo, as obras do estádio. Cada parte tem o seu interruptor: desligado, aquela parte fica como no jogo original. O clube de exemplo no fim mostra o que os ajustes fazem com números.",
             "How many people go to the stadium and when the stadium grows. Attendance is the support × the moment × the match: it grows with what happens on the pitch and cools when the team is back to what was expected. The top part is the crowd of each match and season; the bottom part, the stadium works. Each part has its own switch: off, that part stays as in the original game. The example club at the end shows what the settings do, with numbers.",
         ),
+        Aba::Emprestimos => (
+            "Quem sai emprestado. No jogo original, o dono da IA recusa quase todo pedido de empréstimo, e o jovem que não joga fica parado. Aqui o dono empresta quem sobra, olhando os minutos que o jogador teria e a cobertura que fica no elenco, e os clubes procuram jovens para jogar. Os números da direita são de carreiras de teste com todas as ligas. As regras são uma proposta: o guia (docs/EMPRESTIMOS.md) explica cada uma, para a comunidade sugerir mudanças.",
+            "Who goes on loan. In the original game, the AI owner refuses almost every loan request, and a youngster who doesn't play sits still. Here the owner lends whoever is spare, looking at the minutes the player would get and the cover left in the squad, and clubs look for youngsters to play. The numbers on the right come from test careers with every league. The rules are a proposal: the guide (docs/EMPRESTIMOS.en.md) explains each one, so the community can suggest changes.",
+        ),
         Aba::Cinzentos => (
             "Os jogadores cinzentos. Antes de cada partida (e quando você abre um elenco), o jogo completa os elencos curtos com jogadores virtuais, que aparecem em cinza e ninguém pode contratar. O original dá a eles uma habilidade tirada da reputação do clube, por uma conta que despenca: nos clubes médios e pequenos ela sai negativa, e o motor da partida trata isso como o pior jogador possível. Aqui eles podem vir no nível do próprio clube.",
             "Grey players. Before every match (and when you open a squad), the game fills short squads with virtual players, shown in grey, whom nobody can sign. The original gives them an ability taken from the club's reputation, by a formula that collapses: at mid-sized and small clubs it comes out negative, and the match engine treats that as the weakest possible player. Here they can come at the club's own level.",
@@ -437,6 +509,13 @@ pub fn termos(aba: Aba) -> &'static [Termo] {
             ("Piso do original", "Original floor", "a média que o clube teria no jogo original, calculada temporada a temporada. Quem vai mal perde o que ganhou pela nossa regra, mas nunca fica abaixo dela. Ela é guardada num arquivo ao lado do save (.publico).", "the average the club would have in the original game, worked out season by season. A club doing badly loses what it gained by our rule, but never goes below it. It is kept in a file next to the save (.publico)."),
             ("Demanda", "Demand", "quanta gente quis vir a um jogo, antes de o recorde e o estádio cortarem. É a medida de quem ficou de fora.", "how many people wanted to come to a match, before the record and the stadium cut it. It measures who was left outside."),
             ("Ocupação", "Occupancy", "o público dividido pela capacidade do estádio. 92% ou mais por duas temporadas deixam o clube apto a ampliar.", "the crowd divided by the stadium's capacity. 92% or more for two seasons makes a club able to expand."),
+        ],
+        Aba::Emprestimos => &[
+            ("Linha", "Line", "goleiro, defesa (líbero, zagueiro, ala), meio (volante, meia, meia ofensivo) ou ataque: a que tem a melhor nota de posição do jogador.", "goalkeeper, defence (sweeper, centre back, wing back), midfield (defensive, central, attacking) or attack: the one where the player has his best position rating."),
+            ("Estatuto no elenco", "Squad status", "o papel no contrato: Key (titular absoluto), Regular starter (titular), rotação, reserva, jovem promessa... Key nunca sai emprestado.", "the contract's role: Key, Regular starter, rotation, backup, hot prospect... A Key player never goes on loan."),
+            ("Cobertura", "Cover", "os jogadores da mesma linha que ficam no clube com CA à altura do emprestado.", "the players of the same line who stay at the club with CA up to the loaned player's level."),
+            ("Vontade", "Willingness", "a nota do jogo (0 a 10) para o quanto o jogador quer ir para um clube. Pesa a reputação, o salário, a nação, a personalidade.", "the game's score (0 to 10) for how much a player wants to go to a club. It weighs reputation, wage, nation, personality."),
+            ("Lista de empréstimos", "Loan list", "os jogadores que o dono marca como disponíveis para empréstimo: só eles entram nas listas de procura dos outros clubes.", "the players the owner marks as available for loan: only they enter the other clubs' shortlists."),
         ],
         Aba::Cinzentos => &[
             ("Jogador cinzento", "Grey player", "um jogador virtual que o jogo cria só para completar o elenco: aparece em cinza, não tem contrato e não pode ser contratado. Some quando o clube volta a ter jogadores.", "a virtual player the game creates only to fill the squad: shown in grey, with no contract, and nobody can sign him. He goes away when the club has players again."),

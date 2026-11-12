@@ -95,6 +95,7 @@ fn manchete(aba: Aba, en: bool) -> &'static str {
         Aba::Publico => t2(en, "Quanta gente vai ao estádio.", "How many people go to the stadium."),
         Aba::Inativos => t2(en, "Quem pendura as chuteiras.", "Who hangs up their boots."),
         Aba::Cinzentos => t2(en, "Os jogadores que completam o elenco.", "The players who fill the squad."),
+        Aba::Emprestimos => t2(en, "Quem sai emprestado, e a verba.", "Who goes on loan, and the budget."),
         Aba::Jogo => t2(en, "O save, a tela e a pasta.", "The save, the screen and the folder."),
         Aba::Cfg => t2(en, "O arquivo tweaks.cfg.", "The tweaks.cfg file."),
         Aba::Log => t2(en, "O diário da DLL.", "The DLL's diary."),
@@ -121,8 +122,19 @@ fn original_de(nome: &str) -> Option<&'static str> {
         "stadium_seating_growth" | "stadium_reputation_trigger" => "on",
         "stadium_occupancy" => "league",
         "stadium_size" | "stadium_seat_cost" | "stadium_ceiling_zero" => "original",
+        "loans" => "off",
+        "budget_caps" => "original",
+        "loan_request_willingness" => "3.5",
+        "loan_requests" | "loan_home" | "loan_playing_time" | "loan_youth_demand" => "1",
+        "loan_squad_min" | "loan_unhappiness" => "0",
         _ => return None,
     })
+}
+
+/// O ordinal em inglês (1st, 2nd, 3rd, 4th...).
+fn ordinal_en(n: i32) -> String {
+    let s = match (n % 10, n % 100) { (1, x) if x != 11 => "st", (2, x) if x != 12 => "nd", (3, x) if x != 13 => "rd", _ => "th" };
+    format!("{}{}", n, s)
 }
 
 /// Um título na fonte dos títulos (Archivo Black).
@@ -210,6 +222,16 @@ fn unidade(nome: &str, en: bool) -> &'static str {
         "stadium_reserve" => t2(en, "no dinheiro do banco", "in the database's money"),
         "younger_from_age" | "younger_by" | "contest_max_age" | "idle_min_age" | "protect_young_unemployed" => t2(en, "anos", "years"),
         "idle_days" => t2(en, "dias", "days"),
+        "loan_youth_age" => t2(en, "anos", "years"),
+        "loan_youth_top" | "loan_others_top" => t2(en, "º da linha dele", "of his line"),
+        "loan_training_margin" => t2(en, "pontos de Treino", "Training points"),
+        "loan_cover_regular" | "loan_cover_backup" => t2(en, "jogadores da mesma linha", "players of the same line"),
+        "loan_cover_ratio" => t2(en, "% do CA dele", "% of his CA"),
+        "loan_squad_min" => t2(en, "jogadores no elenco", "players in the squad"),
+        "loan_unhappiness" => t2(en, "de felicidade (−100 a 100)", "happiness (−100 to 100)"),
+        "loan_unhappiness_gap" => t2(en, "de reputação a mais", "more reputation"),
+        "loan_request_willingness" => t2(en, "(0 a 10; original 3,5)", "(0 to 10; original 3.5)"),
+        "loan_requests" | "loan_home" | "loan_playing_time" | "loan_youth_demand" => t2(en, "× o original", "× the original"),
         "idle_rep" => t2(en, "de reputação (0 a 10.000)", "reputation (0 to 10,000)"),
         "idle_rep_per_year" => t2(en, "de reputação por ano", "reputation per year"),
         "squad_limit" => t2(en, "jogadores", "players"),
@@ -786,6 +808,65 @@ impl App {
                 format!("⟦{}⟧ season(s) in a row above {}% before it can expand.", x as i32, self.n(g("stadium_occupancy_min")))),
             "stadium_reserve" => f(format!("Clube com saldo de 20 milhões: a obra pode usar até ⟦{}⟧.", self.milhar((20_000_000.0 - x).max(0.0))),
                 format!("A club with a 20 million balance: the build can use up to ⟦{}⟧.", self.milhar((20_000_000.0 - x).max(0.0)))),
+            "loans" => if self.ligado(nome) {
+                f("O dono da IA empresta quem sobra, o jovem vai para onde joga e o jogador de fora pode voltar para casa. O titular absoluto (Key) nunca sai.".into(),
+                    "The AI owner lends whoever is spare, a youngster goes where he plays and a player abroad can go back home. A Key player never goes.".into())
+            } else {
+                f("Os empréstimos do jogo original: o dono quase sempre recusa, e o salário não entra na conta.".into(), "The original game's loans: the owner almost always refuses, and the wage doesn't count.".into())
+            },
+            "loan_youth_age" => f(format!("Até ⟦{}⟧ anos, quem não é titular absoluto conta como jovem: sai para jogar, sem precisar de cobertura no elenco.", x as i32),
+                format!("Up to ⟦{}⟧, a player who isn't a Key player counts as a youngster: he goes out to play, with no cover needed in the squad.", x as i32)),
+            "loan_youth_top" | "loan_others_top" => {
+                let quem = if nome == "loan_youth_top" { ("Um jovem", "A youngster") } else { ("Um jogador mais velho", "An older player") };
+                f(format!("{} só vai para um clube onde seria do ⟦1º ao {}º⟧ da linha dele (goleiro, defesa, meio ou ataque), pelo CA.", quem.0, x as i32),
+                    format!("{} only goes to a club where he'd be ⟦1st to {}⟧ of his line (goalkeeper, defence, midfield or attack), by CA.", quem.1, ordinal_en(x as i32)))
+            }
+            "loan_training_margin" => if x <= 0.0 {
+                f(format!("Dono com Treino 15: o jovem só vai para um clube com Treino ⟦{} ou mais⟧.", 15 - x as i32), format!("An owner with Training 15: the youngster only goes to a club with Training ⟦{} or more⟧.", 15 - x as i32))
+            } else {
+                f(format!("Dono com Treino 15: o jovem vai para um clube com Treino ⟦{} ou mais⟧ (a volta para casa não olha o treino).", 15 - x as i32),
+                    format!("An owner with Training 15: the youngster goes to a club with Training ⟦{} or more⟧ (going back home ignores Training).", 15 - x as i32))
+            },
+            "loan_cover_regular" | "loan_cover_backup" => {
+                let r = g("loan_cover_ratio") / 100.0;
+                let quem = if nome == "loan_cover_regular" { ("um titular", "a Regular starter") } else { ("um reserva", "a backup") };
+                if x <= 0.0 {
+                    f(format!("⟦Sem cobertura⟧: {} sai sem o dono olhar o elenco.", quem.0), format!("⟦No cover⟧: {} goes without the owner looking at the squad.", quem.1))
+                } else {
+                    f(format!("Para emprestar {} de CA 120, o dono fica com ⟦{}⟧ da mesma linha com CA ⟦{} ou mais⟧.", quem.0, x as i32, (120.0 * r).round()),
+                        format!("To lend {} with CA 120, the owner keeps ⟦{}⟧ of the same line with CA ⟦{} or more⟧.", quem.1, x as i32, (120.0 * r).round()))
+                }
+            }
+            "loan_cover_ratio" => f(format!("Quem cobre um jogador de CA 120 precisa de CA ⟦{} ou mais⟧.", (1.2 * x).round()), format!("Whoever covers a CA 120 player needs CA ⟦{} or more⟧.", (1.2 * x).round())),
+            "loan_squad_min" => if x <= 0.0 {
+                f("⟦Sem piso⟧: o clube pode emprestar até não ter time (o jogo para com \"Only 10 away players\").".into(), "⟦No floor⟧: a club can lend until it has no team (the game stops with \"Only 10 away players\").".into())
+            } else {
+                f(format!("Com ⟦{}⟧ jogadores ou menos no clube, o dono não empresta ninguém.", x as i32), format!("With ⟦{}⟧ players or fewer at the club, the owner lends nobody.", x as i32))
+            },
+            "loan_request_willingness" => f(format!("A IA pede o jogador emprestado se a vontade dele de ir for ⟦{} ou mais⟧ (o original pede 3,5; quanto menor, mais pedidos).", self.n(x)),
+                format!("The AI asks for the player on loan if his willingness to go is ⟦{} or more⟧ (the original needs 3.5; lower means more requests).", self.n(x))),
+            "loan_requests" => {
+                let p = 2f64.powf(x.max(1.0).log2().round());
+                f(format!("⟦{}×⟧ os pedidos de empréstimo da IA (arredonda para 1, 2, 4, 8...).", self.n(p)), format!("⟦{}×⟧ the AI's loan requests (rounds to 1, 2, 4, 8...).", self.n(p)))
+            }
+            "loan_home" => f(format!("Um brasileiro na Europa topa ir emprestado a um clube do Brasil com ⟦{}×⟧ a vontade.", self.n(x)), format!("A Brazilian in Europe is ⟦{}×⟧ as willing to go on loan to a Brazilian club.", self.n(x))),
+            "loan_playing_time" => f(format!("Onde ele seria 1º ou 2º da linha, a vontade de ir emprestado é ⟦{}×⟧.", self.n(x)), format!("Where he'd be 1st or 2nd of his line, his willingness to go on loan is ⟦{}×⟧.", self.n(x))),
+            "loan_youth_demand" => f(format!("Na escolha do alvo de uma vaga de empréstimo, o jovem que jogaria ali vale ⟦{}×⟧ a nota.", self.n(x)),
+                format!("When an AI club picks a loan target, a youngster who'd play there scores ⟦{}×⟧.", self.n(x))),
+            "loan_unhappiness" => if x <= 0.0 {
+                f("⟦Nada acontece⟧: o titular barrado fica como estava, como no original.".into(), "⟦Nothing happens⟧: the blocked starter stays as he was, as in the original.".into())
+            } else {
+                f(format!("O titular que o dono não deixa ir para um clube maior perde ⟦{}⟧ de felicidade: fica mais perto de pedir para sair.", x as i32),
+                    format!("A starter the owner won't let go to a bigger club loses ⟦{}⟧ happiness: he gets closer to asking to leave.", x as i32))
+            },
+            "loan_unhappiness_gap" => f(format!("O titular de um clube de reputação 6.000 só se chateia se quem pede tem ⟦{} ou mais⟧.", self.milhar(6000.0 + x)),
+                format!("A starter at a 6,000 reputation club only gets upset if the asking club has ⟦{} or more⟧.", self.milhar(6000.0 + x))),
+            "budget_caps" => if self.valor(nome) == "off" {
+                f("Toda nação usa a verba inteira, como a Inglaterra, a Espanha e a Itália. Medido: os clubes ricos da Alemanha e da França gastam ⟦+27% a +43%⟧ de verba, sem mudar as finanças.".into(),
+                    "Every nation uses its whole budget, like England, Spain and Italy. Measured: rich clubs in Germany and France get ⟦+27% to +43%⟧ budget, with no change in finances.".into())
+            } else {
+                f("O freio do original: Alemanha, França, Escócia e Holanda só usam 25% da verba acima de 17,5 milhões.".into(), "The original's brake: Germany, France, Scotland and the Netherlands only use 25% of the budget above 17.5 million.".into())
+            },
             "stadium_max" => f(format!("Um estádio com mais de ⟦{}⟧ lugares não amplia mais.", self.milhar(x)), format!("A stadium with more than ⟦{}⟧ places doesn't expand any more.", self.milhar(x))),
             _ => None,
         }
@@ -1498,6 +1579,68 @@ impl App {
         ui.add_space(4.0);
     }
 
+    fn aba_emprestimos(&mut self, ui: &mut egui::Ui) {
+        self.cabecalho(ui, Aba::Emprestimos);
+        let en = self.en;
+        let total = ui.available_width();
+        let esq = (total * 0.62).max(560.0);
+        ui.horizontal_top(|ui| {
+            ui.allocate_ui_with_layout(Vec2::new(esq, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(esq);
+                self.controle(ui, "loans", true);
+                let e = self.ligado("loans");
+                App::cartao(ui, &self.t("Quem sai (a decisão do dono)", "Who goes (the owner's decision)"), |ui| {
+                    for k in ["loan_youth_age", "loan_youth_top", "loan_others_top", "loan_training_margin", "loan_cover_regular", "loan_cover_backup", "loan_cover_ratio", "loan_squad_min"] {
+                        self.controle(ui, k, e);
+                    }
+                });
+                App::cartao(ui, &self.t("Quem pede (os outros clubes e o jogador)", "Who asks (the other clubs and the player)"), |ui| {
+                    for k in ["loan_request_willingness", "loan_requests", "loan_home", "loan_playing_time", "loan_youth_demand"] {
+                        self.controle(ui, k, e);
+                    }
+                });
+                App::cartao(ui, &self.t("O titular barrado", "The blocked starter"), |ui| {
+                    for k in ["loan_unhappiness", "loan_unhappiness_gap"] {
+                        self.controle(ui, k, e);
+                    }
+                });
+                App::cartao(ui, &self.t("Verba", "Budget"), |ui| {
+                    self.controle(ui, "budget_caps", true);
+                });
+            });
+            ui.add_space(18.0);
+            let dir = ui.available_width();
+            ui.allocate_ui_with_layout(Vec2::new(dir, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.set_width(dir);
+                App::cartao(ui, &self.t("Medido (todas as ligas, 2001/02 e 2002/03)", "Measured (every league, 2001/02 and 2002/03)"), |ui| {
+                    egui::Grid::new("emprestimos_medidos").striped(true).spacing([14.0, 4.0]).show(ui, |ui| {
+                        for h in [t2(en, "", ""), t2(en, "Original", "Original"), t2(en, "Estas regras", "These rules")] {
+                            ui.label(RichText::new(h).strong());
+                        }
+                        ui.end_row();
+                        for (pt, e_, o, n) in [
+                            ("Empréstimos", "Loans", "3.255 · 4.042", "5.467 · 5.469"),
+                            ("Jovens promissores emprestados", "Promising youngsters loaned", "680 · 698", "726 · 692"),
+                            ("Bons jogadores subindo (CA 120+)", "Good players moving up (CA 120+)", "259 · 387", "456 · 920"),
+                            ("Titulares saindo dos grandes", "Starters leaving big clubs", "70 · 104", "136 · 182"),
+                            ("Evolução dos promissores (CA/ano)", "Promising players' growth (CA/year)", "11,56 · 10,55", "11,78 · 10,70"),
+                            ("Clubes no vermelho", "Clubs in the red", "48,7% · 47,6%", "48,1% · 48,8%"),
+                        ] {
+                            ui.label(if en { e_ } else { pt });
+                            // os números em pt (1.234 · 11,5); em inglês, ponto e vírgula trocam de papel
+                            let troca = |x: &str| if en { x.chars().map(|c| match c { '.' => ',', ',' => '.', c => c }).collect() } else { x.to_string() };
+                            ui.label(troca(o));
+                            ui.label(RichText::new(troca(n)).color(VERDE()));
+                            ui.end_row();
+                        }
+                    });
+                    ui.label(RichText::new(t2(en, "Uma carreira automática por configuração, sem clube humano. O ruído entre carreiras iguais é de uns 5%. Em todas, inclusive no original, o jovem emprestado evolui uns 2,5 de CA por ano menos que o que fica: é o motor do jogo.",
+                        "One automatic career per setting, with no human club. The noise between identical careers is about 5%. In all of them, the original included, a loaned youngster grows about 2.5 CA a year less than one who stays: it's the game's engine.")).size(11.5).color(CINZA()));
+                });
+            });
+        });
+    }
+
     fn aba_publico(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Publico);
         let en = self.en;
@@ -1983,6 +2126,7 @@ impl eframe::App for App {
                 Aba::Inativos => self.aba_inativos(ui),
                 Aba::Disputa => self.aba_disputa(ui),
                 Aba::Cinzentos => self.aba_cinzentos(ui),
+                Aba::Emprestimos => self.aba_emprestimos(ui),
                 Aba::Nomes => self.aba_nomes(ui),
                 Aba::Publico => self.aba_publico(ui),
                 Aba::Fornada => self.aba_fornada(ui),

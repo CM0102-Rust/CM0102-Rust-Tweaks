@@ -482,6 +482,118 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
+## Loans & budget
+
+Who goes on loan. In the original game, the AI owner refuses almost every loan request, and a youngster who doesn't play sits still. Here the owner lends whoever is spare, looking at the minutes the player would get and the cover left in the squad, and clubs look for youngsters to play. The numbers on the right come from test careers with every league. The rules are a proposal: the guide (docs/EMPRESTIMOS.en.md) explains each one, so the community can suggest changes.
+
+- **Line**: goalkeeper, defence (sweeper, centre back, wing back), midfield (defensive, central, attacking) or attack: the one where the player has his best position rating.
+- **Squad status**: the contract's role: Key, Regular starter, rotation, backup, hot prospect... A Key player never goes on loan.
+- **Cover**: the players of the same line who stay at the club with CA up to the loaned player's level.
+- **Willingness**: the game's score (0 to 10) for how much a player wants to go to a club. It weighs reputation, wage, nation, personality.
+- **Loan list**: the players the owner marks as available for loan: only they enter the other clubs' shortlists.
+
+### Loans — `loans`
+
+Turns on our loan rules. The AI owner lends whoever is spare: a youngster who isn't first team goes where he plays, a squad player goes when someone can cover him, and a player abroad can go back home. A Key player never goes. Your club's decisions stay yours. Off, loans are the original game's, where the owner almost always refuses.
+
+Values: `off` (Off (the original game)), `on` (On (our rule)). Default: `on`.
+
+### Youngster up to — `loan_youth_age`
+
+Up to this age, a player who isn't a Key player counts as a youngster: the idea is to get games, so he goes without the owner needing cover in the squad. Even so, he only goes where he'd play (the two keys below) and to Training not much worse.
+
+Values: from 15 to 30 (whole number). Default: `21`.
+
+### A youngster goes where he'd be up to — `loan_youth_top`
+
+A youngster only goes to a club where he'd be one of the N best of his line (goalkeeper, defence, midfield or attack), by CA. With 2, he'd be first or second choice: he'll play. With 1, only where he'd start. It's also who the demand for youngsters favours.
+
+Values: from 1 to 11 (whole number). Default: `2`.
+
+### Others go where they'd be up to — `loan_others_top`
+
+The same for older players: a player only goes to a club where he'd be one of the N best of his line. Nobody goes on loan to sit on the bench.
+
+Values: from 1 to 11 (whole number). Default: `2`.
+
+### Destination's Training: how much worse — `loan_training_margin`
+
+Training develops a player more than matches do (that is what the test careers show). A youngster only goes to a club with Training of at least the owner's minus this number. With 3, a youngster from a Training 15 club can go to a Training 12 club. With 0, only to equal or better Training: fewer youngsters loaned, each one to a better place. Going back home ignores Training.
+
+Values: from -20 to 20 (whole number). Default: `3`.
+
+### Cover to lend a Regular starter — `loan_cover_regular`
+
+To lend a Regular starter, the owner must keep this many players of the same line up to his level (see the key below). It's the case of a club with three good defensive midfielders: one of them can go.
+
+Values: from 0 to 10 (whole number). Default: `2`.
+
+### Cover to lend rotation and backup — `loan_cover_backup`
+
+The same for a rotation or backup player: how many of the same line up to his level the owner must keep. A loan back home needs one fewer.
+
+Values: from 0 to 10 (whole number). Default: `1`.
+
+### Who covers: CA of at least — `loan_cover_ratio`
+
+What "up to his level" means: whoever covers needs CA of at least this percentage of the loaned player's CA. With 90, whoever covers a CA 120 player needs CA 108 or more.
+
+Values: from 0 to 200 (whole number). Default: `90`.
+
+### The owner doesn't lend with up to — `loan_squad_min`
+
+The squad floor: with this many players or fewer at the club, the owner doesn't lend (nor list for loan). Without it (0), the test careers crashed: a club lent until it had no team and the game stopped with "Only 10 away players".
+
+Values: from 0 to 50 (whole number). Default: `20`.
+
+### Minimum willingness for the AI to ask — `loan_request_willingness`
+
+The AI only asks for a player on loan if his willingness to go is at least this number (the game's own willingness score, 0 to 10). The original needs 3.5. Lower, more requests reach the owner.
+
+Values: from 0 to 10. Default: `2.75`.
+
+### AI loan requests — `loan_requests`
+
+How many times more the AI tries to ask for a loan, compared with the original (1, 2, 4, 8...: the draw only takes powers of 2). With 2, twice the attempts.
+
+Values: from 1 to 64 (whole number). Default: `2`.
+
+### Willingness to go back home — `loan_home`
+
+A player abroad is more willing to go on loan to a club of his own nation: the Brazilian in Europe who goes back to Brazil. A loan back home also needs one less cover and ignores Training. 1 = the original.
+
+Values: from 0.1 to 10. Default: `2`.
+
+### Willingness to go where he plays — `loan_playing_time`
+
+A player is more willing to go on loan where he'd be first or second choice of his line: minutes. 1 = the original.
+
+Values: from 0.1 to 10. Default: `1.3`.
+
+### Demand for youngsters — `loan_youth_demand`
+
+When an AI club picks whom to ask for in a loan slot, a youngster who would play there (among the first of his line, going home or to Training within the margin) scores this much more. Without it, spare adults win the slots and youth loans fall by half. 1 = the original.
+
+Values: from 0.1 to 10. Default: `3`.
+
+### The blocked starter loses in happiness — `loan_unhappiness`
+
+The case of the player who wants to go and the owner won't let him: when a much bigger club asks for a starter (Key or Regular starter) on loan and the owner refuses, the player loses this much contract happiness. Unhappy, he gets closer to asking to leave, and the market moves. 0 = nothing happens, as in the original. It's rare today (6 cases in two test seasons), because a bigger club hardly ever asks for a starter on loan: the number is there for when it happens more.
+
+Values: from 0 to 200 (whole number). Default: `30`.
+
+### How much bigger the asking club is — `loan_unhappiness_gap`
+
+How much bigger, in reputation, the asking club must be for the starter to get upset at the refusal. With 1,000, a 6,000 club's starter gets upset with a request from a club of 7,000 or more.
+
+Values: from 0 to 10000 (whole number). Default: `1000`.
+
+### Transfer budget — `budget_caps`
+
+In the original game, some nations' transfer budget is compressed: Germany, France, Scotland and the Netherlands only use 25% of what's above 17.5 million; Brazil, the Nordic nations and others, only part above 2.5 million. England, Spain and Italy have no brake. With no brake, every club uses its whole budget, like the English. In the test careers rich German and French clubs spent more, and finances didn't change.
+
+Values: `original` (With the per-nation brake (original)), `off` (No brake: every nation like England). Default: `off`.
+
 ## Screen, save, folder
 
 The save, the install, the screen and the CD. These tweaks don't change the game's rules: only how it saves, where it looks for its files and how it draws.

@@ -90,9 +90,10 @@ pub(crate) fn iniciar_batida() {
             let mes = ((dia as u32 * 12) / 366) as u8;
             if ano > 1900 && (ano, mes) != ultimo {
                 ultimo = (ano, mes);
-                registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}{}", ano, dia, inicio.elapsed().as_secs(),
+                registro::linha(&format!("tick\t{}-{:03}\t{}s\tcontest {}\tbirths {}\tidle {}{}{}", ano, dia, inicio.elapsed().as_secs(),
                     JOVENS.load(Relaxed), NASCIDOS.load(Relaxed), APOSENTADOS.load(Relaxed),
-                    if unsafe { arse() } { "\tarse (player_setup.cfg)" } else { "" }));
+                    if unsafe { arse() } { "\tarse (player_setup.cfg)" } else { "" },
+                    if crate::estudo::ligado() || crate::mercado::ligado() { format!("\t{}", crate::mercado::contadores()) } else { String::new() }));
                 if mes == 6 {
                     unsafe { registrar_temporada(format!("{}-{:03}", ano, dia)) };
                 }

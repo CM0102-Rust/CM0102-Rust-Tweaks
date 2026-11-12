@@ -45,8 +45,14 @@ A verba existe, mas passa por funis [observado]:
 
 ## 4. O que a carreira mediu
 
-*(a preencher com a carreira de 07/11)*
+Os empréstimos e a verba foram medidos e viraram chaves: ver [EMPRESTIMOS.md](EMPRESTIMOS.md) §4. O resto do estudo das carreiras de 11 e 12/11/2026, com cada item testado sozinho:
 
-## 5. Chaves propostas
+- **O lance mais fácil** (o sorteio contra reputação + 1.000, não 2 × reputação + 1.000): +4% a 7% de atividade.
+- **O destaque** (a vontade de um titular de ir para um clube bem maior, × 1,6): +22% de jogadores subindo na 2ª temporada.
+- **O preço do titular absoluto** (× o pedido) e o **Business do presidente** na verba: dentro do ruído, ou só mudam a verba.
+- **As correções da multa (0x86165b) e do empréstimo da lista de reservas (0x83e482)**: dentro do ruído.
 
-*(a preencher)*
+## 5. Chaves
+
+- **Empréstimos e verba** (1.5): `loans`, as `loan_*` e `budget_caps`, em [EMPRESTIMOS.md](EMPRESTIMOS.md) §5.
+- **As transferências** (o destaque, o lance, o interesse do mercado): o próximo estudo, com o mesmo método.

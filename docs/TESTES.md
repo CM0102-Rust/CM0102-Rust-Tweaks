@@ -365,14 +365,34 @@ As 11 nações sem nenhum nome (nos dois bancos novos) são extintas ou duplicad
 
 Exemplos no update 2026 (primeiros e sobrenomes próprios em 200): Serra Leoa, Bahrein, Cuba, Andorra e Liechtenstein, de 0 e 0 para 200 e 200; Vietnã, de 200 e 26 para 200 e 200; Inglaterra e Brasil, 200 e 200 nos dois. As carreiras (criada no update 2026, carregada no CLZ 6.1) seguiram sem queda nem caixa de erro.
 
-## 5. Limites e próximos testes
+## 5. Os empréstimos e a verba (`loans`, `budget_caps`)
+
+Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho de 2003. Rodaram quatro ao mesmo tempo, em bancadas separadas, com o modo de medição (`TWEAKS_ESTUDO=1`) e as regras ligadas uma de cada vez. O resultado e o que cada parte fez estão em [EMPRESTIMOS.md](EMPRESTIMOS.md) §4. Como foi o teste:
+
+- **Primeiro cada item sozinho, depois as combinações** (o pedido do Lucas: nunca tudo de uma vez). A base original rodou três vezes para medir o ruído: ±5% na maioria das contagens, ±0,1 a 0,3 na evolução do CA.
+- **O que se mede** (o `estudo_*.tsv` de cada carreira):
+  - os empréstimos e as transferências concluídas;
+  - as decisões do dono;
+  - os jovens promissores (até 21, PA − CA ≥ 30) e o CA deles a cada julho;
+  - os jogos de liga de cada emprestado (das estatísticas da competição);
+  - a verba e o gasto dos clubes.
+- **As quedas:** sem o piso do elenco, três de quatro carreiras caíram:
+  - "Only 10 away players" num time reserva;
+  - um erro de copa;
+  - uma falha de memória.
+
+  Com `loan_squad_min = 20`, quatro de quatro chegaram a julho de 2003. As travadas de mais de 60 s em julho de 2001 acontecem também na base original com quatro jogos ao mesmo tempo: é a montagem das listas de procura do jogo.
+- **Pelo `tweaks.cfg`** (sem o modo de medição): uma carreira curta com o `tweaks.cfg` do repositório e `log = 1` mostra a linha `loans: on (...)` e os contadores na linha `tick`.
+- **Falta:** carreiras de 10 temporadas, o CLZ e uma carreira com clube humano.
+
+## 6. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
 - **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
 - **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois outros pacotes da comunidade, quando saírem.
 
-## 6. Como reproduzir
+## 7. Como reproduzir
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).

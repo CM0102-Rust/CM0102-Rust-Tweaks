@@ -38,8 +38,18 @@ unsafe fn clube(c: usize) -> String {
     let comp = d(c + 0x57);
     let estadio = d(c + 0x69);
     let (cap, teto) = if estadio != 0 { (d(estadio + 0x3c) as i32, d(estadio + 0x44) as i32) } else { (-1, -1) };
-    format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", d(c), nome(c), d(comp), w(comp + 0x69), w(c + 0x80),
-        d(c + 0x73) as i32, d(c + 0x77) as i32, d(c + 0x7b) as i32, cap, teto)
+    // o saldo de verdade fica nas finanças (0x5a0590, thiscall em [0xae2a38], ret 4; BALANCE +0, i64); +0x65 é o
+    // dinheiro do banco de dados, que a carreira não atualiza. A verba: 0x598800 thiscall(fin, 0, 0, 0, 1, 0) -> i64.
+    let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
+    let verba: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32) -> i64 = core::mem::transmute(0x598800usize);
+    let fin = financas(d(0xae2a38), c);
+    let (saldo, v) = if fin != 0 { (core::ptr::read_unaligned(fin as *const i64), verba(fin, 0, 0, 0, 1, 0)) } else { (0, 0) };
+    // Business (+0xf) e Ambition do presidente (+0xbf, ficha de não jogador em +0x69); -1 sem presidente
+    let pres = d(c + 0xbf);
+    let np = if pres != 0 { d(pres + 0x69) } else { 0 };
+    let business = if np != 0 { b(np + 0xf) as i32 } else { -1 };
+    format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", d(c), nome(c), d(comp), w(comp + 0x69), w(c + 0x80),
+        d(c + 0x73) as i32, d(c + 0x77) as i32, d(c + 0x7b) as i32, cap, teto, d(c + 0x65) as i32, saldo, v, business)
 }
 
 static mut ANTERIOR: Option<HashMap<usize, usize>> = None;
@@ -54,10 +64,36 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
     }
     let linhas: Vec<String> = (0..nc).map(|i| clubes + 0x245 * i).filter(|&c| em_competicao(c))
         .map(|c| format!("{}\t{}", data, clube(c))).collect();
-    gravar("estudo_clubes.tsv", "data\tclube\tnome\tcomp\tcomp_rep\trep\tpublico\tpub_min\tpub_max\tcapacidade\tteto_estadio", &linhas);
+    gravar("estudo_clubes.tsv", "data\tclube\tnome\tcomp\tcomp_rep\trep\tpublico\tpub_min\tpub_max\tcapacidade\tteto_estadio\tcaixa\tsaldo\tverba\tbusiness", &linhas);
 
     let mut agora = HashMap::new();
     let (mut jogadores, mut mudancas) = (Vec::new(), Vec::new());
+    let mut emprestados = Vec::new();
+    let mut jovens = Vec::new();
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    // os jogos de cada (pessoa, clube) nas ligas da temporada: o Comp_Stats de cada liga (objeto em [[0xadadfc] + 4 × id] + 8),
+    // tabela de jogadores em +0x19 (45 bytes: +4 a pessoa, +8 o clube da última partida, +0xc os jogos), quantidade em +0x21
+    let mut jogos_liga: HashMap<(usize, usize), u32> = HashMap::new();
+    let mut ligas = std::collections::HashSet::new();
+    for i in 0..nc {
+        let c = clubes + 0x245 * i;
+        let comp = d(c + 0x57);
+        if comp != 0 && em_competicao(c) && ligas.insert(d(comp)) {
+            let obj = d(d(0xadadfc) + 4 * d(comp));
+            let est = if obj != 0 { d(obj + 8) } else { 0 };
+            if est == 0 {
+                continue;
+            }
+            let (tab, q) = (d(est + 0x19), d(est + 0x21));
+            if tab == 0 || q > 100_000 {
+                continue;
+            }
+            for r in 0..q {
+                let e = tab + 45 * r;
+                *jogos_liga.entry((d(e + 4), d(e + 8))).or_insert(0) += *((e + 0xc) as *const u8) as u32;
+            }
+        }
+    }
     let anterior = (*core::ptr::addr_of_mut!(ANTERIOR)).take();
     for s in 0..n {
         let p = pessoas + 110 * s;
@@ -68,6 +104,18 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
         let c = d(p + 0x39);
         let id_clube = if c != 0 { d(c) } else { usize::MAX };
         agora.insert(s, id_clube);
+        // os jogos do contrato com o clube atual (+0x3b) de quem não está num contrato comum (tipo 5 = empréstimo)
+        if c != 0 {
+            let k = contrato(d(0xae1050), p, c);
+            if k != 0 && *((k + 0x35) as *const u8) & 0x3f != 2 {
+                emprestados.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data, s, d(c), w(c + 0x80), *((k + 0x35) as *const u8) & 0x3f,
+                    jogos_liga.get(&(d(p), d(c))).copied().unwrap_or(0), b(p + 0x18), w(ficha + 5), w(ficha + 7)));
+            }
+        }
+        // os jovens promissores (até 21, PA − CA ≥ 30) e os jogos de liga no clube atual, para comparar com os emprestados
+        if c != 0 && b(p + 0x18) <= 21 && w(ficha + 7) - w(ficha + 5) >= 30 {
+            jovens.push(format!("{}\t{}\t{}\t{}", data, s, d(c), jogos_liga.get(&(d(p), d(c))).copied().unwrap_or(0)));
+        }
         let dados = || format!("{}\t{}\t{}\t{}\t{}\t{}", b(p + 0x18), w(ficha + 5), w(ficha + 7), u(ficha + 9), u(ficha + 0xb), u(ficha + 0xd));
         if julho && c != 0 && em_competicao(c) {
             jogadores.push(format!("{}\t{}\t{}\t{}\t{}", data, s, dados(), d(c), w(c + 0x80)));
@@ -83,6 +131,9 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
     if julho {
         gravar("estudo_jogadores.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tclube\tclube_rep", &jogadores);
     }
+    gravar_mercado();
+    gravar("estudo_emprestados.tsv", "data\tpessoa\tclube\tclube_rep\ttipo\tjogos\tidade\tca\tpa", &emprestados);
+    gravar("estudo_jovens.tsv", "data\tpessoa\tclube\tjogos", &jovens);
     gravar("estudo_mudancas.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tde\tde_rep\tpara\tpara_rep", &mudancas);
 }
 
@@ -134,6 +185,7 @@ pub(crate) unsafe fn instalar() {
         registro::linha("study: watching the automatic team selection (0x6dbc50) for the repeated-player box");
     }
     instalar_conferencia();
+    instalar_mercado();
 }
 
 unsafe fn elenco_repetido(c: usize) -> Vec<usize> {
@@ -243,4 +295,153 @@ pub(crate) unsafe fn instalar_conferencia() {
         None => registro::linha("study: 0x7a6f10 differs; not watched"),
     }
     registro::linha("study: watching every addition to a squad (0x53bd10, 0x7a6f10) for repeated people");
+}
+
+// ---- Mercado (1.5): cada decisão da 0x84af00 e cada transferência concluída (0x8cb810) ----
+
+/// As linhas do mercado esperando a gravação (na batida mensal, ou a cada 20 mil).
+static MERCADO: std::sync::Mutex<(Vec<String>, Vec<String>)> = std::sync::Mutex::new((Vec::new(), Vec::new()));
+static mut T_PREVER: usize = 0;
+static mut T_PASSADA: usize = 0;
+static mut QUEM_PREVE: usize = 0;
+/// As previsões em massa contadas (gravadas em `estudo_previsoes.tsv` na batida mensal) e os pedidos de empréstimo previstos
+/// já registrados no ano (uma linha por pessoa, comprador e motivo).
+static CONTAGEM: std::sync::Mutex<Option<HashMap<String, u64>>> = std::sync::Mutex::new(None);
+static VISTOS_EMP: std::sync::Mutex<Option<std::collections::HashSet<(usize, usize, String, &'static str)>>> = std::sync::Mutex::new(None);
+
+const CAB_DECISOES: &str = "data\tquem\temprestimo\tresposta\tmotivo\tvendedor\tvendedor_nome\tvendedor_rep\tvendedor_humano\tcomprador\tcomprador_rep\tpessoa\tidade\tca\tpa\trep_atual\tlistado\testatuto\tmoral\ttipo_contrato\toferta\tpedido";
+const CAB_PASSADAS: &str = "data\ta0\ta1\ta2\ta3\ta4\ta5\tvalor\ttipo\tdia\tano";
+
+fn guardar_mercado(decisao: Option<String>, passada: Option<String>) {
+    let Ok(mut m) = MERCADO.lock() else { return };
+    if let Some(l) = decisao {
+        m.0.push(l);
+    }
+    if let Some(l) = passada {
+        m.1.push(l);
+    }
+    if m.0.len() >= 20_000 || m.1.len() >= 20_000 {
+        let (a, b) = (core::mem::take(&mut m.0), core::mem::take(&mut m.1));
+        drop(m);
+        gravar("estudo_decisoes.tsv", CAB_DECISOES, &a);
+        gravar("estudo_passadas.tsv", CAB_PASSADAS, &b);
+    }
+}
+
+/// Grava o que está esperando (chamada pela batida mensal).
+pub(crate) fn gravar_mercado() {
+    if let Ok(mut c) = CONTAGEM.lock() {
+        if let Some(c) = c.take() {
+            let linhas: Vec<String> = c.into_iter().map(|(k, n)| format!("{}\t{}", k, n)).collect();
+            gravar("estudo_previsoes.tsv", "ano\tquem\temprestimo\tresposta\tmotivo\tn", &linhas);
+        }
+    }
+    let Ok(mut m) = MERCADO.lock() else { return };
+    let (a, b) = (core::mem::take(&mut m.0), core::mem::take(&mut m.1));
+    drop(m);
+    gravar("estudo_decisoes.tsv", CAB_DECISOES, &a);
+    gravar("estudo_passadas.tsv", CAB_PASSADAS, &b);
+}
+
+unsafe fn f64_em(a: usize) -> f64 {
+    core::ptr::read_unaligned(a as *const f64)
+}
+
+/// Por que a 0x84af00 respondeu assim a um pedido de empréstimo (a mesma ordem das regras dela; ver EMPRESTIMOS.md).
+unsafe fn motivo_emprestimo(vendedor: usize, jogador: usize, comprador: usize, k: usize) -> &'static str {
+    let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544590usize);
+    if vendedor == 0 || (k != 0 && b(k + 0x49) != 0) {
+        return "no_seller_or_flag";
+    }
+    if d(vendedor + 0xcf) == jogador {
+        return "is_manager";
+    }
+    if k == 0 || b(k + 0x35) & 0x3f != 2 {
+        return "no_contract";
+    }
+    if humano(vendedor, 0, 1, 0, 0) != 0 {
+        return "human_seller";
+    }
+    let rep = w(comprador + 0x80) as f64;
+    let rep_j = u(d(jogador + 0x61) + 0xb) as f64;
+    let lis = listado(jogador, 0) != 0;
+    if lis && rep * f64_em(0x968928) > rep_j {
+        return "listed";
+    }
+    let st = b(k + 0x4f) as u8 & 0xf0;
+    if st == 0x60 || st == 0x70 || b(d(jogador + 0x61) + 0xf) == 0x14 {
+        if rep > rep_j * f64_em(0x969040) && (b(k + 0x3d) as i8) < -50 && d(vendedor + 0x1db) != d(0x9cf6e8) {
+            return "status_6_7";
+        }
+        return if lis { "listed_rep_low_and_status_fail" } else { "status_fail" };
+    }
+    if lis { "listed_rep_low" } else { "not_listed" }
+}
+
+unsafe extern "stdcall" fn prever(vendedor: usize, jogador: usize, oferta: i64, comprador: usize, pedido: i64, emprestimo: u32) -> u8 {
+    let original: unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8 = core::mem::transmute(T_PREVER);
+    let quem = QUEM_PREVE.wrapping_sub(5);
+    let r = original(vendedor, jogador, oferta, comprador, pedido, emprestimo);
+    let r = crate::mercado::prever_emprestimo(vendedor, jogador, comprador, emprestimo, r, quem);
+    if jogador == 0 || comprador < 0x10000 {
+        return r;
+    }
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544590usize);
+    let k = if vendedor != 0 { contrato(d(0xae1050), jogador, vendedor) } else { 0 };
+    let emp = emprestimo as u8 != 0;
+    let motivo = if emp { motivo_emprestimo(vendedor, jogador, comprador, k) } else { "-" };
+    let ficha = d(jogador + 0x61);
+    let (ca, pa, rep_j) = if ficha != 0 { (w(ficha + 5) as i32, w(ficha + 7) as i32, u(ficha + 0xb) as i32) } else { (-1, -1, -1) };
+    let (vid, vnome, vrep, vh) = if vendedor != 0 { (d(vendedor) as i64, nome(vendedor), w(vendedor + 0x80) as i32, humano(vendedor, 0, 1, 0, 0)) } else { (-1, String::new(), -1, 0) };
+    let (st, moral, tipo) = if k != 0 { ((b(k + 0x4f) as u8 >> 4) as i32, b(k + 0x3d) as i8 as i32, (b(k + 0x35) as u8 & 0x3f) as i32) } else { (-1, 0, -1) };
+    let data = data_do_jogo();
+    let massa = matches!(quem, 0x8435c3 | 0x84049c | 0x8405a2);
+    if massa {
+        let Ok(mut c) = CONTAGEM.lock() else { return r };
+        *c.get_or_insert_with(HashMap::new).entry(format!("{}\t{:#x}\t{}\t{}\t{}", &data[..4], quem, emp as u8, r, motivo)).or_insert(0) += 1;
+        drop(c);
+        if quem != 0x8405a2 {
+            return r;
+        }
+        let Ok(mut v) = VISTOS_EMP.lock() else { return r };
+        if !v.get_or_insert_with(Default::default).insert((d(jogador), d(comprador), data[..4].to_string(), motivo)) {
+            return r;
+        }
+    }
+    guardar_mercado(Some(format!("{}\t{:#x}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        data, quem, emp as u8, r, motivo, vid, vnome, vrep, vh, d(comprador), w(comprador + 0x80), d(jogador), b(jogador + 0x18),
+        ca, pa, rep_j, listado(jogador, 0), st, moral, tipo, oferta, pedido)), None);
+    r
+}
+
+#[unsafe(naked)]
+unsafe extern "C" fn entrada_prever() {
+    core::arch::naked_asm!("mov eax, [esp]", "mov [{q}], eax", "jmp {f}", q = sym QUEM_PREVE, f = sym prever);
+}
+
+/// { 0x8cb810 } (thiscall, ret 4): `TRANSFER_MANAGER::add_past_transfer(registro)`: 37 bytes, +0..+0x17 seis u32 (a
+/// pessoa e os clubes), +0x18 o valor, +0x1c o tipo, +0x1d a data (dia do ano u16, ano u16).
+unsafe extern "thiscall" fn passada(t: usize, r: usize) {
+    let original: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(T_PASSADA);
+    if r != 0 {
+        let a = |k: usize| d(r + 4 * k) as i32;
+        guardar_mercado(None, Some(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data_do_jogo(), a(0), a(1), a(2), a(3), a(4), a(5),
+            d(r + 0x18) as i32, b(r + 0x1c) as u8, u(r + 0x1d), u(r + 0x1f))));
+    }
+    original(t, r)
+}
+
+pub(crate) unsafe fn instalar_mercado() {
+    match crate::origem::trampolim(0x84af00, &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00], entrada_prever as *const () as usize) {
+        Some(t) => T_PREVER = t,
+        None => registro::linha("study: 0x84af00 differs; transfer and loan decisions not watched"),
+    }
+    match crate::origem::trampolim(0x8cb810, &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00], passada as *const () as usize) {
+        Some(t) => T_PASSADA = t,
+        None => registro::linha("study: 0x8cb810 differs; completed transfers not watched"),
+    }
+    registro::linha("study: watching transfer and loan decisions (0x84af00) and completed transfers (0x8cb810)");
 }

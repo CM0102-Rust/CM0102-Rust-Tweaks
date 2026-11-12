@@ -65,6 +65,8 @@ pub(crate) struct Publico {
     /// o estádio: a ocupação mínima (%) e a reserva de caixa que a obra não toca
     ocupacao_min: f64,
     reserva: f64,
+    /// o bônus do campeão da liga na média da temporada seguinte (%; 0 = sem)
+    titulo: f64,
 }
 
 /// O jogo original (sem tweaks.cfg nenhum, nada muda).
@@ -72,7 +74,7 @@ const ORIGINAL: Publico = Publico {
     sentados_crescem: true, gatilho_reputacao: true, tetos_da_liga: true, recorde_real: false, reprimida: 0.0, tradicao: 0.0,
     mata_estadio: false, temporadas_cheias: 1, ocupacao_tudo: false, obra_demanda: false, custo_lugar: 0.0, teto_demanda: false,
     maximo: 125_000, disputa: false, teto_fraco: 2000.0, teto_medio: 3000.0, teto_forte: 5000.0, fraca_limite: 1500.0, fraca_fica: 20.0,
-    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0,
+    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0, titulo: 0.0,
 };
 /// As nossas regras, o padrão de cada chave ausente de um tweaks.cfg (08/11, Lucas: o padrão é sempre o nosso). O custo
 /// por lugar −1 = `auto` (calibrado pelo caixa dos clubes do banco).
@@ -80,7 +82,7 @@ const NOSSO: Publico = Publico {
     sentados_crescem: false, gatilho_reputacao: false, tetos_da_liga: false, recorde_real: true, reprimida: 0.1, tradicao: 0.025,
     mata_estadio: true, temporadas_cheias: 2, ocupacao_tudo: true, obra_demanda: true, custo_lugar: -1.0, teto_demanda: true,
     maximo: 125_000, disputa: true, teto_fraco: 0.0, teto_medio: 0.0, teto_forte: 0.0, fraca_limite: 0.0, fraca_fica: 20.0,
-    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0,
+    rumo_real: 50.0, por_posicao: 3.0, piso: true, disputa_max: 50.0, disputa_top2: 25.0, ocupacao_min: 92.0, reserva: 5_250_000.0, titulo: 0.0,
 };
 static mut P: Publico = ORIGINAL;
 
@@ -128,6 +130,8 @@ fn ler() -> Publico {
             },
             "stadium_ceiling_zero" => p.teto_demanda = v != "original",
             "title_race" => p.disputa = v != "off",
+            // EXPERIMENTAL (1.5): % a mais na média do ano seguinte para o campeão da liga
+            "title_bonus" => p.titulo = n.unwrap_or(p.titulo).clamp(0.0, 100.0),
             "stadium_max" => p.maximo = n.unwrap_or(p.maximo as f64).clamp(1_000.0, 1e7) as i32,
             _ => {}
         }
@@ -623,6 +627,10 @@ unsafe extern "C" fn media(liga: usize) {
         // a tradição só para quem terminou 2 posições ou mais acima do previsto: % da distância por posição
         if p.tradicao > 0.0 && dif >= 2 && (recorde as f64) > nova {
             nova += (p.tradicao * dif as f64).min(1.0) * (recorde as f64 - nova);
+        }
+        // o campeão da liga (title_bonus): o título atrai gente mesmo para quem já era o favorito (dif = 0)
+        if p.titulo > 0.0 && a.fim == 1 {
+            nova *= 1.0 + p.titulo / 100.0;
         }
         // os tetos da média pela divisão (0 = sem teto)
         let teto_div = if nivel <= 7 { p.teto_fraco } else if nivel <= 12 { p.teto_medio } else { p.teto_forte };

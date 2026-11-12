@@ -45,8 +45,14 @@ The budget exists, but it goes through funnels [observed]:
 
 ## 4. What the career measured
 
-*(to be filled in with the 07/11 career)*
+Loans and the budget were measured and became keys: see [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §4. The rest of the study from the 11 and 12/11/2026 careers, each item tested on its own:
 
-## 5. Proposed keys
+- **The easier bid** (the draw against reputation + 1,000, not 2 × reputation + 1,000): +4% to 7% activity.
+- **The standout** (a starter's willingness to go to a much bigger club, × 1.6): +22% players moving up in the 2nd season.
+- **The Key player's price** (× the asking price) and the **chairman's Business** in the budget: within the noise, or they only change the budget.
+- **The fixes to the release clause (0x86165b) and to the reserve-list loan (0x83e482)**: within the noise.
 
-*(to be filled in)*
+## 5. Keys
+
+- **Loans and budget** (1.5): `loans`, the `loan_*` keys and `budget_caps`, in [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §5.
+- **Transfers** (the standout, the bid, the market's interest): the next study, with the same method.

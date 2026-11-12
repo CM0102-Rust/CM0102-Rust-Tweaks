@@ -482,6 +482,118 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
+## Empréstimos e verba
+
+Quem sai emprestado. No jogo original, o dono da IA recusa quase todo pedido de empréstimo, e o jovem que não joga fica parado. Aqui o dono empresta quem sobra, olhando os minutos que o jogador teria e a cobertura que fica no elenco, e os clubes procuram jovens para jogar. Os números da direita são de carreiras de teste com todas as ligas. As regras são uma proposta: o guia (docs/EMPRESTIMOS.md) explica cada uma, para a comunidade sugerir mudanças.
+
+- **Linha**: goleiro, defesa (líbero, zagueiro, ala), meio (volante, meia, meia ofensivo) ou ataque: a que tem a melhor nota de posição do jogador.
+- **Estatuto no elenco**: o papel no contrato: Key (titular absoluto), Regular starter (titular), rotação, reserva, jovem promessa... Key nunca sai emprestado.
+- **Cobertura**: os jogadores da mesma linha que ficam no clube com CA à altura do emprestado.
+- **Vontade**: a nota do jogo (0 a 10) para o quanto o jogador quer ir para um clube. Pesa a reputação, o salário, a nação, a personalidade.
+- **Lista de empréstimos**: os jogadores que o dono marca como disponíveis para empréstimo: só eles entram nas listas de procura dos outros clubes.
+
+### Empréstimos — `loans`
+
+Liga as nossas regras de empréstimo. O dono da IA empresta quem sobra: o jovem que não é titular vai para onde joga, o jogador do elenco vai quando há quem o cubra, e quem está fora do país pode voltar para casa. O titular absoluto (Key) nunca sai. As decisões do seu clube continuam suas. Desligado, os empréstimos são os do jogo original, em que o dono quase sempre recusa.
+
+Valores: `off` (Desligado (o jogo original)), `on` (Ligado (a nossa regra)). Padrão: `on`.
+
+### Jovem até — `loan_youth_age`
+
+Até esta idade, o jogador que não é titular absoluto conta como jovem: a ideia é rodar, então ele sai sem o dono precisar de cobertura no elenco. Mesmo assim, só vai para onde jogaria (as duas chaves de baixo) e para um treino não muito pior.
+
+Valores: de 15 a 30 (inteiro). Padrão: `21`.
+
+### O jovem vai para onde seria até o — `loan_youth_top`
+
+O jovem só vai para um clube onde seria um dos N melhores da linha dele (goleiro, defesa, meio ou ataque), pelo CA. Com 2, ele seria o primeiro ou o segundo da posição: vai jogar. Com 1, só onde seria titular. É também quem a procura por jovens favorece.
+
+Valores: de 1 a 11 (inteiro). Padrão: `2`.
+
+### Os outros vão para onde seriam até o — `loan_others_top`
+
+O mesmo para os mais velhos: o jogador só vai para um clube onde seria um dos N melhores da linha. Ninguém vai emprestado para sentar no banco.
+
+Valores: de 1 a 11 (inteiro). Padrão: `2`.
+
+### Treino do destino: até quanto pior — `loan_training_margin`
+
+O treino forma o jogador mais que os jogos (é o que as carreiras de teste mostram). O jovem só vai para um clube com Treino de ao menos o do dono menos este número. Com 3, um jovem do Flamengo (Treino 15) pode ir para um clube de Treino 12. Com 0, só para treino igual ou melhor: menos jovens emprestados, cada um num lugar melhor. A volta para casa não olha o treino.
+
+Valores: de -20 a 20 (inteiro). Padrão: `3`.
+
+### Cobertura para emprestar um titular — `loan_cover_regular`
+
+Para emprestar um titular (Regular starter), o dono precisa ficar com este número de jogadores da mesma linha à altura dele (veja a chave de baixo). É o caso do Flamengo com três volantes bons: um deles pode sair.
+
+Valores: de 0 a 10 (inteiro). Padrão: `2`.
+
+### Cobertura para emprestar rotação e reserva — `loan_cover_backup`
+
+O mesmo para o jogador de rotação ou reserva: quantos da mesma linha à altura dele o dono precisa manter. A volta para casa precisa de um a menos.
+
+Valores: de 0 a 10 (inteiro). Padrão: `1`.
+
+### Quem cobre: CA de ao menos — `loan_cover_ratio`
+
+O que é "à altura dele": quem cobre precisa de CA de ao menos esta porcentagem do CA do jogador emprestado. Com 90, quem cobre um jogador de CA 120 precisa de CA 108 ou mais.
+
+Valores: de 0 a 200 (inteiro). Padrão: `90`.
+
+### O dono não empresta com até — `loan_squad_min`
+
+O piso do elenco: com este número de jogadores ou menos no clube, o dono não empresta (nem põe na lista de empréstimos). Sem ele (0), as carreiras de teste caíram: um clube emprestou até ficar sem time e o jogo parou com "Only 10 away players".
+
+Valores: de 0 a 50 (inteiro). Padrão: `20`.
+
+### Vontade mínima para a IA pedir — `loan_request_willingness`
+
+A IA só pede um jogador emprestado se a vontade dele de ir for ao menos este número (a mesma nota de vontade do jogo, de 0 a 10). O original pede 3,5. Mais baixo, mais pedidos chegam ao dono.
+
+Valores: de 0 a 10. Padrão: `2.75`.
+
+### Pedidos de empréstimo da IA — `loan_requests`
+
+Quantas vezes mais a IA tenta pedir empréstimo, comparado com o original (1, 2, 4, 8...: o sorteio só aceita potências de 2). Com 2, o dobro de tentativas.
+
+Valores: de 1 a 64 (inteiro). Padrão: `2`.
+
+### Vontade de voltar para casa — `loan_home`
+
+O jogador que está fora do país topa mais ir emprestado para um clube da nação dele: o brasileiro na Europa que volta ao Brasil. A volta para casa também precisa de um a menos de cobertura e não olha o treino. 1 = o original.
+
+Valores: de 0.1 a 10. Padrão: `2`.
+
+### Vontade de ir para onde joga — `loan_playing_time`
+
+O jogador topa mais ir emprestado para onde seria o primeiro ou o segundo da linha: minutos. 1 = o original.
+
+Valores: de 0.1 a 10. Padrão: `1.3`.
+
+### Procura por jovens — `loan_youth_demand`
+
+Quando um clube da IA escolhe quem pedir numa vaga de empréstimo, o jovem que jogaria ali (entre os primeiros da linha, indo para casa ou para um treino dentro da margem) vale este tanto a mais na nota. Sem isso, os adultos que sobram ganham as vagas e os jovens emprestados caem pela metade. 1 = o original.
+
+Valores: de 0.1 a 10. Padrão: `3`.
+
+### O titular barrado perde de felicidade — `loan_unhappiness`
+
+O caso do jogador que quer ir e o dono não deixa: quando um clube bem maior pede emprestado um titular (Key ou Regular starter) e o dono recusa, o jogador perde esta felicidade no contrato. Infeliz, ele fica mais perto de pedir para sair, e o mercado se mexe. 0 = nada acontece, como no original. Hoje é raro (6 casos em duas temporadas de teste), porque o clube maior quase nunca pede um titular emprestado: o número vale para quando isso acontecer mais.
+
+Valores: de 0 a 200 (inteiro). Padrão: `30`.
+
+### Quanto maior o clube que pede — `loan_unhappiness_gap`
+
+Quanto maior, em reputação, o clube que pede precisa ser para o titular se chatear com a recusa. Com 1.000, o titular de um clube de 6.000 se chateia com um pedido de um clube de 7.000 ou mais.
+
+Valores: de 0 a 10000 (inteiro). Padrão: `1000`.
+
+### Verba de transferências — `budget_caps`
+
+No jogo original, a verba de transferências de algumas nações é comprimida: Alemanha, França, Escócia e Holanda só usam 25% do que passa de 17,5 milhões; Brasil, os nórdicos e outros, só uma parte acima de 2,5 milhões. Inglaterra, Espanha e Itália não têm freio. Sem freio, todo clube usa a verba inteira, como os ingleses. Nas carreiras de teste os clubes ricos alemães e franceses gastaram mais, e as finanças não mudaram.
+
+Valores: `original` (Com o freio por nação (original)), `off` (Sem freio: toda nação como a Inglaterra). Padrão: `off`.
+
 ## Tela, save e pasta
 
 O save, a instalação, a tela e o CD. Estes ajustes não mudam as regras do jogo: só como ele grava, onde procura os arquivos e como desenha.

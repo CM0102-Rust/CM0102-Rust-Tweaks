@@ -27,6 +27,7 @@ pub enum Aba {
     Inativos,
     Disputa,
     Cinzentos,
+    Emprestimos,
     Fornada,
     Nomes,
     Publico,
@@ -37,7 +38,7 @@ pub enum Aba {
 
 /// O menu da esquerda, na ordem: (aba, nome pt, nome en, grupo pt, grupo en); o grupo vazio não tem título. Os grupos
 /// (03/11, Lucas): o que muda a carreira, o que só registra, a instalação e os arquivos.
-pub const ABAS: [(Aba, &str, &str, &str, &str); 12] = [
+pub const ABAS: [(Aba, &str, &str, &str, &str); 13] = [
     (Aba::Inicio, "Início", "Start", "", ""),
     (Aba::Fornada, "Fornada de regens", "Youth intake", "Regens", "Regens"),
     (Aba::Idades, "Idades dos regens", "Regen ages", "Regens", "Regens"),
@@ -46,6 +47,7 @@ pub const ABAS: [(Aba, &str, &str, &str, &str); 12] = [
     (Aba::Publico, "Público e estádio", "Attendance & stadium", "Carreira", "Career"),
     (Aba::Inativos, "Aposentadoria", "Retirement", "Carreira", "Career"),
     (Aba::Cinzentos, "Jogadores cinzentos", "Grey players", "Carreira", "Career"),
+    (Aba::Emprestimos, "Empréstimos e verba", "Loans & budget", "Carreira", "Career"),
     (Aba::Jogo, "Tela, save e pasta", "Screen, save, folder", "Instalação", "Install"),
     (Aba::Cfg, "tweaks.cfg", "tweaks.cfg", "Arquivos e registros", "Files and records"),
     (Aba::Log, "tweaks.log", "tweaks.log", "Arquivos e registros", "Files and records"),
@@ -134,6 +136,23 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "stadium_seat_cost", aba: Aba::Publico, tipo: Tipo::Escolha(&[("original", "O do jogo (uns 100 por lugar)", "The game's (about 100 a place)"), ("auto", "Automático, pelo caixa do banco", "Automatic, by the database's money")]), padrao: "auto", rotulo: ("Custo por lugar novo", "Cost per new place") },
     Chave { nome: "stadium_ceiling_zero", aba: Aba::Publico, tipo: Tipo::Escolha(&[("original", "Sobe 1.500 por ano (original)", "Rises 1,500 a year (original)"), ("demand", "Pela demanda medida", "By the measured demand")]), padrao: "demand", rotulo: ("Estádio sem teto no banco", "Stadium with no ceiling in the database") },
     Chave { nome: "stadium_max", aba: Aba::Publico, tipo: num(1000.0, 1e7, 30000.0, 200000.0, true), padrao: "125000", rotulo: ("Maior estádio que ainda amplia", "Largest stadium that still expands") },
+    Chave { nome: "loans", aba: Aba::Emprestimos, tipo: Tipo::Escolha(&[("off", "Desligado (o jogo original)", "Off (the original game)"), ("on", "Ligado (a nossa regra)", "On (our rule)")]), padrao: "on", rotulo: ("Empréstimos", "Loans") },
+    Chave { nome: "loan_youth_age", aba: Aba::Emprestimos, tipo: num(15.0, 30.0, 17.0, 25.0, true), padrao: "21", rotulo: ("Jovem até", "Youngster up to") },
+    Chave { nome: "loan_youth_top", aba: Aba::Emprestimos, tipo: num(1.0, 11.0, 1.0, 5.0, true), padrao: "2", rotulo: ("O jovem vai para onde seria até o", "A youngster goes where he'd be up to") },
+    Chave { nome: "loan_others_top", aba: Aba::Emprestimos, tipo: num(1.0, 11.0, 1.0, 5.0, true), padrao: "2", rotulo: ("Os outros vão para onde seriam até o", "Others go where they'd be up to") },
+    Chave { nome: "loan_training_margin", aba: Aba::Emprestimos, tipo: num(-20.0, 20.0, -5.0, 10.0, true), padrao: "3", rotulo: ("Treino do destino: até quanto pior", "Destination's Training: how much worse") },
+    Chave { nome: "loan_cover_regular", aba: Aba::Emprestimos, tipo: num(0.0, 10.0, 0.0, 5.0, true), padrao: "2", rotulo: ("Cobertura para emprestar um titular", "Cover to lend a Regular starter") },
+    Chave { nome: "loan_cover_backup", aba: Aba::Emprestimos, tipo: num(0.0, 10.0, 0.0, 5.0, true), padrao: "1", rotulo: ("Cobertura para emprestar rotação e reserva", "Cover to lend rotation and backup") },
+    Chave { nome: "loan_cover_ratio", aba: Aba::Emprestimos, tipo: num(0.0, 200.0, 50.0, 120.0, true), padrao: "90", rotulo: ("Quem cobre: CA de ao menos", "Who covers: CA of at least") },
+    Chave { nome: "loan_squad_min", aba: Aba::Emprestimos, tipo: num(0.0, 50.0, 0.0, 30.0, true), padrao: "20", rotulo: ("O dono não empresta com até", "The owner doesn't lend with up to") },
+    Chave { nome: "loan_request_willingness", aba: Aba::Emprestimos, tipo: num(0.0, 10.0, 1.0, 5.0, false), padrao: "2.75", rotulo: ("Vontade mínima para a IA pedir", "Minimum willingness for the AI to ask") },
+    Chave { nome: "loan_requests", aba: Aba::Emprestimos, tipo: num(1.0, 64.0, 1.0, 8.0, true), padrao: "2", rotulo: ("Pedidos de empréstimo da IA", "AI loan requests") },
+    Chave { nome: "loan_home", aba: Aba::Emprestimos, tipo: num(0.1, 10.0, 1.0, 4.0, false), padrao: "2", rotulo: ("Vontade de voltar para casa", "Willingness to go back home") },
+    Chave { nome: "loan_playing_time", aba: Aba::Emprestimos, tipo: num(0.1, 10.0, 1.0, 3.0, false), padrao: "1.3", rotulo: ("Vontade de ir para onde joga", "Willingness to go where he plays") },
+    Chave { nome: "loan_youth_demand", aba: Aba::Emprestimos, tipo: num(0.1, 10.0, 1.0, 5.0, false), padrao: "3", rotulo: ("Procura por jovens", "Demand for youngsters") },
+    Chave { nome: "loan_unhappiness", aba: Aba::Emprestimos, tipo: num(0.0, 200.0, 0.0, 100.0, true), padrao: "30", rotulo: ("O titular barrado perde de felicidade", "The blocked starter loses in happiness") },
+    Chave { nome: "loan_unhappiness_gap", aba: Aba::Emprestimos, tipo: num(0.0, 10000.0, 0.0, 3000.0, true), padrao: "1000", rotulo: ("Quanto maior o clube que pede", "How much bigger the asking club is") },
+    Chave { nome: "budget_caps", aba: Aba::Emprestimos, tipo: Tipo::Escolha(&[("original", "Com o freio por nação (original)", "With the per-nation brake (original)"), ("off", "Sem freio: toda nação como a Inglaterra", "No brake: every nation like England")]), padrao: "off", rotulo: ("Verba de transferências", "Transfer budget") },
     Chave { nome: "squad_guard", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "1", rotulo: ("Proteção do elenco (jogador repetido)", "Squad guard (repeated player)") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
     Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
@@ -177,6 +196,7 @@ pub fn mestres(aba: Aba) -> &'static [(&'static str, &'static str, &'static str)
         Aba::Inativos => &[("retire_idle_players", "1", "0")],
         Aba::Nomes => &[("regen_names", "own", "original")],
         Aba::Cinzentos => &[("grey_players", "squad", "original")],
+        Aba::Emprestimos => &[("loans", "on", "off"), ("budget_caps", "off", "original")],
         Aba::Publico => &[("attendance", "on", "off"), ("stadium", "on", "off")],
         Aba::Registro => &[("regen_origins", "1", "0")],
         _ => &[],
@@ -186,8 +206,8 @@ pub fn mestres(aba: Aba) -> &'static [(&'static str, &'static str, &'static str)
 /// As predefinições (docs/CONFIGURADOR.md §4): (nome pt, nome en, valores). As chaves de instalação (pasta, marca,
 /// sobrescrever, log, vídeo, resolução, CD) ficam fora: dependem da instalação, não do gosto.
 pub const PREDEFINICOES: &[(&str, &str, &[(&str, &str)])] = &[
-    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0")]),
-    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0")]),
+    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
+    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
     ("Equilibrado", "Balanced", &[("ages", "custom"), ("younger_from_age", "22"), ("younger_by", "6"), ("ages_out_of_game", "original"), ("ca_cap_skip", "0.5"), ("contest_max_age", "18"), ("unattached", "original"),
         ("retire_idle_players", "1"), ("idle_days", "180"), ("idle_min_age", "28"), ("idle_rep", "1500"), ("idle_rep_per_year", "250"), ("protect_young_unemployed", "0"), ("rule", "new"),
         ("target_k", "50"), ("target_ca", "0"), ("sigma", "2500"), ("sigma_below", "1200"), ("level_floor", "0.002"), ("facilities_base", "0.4"), ("facilities_k", "0.06"), ("staff_min", "0.8"),

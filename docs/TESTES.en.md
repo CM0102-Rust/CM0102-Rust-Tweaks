@@ -365,14 +365,34 @@ The 11 nations with no names at all (in both new databases) are defunct or dupli
 
 Examples in the 2026 update (own first names and surnames out of 200): Sierra Leone, Bahrain, Cuba, Andorra and Liechtenstein, from 0 and 0 to 200 and 200; Vietnam, from 200 and 26 to 200 and 200; England and Brazil, 200 and 200 in both. The careers (created on the 2026 update, loaded on CLZ 6.1) went on with no crash and no error box.
 
-## 5. Limits and next tests
+## 5. Loans and the budget (`loans`, `budget_caps`)
+
+Automatic careers with **every league in the database**, July 2001 to July 2003. Four ran at a time, on separate benches, with the measuring mode (`TWEAKS_ESTUDO=1`) and the rules turned on one at a time. The result and what each part did are in [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §4. How it was tested:
+
+- **First each item on its own, then the combinations** (Lucas's request: never everything at once). The original base ran three times to measure the noise: ±5% on most counts, ±0.1 to 0.3 on CA growth.
+- **What is measured** (each career's `estudo_*.tsv`):
+  - loans and completed transfers;
+  - the owner's decisions;
+  - promising youngsters (up to 21, PA − CA ≥ 30) and their CA every July;
+  - each loanee's league games (from the competition's statistics);
+  - clubs' budget and spending.
+- **The crashes:** without the squad floor, three of four careers crashed:
+  - "Only 10 away players" in a reserve team;
+  - a cup error;
+  - a memory fault.
+
+  With `loan_squad_min = 20`, four of four reached July 2003. The stalls of more than 60 s in July 2001 also happen in the original base with four games at once: it's the game building its shortlists.
+- **Through `tweaks.cfg`** (without the measuring mode): a short career with the repository's `tweaks.cfg` and `log = 1` shows the `loans: on (...)` line and the counters on the `tick` line.
+- **Still to do:** 10-season careers, CLZ and a career with a human club.
+
+## 6. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
 - **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
 - **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then other community packs, when they're out.
 
-## 6. How to reproduce
+## 7. How to reproduce
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).
