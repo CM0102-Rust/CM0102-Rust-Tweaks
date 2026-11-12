@@ -1613,18 +1613,18 @@ impl App {
             ui.allocate_ui_with_layout(Vec2::new(dir, 0.0), egui::Layout::top_down(egui::Align::Min), |ui| {
                 ui.set_width(dir);
                 App::cartao(ui, &self.t("Medido (todas as ligas, 2001/02 e 2002/03)", "Measured (every league, 2001/02 and 2002/03)"), |ui| {
-                    egui::Grid::new("emprestimos_medidos").striped(true).spacing([14.0, 4.0]).show(ui, |ui| {
+                    egui::Grid::new("emprestimos_medidos").striped(true).spacing([10.0, 4.0]).show(ui, |ui| {
                         for h in [t2(en, "", ""), t2(en, "Original", "Original"), t2(en, "Estas regras", "These rules")] {
                             ui.label(RichText::new(h).strong());
                         }
                         ui.end_row();
                         for (pt, e_, o, n) in [
                             ("Empréstimos", "Loans", "3.255 · 4.042", "5.467 · 5.469"),
-                            ("Jovens promissores emprestados", "Promising youngsters loaned", "680 · 698", "726 · 692"),
-                            ("Bons jogadores subindo (CA 120+)", "Good players moving up (CA 120+)", "259 · 387", "456 · 920"),
-                            ("Titulares saindo dos grandes", "Starters leaving big clubs", "70 · 104", "136 · 182"),
-                            ("Evolução dos promissores (CA/ano)", "Promising players' growth (CA/year)", "11,56 · 10,55", "11,78 · 10,70"),
-                            ("Clubes no vermelho", "Clubs in the red", "48,7% · 47,6%", "48,1% · 48,8%"),
+                            ("Jovens emprestados", "Youngsters loaned", "680 · 698", "726 · 692"),
+                            ("Sobem (CA 120+)", "Moving up (CA 120+)", "259 · 387", "456 · 920"),
+                            ("Saem dos grandes", "Leaving big clubs", "70 · 104", "136 · 182"),
+                            ("Evolução (CA/ano)", "Growth (CA/year)", "11,56 · 10,55", "11,78 · 10,70"),
+                            ("No vermelho", "In the red", "48,7% · 47,6%", "48,1% · 48,8%"),
                         ] {
                             ui.label(if en { e_ } else { pt });
                             // os números em pt (1.234 · 11,5); em inglês, ponto e vírgula trocam de papel
@@ -1634,8 +1634,8 @@ impl App {
                             ui.end_row();
                         }
                     });
-                    ui.label(RichText::new(t2(en, "Uma carreira automática por configuração, sem clube humano. O ruído entre carreiras iguais é de uns 5%. Em todas, inclusive no original, o jovem emprestado evolui uns 2,5 de CA por ano menos que o que fica: é o motor do jogo.",
-                        "One automatic career per setting, with no human club. The noise between identical careers is about 5%. In all of them, the original included, a loaned youngster grows about 2.5 CA a year less than one who stays: it's the game's engine.")).size(11.5).color(CINZA()));
+                    ui.label(RichText::new(t2(en, "Os jovens são os promissores (até 21 anos, PA − CA de 30 ou mais); sobem os de CA 120+ que vão para um clube maior; saem dos grandes os de CA 140+. Uma carreira automática por configuração, sem clube humano. O ruído entre carreiras iguais é de uns 5%. Em todas, inclusive no original, o jovem emprestado evolui uns 2,5 de CA por ano menos que o que fica: é o motor do jogo.",
+                        "Youngsters are the promising ones (up to 21, PA − CA of 30 or more); moving up are CA 120+ players going to a bigger club; leaving big clubs are CA 140+. One automatic career per setting, with no human club. The noise between identical careers is about 5%. In all of them, the original included, a loaned youngster grows about 2.5 CA a year less than one who stays: it's the game's engine.")).size(11.5).color(CINZA()));
                 });
             });
         });
