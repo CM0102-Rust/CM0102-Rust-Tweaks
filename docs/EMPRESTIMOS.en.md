@@ -71,7 +71,7 @@ And one limit: **a Key player never goes on loan.** But a starter a much bigger 
 
 **E. The blocked starter**: in a real decision (not the shortlist predictions), when the owner refuses to loan a starter (Key or Regular starter) to a club with reputation at least `loan_unhappiness_gap` above his own, the player loses `loan_unhappiness` contract happiness. Unhappy, he gets closer to asking to leave.
 
-**F. The budget**: with `budget_caps = off`, no nation's budget is compressed (all like England).
+**F. The budget brake**: with `budget_caps = off`, no nation's budget is compressed (all like England).
 
 ## 4. What the careers measured
 
@@ -103,7 +103,7 @@ What each part did, one at a time [measured]:
 
 ## 5. The keys
 
-In `tweaks.cfg`, or in the configurator's **Loans & budget** tab. Without `tweaks.cfg` nothing changes; with it, a missing key takes the "default" column. **The default is what was tested** in the §4 careers. In the "original" column, "no rule" means the original game has no such check: a youngster, for example, goes to any Training.
+In `tweaks.cfg`, or in the configurator's **Loans & budget brake** tab. Without `tweaks.cfg` nothing changes; with it, a missing key takes the "default" column. **The default is what was tested** in the §4 careers. In the "original" column, "no rule" means the original game has no such check: a youngster, for example, goes to any Training.
 
 | Key | Default | Original | What it does |
 |---|---|---|---|

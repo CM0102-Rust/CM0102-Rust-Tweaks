@@ -482,7 +482,7 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
-## Loans & budget
+## Loans & budget brake
 
 Who goes on loan. In the original game, the AI owner refuses almost every loan request, and a youngster who doesn't play sits still. Here the owner lends whoever is spare, looking at the minutes the player would get and the cover left in the squad, and clubs look for youngsters to play. The numbers on the right come from test careers with every league. The rules are a proposal: the guide (docs/EMPRESTIMOS.en.md) explains each one, so the community can suggest changes.
 
@@ -588,7 +588,7 @@ How much bigger, in reputation, the asking club must be for the starter to get u
 
 Values: from 0 to 10000 (whole number). Default: `1000`.
 
-### Transfer budget — `budget_caps`
+### Per-nation budget brake — `budget_caps`
 
 In the original game, some nations' transfer budget is compressed: Germany, France, Scotland and the Netherlands only use 25% of what's above 17.5 million; Brazil, the Nordic nations and others, only part above 2.5 million. England, Spain and Italy have no brake. With no brake, every club uses its whole budget, like the English. In the test careers rich German and French clubs spent more, and finances didn't change.
 

@@ -95,7 +95,7 @@ fn manchete(aba: Aba, en: bool) -> &'static str {
         Aba::Publico => t2(en, "Quanta gente vai ao estádio.", "How many people go to the stadium."),
         Aba::Inativos => t2(en, "Quem pendura as chuteiras.", "Who hangs up their boots."),
         Aba::Cinzentos => t2(en, "Os jogadores que completam o elenco.", "The players who fill the squad."),
-        Aba::Emprestimos => t2(en, "Quem sai emprestado, e a verba.", "Who goes on loan, and the budget."),
+        Aba::Emprestimos => t2(en, "Os empréstimos e a trava da verba.", "Loans and the budget brake."),
         Aba::Jogo => t2(en, "O save, a tela e a pasta.", "The save, the screen and the folder."),
         Aba::Cfg => t2(en, "O arquivo tweaks.cfg.", "The tweaks.cfg file."),
         Aba::Log => t2(en, "O diário da DLL.", "The DLL's diary."),
@@ -1604,7 +1604,7 @@ impl App {
                         self.controle(ui, k, e);
                     }
                 });
-                App::cartao(ui, &self.t("Verba", "Budget"), |ui| {
+                App::cartao(ui, &self.t("A trava da verba", "The budget brake"), |ui| {
                     self.controle(ui, "budget_caps", true);
                 });
             });

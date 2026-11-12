@@ -54,5 +54,5 @@ Os empréstimos e a verba foram medidos e viraram chaves: ver [EMPRESTIMOS.md](E
 
 ## 5. Chaves
 
-- **Empréstimos e verba** (1.5): `loans`, as `loan_*` e `budget_caps`, em [EMPRESTIMOS.md](EMPRESTIMOS.md) §5.
+- **Empréstimos e trava da verba** (1.5): `loans`, as `loan_*` e `budget_caps`, em [EMPRESTIMOS.md](EMPRESTIMOS.md) §5.
 - **As transferências** (o destaque, o lance, o interesse do mercado): o próximo estudo, com o mesmo método.

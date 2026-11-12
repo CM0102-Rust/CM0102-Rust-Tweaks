@@ -54,5 +54,5 @@ Loans and the budget were measured and became keys: see [EMPRESTIMOS.en.md](EMPR
 
 ## 5. Keys
 
-- **Loans and budget** (1.5): `loans`, the `loan_*` keys and `budget_caps`, in [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §5.
+- **Loans and the budget brake** (1.5): `loans`, the `loan_*` keys and `budget_caps`, in [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §5.
 - **Transfers** (the standout, the bid, the market's interest): the next study, with the same method.

@@ -482,7 +482,7 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
-## Empréstimos e verba
+## Empréstimos e trava
 
 Quem sai emprestado. No jogo original, o dono da IA recusa quase todo pedido de empréstimo, e o jovem que não joga fica parado. Aqui o dono empresta quem sobra, olhando os minutos que o jogador teria e a cobertura que fica no elenco, e os clubes procuram jovens para jogar. Os números da direita são de carreiras de teste com todas as ligas. As regras são uma proposta: o guia (docs/EMPRESTIMOS.md) explica cada uma, para a comunidade sugerir mudanças.
 
@@ -588,7 +588,7 @@ Quanto maior, em reputação, o clube que pede precisa ser para o titular se cha
 
 Valores: de 0 a 10000 (inteiro). Padrão: `1000`.
 
-### Verba de transferências — `budget_caps`
+### Trava da verba por nação — `budget_caps`
 
 No jogo original, a verba de transferências de algumas nações é comprimida: Alemanha, França, Escócia e Holanda só usam 25% do que passa de 17,5 milhões; Brasil, os nórdicos e outros, só uma parte acima de 2,5 milhões. Inglaterra, Espanha e Itália não têm freio. Sem freio, todo clube usa a verba inteira, como os ingleses. Nas carreiras de teste os clubes ricos alemães e franceses gastaram mais, e as finanças não mudaram.
 

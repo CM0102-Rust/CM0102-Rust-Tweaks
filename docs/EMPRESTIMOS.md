@@ -71,7 +71,7 @@ E um limite: **o titular absoluto (Key) nunca sai emprestado.** Mas o titular qu
 
 **E. O titular barrado**: numa decisão de verdade (não nas previsões das listas de procura), quando o dono recusa o empréstimo de um titular (Key ou Regular starter) para um clube com reputação ao menos `loan_unhappiness_gap` acima da dele, o jogador perde `loan_unhappiness` de felicidade no contrato. Infeliz, ele fica mais perto de pedir para sair.
 
-**F. A verba**: com `budget_caps = off`, nenhuma nação tem a verba comprimida (todas como a Inglaterra).
+**F. A trava da verba**: com `budget_caps = off`, nenhuma nação tem a verba comprimida (todas como a Inglaterra).
 
 ## 4. O que as carreiras mediram
 
@@ -103,7 +103,7 @@ O que cada parte fez, uma de cada vez [medido]:
 
 ## 5. As chaves
 
-No `tweaks.cfg`, ou na aba **Empréstimos e verba** do configurador. Sem `tweaks.cfg` nada muda; com ele, a chave ausente usa o valor da coluna "padrão". **O padrão é o que foi testado** nas carreiras do §4. Na coluna "original", "sem a regra" quer dizer que o jogo original não tem aquela conta: o jovem, por exemplo, vai para qualquer treino.
+No `tweaks.cfg`, ou na aba **Empréstimos e trava** do configurador. Sem `tweaks.cfg` nada muda; com ele, a chave ausente usa o valor da coluna "padrão". **O padrão é o que foi testado** nas carreiras do §4. Na coluna "original", "sem a regra" quer dizer que o jogo original não tem aquela conta: o jovem, por exemplo, vai para qualquer treino.
 
 | Chave | Padrão | Original | O que faz |
 |---|---|---|---|
