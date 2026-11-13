@@ -148,8 +148,12 @@ impl Exe {
             _ => (Estado::Desconhecido, ("o nome da trava de jogo único não está onde o 3.9.68 o tem: um jogo por vez".into(),
                 "the single-game lock's name isn't where 3.9.68 has it: one game at a time".into())),
         });
-        push("clear_admin_flag", ligado("clear_admin_flag"), if self.nick { ok() } else {
-            (Estado::Compativel, ("sem NickDLL.dll na pasta: não há marca para tirar".into(), "no NickDLL.dll here: no flag to clear".into()))
+        let clz_dll = self.caminho.parent().map_or(false, |p| p.join("clz.dll").exists());
+        push("clear_admin_flag", ligado("clear_admin_flag"), match (self.nick, clz_dll) {
+            (true, true) => ok(),
+            (true, false) => (Estado::Compativel, ("tira também o modo Windows 95: sem o clz.dll, o CLZ 2026 V6.1 cai ao criar a carreira sem ele".into(),
+                "also clears Windows 95 mode: without clz.dll, CLZ 2026 V6.1 crashes creating a career without it".into())),
+            _ => (Estado::Compativel, ("sem NickDLL.dll na pasta: não há marca para tirar".into(), "no NickDLL.dll here: no flag to clear".into())),
         });
         // a resolução: a NickDLL com resolução escolhida fica com ela; senão a lista inteira, completando o que falta
         let (a, d, o) = self.trocas(&trocas::RESOLUCAO);

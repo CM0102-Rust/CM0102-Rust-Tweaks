@@ -17,8 +17,8 @@ pub fn ajuda(chave: &str) -> (&'static str, &'static str) {
             "The game uses the folder its exe is in, with no SetupReg and no Windows registry. Useful for several installs side by side or a copy on a USB stick. Nothing is written to the registry.",
         ),
         "clear_admin_flag" => (
-            "Só para quem usa a NickDLL (CLZ e outros pacotes do NickPatcher): ela marca o exe para rodar como administrador a cada abertura. Esta opção tira essa marca (mantém o modo Windows 95). Vale a partir da abertura seguinte. Deixe desligado se você marcou isso de propósito.",
-            "Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark (keeps Windows 95 mode). It takes effect from the next start. Leave it off if you set that on purpose.",
+            "Só para quem usa a NickDLL (CLZ e outros pacotes do NickPatcher): ela marca o exe para rodar como administrador a cada abertura. Esta opção tira essa marca e o modo Windows 95 que vem junto (com ele, o CLZ com o clz.dll abre em tela branca e trava). Vale a partir da abertura seguinte. Atenção: o CLZ 2026 V6.1 sem o clz.dll cai ao criar a carreira sem o modo Windows 95; nesse pacote, deixe desligado. Deixe desligado também se você marcou isso de propósito.",
+            "Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark and the Windows 95 mode that comes with it (with it, CLZ with clz.dll opens on a white screen and hangs). It takes effect from the next start. Warning: CLZ 2026 V6.1 without clz.dll crashes when creating a career without Windows 95 mode; in that pack, leave it off. Leave it off too if you set that on purpose.",
         ),
         "override_exe_changes" => (
             "Quando o seu exe já tem uma modificação no mesmo ponto de um ajuste (o Regen Tweak, as idades do NickPatcher), o normal é ficar com a do exe. Ligado, os ajustes desta DLL substituem essas modificações. Use só se você quer as regras desta DLL no lugar das do seu pacote.",

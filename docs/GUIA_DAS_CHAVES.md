@@ -621,7 +621,7 @@ Valores: `1` liga, `0` desliga. Padrão: `0`.
 
 ### Tirar a marca de administrador da NickDLL — `clear_admin_flag`
 
-Só para quem usa a NickDLL (CLZ e outros pacotes do NickPatcher): ela marca o exe para rodar como administrador a cada abertura. Esta opção tira essa marca (mantém o modo Windows 95). Vale a partir da abertura seguinte. Deixe desligado se você marcou isso de propósito.
+Só para quem usa a NickDLL (CLZ e outros pacotes do NickPatcher): ela marca o exe para rodar como administrador a cada abertura. Esta opção tira essa marca e o modo Windows 95 que vem junto (com ele, o CLZ com o clz.dll abre em tela branca e trava). Vale a partir da abertura seguinte. Atenção: o CLZ 2026 V6.1 sem o clz.dll cai ao criar a carreira sem o modo Windows 95; nesse pacote, deixe desligado. Deixe desligado também se você marcou isso de propósito.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 

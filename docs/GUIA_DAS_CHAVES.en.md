@@ -621,7 +621,7 @@ Values: `1` on, `0` off. Default: `0`.
 
 ### Clear NickDLL's admin flag — `clear_admin_flag`
 
-Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark (keeps Windows 95 mode). It takes effect from the next start. Leave it off if you set that on purpose.
+Only for NickDLL users (CLZ and other NickPatcher packs): it marks the exe to run as administrator every time. This removes that mark and the Windows 95 mode that comes with it (with it, CLZ with clz.dll opens on a white screen and hangs). It takes effect from the next start. Warning: CLZ 2026 V6.1 without clz.dll crashes when creating a career without Windows 95 mode; in that pack, leave it off. Leave it off too if you set that on purpose.
 
 Values: `1` on, `0` off. Default: `0`.
 
