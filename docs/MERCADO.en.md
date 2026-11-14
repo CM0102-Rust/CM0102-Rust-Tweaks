@@ -52,6 +52,11 @@ Loans and the budget were measured and became keys: see [EMPRESTIMOS.en.md](EMPR
 - **The Key player's price** (× the asking price) and the **chairman's Business** in the budget: within the noise, or they only change the budget.
 - **The fixes to the release clause (0x86165b) and to the reserve-list loan (0x83e482)**: within the noise.
 
+The study of transfers between continents (13/11/2026, in progress, measurement mode only):
+
+- **The barrier is neither the continent nor willingness:** of every 5 bids the AI drops for a foreigner from another continent, 4 are the buying nation's foreign-player limit for signings (`can_sign_player`, 0x8ced40), mostly in the USA. The budget and the slot's price cap hardly refuse anything. Raising the USA's limit opens Europe → USA; Brazil doesn't change (there the brake is money).
+- **The foreign-player limit on the pitch** (the match-day one, 0x8cf880) is ignored when signing. A study key (`estr_jogo`) makes it weigh on the choice of target, without a veto: 10% fewer foreigners above the limit and half the nation-rule refusals. Emptying a squad already over the limit (a stronger weight, the spare player listed for loan) didn't work: buyers are missing.
+
 ## 5. Keys
 
 - **Loans and the budget brake** (1.5): `loans`, the `loan_*` keys and `budget_caps`, in [EMPRESTIMOS.en.md](EMPRESTIMOS.en.md) §5.

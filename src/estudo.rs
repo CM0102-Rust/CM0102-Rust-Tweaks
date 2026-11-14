@@ -70,6 +70,7 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
     let (mut jogadores, mut mudancas) = (Vec::new(), Vec::new());
     let mut emprestados = Vec::new();
     let mut jovens = Vec::new();
+    let mut destaques = Vec::new();
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     // os jogos de cada (pessoa, clube) nas ligas da temporada: o Comp_Stats de cada liga (objeto em [[0xadadfc] + 4 × id] + 8),
     // tabela de jogadores em +0x19 (45 bytes: +4 a pessoa, +8 o clube da última partida, +0xc os jogos), quantidade em +0x21
@@ -123,18 +124,40 @@ pub(crate) unsafe fn medir(data: &str, julho: bool) {
         if let Some(antes) = anterior.as_ref().and_then(|a| a.get(&s)) {
             if *antes != id_clube {
                 let rep = |id: usize| if id < nc { w(clubes + 0x245 * id + 0x80) as i32 } else { -1 };
-                mudancas.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}", data, s, dados(), *antes as i64, rep(*antes), id_clube as i64, rep(id_clube)));
+                // a nação e o continente (ids) de cada clube; -1 sem clube
+                let nac = |id: usize| { let n = if id < nc { d(clubes + 0x245 * id + 0x53) } else { 0 }; if n != 0 { d(n) as i64 } else { -1 } };
+                let cont = |id: usize| { let n = if id < nc { d(clubes + 0x245 * id + 0x53) } else { 0 }; let k = if n != 0 { d(n + 0x71) } else { 0 }; if k != 0 { d(k) as i64 } else { -1 } };
+                let np = d(p + 0x1a);
+                mudancas.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data, s, dados(), *antes as i64, rep(*antes), id_clube as i64, rep(id_clube),
+                    if np >= 0x10000 { d(np) as i64 } else { -1 }, nac(*antes), nac(id_clube), cont(*antes), cont(id_clube)));
             }
         }
     }
     *core::ptr::addr_of_mut!(ANTERIOR) = Some(agora);
+    // os destaques que as partidas registraram (na linha do jogo; ver mercado::rep_partida)
+    let temp = data[..4].parse::<i32>().unwrap_or(0) - (data[5..].parse::<i32>().unwrap_or(0) < 182) as i32;
+    for (id, pts, x) in crate::mercado::destaques_da_temporada(temp) {
+        if id >= n {
+            continue;
+        }
+        let p = pessoas + 110 * id;
+        let (ficha, c) = (d(p + 0x61), d(p + 0x39));
+        if ficha == 0 || c == 0 || d(p) != id {
+            continue;
+        }
+        let nacao = |v: usize| if v >= 0x10000 { d(v) } else { v };
+        destaques.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{}\t{}\t{}\t{:.2}\t{}\t{}\t{}\t{}\t{}", data, id, b(p + 0x18), w(ficha + 5), d(c), w(c + 0x80),
+            pts, x[0], x[1] as f32, x[2], x[3], x[4], u(ficha + 0xb), u(ficha + 0xd), nacao(d(p + 0x1a)), nacao(d(c + 0x53))));
+    }
     if julho {
         gravar("estudo_jogadores.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tclube\tclube_rep", &jogadores);
     }
     gravar_mercado();
     gravar("estudo_emprestados.tsv", "data\tpessoa\tclube\tclube_rep\ttipo\tjogos\tidade\tca\tpa", &emprestados);
     gravar("estudo_jovens.tsv", "data\tpessoa\tclube\tjogos", &jovens);
-    gravar("estudo_mudancas.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tde\tde_rep\tpara\tpara_rep", &mudancas);
+    crate::mercado::gravar_funil();
+    gravar("estudo_destaques.tsv", "data\tpessoa\tidade\tca\tclube\tclube_rep\tpontos\tjogos\tmedia\tjogos_liga\tgols_liga\tsel_titular\trep_atual\trep_mundial\tnacao\tnacao_clube", &destaques);
+    gravar("estudo_mudancas.tsv", "data\tpessoa\tidade\tca\tpa\trep_casa\trep_atual\trep_mundial\tde\tde_rep\tpara\tpara_rep\tnacao\tde_nacao\tpara_nacao\tde_cont\tpara_cont", &mudancas);
 }
 
 static mut VISTOS: Option<std::collections::HashSet<(usize, usize)>> = None;

@@ -52,6 +52,11 @@ Os empréstimos e a verba foram medidos e viraram chaves: ver [EMPRESTIMOS.md](E
 - **O preço do titular absoluto** (× o pedido) e o **Business do presidente** na verba: dentro do ruído, ou só mudam a verba.
 - **As correções da multa (0x86165b) e do empréstimo da lista de reservas (0x83e482)**: dentro do ruído.
 
+O estudo das transferências entre continentes (13/11/2026, em andamento, só no modo de medição):
+
+- **A barreira não é o continente nem a vontade:** de cada 5 lances que a IA desiste por um estrangeiro de outro continente, 4 são o limite de estrangeiros na contratação da nação de quem compra (`can_sign_player`, 0x8ced40), sobretudo nos EUA. A verba e o teto da vaga quase não recusam. Subir o limite dos EUA abre a Europa → EUA; o Brasil não muda (para ele a trava é o dinheiro).
+- **O limite de estrangeiros em campo** (o da escalação, 0x8cf880) a contratação ignora. Uma chave de estudo (`estr_jogo`) o faz pesar na escolha do alvo, sem vetar: menos 10% de estrangeiros acima do limite e metade das recusas da regra da nação. Esvaziar o elenco que já passou do limite (peso mais forte, sobra emprestável) não deu resultado: falta comprador.
+
 ## 5. Chaves
 
 - **Empréstimos e trava da verba** (1.5): `loans`, as `loan_*` e `budget_caps`, em [EMPRESTIMOS.md](EMPRESTIMOS.md) §5.
