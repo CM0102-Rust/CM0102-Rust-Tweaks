@@ -36,6 +36,17 @@ pub(crate) unsafe fn assinatura(trechos: &[(usize, usize)]) -> u64 {
     h
 }
 
+/// Desfaz um `desviar`: devolve o começo original da rotina (`antes`) e tira o desvio das listas.
+pub(crate) unsafe fn desfazer(de: usize, antes: &[u8]) {
+    (*core::ptr::addr_of_mut!(DESVIOS)).retain(|d| d.0 != de);
+    (*core::ptr::addr_of_mut!(MARCAS)).retain(|m| m.0 != de);
+    let mut antiga = 0u32;
+    VirtualProtect(de as *mut c_void, antes.len(), 0x40, &mut antiga);
+    core::ptr::copy_nonoverlapping(antes.as_ptr(), de as *mut u8, antes.len());
+    VirtualProtect(de as *mut c_void, antes.len(), antiga, &mut antiga);
+    FlushInstructionCache(GetCurrentProcess(), de as *const c_void, antes.len());
+}
+
 /// Salto (E9) da entrada da rotina original para a versão em Rust.
 pub(crate) unsafe fn desviar(de: usize, para: usize) {
     (*core::ptr::addr_of_mut!(DESVIOS)).push((de, para));

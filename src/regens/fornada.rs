@@ -845,6 +845,32 @@ static mut ESCREVER: usize = 0;
 /// O começo original de `NewsItem::get_action_button` (o trampolim).
 static mut BOTAO: usize = 0;
 
+/// As duas rotinas de notícia desviadas pela mensagem: entrada, começo original e tamanho (o do 3.9.68).
+const ROTINAS_DA_MENSAGEM: [(usize, &[u8], usize); 2] = [(0x77bc80, &[0x6a, 0xff, 0x64, 0xa1, 0, 0, 0, 0], 28400), (0x782b70, &[0x64, 0xa1, 0, 0, 0, 0], 1024)];
+/// As duas rotinas como estavam quando a mensagem as desviou (sem o começo), para a conferência da abertura.
+static mut COPIA_DA_MENSAGEM: Vec<Vec<u8>> = Vec::new();
+
+/// Na abertura (o primeiro DirectDrawCreate, depois das DLLs do exe): se outra DLL mudou uma das rotinas de notícia
+/// depois que a mensagem as desviou (o CLZ 6.1 manda as notícias dele por elas), a mensagem desfaz os dois desvios e
+/// fica desligada; a fornada segue. Os dois mexendo na mesma rotina derrubavam o jogo do CLZ ao carregar o save.
+pub unsafe fn conferir_convivencia() {
+    let copia = &*core::ptr::addr_of!(COPIA_DA_MENSAGEM);
+    if copia.len() != ROTINAS_DA_MENSAGEM.len() {
+        return;
+    }
+    let mudou = ROTINAS_DA_MENSAGEM.iter().zip(copia).any(|(&(va, antes, n), c)| {
+        core::slice::from_raw_parts((va + antes.len()) as *const u8, n - antes.len()) != &c[..]
+    });
+    if !mudou {
+        return;
+    }
+    for &(va, antes, _) in &ROTINAS_DA_MENSAGEM {
+        crate::desfazer(va, antes);
+    }
+    F.mensagem = false;
+    registro::linha("intake: another DLL changed the game's news routines (0x77bc80, 0x782b70) after loading; the inbox message is off so the two don't collide (the intake itself goes on)");
+}
+
 /// A notícia é a nossa (tipo 0x1388 com as duas marcas)?
 unsafe fn e_nossa(item: usize) -> bool {
     let vaga = |k: usize| core::ptr::read_unaligned((item + 5 + 4 * k) as *const u32);
@@ -1045,7 +1071,12 @@ pub unsafe fn instalar() -> bool {
                     ESCREVER = t;
                     // o botão: mov eax, fs:[0]
                     match crate::origem::trampolim(0x782b70, &[0x64, 0xa1, 0, 0, 0, 0], botao as *const () as usize) {
-                        Some(t) => BOTAO = t,
+                        Some(t) => {
+                            BOTAO = t;
+                            *core::ptr::addr_of_mut!(COPIA_DA_MENSAGEM) = ROTINAS_DA_MENSAGEM.iter()
+                                .map(|&(va, antes, n)| core::slice::from_raw_parts((va + antes.len()) as *const u8, n - antes.len()).to_vec())
+                                .collect();
+                        }
                         None => registro::linha("intake: the news button routine at 0x782b70 isn't the 3.9.68 one; the message keeps the Reply button"),
                     }
                 }

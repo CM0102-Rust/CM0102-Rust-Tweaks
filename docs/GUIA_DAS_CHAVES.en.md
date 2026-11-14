@@ -44,7 +44,7 @@ Values: `original` (The game's own dates), `174` (24 June (day 174, a week befor
 
 ### Intake message — `intake_news`
 
-On intake day your club gets an inbox message from the youth coach with every regen who arrived and his view of each one (or the notice that nobody could come for lack of room): whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language. The phrases are in intake_news.txt, next to the exe, one section for each of the game's 19 languages: you can edit or translate them (Portuguese, Spanish, English, French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated). Without the DLL the message shows as one short line.
+On intake day your club gets an inbox message from the youth coach with every regen who arrived and his view of each one (or the notice that nobody could come for lack of room): whether he's ready for the first team (compared with your squad) and how far he can go. It comes in the game's language. The phrases are in intake_news.txt, next to the exe, one section for each of the game's 19 languages: you can edit or translate them (Portuguese, Spanish, English, French, German, Italian, Dutch, Danish, Norwegian and Swedish come translated). Without the DLL the message shows as one short line. In a game where another DLL already sends news through the same routines (CLZ 6.1), the message turns itself off and the intake goes on.
 
 Values: `1` (Inbox message), `0` (No message). Default: `1`.
 

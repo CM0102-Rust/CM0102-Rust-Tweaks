@@ -383,7 +383,12 @@ Automatic careers with **every league in the database**, July 2001 to July 2003.
 
   With `loan_squad_min = 20`, four of four reached July 2003. The stalls of more than 60 s in July 2001 also happen in the original base with four games at once: it's the game building its shortlists.
 - **Through `tweaks.cfg`** (without the measuring mode): a short career with the repository's `tweaks.cfg` and `log = 1` shows the `loans: on (...)` line and the counters on the `tick` line.
-- **Still to do:** 10-season careers, CLZ and a career with a human club.
+- **The repository's `tweaks.cfg`** (with `log = 1`, 11/14/2026) [measured]:
+  - **Factory game, every nation, to the end of 2003:** two careers with loans and one without, no crash. The first with loans stopped at 2003-324 on the box `match_eng..cpp 652` ("Only 10 away players", Triestina's reserves); the repeat and the career without loans reached 2003-359 with no box. One in three: it can't yet be told whether it comes from the loans.
+  - **CLZ (the 2026 save, to 2027-181):** no crash. The owner accepted 4,632 loan requests and turned down 1,075. Game boxes that don't stop the career: `contract_manager..cpp 5929` at 2027-012 (two of four careers) and "Only 10 home players" in the reserves (two careers).
+  - **The 5929 box:** the game's `end_loan` (0x4d07e0) ends the loan of someone without a club. The daily pass checks the club before the call; the transfer (0x8c9d5d) doesn't. With `loans = on`, the DLL does what the daily pass does: it only removes the loan contract, with no box, and logs a `loan_end_noclub` line with the player, the contract's expiry and the loan's end. The cause isn't found yet: it isn't the loan outlasting the contract (184 loans signed in CLZ, none past the contract).
+  - **The intake message in CLZ:** with `intake_news = 1`, the CLZ game crashed when loading the save (0x782c30, in `NewsItem::get_action_button`). After the DLL loads, CLZ changes the two news routines the message hooks (0x77bc80 and 0x782b70). Now the DLL checks both at startup: if another DLL changed either, it undoes both hooks and turns the message off, with a line in the log; the intake goes on. In CLZ, no crash; in the factory game the message stays on.
+- **Still to do:** the 10-season career to 2011 and a career with a human club.
 
 ## 6. Limits and next tests
 

@@ -140,7 +140,8 @@ Com `log = 1`, a linha `tick` do `tweaks.log` traz, a cada mês do jogo:
   - o motor do jogo forma pelo treino, pela idade e pelo potencial.
 
   Por isso existe a margem do treino. Com `loan_training_margin = 0`, cada jovem vai para um lugar melhor, mas um terço deles deixa de ser emprestado.
-- **Não medido ainda**: carreiras longas (10 temporadas), carreiras com o clube humano e os bancos da comunidade (como o CLZ).
+- **O CLZ e as carreiras até o fim de 2003** (14/11): sem queda; o que cada uma mostrou está no [TESTES.md](TESTES.md) §5. **Não medido ainda**: a carreira de 10 temporadas até 2011 e carreiras com o clube humano.
+- **O fim do empréstimo de quem está sem clube**: o jogo mostra a caixa `contract_manager..cpp 5929` quando uma transferência encerra o empréstimo de alguém sem clube. Com `loans = on`, a DLL só tira o contrato de empréstimo, como a passagem diária do próprio jogo já faz, e registra o caso (`loan_end_noclub`).
 - **O empréstimo do clube humano** continua como no jogo: o clube humano decide o que empresta, e um pedido do humano a um clube da IA passa pela regra A.
 
 ## 7. Como propor uma mudança

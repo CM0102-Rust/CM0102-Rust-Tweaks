@@ -140,7 +140,8 @@ With `log = 1`, the `tick` line in `tweaks.log` shows, every game month:
   - the game's engine develops through Training, age and potential.
 
   That's why there's a Training margin. With `loan_training_margin = 0`, each youngster goes to a better place, but a third of them are no longer loaned.
-- **Not measured yet**: long careers (10 seasons), careers with a human club and the community's databases (such as CLZ).
+- **CLZ and the careers to the end of 2003** (11/14): no crash; what each one showed is in [TESTES.en.md](TESTES.en.md) §5. **Not measured yet**: the 10-season career to 2011 and careers with a human club.
+- **The end of a loan for someone without a club**: the game shows the box `contract_manager..cpp 5929` when a transfer ends the loan of someone without a club. With `loans = on`, the DLL only removes the loan contract, as the game's own daily pass already does, and logs the case (`loan_end_noclub`).
 - **The human club's loans** stay as in the game: the human club decides what it lends, and a human request to an AI club goes through rule A.
 
 ## 7. How to propose a change

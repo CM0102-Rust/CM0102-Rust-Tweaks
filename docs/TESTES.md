@@ -383,7 +383,12 @@ Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho
 
   Com `loan_squad_min = 20`, quatro de quatro chegaram a julho de 2003. As travadas de mais de 60 s em julho de 2001 acontecem também na base original com quatro jogos ao mesmo tempo: é a montagem das listas de procura do jogo.
 - **Pelo `tweaks.cfg`** (sem o modo de medição): uma carreira curta com o `tweaks.cfg` do repositório e `log = 1` mostra a linha `loans: on (...)` e os contadores na linha `tick`.
-- **Falta:** carreiras de 10 temporadas, o CLZ e uma carreira com clube humano.
+- **O `tweaks.cfg` do repositório** (com `log = 1`, 14/11/2026) [medido]:
+  - **Jogo de fábrica, todas as nações, até o fim de 2003:** duas carreiras com os empréstimos e uma sem, nenhuma queda. A primeira com os empréstimos parou em 2003-324 na caixa `match_eng..cpp 652` ("Only 10 away players", as reservas da Triestina); a repetição e a carreira sem os empréstimos chegaram a 2003-359 sem caixa. Uma em três: ainda não dá para dizer se vem dos empréstimos.
+  - **CLZ (o save de 2026, até 2027-181):** sem queda. O dono aceitou 4.632 pedidos de empréstimo e recusou 1.075. Caixas do jogo que não param a carreira: `contract_manager..cpp 5929` em 2027-012 (duas de quatro carreiras) e "Only 10 home players" nas reservas (duas carreiras).
+  - **A caixa 5929:** o `end_loan` do jogo (0x4d07e0) encerra o empréstimo de quem está sem clube. A passagem diária confere o clube antes de chamar; a transferência (0x8c9d5d) não. Com `loans = on`, a DLL faz o que a passagem diária faz: só tira o contrato de empréstimo, sem a caixa, e registra a linha `loan_end_noclub` com o jogador, o vencimento do contrato e o fim do empréstimo. A causa ainda não está achada: o empréstimo passando do contrato não é (184 empréstimos assinados no CLZ, nenhum além do contrato).
+  - **A mensagem da fornada no CLZ:** com `intake_news = 1`, o jogo do CLZ caía ao carregar o save (0x782c30, em `NewsItem::get_action_button`). O CLZ muda, depois que a DLL carrega, as duas rotinas de notícia que a mensagem desvia (0x77bc80 e 0x782b70). Agora a DLL confere as duas na abertura: se outra DLL mudou alguma, desfaz os dois desvios e desliga a mensagem, com uma linha no registro; a fornada segue. No CLZ, sem queda; no jogo de fábrica, a mensagem continua ligada.
+- **Falta:** a carreira de 10 temporadas até 2011 e uma carreira com clube humano.
 
 ## 6. Limites e próximos testes
 

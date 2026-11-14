@@ -733,9 +733,38 @@ pub(crate) fn ligado() -> bool {
 
 pub(crate) fn contadores() -> String {
     use core::sync::atomic::Ordering::Relaxed;
-    format!("loan_listed {} loan_accepted {} loan_real_yes {} loan_real_no {} unhappy {} young_sought {} standout_sought {} standout_rep {}", LISTADOS.swap(0, Relaxed), ACEITOS.swap(0, Relaxed),
+    format!("loan_listed {} loan_accepted {} loan_real_yes {} loan_real_no {} unhappy {} young_sought {} standout_sought {} standout_rep {} loan_end_noclub {}", LISTADOS.swap(0, Relaxed), ACEITOS.swap(0, Relaxed),
         EMP_ACEITOS.swap(0, Relaxed), EMP_RECUSADOS.swap(0, Relaxed), INSATISFEITOS.swap(0, Relaxed), PROCURADOS.swap(0, Relaxed),
-        DESTACADOS.swap(0, Relaxed), BONUS_REP.swap(0, Relaxed))
+        DESTACADOS.swap(0, Relaxed), BONUS_REP.swap(0, Relaxed), SEM_CLUBE.swap(0, Relaxed))
+}
+
+static SEM_CLUBE: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static mut T_FIM: usize = 0;
+
+/// `CONTRACT_MANAGER::end_loan` (0x4d07e0): sem clube (+0x39 vazio), faz o que a passagem diária do próprio jogo faz
+/// (0x4c80ed): só tira o contrato de empréstimo (`remove_loan_contract`, 0x4d0bd0), sem a caixa 5929. A transferência
+/// (0x8c9d5d) chamava sem conferir.
+unsafe extern "thiscall" fn fim_do_emprestimo(cm: usize, pessoa: usize) {
+    if pessoa != 0 && d(pessoa + 0x39) == 0 {
+        let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d0bd0usize);
+        let id = d(pessoa) as usize;
+        let linha = d(0xae2d0c) + 79 * id;
+        let (ip, ie) = (d(linha) as i32, d(linha + 4) as i32);
+        let data = |i: i32| if i < 0 { String::from("-") } else { let k = d(cm) + 0x50 * i as usize; format!("{}-{:03}", *((k + 0x2f) as *const u16), *((k + 0x2d) as *const u16)) };
+        registro::linha(&format!("loan_end_noclub\t{}\tperson {}\tcontract {} ends {}\tloan {} ends {}", data_do_jogo(), id, ip, data(ip), ie, data(ie)));
+        tirar(cm, pessoa);
+        SEM_CLUBE.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
+        return;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(T_FIM);
+    f(cm, pessoa)
+}
+
+unsafe fn instalar_fim_do_emprestimo() {
+    match crate::origem::trampolim(0x4d07e0, &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00], fim_do_emprestimo as *const () as usize) {
+        Some(t) => T_FIM = t,
+        None => registro::linha("loans: 0x4d07e0 differs from 3.9.68; a loan of a person without a club still shows the box contract_manager..cpp 5929"),
+    }
 }
 
 /// As nossas regras de empréstimo (a configuração EJ3m das carreiras de 12/11), o padrão de cada chave ausente.
@@ -861,6 +890,7 @@ pub(crate) unsafe fn instalar() {
             request willingness {}, requests x{}, home x{}, playing time x{}, youth demand x{}, unhappiness {} at +{} reputation)", c.idade_rodagem, c.vaga_jovem, c.vaga_outros,
             c.cobertura_min, c.cobertura_reserva, (c.cobertura_ratio * 100.0).round(), c.elenco_min, c.vontade_pedido, 1 << (c.pedido_div - 2).clamp(0, 30),
             c.fator_casa, c.fator_minutos, c.procura_jovem, c.insatisfacao, c.insat_dif));
+        instalar_fim_do_emprestimo();
         // a decisão do dono (0x84af00): nas carreiras de medição o embrulho do estudo já chama a regra
         if !estudo {
             match crate::origem::trampolim(0x84af00, &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00], entrada_decisao as *const () as usize) {
