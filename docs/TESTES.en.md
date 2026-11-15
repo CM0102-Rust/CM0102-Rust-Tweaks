@@ -388,7 +388,8 @@ Automatic careers with **every league in the database**, July 2001 to July 2003.
   - **CLZ (the 2026 save, to 2027-181):** no crash. The owner accepted 4,632 loan requests and turned down 1,075. Game boxes that don't stop the career: `contract_manager..cpp 5929` at 2027-012 (two of four careers) and "Only 10 home players" in the reserves (two careers).
   - **The 5929 box:** the game's `end_loan` (0x4d07e0) ends the loan of someone without a club. The daily pass checks the club before the call; the transfer (0x8c9d5d) doesn't. With `loans = on`, the DLL does what the daily pass does: it only removes the loan contract, with no box, and logs a `loan_end_noclub` line with the player, the contract's expiry and the loan's end. The cause isn't found yet: it isn't the loan outlasting the contract (184 loans signed in CLZ, none past the contract).
   - **The intake message in CLZ:** with `intake_news = 1`, the CLZ game crashed when loading the save (0x782c30, in `NewsItem::get_action_button`). After the DLL loads, CLZ changes the two news routines the message hooks (0x77bc80 and 0x782b70). Now the DLL checks both at startup: if another DLL changed either, it undoes both hooks and turns the message off, with a line in the log; the intake goes on. In CLZ, no crash; in the factory game the message stays on.
-- **Still to do:** the 10-season career to 2011 and a career with a human club.
+- **10 seasons, the 10 leagues of §4.4** (factory game, 11/14): no crash, no game box and no `loan_end_noclub` up to 2010-214, where the 5-hour limit ran out. Players stayed at 86.6 to 86.7 thousand per season (50.4 to 51.7 thousand without a club). About 33 minutes per season, against about 16 in §4.4: the log had 26 million `grey` lines (1.4 GB) and the machine was shared with other sessions; 1.4 was not repeated under the same conditions.
+- **Still to do:** a career with a human club.
 
 ## 6. Limits and next tests
 

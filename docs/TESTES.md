@@ -388,7 +388,8 @@ Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho
   - **CLZ (o save de 2026, até 2027-181):** sem queda. O dono aceitou 4.632 pedidos de empréstimo e recusou 1.075. Caixas do jogo que não param a carreira: `contract_manager..cpp 5929` em 2027-012 (duas de quatro carreiras) e "Only 10 home players" nas reservas (duas carreiras).
   - **A caixa 5929:** o `end_loan` do jogo (0x4d07e0) encerra o empréstimo de quem está sem clube. A passagem diária confere o clube antes de chamar; a transferência (0x8c9d5d) não. Com `loans = on`, a DLL faz o que a passagem diária faz: só tira o contrato de empréstimo, sem a caixa, e registra a linha `loan_end_noclub` com o jogador, o vencimento do contrato e o fim do empréstimo. A causa ainda não está achada: o empréstimo passando do contrato não é (184 empréstimos assinados no CLZ, nenhum além do contrato).
   - **A mensagem da fornada no CLZ:** com `intake_news = 1`, o jogo do CLZ caía ao carregar o save (0x782c30, em `NewsItem::get_action_button`). O CLZ muda, depois que a DLL carrega, as duas rotinas de notícia que a mensagem desvia (0x77bc80 e 0x782b70). Agora a DLL confere as duas na abertura: se outra DLL mudou alguma, desfaz os dois desvios e desliga a mensagem, com uma linha no registro; a fornada segue. No CLZ, sem queda; no jogo de fábrica, a mensagem continua ligada.
-- **Falta:** a carreira de 10 temporadas até 2011 e uma carreira com clube humano.
+- **10 temporadas, as 10 ligas do §4.4** (jogo de fábrica, 14/11): sem queda, sem caixa do jogo e sem `loan_end_noclub` até 2010-214, onde acabou o limite de 5 horas. Os jogadores ficaram em 86,6 a 86,7 mil por temporada (50,4 a 51,7 mil sem clube). Uns 33 minutos por temporada, contra uns 16 no §4.4: o registro teve 26 milhões de linhas `grey` (1,4 GB) e a máquina estava dividida com outras sessões; a 1.4 não foi repetida nas mesmas condições.
+- **Falta:** uma carreira com clube humano.
 
 ## 6. Limites e próximos testes
 
