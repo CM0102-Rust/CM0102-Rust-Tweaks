@@ -33,6 +33,14 @@ def trechos_dos_ajustes():
     out += [('regen_origins', 0x7a664f, 0x7a6654), ('regen_origins', 0x7a6335, 0x7a633a), ('regen_origins', 0x7a64c9, 0x7a64ce),
             ('regen_origins', 0x7a64e2, 0x7a64e7), ('match report (30 rows)', 0x402ac0, 0x402ac6), ('log (message boxes)', 0x5e8290, 0x5e8299),
             ('ages (contest age)', 0x7ace69, 0x7ace6a)]
+    # loans (src/mercado.rs): as entradas desviadas, as chamadas trocadas e as trocas de bytes
+    m = open(os.path.join(RAIZ, 'src', 'mercado.rs'), encoding='utf-8').read()
+    for a, b in re.findall(r'trampolim\((0x[0-9a-f]+), &\[([^\]]*)\]', m):
+        out.append(('loans', int(a, 16), int(a, 16) + len(b.split(','))))
+    for a in re.findall(r'(?:chamar|desviar)\((0x[0-9a-f]+),', m):
+        out.append(('loans', int(a, 16), int(a, 16) + 5))
+    for a, b in re.findall(r'\((0x[0-9a-f]+), &\[([^\]]*)\], &\[', m):
+        out.append(('loans', int(a, 16), int(a, 16) + len(b.split(','))))
     return out
 
 

@@ -31,6 +31,8 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 
 **Público, estádio e proteção do elenco** (1.4): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos trechos deles (as chamadas trocadas do público e do estádio, as duas rotinas de entrada no elenco, a escalação automática e os ganchos de gravar e carregar o save). Nos exes do CLZ 6.1, do CLZ 5.4 e da demo do NickPatcher, esses trechos estão como no 3.9.68.
 
+**Empréstimos** (1.5): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 28 trechos que `loans` desvia ou troca (a decisão do dono, o fim do empréstimo, a lista e a procura dos jovens, a verba das nações), conferidos por `tools/exe/nickpatcher_vs_tweaks.py`. No CLZ 6.1, os empréstimos ligaram sem aviso e rodaram até 2027 sem queda ([TESTES.md](TESTES.md) §5).
+
 ## A NickDLL (pacotes como o CLZ)
 
 A NickDLL muda o exe em memória, depois de abrir. As que trazem a "resolução ampliada" (`"resolucao"` no `NickDLL_config.json`) cuidam da resolução: com uma resolução escolhida lá, a nossa `resolution` fica de fora. Ela também troca a rotina do time B (a disputa usa a dela, sem problema) e pode desviar a caixa de mensagem (o nosso `log` encadeia; a confirmar no jogo). Detalhes em [COMPATIBILIDADE.md](COMPATIBILIDADE.md).

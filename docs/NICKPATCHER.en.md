@@ -31,6 +31,8 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 
 **Attendance, stadium and squad protection** (1.4): no NickPatcher option or MiscPatches patch writes to their code spots (the replaced attendance and stadium calls, the two squad-entry routines, the automatic team selection and the save and load hooks). In the exes of CLZ 6.1, CLZ 5.4 and the NickPatcher demo, these spots are as in 3.9.68.
 
+**Loans** (1.5): no NickPatcher option or MiscPatches patch writes to the 28 spots `loans` hooks or changes (the owner's decision, the end of a loan, the youth listing and demand, the nations' budgets), checked by `tools/exe/nickpatcher_vs_tweaks.py`. On CLZ 6.1, loans turned on with no warning and ran to 2027 with no crash ([TESTES.en.md](TESTES.en.md) §5).
+
 ## NickDLL (packs like CLZ)
 
 NickDLL changes the exe in memory after it opens. Those with the "extended resolution" (`"resolucao"` in `NickDLL_config.json`) take care of the resolution: with a resolution chosen there, our `resolution` stays out. It also replaces the B-team routine (the contest uses its version, no problem) and may hook the message box (our `log` chains; to be confirmed in the game). Details in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md).
