@@ -1,29 +1,24 @@
 //! `grey_signing`: efetivar um jogador cinzento do clube do técnico humano (desenho em docs/EFETIVAR_CINZENTOS.md).
 //! 1. No perfil de um cinzento do clube humano, o botão Action com o item "Efetivar" (o jogo não mostra o Action para
 //!    cinzentos): um trecho em 0x874a58, logo depois do menu, na montagem do perfil 0x870700.
-//! 2. O clique (`staff_screens_handle_profile_action` 0x888260, desviada na entrada): o id 0x50 efetiva e abre a
-//!    negociação do contrato (`contract_screens_offer_contract_to_staff` 0x4dd0f0); o resto vai para a original.
+//! 2. O clique (`staff_screens_handle_profile_action` 0x888260, desviada na entrada): o id 0x50 efetiva; o resto vai
+//!    para a original.
 //! 3. A efetivação: uma pessoa real que sobra (uma adormecida da fornada ou, sem ela, a cabeça da fila de regens com
 //!    uma ficha da reserva) vira regen pela rotina do próprio jogo (a chamada da fila, 0x7abac0), com a ficha do
 //!    cinzento e sem a disputa dos clubes; depois recebe a identidade do cinzento (nomes, nascimento, nações e a ficha),
-//!    a personalidade sorteada e a marca de regen, e assina com o clube humano (0x7a6f10) num contrato provisório.
-//! 4. A negociação fácil, só para os efetivados: o pedido (`set_to_desired_contract` 0x85fc50) é o salário padrão do
-//!    papel × `grey_signing_wage` %, sem luvas, bônus nem cláusulas; ele sempre aceita conversar (0x4d4660).
-//! ponytail: a lista dos efetivados fica só na memória: depois de carregar um save, a negociação volta a ser a do jogo.
+//!    a personalidade sorteada e a marca de regen, e assina com o clube humano (0x7a6f10): o salário padrão do jogo e
+//!    um contrato de `grey_signing_months` meses (12). A negociação pela tela do jogo (16/11) foi tirada: nenhum
+//!    efetivado aceitava a proposta.
 
 use crate::{d, registro, sorteio, w};
 
 static mut LIGADO: bool = false;
-static mut SALARIO: i32 = 80;
-static mut DIAS: i32 = 30;
+static mut MESES: i32 = 12;
 /// Durante a efetivação, a disputa e a lista da nação (as duas chamadas de clube da 0x7abac0) devolvem 0.
 static mut EFETIVANDO: bool = false;
 static mut DISPUTA_ANTES: usize = 0;
 static mut LISTA_ANTES: usize = 0;
 static mut T_CLIQUE: usize = 0;
-static mut T_PEDIDO: usize = 0;
-static mut T_CONVERSA: usize = 0;
-static mut EFETIVADOS: Vec<usize> = Vec::new();
 /// O id do item no menu Action (livre no perfil e fora da faixa da barra de menu, ≥ 0x3e8).
 const ITEM: u16 = 0x50;
 
@@ -37,8 +32,7 @@ fn ler() {
         unsafe {
             match k {
                 "grey_signing" => LIGADO = v == "1" || v == "on",
-                "grey_signing_wage" => SALARIO = v.parse().unwrap_or(80).clamp(10, 200),
-                "grey_signing_days" => DIAS = v.parse().unwrap_or(30).clamp(7, 365),
+                "grey_signing_months" => MESES = v.parse().unwrap_or(12).clamp(1, 60),
                 _ => {}
             }
         }
@@ -113,10 +107,7 @@ unsafe extern "C" fn clique(idx: i32) -> i32 {
     if id == ITEM {
         let parametro: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7ff010usize);
         let cinzento = parametro(0xb74450, 0);
-        if let Some(p) = efetivar(cinzento) {
-            let negociar: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(0x4dd0f0usize);
-            negociar(p, 0, 0, 1);
-        }
+        efetivar(cinzento);
         return -4;
     }
     let original: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(T_CLIQUE);
@@ -205,11 +196,11 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         registro::linha(&format!("grey signing\t{}\tperson {} could not join the club (squad full)", crate::data_do_jogo(), d(p)));
         return None;
     }
-    // o contrato provisório: o fim em hoje + grey_signing_days
+    // o contrato: o fim em hoje + grey_signing_months
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contrato(0xae1050, p);
     if k != 0 {
-        let (mut dia, mut ano) = (w(0xae2c90) as i32 + DIAS, w(0xae2c92) as i32);
+        let (mut dia, mut ano) = (w(0xae2c90) as i32 + MESES * 365 / 12, w(0xae2c92) as i32);
         while dia > 364 {
             dia -= 365;
             ano += 1;
@@ -217,7 +208,6 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         core::ptr::write_unaligned((k + 0x2d) as *mut u16, dia as u16);
         core::ptr::write_unaligned((k + 0x2f) as *mut u16, ano as u16);
     }
-    (*core::ptr::addr_of_mut!(EFETIVADOS)).push(d(p));
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
     Some(p)
@@ -275,38 +265,6 @@ unsafe extern "thiscall" fn cinzento(this: usize, clube: usize, a2: usize, id: u
     }
 }
 
-fn efetivado(id: usize) -> bool {
-    unsafe { (*core::ptr::addr_of!(EFETIVADOS)).contains(&id) }
-}
-
-/// { 0x85fc50 } `STAFF_CONTRACT::set_to_desired_contract` (thiscall, ret 0x1c): depois da original, para o efetivado no
-/// clube humano, o pedido vira o salário padrão do papel × grey_signing_wage %, sem luvas, bônus nem cláusulas.
-unsafe extern "thiscall" fn pedido(c: usize, staff: usize, clube: usize, transf: i32, situacao: u32, cargo: u32, s1: usize, s2: usize) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, usize, usize) -> u32 = core::mem::transmute(T_PEDIDO);
-    let r = f(c, staff, clube, transf, situacao, cargo, s1, s2);
-    if staff != 0 && efetivado(d(staff)) && clube != 0 && clube == clube_humano() {
-        let padrao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f32 = core::mem::transmute(0x864550usize);
-        let base = padrao(c, staff, clube, 1, situacao & 0xff, 0xb, 0);
-        let salario = ((base as f64 * SALARIO as f64 / 100.0) as i32).max(55);
-        core::ptr::write_unaligned((c + 0xc) as *mut i32, salario);
-        core::ptr::write_unaligned((c + 8) as *mut i32, 0);
-        for o in [0x10usize, 0x14, 0x18] {
-            core::ptr::write_unaligned((c + o) as *mut i32, -1);
-        }
-        core::ptr::write_bytes((c + 0x1c) as *mut u8, 0, 9);
-    }
-    r
-}
-
-/// { 0x4d4660 } `CONTRACT_MANAGER::will_negotiate_offer` (thiscall, ret 4): o efetivado sempre conversa.
-unsafe extern "thiscall" fn conversa(cm: usize, oferta: usize) -> u32 {
-    if oferta != 0 && efetivado(d(oferta)) {
-        return 1;
-    }
-    let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(T_CONVERSA);
-    f(cm, oferta)
-}
-
 /// O `call rel32` em `em`: o alvo atual, se for um `call`.
 unsafe fn alvo_do_call(em: usize) -> Option<usize> {
     (*(em as *const u8) == 0xe8).then(|| (core::ptr::read_unaligned((em + 1) as *const i32) as usize).wrapping_add(em + 5))
@@ -338,13 +296,5 @@ pub(crate) unsafe fn instalar() {
         Some(t) => T_CINZENTO = t,
         None => registro::linha("grey signing: create_virtual_player at 0x90e0a0 differs from 3.9.68; a new grey player may repeat a signed one's name"),
     }
-    match crate::origem::trampolim(0x85fc50, &[0x6a, 0xff, 0x68, 0x76, 0x2a, 0x96, 0x00], pedido as *const () as usize) {
-        Some(t) => T_PEDIDO = t,
-        None => registro::linha("grey signing: the contract demand at 0x85fc50 differs from 3.9.68; the negotiation is the game's"),
-    }
-    match crate::origem::trampolim(0x4d4660, &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18], conversa as *const () as usize) {
-        Some(t) => T_CONVERSA = t,
-        None => registro::linha("grey signing: the will-to-negotiate check at 0x4d4660 differs from 3.9.68"),
-    }
-    registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item; temporary contract of {} days, then an easy negotiation at {}% of the role's default wage)", { DIAS }, { SALARIO }));
+    registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item: a real player on a {}-month contract at the game's default wage)", { MESES }));
 }
