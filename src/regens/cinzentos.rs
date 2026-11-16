@@ -22,7 +22,7 @@ pub(crate) unsafe fn nivel(clube: usize) -> Option<i32> {
             if p == 0 || d(p) >= pessoas || d(p + 0x61) == 0 {
                 return None;
             }
-            Some(w(d(p + 0x61) + 5) as u16 as i32)
+            Some(w(d(p + 0x61) + 5) as i32).filter(|&ca| ca > 0) // CA negativo (cinzento efetivado da conta original) não conta
         })
         .collect();
     if cas.len() < 5 {
