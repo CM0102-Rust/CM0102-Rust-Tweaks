@@ -249,6 +249,32 @@ unsafe fn nivelar(p: usize, ficha: usize, clube: usize) {
     core::ptr::write_unaligned((ficha + 0xd) as *mut i16, 1);
 }
 
+static mut T_CINZENTO: usize = 0;
+
+/// { 0x90e0a0 } `create_virtual_player(clube, _, id da pessoa, id da ficha, ...)` (cdecl, 7 argumentos): o jogo sorteia
+/// os nomes do cinzento com o `rand` semeado por clube e grupo, então o cinzento que repõe a vaga de um efetivado nasce
+/// com o mesmo nome dele. Depois da original: se um jogador real do elenco tem o mesmo nome e sobrenome, novos nomes da
+/// nação do clube (+0x53; as mesmas rotinas da original, 0x539c60 e 0x53a1b0), até 10 tentativas.
+unsafe extern "C" fn cinzento(clube: usize, a2: usize, id: usize, a4: usize, a5: usize, a6: usize, a7: usize) {
+    let f: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize) = core::mem::transmute(T_CINZENTO);
+    f(clube, a2, id, a4, a5, a6, a7);
+    let nacao = d(clube + 0x53);
+    if clube < 0x10000 || nacao == 0 {
+        return;
+    }
+    let p = d(0xae23bc) + 110 * id;
+    let reais = d(0xae2364);
+    let repetido = |p: usize| (0..50).map(|k| d(clube + 0xd7 + 4 * k)).any(|q| q != 0 && q != p && d(q) < reais && d(q + 4) == d(p + 4) && d(q + 8) == d(p + 8));
+    let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
+    let sobrenome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a1b0usize);
+    let mut n = 0;
+    while repetido(p) && n < 10 {
+        *((p + 4) as *mut usize) = nome(nacao);
+        *((p + 8) as *mut usize) = sobrenome(nacao);
+        n += 1;
+    }
+}
+
 fn efetivado(id: usize) -> bool {
     unsafe { (*core::ptr::addr_of!(EFETIVADOS)).contains(&id) }
 }
@@ -308,6 +334,10 @@ pub(crate) unsafe fn instalar() {
     crate::fornada::trocar_call(0x7acea2, disputa as *const () as usize);
     crate::fornada::trocar_call(0x7acf4f, lista as *const () as usize);
     crate::desviar(0x874a58, trecho_do_menu as *const () as usize);
+    match crate::origem::trampolim(0x90e0a0, &[0x6a, 0xff, 0x68, 0xa0, 0x55, 0x96, 0x00], cinzento as *const () as usize) {
+        Some(t) => T_CINZENTO = t,
+        None => registro::linha("grey signing: create_virtual_player at 0x90e0a0 differs from 3.9.68; a new grey player may repeat a signed one's name"),
+    }
     match crate::origem::trampolim(0x85fc50, &[0x6a, 0xff, 0x68, 0x76, 0x2a, 0x96, 0x00], pedido as *const () as usize) {
         Some(t) => T_PEDIDO = t,
         None => registro::linha("grey signing: the contract demand at 0x85fc50 differs from 3.9.68; the negotiation is the game's"),
