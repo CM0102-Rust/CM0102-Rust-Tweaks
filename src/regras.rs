@@ -82,6 +82,10 @@ pub(crate) struct Regras {
     pub(crate) cinzentos: bool,
     /// grey_players_spread: a largura da faixa do CA do cinzento, centrada no nível.
     pub(crate) cinzentos_espalhar: i32,
+    /// grey_players_surprise: a chance (%) de um cinzento nascer acima do nível, de grey_players_surprise_min a _max.
+    pub(crate) cinzentos_surpresa: i32,
+    pub(crate) cinzentos_surpresa_min: i32,
+    pub(crate) cinzentos_surpresa_max: i32,
     /// regen_names = own: a nação usa os próprios nomes a partir de `nomes_minimo` (a original, só acima de 100).
     pub(crate) nomes: bool,
     pub(crate) nomes_minimo: i32,
@@ -134,6 +138,9 @@ pub(crate) const PADRAO: Regras = Regras {
     origens: false,
     cinzentos: false,
     cinzentos_espalhar: 10,
+    cinzentos_surpresa: 5,
+    cinzentos_surpresa_min: 15,
+    cinzentos_surpresa_max: 35,
     nomes: false,
     nomes_minimo: 20,
 };
@@ -252,6 +259,9 @@ pub(crate) fn ler_regras() -> Regras {
             "younger_by" => r.mais_novo_em = (x as i32).max(0),
             "regen_names_min" => r.nomes_minimo = (x as i32).clamp(1, 101),
             "grey_players_spread" => r.cinzentos_espalhar = (x as i32).clamp(0, 100),
+            "grey_players_surprise" => r.cinzentos_surpresa = (x as i32).clamp(0, 100),
+            "grey_players_surprise_min" => r.cinzentos_surpresa_min = (x as i32).clamp(0, 200),
+            "grey_players_surprise_max" => r.cinzentos_surpresa_max = (x as i32).clamp(0, 200),
             _ => {}
         }
     }

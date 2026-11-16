@@ -8,6 +8,9 @@ use crate::{d, data_do_jogo, nome, registro, w};
 /// grey_players_spread: o CA sai numa faixa dessa largura centrada no nível (10: do nível − 5 ao nível + 5).
 pub static mut ESPALHAR: i32 = 10;
 pub static mut REGISTRAR: bool = false;
+/// grey_players_surprise: (chance %, bônus mínimo, bônus máximo). A surpresa sai do mesmo `rand` semeado por clube e
+/// grupo, então o cinzento-surpresa é o mesmo a cada partida enquanto a vaga existir.
+pub static mut SURPRESA: (i32, i32, i32) = (5, 15, 35);
 
 /// O nível do elenco: a média do CA dos 16 melhores jogadores reais (+0xd7, 50 vagas; real = id < [0xAE2364], com ficha em
 /// +0x61). Nada com menos de 5 reais.
@@ -44,9 +47,14 @@ unsafe extern "C" fn ca_do_cinzento(clube: usize, _jovem: i32, _reserva: i32, or
         Some(n) if n >= pela_rep => (n, "squad"),
         _ => (pela_rep, "reputation"),
     };
-    let ca = (base + if ESPALHAR > 0 { rand() % (ESPALHAR + 1) - ESPALHAR / 2 } else { 0 }).clamp(1, 200);
+    let mut ca = (base + if ESPALHAR > 0 { rand() % (ESPALHAR + 1) - ESPALHAR / 2 } else { 0 }).clamp(1, 200);
+    let (chance, min, max) = SURPRESA;
+    let surpresa = chance > 0 && rand() % 100 < chance;
+    if surpresa {
+        ca = (base + min + rand() % (max - min + 1)).clamp(1, 200);
+    }
     if REGISTRAR {
-        registro::linha(&format!("grey\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data_do_jogo(), nome(clube), rep, fonte, base, original as i16, ca));
+        registro::linha(&(format!("grey\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data_do_jogo(), nome(clube), rep, fonte, base, original as i16, ca) + if surpresa { "\tsurprise" } else { "" }));
     }
     ca
 }
