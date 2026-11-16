@@ -1,0 +1,293 @@
+//! `grey_signing`: efetivar um jogador cinzento do clube do técnico humano (desenho em docs/EFETIVAR_CINZENTOS.md).
+//! 1. No perfil de um cinzento do clube humano, o botão Action com o item "Efetivar" (o jogo não mostra o Action para
+//!    cinzentos): um trecho em 0x874a58, logo depois do menu, na montagem do perfil 0x870700.
+//! 2. O clique (`staff_screens_handle_profile_action` 0x888260, desviada na entrada): o id 0x50 efetiva e abre a
+//!    negociação do contrato (`contract_screens_offer_contract_to_staff` 0x4dd0f0); o resto vai para a original.
+//! 3. A efetivação: uma pessoa real que sobra (uma adormecida da fornada ou, sem ela, a cabeça da fila de regens com
+//!    uma ficha da reserva) vira regen pela rotina do próprio jogo (a chamada da fila, 0x7abac0), com a ficha do
+//!    cinzento e sem a disputa dos clubes; depois recebe a identidade do cinzento (nomes, nascimento, nações e a ficha),
+//!    a personalidade sorteada e a marca de regen, e assina com o clube humano (0x7a6f10) num contrato provisório.
+//! 4. A negociação fácil, só para os efetivados: o pedido (`set_to_desired_contract` 0x85fc50) é o salário padrão do
+//!    papel × `grey_signing_wage` %, sem luvas, bônus nem cláusulas; ele sempre aceita conversar (0x4d4660).
+//! ponytail: a lista dos efetivados fica só na memória: depois de carregar um save, a negociação volta a ser a do jogo.
+
+use crate::{d, registro, sorteio, w};
+
+static mut LIGADO: bool = false;
+static mut SALARIO: i32 = 80;
+static mut DIAS: i32 = 30;
+/// Durante a efetivação, a disputa e a lista da nação (as duas chamadas de clube da 0x7abac0) devolvem 0.
+static mut EFETIVANDO: bool = false;
+static mut DISPUTA_ANTES: usize = 0;
+static mut LISTA_ANTES: usize = 0;
+static mut T_CLIQUE: usize = 0;
+static mut T_PEDIDO: usize = 0;
+static mut T_CONVERSA: usize = 0;
+static mut EFETIVADOS: Vec<usize> = Vec::new();
+/// O id do item no menu Action (livre no perfil e fora da faixa da barra de menu, ≥ 0x3e8).
+const ITEM: u16 = 0x50;
+
+fn ler() {
+    let caminho = std::env::current_exe().map(|x| x.with_file_name("tweaks.cfg")).unwrap_or_else(|_| "tweaks.cfg".into());
+    let Ok(texto) = std::fs::read_to_string(caminho) else { return };
+    for linha in texto.lines() {
+        let linha = linha.split('#').next().unwrap_or("");
+        let Some((k, v)) = linha.split_once('=') else { continue };
+        let (k, v) = (k.trim(), v.trim());
+        unsafe {
+            match k {
+                "grey_signing" => LIGADO = v == "1" || v == "on",
+                "grey_signing_wage" => SALARIO = v.parse().unwrap_or(80).clamp(10, 200),
+                "grey_signing_days" => DIAS = v.parse().unwrap_or(30).clamp(7, 365),
+                _ => {}
+            }
+        }
+    }
+}
+
+/// O técnico humano da vez (`[0xb74c26 + 0x300 × canal]`, canal = `[0xb77c7a]`) e o clube dele (+0x39).
+unsafe fn clube_humano() -> usize {
+    let humano = d(0xb74c26 + 0x300 * w(0xb77c7a) as usize);
+    if humano == 0 { 0 } else { d(humano + 0x39) }
+}
+
+/// O cinzento `p` está no elenco (+0xd7, 50 vagas) do clube humano? Devolve a vaga.
+unsafe fn vaga_no_humano(p: usize) -> Option<usize> {
+    let c = clube_humano();
+    if c == 0 || p == 0 || d(p) < d(0xae2364) {
+        return None;
+    }
+    (0..50).map(|k| c + 0xd7 + 4 * k).find(|&a| d(a) == p)
+}
+
+fn em_portugues() -> bool {
+    matches!(unsafe { d(0x9eb2dc) } as i32, 9 | 17)
+}
+
+/// O trecho em 0x874a58 chama com o bloco do `pushad` (esp, de cima para baixo: edi, esi, ebp, esp, ebx, edx, ecx, eax);
+/// o quadro da montagem fica logo acima (+0x20): a pessoa em +0x20, as cores em +0x14 e +0x18.
+unsafe extern "C" fn menu(regs: usize) {
+    let quadro = regs + 32;
+    let (ebp, staff) = (d(regs + 8) as i32, d(quadro + 0x20));
+    if ebp != -1 || vaga_no_humano(staff).is_none() {
+        return;
+    }
+    let sprintf: unsafe extern "C" fn(*mut u8, *const u8) -> usize = core::mem::transmute(0x66f4e0usize);
+    let botao: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, *const u8, usize, usize) -> usize =
+        core::mem::transmute(0x804030usize);
+    let area: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
+        core::mem::transmute(0x55fba0usize);
+    #[allow(clippy::type_complexity)]
+    let item: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
+        core::mem::transmute(0x55f990usize);
+    let mut rotulo = [0u8; 64];
+    sprintf(rotulo.as_mut_ptr(), 0xa8560c as *const u8); // "Action", pela tradução do jogo
+    let b = botao(0xb74450, 0x294, 4, 0x311, 0x18, 0x30, d(quadro + 0x18), 0xc, 1, d(quadro + 0x14), rotulo.as_ptr(), 0, 0);
+    let display = d(0xb74c4c + 0x300 * w(0xb77c7a) as usize);
+    let a = area(display, 0, 0, 0, 0, 0, 0, 0, 0, 0x130, w(0xae31aa) as u16 as usize, b & 0xffff);
+    if a as i32 == -1 {
+        return;
+    }
+    let texto: &[u8] = if em_portugues() { b"Efetivar\0" } else { b"Make permanent\0" };
+    sprintf(0xde1f64 as *mut u8, texto.as_ptr());
+    item(display, 2, 0, 0, 0, 0, 0, 0, 0x10, w(0xae31aa) as u16 as usize, w(0xaebdec) as u16 as usize, 1, 1, w(0xaebdea) as u16 as usize,
+        0xde1f64, 0, ITEM as usize, 0, a & 0xffff);
+}
+
+#[unsafe(naked)]
+unsafe extern "C" fn trecho_do_menu() {
+    // pushad; push esp (o bloco); call menu; add esp, 4; popad; as 3 instruções trocadas; volta em 0x874a5d
+    core::arch::naked_asm!("pushad", "push esp", "call {m}", "add esp, 4", "popad", "xor esi, esi", "push esi", "push 4",
+        "push 0x874a5d", "ret", m = sym menu);
+}
+
+/// { 0x888260 } (cdecl, short): o clique num item do perfil. O id do item: `Display + 0xba966 + idx × 0x18c` (ou
+/// `[0xdd6bde]` com idx −1 ou id 0).
+unsafe extern "C" fn clique(idx: i32) -> i32 {
+    let idx16 = idx as i16;
+    let display = d(0xb74c4c + 0x300 * w(0xb77c7a) as usize);
+    let mut id = if idx16 == -1 { 0 } else { w(display + 0xba966 + idx16 as usize * 0x18c) as u16 };
+    if idx16 == -1 || id == 0 {
+        id = w(0xdd6bde) as u16;
+    }
+    if id == ITEM {
+        let parametro: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7ff010usize);
+        let cinzento = parametro(0xb74450, 0);
+        if let Some(p) = efetivar(cinzento) {
+            let negociar: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(0x4dd0f0usize);
+            negociar(p, 0, 0, 1);
+        }
+        return -4;
+    }
+    let original: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(T_CLIQUE);
+    original(idx)
+}
+
+/// As duas chamadas de clube da 0x7abac0 (a disputa em 0x7acea2, a lista da nação em 0x7acf4f; thiscall, ret 4): 0
+/// durante a efetivação, para o efetivado nascer sem clube.
+unsafe extern "thiscall" fn disputa(this: usize, p: usize) -> usize {
+    if EFETIVANDO {
+        return 0;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(DISPUTA_ANTES);
+    f(this, p)
+}
+unsafe extern "thiscall" fn lista(this: usize, p: usize) -> usize {
+    if EFETIVANDO {
+        return 0;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(LISTA_ANTES);
+    f(this, p)
+}
+
+/// O id da nação (ponteiro da tabela de nações, [0xae23a8], 0x122 bytes cada).
+unsafe fn id_da_nacao(n: usize) -> usize {
+    if n == 0 { 0 } else { (n - d(0xae23a8)) / 0x122 }
+}
+
+/// Efetiva o cinzento `g` do clube humano; devolve a pessoa real.
+unsafe fn efetivar(g: usize) -> Option<usize> {
+    let vaga = vaga_no_humano(g)?;
+    let clube = clube_humano();
+    let regen = d(0xb7434c);
+    let ficha_g = d(g + 0x61);
+    if regen == 0 || ficha_g == 0 {
+        return None;
+    }
+    let (pessoas, fichas) = (d(0xae23bc), d(0xae23c4));
+    // a pessoa: uma adormecida da fornada (com a própria ficha) ou a cabeça da fila de regens (com a ficha da frente da
+    // reserva, o que custa um regen)
+    let adormecidas = crate::fornada::adormecidos(regen);
+    let (p, da_fila) = match adormecidas.first() {
+        Some(&p) => (p, false),
+        None if d(regen + 0x14) > 0 && d(regen + 0x40) > 0 => (pessoas + 110 * d(d(regen + 0x10)), true),
+        None => {
+            registro::linha(&format!("grey signing\t{}\tno spare person: no dormant person and the regen queue or record pool is empty", crate::data_do_jogo()));
+            return None;
+        }
+    };
+    let ficha = if da_fila { fichas + 0x46 * d(d(regen + 0x3c)) } else { d(p + 0x61) };
+    let id_ficha = d(ficha);
+    core::ptr::copy_nonoverlapping(ficha_g as *const u8, ficha as *mut u8, 70);
+    *(ficha as *mut usize) = id_ficha;
+    if !da_fila {
+        crate::fornada::por_na_frente_da_reserva(regen, id_ficha, id_da_nacao(d(g + 0x1a)));
+    }
+    // o regen, pela chamada da fila (a 0x7abac0, ou o regen_origins por cima dela), sem a disputa
+    let alvo = (core::ptr::read_unaligned(0x7a6650 as *const i32) as usize).wrapping_add(0x7a6654);
+    let criar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(alvo);
+    let antes = d(regen + 0x40);
+    EFETIVANDO = true;
+    criar(regen, p);
+    EFETIVANDO = false;
+    if da_fila {
+        crate::fornada::tirar(regen, 0x10, 12, d(p));
+    }
+    if d(regen + 0x40) >= antes || d(p + 0x39) != 0 || d(p + 0x61) != ficha {
+        registro::linha(&format!("grey signing\t{}\tthe regen routine didn't take person {} (club {:#x}); nothing signed", crate::data_do_jogo(), d(p), d(p + 0x39)));
+        return None;
+    }
+    // a identidade do cinzento: nomes, nascimento, idade, nações (+4..+0x22) e a ficha inteira (a 0x7abac0 mexe no CA)
+    core::ptr::copy_nonoverlapping((g + 4) as *const u8, (p + 4) as *mut u8, 0x1e);
+    core::ptr::copy_nonoverlapping(ficha_g as *const u8, ficha as *mut u8, 70);
+    *(ficha as *mut usize) = id_ficha;
+    // a personalidade sorteada (+0x56..+0x5d; o cinzento tem 10 em tudo) e a marca de regen
+    for o in 0x56..=0x5d {
+        *((p + o) as *mut u8) = (5 + sorteio(16)) as u8;
+    }
+    *crate::fornada::registro79(d(p)) |= 0x40; // o +0xb do registro de 79 bytes
+    // o clube: a vaga do cinzento fica livre e a assinatura do regen põe o efetivado no elenco
+    core::ptr::write_unaligned(vaga as *mut usize, 0);
+    let assinar: unsafe extern "stdcall" fn(usize, usize) -> u32 = core::mem::transmute(0x7a6f10usize);
+    if assinar(p, clube) & 0xff == 0 {
+        core::ptr::write_unaligned(vaga as *mut usize, g);
+        registro::linha(&format!("grey signing\t{}\tperson {} could not join the club (squad full)", crate::data_do_jogo(), d(p)));
+        return None;
+    }
+    // o contrato provisório: o fim em hoje + grey_signing_days
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let k = contrato(0xae1050, p);
+    if k != 0 {
+        let (mut dia, mut ano) = (w(0xae2c90) as i32 + DIAS, w(0xae2c92) as i32);
+        while dia > 364 {
+            dia -= 365;
+            ano += 1;
+        }
+        core::ptr::write_unaligned((k + 0x2d) as *mut u16, dia as u16);
+        core::ptr::write_unaligned((k + 0x2f) as *mut u16, ano as u16);
+    }
+    (*core::ptr::addr_of_mut!(EFETIVADOS)).push(d(p));
+    registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
+        crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
+    Some(p)
+}
+
+fn efetivado(id: usize) -> bool {
+    unsafe { (*core::ptr::addr_of!(EFETIVADOS)).contains(&id) }
+}
+
+/// { 0x85fc50 } `STAFF_CONTRACT::set_to_desired_contract` (thiscall, ret 0x1c): depois da original, para o efetivado no
+/// clube humano, o pedido vira o salário padrão do papel × grey_signing_wage %, sem luvas, bônus nem cláusulas.
+unsafe extern "thiscall" fn pedido(c: usize, staff: usize, clube: usize, transf: i32, situacao: u32, cargo: u32, s1: usize, s2: usize) -> u32 {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, usize, usize) -> u32 = core::mem::transmute(T_PEDIDO);
+    let r = f(c, staff, clube, transf, situacao, cargo, s1, s2);
+    if staff != 0 && efetivado(d(staff)) && clube != 0 && clube == clube_humano() {
+        let padrao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f32 = core::mem::transmute(0x864550usize);
+        let base = padrao(c, staff, clube, 1, situacao & 0xff, 0xb, 0);
+        let salario = ((base as f64 * SALARIO as f64 / 100.0) as i32).max(55);
+        core::ptr::write_unaligned((c + 0xc) as *mut i32, salario);
+        core::ptr::write_unaligned((c + 8) as *mut i32, 0);
+        for o in [0x10usize, 0x14, 0x18] {
+            core::ptr::write_unaligned((c + o) as *mut i32, -1);
+        }
+        core::ptr::write_bytes((c + 0x1c) as *mut u8, 0, 9);
+    }
+    r
+}
+
+/// { 0x4d4660 } `CONTRACT_MANAGER::will_negotiate_offer` (thiscall, ret 4): o efetivado sempre conversa.
+unsafe extern "thiscall" fn conversa(cm: usize, oferta: usize) -> u32 {
+    if oferta != 0 && efetivado(d(oferta)) {
+        return 1;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(T_CONVERSA);
+    f(cm, oferta)
+}
+
+/// O `call rel32` em `em`: o alvo atual, se for um `call`.
+unsafe fn alvo_do_call(em: usize) -> Option<usize> {
+    (*(em as *const u8) == 0xe8).then(|| (core::ptr::read_unaligned((em + 1) as *const i32) as usize).wrapping_add(em + 5))
+}
+
+/// Depois da fornada (que pode já ter trocado as duas chamadas de clube: encadeia nelas).
+pub(crate) unsafe fn instalar() {
+    ler();
+    if !LIGADO {
+        return;
+    }
+    let menu_ok = core::slice::from_raw_parts(0x874a58 as *const u8, 5) == [0x33, 0xf6, 0x56, 0x6a, 0x04];
+    let (Some(da), Some(li)) = (alvo_do_call(0x7acea2), alvo_do_call(0x7acf4f)) else {
+        return registro::linha("grey signing: the regen routine's club calls (0x7acea2, 0x7acf4f) differ from 3.9.68; off");
+    };
+    if !menu_ok {
+        return registro::linha("grey signing: the profile build at 0x874a58 differs from 3.9.68; off");
+    }
+    let Some(t) = crate::origem::trampolim(0x888260, &[0x6a, 0xff, 0x68, 0x9b, 0x2f, 0x96, 0x00], clique as *const () as usize) else {
+        return registro::linha("grey signing: the profile click handler at 0x888260 differs from 3.9.68; off");
+    };
+    T_CLIQUE = t;
+    DISPUTA_ANTES = da;
+    LISTA_ANTES = li;
+    crate::fornada::trocar_call(0x7acea2, disputa as *const () as usize);
+    crate::fornada::trocar_call(0x7acf4f, lista as *const () as usize);
+    crate::desviar(0x874a58, trecho_do_menu as *const () as usize);
+    match crate::origem::trampolim(0x85fc50, &[0x6a, 0xff, 0x68, 0x76, 0x2a, 0x96, 0x00], pedido as *const () as usize) {
+        Some(t) => T_PEDIDO = t,
+        None => registro::linha("grey signing: the contract demand at 0x85fc50 differs from 3.9.68; the negotiation is the game's"),
+    }
+    match crate::origem::trampolim(0x4d4660, &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18], conversa as *const () as usize) {
+        Some(t) => T_CONVERSA = t,
+        None => registro::linha("grey signing: the will-to-negotiate check at 0x4d4660 differs from 3.9.68"),
+    }
+    registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item; temporary contract of {} days, then an easy negotiation at {}% of the role's default wage)", { DIAS }, { SALARIO }));
+}

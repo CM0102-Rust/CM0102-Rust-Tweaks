@@ -147,7 +147,7 @@ unsafe extern "C" fn extra_do_corte(extra: i32, pessoas: i32, fichas: i32, prefs
     total
 }
 
-unsafe fn registro79(id: usize) -> *mut u8 {
+pub(crate) unsafe fn registro79(id: usize) -> *mut u8 {
     (d(0xae2d0c) + 79 * id + 0xb) as *mut u8
 }
 
@@ -234,7 +234,7 @@ unsafe fn gravar_teste(ano: i32) {
 
 /// O estoque: aposentados (bits 0x30 = 0x20), sem clube, com ficha, fora da fila e abaixo dos humanos. Os aposentados
 /// da fila não entram: eles nascem pela disputa, com a curva (`nascer_da_fila`).
-unsafe fn adormecidos(this: usize) -> Vec<usize> {
+pub(crate) unsafe fn adormecidos(this: usize) -> Vec<usize> {
     let (pessoas, n) = (d(0xae23bc), d(0xae2364));
     let na_fila: std::collections::HashSet<usize> = (0..d(this + 0x14)).map(|k| d(d(this + 0x10) + 12 * k)).collect();
     (0..n.saturating_sub(16))
@@ -288,7 +288,7 @@ unsafe fn nascer_da_fila(this: usize, n: usize, chegaram: &mut std::collections:
 
 /// Tira a entrada `chave` (o dword +0) de um vetor do jogo: base em `this+ptr`, quantidade em `this+ptr+4`, `tam` bytes
 /// por entrada; a última vaga fica com −1 e zeros, como a 0x7a65d0 deixa a fila.
-unsafe fn tirar(this: usize, ptr: usize, tam: usize, chave: usize) -> bool {
+pub(crate) unsafe fn tirar(this: usize, ptr: usize, tam: usize, chave: usize) -> bool {
     let (v, q) = (d(this + ptr), d(this + ptr + 4));
     let Some(k) = (0..q).find(|&k| d(v + tam * k) == chave) else { return false };
     core::ptr::copy((v + tam * (k + 1)) as *const u8, (v + tam * k) as *mut u8, tam * (q - k - 1));
@@ -996,7 +996,7 @@ pub unsafe fn instalar_aposentadoria() {
 
 /// A entrada {ficha, nação, 0, −1} na frente da reserva de fichas (+0x3c ponteiro, +0x40 quantidade, +0x44 capacidade),
 /// crescendo com o `realloc` do jogo (0x945667) como a 0x7a8350.
-unsafe fn por_na_frente_da_reserva(this: usize, ficha: usize, nacao: usize) {
+pub(crate) unsafe fn por_na_frente_da_reserva(this: usize, ficha: usize, nacao: usize) {
     let (mut v, q, mut cap) = (d(this + 0x3c), d(this + 0x40), d(this + 0x44));
     if q >= cap {
         cap += 250;
@@ -1024,7 +1024,7 @@ unsafe fn e_call(em: usize, antes: usize) -> bool {
 }
 
 /// Troca o alvo do `call rel32` em `em`.
-unsafe fn trocar_call(em: usize, para: usize) {
+pub(crate) unsafe fn trocar_call(em: usize, para: usize) {
     (*core::ptr::addr_of_mut!(crate::MARCAS)).push((em, 5));
     let mut antiga = 0u32;
     crate::VirtualProtect(em as *mut core::ffi::c_void, 5, 0x40, &mut antiga);
