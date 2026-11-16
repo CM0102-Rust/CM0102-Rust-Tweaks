@@ -251,13 +251,13 @@ unsafe fn nivelar(p: usize, ficha: usize, clube: usize) {
 
 static mut T_CINZENTO: usize = 0;
 
-/// { 0x90e0a0 } `create_virtual_player(clube, _, id da pessoa, id da ficha, ...)` (cdecl, 7 argumentos): o jogo sorteia
+/// { 0x90e0a0 } `create_virtual_player(clube, _, id da pessoa, id da ficha, ...)` (thiscall com 7 na pilha, ret 0x1c): o jogo sorteia
 /// os nomes do cinzento com o `rand` semeado por clube e grupo, então o cinzento que repõe a vaga de um efetivado nasce
 /// com o mesmo nome dele. Depois da original: se um jogador real do elenco tem o mesmo nome e sobrenome, novos nomes da
 /// nação do clube (+0x53; as mesmas rotinas da original, 0x539c60 e 0x53a1b0), até 10 tentativas.
-unsafe extern "C" fn cinzento(clube: usize, a2: usize, id: usize, a4: usize, a5: usize, a6: usize, a7: usize) {
-    let f: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize) = core::mem::transmute(T_CINZENTO);
-    f(clube, a2, id, a4, a5, a6, a7);
+unsafe extern "thiscall" fn cinzento(this: usize, clube: usize, a2: usize, id: usize, a4: usize, a5: usize, a6: usize, a7: usize) {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize) = core::mem::transmute(T_CINZENTO);
+    f(this, clube, a2, id, a4, a5, a6, a7);
     let nacao = d(clube + 0x53);
     if clube < 0x10000 || nacao == 0 {
         return;
