@@ -11,7 +11,7 @@ pub static mut REGISTRAR: bool = false;
 
 /// O nível do elenco: a média do CA dos 16 melhores jogadores reais (+0xd7, 50 vagas; real = id < [0xAE2364], com ficha em
 /// +0x61). Nada com menos de 5 reais.
-unsafe fn nivel(clube: usize) -> Option<i32> {
+pub(crate) unsafe fn nivel(clube: usize) -> Option<i32> {
     let pessoas = d(0xae2364);
     let mut cas: Vec<i32> = (0..50)
         .filter_map(|k| {

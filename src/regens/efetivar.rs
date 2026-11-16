@@ -191,6 +191,7 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
     core::ptr::copy_nonoverlapping((g + 4) as *const u8, (p + 4) as *mut u8, 0x1e);
     core::ptr::copy_nonoverlapping(ficha_g as *const u8, ficha as *mut u8, 70);
     *(ficha as *mut usize) = id_ficha;
+    nivelar(p, ficha, clube);
     // a personalidade sorteada (+0x56..+0x5d; o cinzento tem 10 em tudo) e a marca de regen
     for o in 0x56..=0x5d {
         *((p + o) as *mut u8) = (5 + sorteio(16)) as u8;
@@ -220,6 +221,32 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
     Some(p)
+}
+
+/// O CA e o PA do efetivado. Com `grey_players = original`, o cinzento de clube pequeno nasce com CA negativo (a conta
+/// do jogo pela reputação): o CA passa a ser ao menos o nível do clube, a mesma conta de `grey_players = squad` (a
+/// média dos 16 melhores reais, ou a reputação: R × 0,016 + 20), ± 5. O PA deixa espaço pela idade (até 18: +30 a +50;
+/// 19–21: +15 a +35; 22–24: +5 a +20; 25 ou mais: até +8). As reputações do jogador (+9 atual, +0xb em casa, +0xd
+/// mundial) saem do CA como a 0x7abac0 faz com o regen.
+unsafe fn nivelar(p: usize, ficha: usize, clube: usize) {
+    let rep = w(clube + 0x80) as i32;
+    let base = crate::cinzentos::nivel(clube).unwrap_or(0).max(rep * 16 / 1000 + 20);
+    let ca = (w(ficha + 5) as i32).max(base + sorteio(11) - 5).clamp(1, 200);
+    let nasc = w(p + 0x18) as i32;
+    let idade = if nasc > 1900 { w(0xae2c92) as i32 - nasc } else { *((p + 0x18) as *const u8) as i32 };
+    let folga = match idade {
+        ..=18 => 30 + sorteio(21),
+        19..=21 => 15 + sorteio(21),
+        22..=24 => 5 + sorteio(16),
+        _ => sorteio(9),
+    };
+    let pa = (w(ficha + 7) as i32).max(ca + folga).clamp(ca, 200);
+    core::ptr::write_unaligned((ficha + 5) as *mut i16, ca as i16);
+    core::ptr::write_unaligned((ficha + 7) as *mut i16, pa as i16);
+    let atual = 0x7d + sorteio(0x2ee) + ca * 15;
+    core::ptr::write_unaligned((ficha + 9) as *mut i16, atual.min(10000) as i16);
+    core::ptr::write_unaligned((ficha + 0xb) as *mut i16, (atual + sorteio(0x32)).min(10000) as i16);
+    core::ptr::write_unaligned((ficha + 0xd) as *mut i16, 1);
 }
 
 fn efetivado(id: usize) -> bool {
