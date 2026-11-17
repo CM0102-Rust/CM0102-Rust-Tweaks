@@ -139,6 +139,8 @@ unsafe fn id_da_nacao(n: usize) -> usize {
 /// Efetiva o cinzento `g` do clube humano; devolve a pessoa real.
 unsafe fn efetivar(g: usize) -> Option<usize> {
     let vaga = vaga_no_humano(g)?;
+    // o time do cinzento: o bit 0 do +0x5e (1 principal, 0 reservas), como o `get_squad_placement` 0x4cbb60 lê
+    let no_principal = *((g + 0x5e) as *const u8) & 1 == 1;
     let clube = clube_humano();
     let regen = d(0xb7434c);
     let ficha_g = d(g + 0x61);
@@ -196,9 +198,16 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         registro::linha(&format!("grey signing\t{}\tperson {} could not join the club (squad full)", crate::data_do_jogo(), d(p)));
         return None;
     }
+    // o time: a assinatura do regen põe o efetivado nas reservas do clube humano; quem era do principal sobe
+    // (`CONTRACT_MANAGER::move_to_first_team` 0x4cc0b0). O gerente dos contratos é [0xae1050] (o vetor, [[0xae1050]]).
+    let cm = d(0xae1050);
+    if no_principal {
+        let subir: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cc0b0usize);
+        subir(cm, p, clube);
+    }
     // o contrato: o fim em hoje + grey_signing_months
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let k = contrato(0xae1050, p);
+    let k = contrato(cm, p);
     if k != 0 {
         let (mut dia, mut ano) = (w(0xae2c90) as i32 + MESES * 365 / 12, w(0xae2c92) as i32);
         while dia > 364 {
