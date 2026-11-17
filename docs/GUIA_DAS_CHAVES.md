@@ -508,7 +508,7 @@ Valores: `original` (Original (nome e sobrenome do banco)), `nickname` (Apelido 
 
 ### Efetivar os cinzentos do seu clube — `grey_signing`
 
-No perfil de um cinzento do seu clube aparece o botão Ação com o item Efetivar. Ao clicar, ele vira um jogador de verdade, com o mesmo nome, idade, nação, posições e atributos; o CA fica pelo menos no nível do clube, o PA ganha espaço pela idade, a personalidade é sorteada e ele leva a marca de regen (os editores o acham em "Só regens"). Ele fica no time em que estava (principal ou reservas), com um contrato normal dos meses e do salário escolhidos abaixo. Só para o técnico humano: a IA segue usando cinzentos como hoje. A pessoa vem das que sobram da fornada; sem a fornada, de um aposentado da fila de regens (um regen a menos).
+No perfil de um cinzento do seu clube aparece o botão Ação com o item Efetivar. Ao clicar, ele vira um jogador de verdade, com o mesmo nome, idade, nação, posições e atributos; o CA fica pelo menos no nível do clube, o PA ganha espaço pela idade, a personalidade é sorteada e ele leva a marca de regen (os editores o acham em "Só regens"). Ele fica no time em que estava (principal ou reservas), com um contrato normal dos meses e do salário escolhidos abaixo. Na seleção (com Assumir qualquer seleção), ele fica sem clube e convocado, sem contrato. Só para o técnico humano: a IA segue usando cinzentos como hoje. A pessoa vem das que sobram da fornada; sem a fornada, de um aposentado da fila de regens (um regen a menos).
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 
@@ -523,6 +523,12 @@ Valores: de 1 a 60 (inteiro). Padrão: `12`.
 O salário do efetivado, em % da mediana dos salários do seu elenco (sem os regens). 100 = o que o jogador do meio do seu elenco ganha. O padrão do jogo para um regen era alto demais num clube pequeno: no Friburguense, 250 contra 100 do elenco.
 
 Valores: de 10 a 300 (inteiro). Padrão: `100`.
+
+### Assumir qualquer seleção (com cinzentos) — `manage_any_team`
+
+Qualquer seleção principal pode ter técnico humano: na criação da carreira (o item Seleções no fim do seletor de nação) e durante ela. O original só deixa assumir a seleção de uma nação com mais de 150 pessoas no banco: Porto Rico, São Marino e outras pequenas ficavam de fora. A seleção do técnico humano também passa a receber cinzentos para completar a lista, como um clube (no original, só a IA os recebia, e uma seleção pequena nunca completava a convocação); com Efetivar ligado, dá para efetivá-los. As seleções do segundo conjunto (a sub-21) seguem a regra original.
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
 
 ## Empréstimos e trava
 

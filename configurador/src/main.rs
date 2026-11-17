@@ -1399,6 +1399,9 @@ impl App {
         for k in ["grey_signing_months", "grey_signing_wage"] {
             self.controle(ui, k, efetivar);
         }
+        ui.add_space(10.0);
+        ui.label(RichText::new(self.t("As seleções", "National teams")).strong().size(15.0).color(VERDE()));
+        self.controle(ui, "manage_any_team", true);
     }
 
     /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.
@@ -2051,6 +2054,7 @@ impl eframe::App for App {
                     self.definir("squad_guard", if on { "1" } else { "0" });
                     self.definir("match_text_guard", if on { "1" } else { "0" });
                     self.definir("grey_signing", if on { "1" } else { "0" });
+                    self.definir("manage_any_team", if on { "1" } else { "0" });
                 }
             });
             let mut grupo_atual = "";

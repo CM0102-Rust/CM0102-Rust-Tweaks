@@ -35,6 +35,8 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 
 **Grey players and commentary** (1.6): no NickPatcher option or MiscPatches patch writes to the 6 spots of `grey_signing`, `grey_players_names` and `match_text_guard` (the profile menu and click, the grey player's creation, the regen's two club calls, the event with no text), checked by `tools/exe/nickpatcher_vs_tweaks.py`. On CLZ v6 with the 15/11 NickDLL, making permanent and the nickname ran, and the saved game was loaded ([TESTES.en.md](TESTES.en.md) §6).
 
+**National teams** (1.7): no NickPatcher option or MiscPatches patch writes to the 9 spots of `manage_any_team` (the entry of `club_can_be_managed` 0x544820, the automatic career, six pieces of the team choice and the human-manager test in the grey players' creation, 0x90dc6d). NickPatcher's `manageanyteam` option changes another byte of the same routine (0x5448aa) and doesn't free small national teams; the two live together ([SELECOES.en.md](SELECOES.en.md) §4).
+
 ## NickDLL (packs like CLZ)
 
 NickDLL changes the exe in memory after it opens. Those with the "extended resolution" (`"resolucao"` in `NickDLL_config.json`) take care of the resolution: with a resolution chosen there, our `resolution` stays out. It also replaces the B-team routine (the contest uses its version, no problem) and may hook the message box (our `log` chains; to be confirmed in the game). Details in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md).

@@ -412,14 +412,22 @@ Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho
   - nas reservas.
 - **Falta:** o estoque próprio para a fornada desligada (hoje a pessoa vem da fila de regens e custa um regen).
 
-## 7. Limites e próximos testes
+## 7. As seleções (`manage_any_team`)
+
+- **No 3.9.68, com o Lucas** (17/11/2026, carreira nova, banco do 3.9.68): o item Seleções apareceu no fim do seletor de nação, e São Marino (12 pessoas no banco, recusada pelo original) foi assumida. [medido na memória e no `tweaks.log`]
+- **Os cinzentos da seleção:** logo depois da criação, a seleção tinha 5 convocados reais e 21 cinzentos de CA 49 a 53 (o nível pela reputação, 50; pela fórmula original, −98) e um surpresa de CA 79. Depois de gravar e carregar, sem a troca de 0x90dc6d, os cinzentos não voltavam (a seleção do humano não recebe cinzentos no original); com ela, voltaram.
+- **A efetivação na seleção:** o Lucas efetivou 19 cinzentos e gravou (`SanMarino2.sav`, data 2001-361). O save foi carregado escondido e lido na memória: os 19 voltaram como jogadores reais, sem clube (+0x39 = 0), convocados (+0x24 = São Marino, cargo 0x0b), CA 51 a 79 e PA 56 a 95, todos de pessoas adormecidas da fornada.
+- **No CLZ v6, com a NickDLL** (17/11): carreira automática escondida, banco grande, Brasil jogável, até 31/01/2026, sem queda nem caixa de erro; o ponto 0x90dc6d trocado (o log: "1 places changed now").
+- **Falta:** um jogo marcado no calendário (São Marino não tinha nenhum até o fim de 2001) para ver a convocação de uma partida; a tela segue mostrando "5 jogadores escolhidos".
+
+## 8. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
 - **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
 - **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois outros pacotes da comunidade, quando saírem.
 
-## 8. Como reproduzir
+## 9. Como reproduzir
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).

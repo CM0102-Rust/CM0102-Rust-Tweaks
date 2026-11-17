@@ -35,6 +35,8 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 
 **Cinzentos e narração** (1.6): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 6 pontos de `grey_signing`, `grey_players_names` e `match_text_guard` (o menu e o clique do perfil, a criação do cinzento, as duas chamadas de clube da regen, o lance sem texto), conferidos por `tools/exe/nickpatcher_vs_tweaks.py`. No CLZ v6 com a NickDLL de 15/11, a efetivação e o apelido rodaram e o save gravado foi carregado ([TESTES.md](TESTES.md) §6).
 
+**Seleções** (1.7): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 9 pontos de `manage_any_team` (a entrada de `club_can_be_managed` 0x544820, a carreira automática, seis trechos da escolha do time e o teste de técnico humano na criação dos cinzentos, 0x90dc6d). A opção `manageanyteam` do NickPatcher muda outro byte da mesma rotina (0x5448aa) e não libera as seleções pequenas; as duas convivem ([SELECOES.md](SELECOES.md) §4).
+
 ## A NickDLL (pacotes como o CLZ)
 
 A NickDLL muda o exe em memória, depois de abrir. As que trazem a "resolução ampliada" (`"resolucao"` no `NickDLL_config.json`) cuidam da resolução: com uma resolução escolhida lá, a nossa `resolution` fica de fora. Ela também troca a rotina do time B (a disputa usa a dela, sem problema) e pode desviar a caixa de mensagem (o nosso `log` encadeia; a confirmar no jogo). Detalhes em [COMPATIBILIDADE.md](COMPATIBILIDADE.md).

@@ -508,7 +508,7 @@ Values: `original` (Original (first and second name from the database)), `nickna
 
 ### Make your club's grey players permanent — `grey_signing`
 
-On the profile of a grey player in your club, the Action button appears with a Make permanent item. On the click he becomes a real player, with the same name, age, nation, positions and attributes; his CA is at least the club's level, his PA gets room by age, his personality is drawn at random and he carries the regen mark (editors find him under "Only regens"). He stays in the team he was in (first team or reserves), on a normal contract with the months and wage chosen below. Only for the human manager: the AI keeps using grey players as it does today. The person comes from those the intake has spare; without the intake, from a retired player in the regen queue (one regen fewer).
+On the profile of a grey player in your club, the Action button appears with a Make permanent item. On the click he becomes a real player, with the same name, age, nation, positions and attributes; his CA is at least the club's level, his PA gets room by age, his personality is drawn at random and he carries the regen mark (editors find him under "Only regens"). He stays in the team he was in (first team or reserves), on a normal contract with the months and wage chosen below. At a national team (with Manage any national team), he's called up with no club and no contract. Only for the human manager: the AI keeps using grey players as it does today. The person comes from those the intake has spare; without the intake, from a retired player in the regen queue (one regen fewer).
 
 Values: `1` on, `0` off. Default: `0`.
 
@@ -523,6 +523,12 @@ Values: from 1 to 60 (whole number). Default: `12`.
 The wage of a player made permanent, in % of your squad's median wage (regens left out). 100 = what the middle player in your squad earns. The game's default for a regen was far too high at a small club: at Friburguense, 250 against the squad's 100.
 
 Values: from 10 to 300 (whole number). Default: `100`.
+
+### Manage any national team (with grey players) — `manage_any_team`
+
+Any main national team can have a human manager: when starting a career (the National teams item at the end of the nation selector) and during it. The original only lets you take the national team of a nation with more than 150 people in the database: Puerto Rico, San Marino and other small ones were left out. The human manager's national team also gets grey players to fill its squad, like a club (in the original only the AI got them, and a small national team never filled its call-up); with Make permanent on, you can make them permanent. National teams of the second set (the under-21s) keep the original rule.
+
+Values: `1` on, `0` off. Default: `0`.
 
 ## Loans & budget brake
 

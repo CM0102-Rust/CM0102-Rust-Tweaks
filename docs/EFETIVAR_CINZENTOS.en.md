@@ -80,6 +80,8 @@ A nation with fewer than 20 nicknames gets only one-word first and second names.
 
 The grey players' surprise (`grey_players_surprise`, 5%, +15 to +35 CA above the level) is in [GUIA_DAS_CHAVES.en.md](GUIA_DAS_CHAVES.en.md).
 
+At the human manager's national team (with `manage_any_team = 1`), the player made permanent is called up with no club and no contract: see [SELECOES.en.md](SELECOES.en.md) §3.
+
 ## 7. Proofs and what's left
 
 Proven (TESTES §6):

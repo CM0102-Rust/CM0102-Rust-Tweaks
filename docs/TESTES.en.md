@@ -412,14 +412,22 @@ Automatic careers with **every league in the database**, July 2001 to July 2003.
   - in the reserves.
 - **Still to do:** the own stock for when the intake is off (today the person comes from the regen queue and costs a regen).
 
-## 7. Limits and next tests
+## 7. National teams (`manage_any_team`)
+
+- **On 3.9.68, with Lucas** (17/11/2026, new career, the 3.9.68 database): the National teams item showed at the end of the nation selector, and San Marino (12 people in the database, refused by the original) was taken. [measured in memory and in `tweaks.log`]
+- **The national team's grey players:** right after the career was created, the national team had 5 real players called up and 21 grey players of CA 49 to 53 (the level from the reputation, 50; by the original formula, −98) and a surprise one of CA 79. After saving and loading, without the change at 0x90dc6d, the grey players didn't come back (the human's national team gets no grey players in the original); with it, they did.
+- **Making permanent at the national team:** Lucas made 19 grey players permanent and saved (`SanMarino2.sav`, date 2001-361). The save was loaded hidden and read in memory: all 19 came back as real players, with no club (+0x39 = 0), called up (+0x24 = San Marino, job 0x0b), CA 51 to 79 and PA 56 to 95, all from the intake's dormant people.
+- **On CLZ v6, with NickDLL** (17/11): a hidden automatic career, large database, Brazil playable, to 31/01/2026, with no crash or error box; the spot at 0x90dc6d changed (the log: "1 places changed now").
+- **Still to do:** a match on the calendar (San Marino had none until the end of 2001) to see a match call-up; the screen still shows "5 players chosen".
+
+## 8. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
 - **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
 - **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then other community packs, when they're out.
 
-## 8. How to reproduce
+## 9. How to reproduce
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).

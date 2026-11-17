@@ -45,19 +45,18 @@ fn ler() {
     }
 }
 
-/// O técnico humano da vez (`[0xb74c26 + 0x300 × canal]`, canal = `[0xb77c7a]`) e o clube dele (+0x39).
-unsafe fn clube_humano() -> usize {
+/// O técnico humano da vez (`[0xb74c26 + 0x300 × canal]`, canal = `[0xb77c7a]`): o clube dele (+0x39) e a seleção (+0x24).
+unsafe fn times_humanos() -> [usize; 2] {
     let humano = d(0xb74c26 + 0x300 * w(0xb77c7a) as usize);
-    if humano == 0 { 0 } else { d(humano + 0x39) }
+    if humano == 0 { [0, 0] } else { [d(humano + 0x39), d(humano + 0x24)] }
 }
 
-/// O cinzento `p` está no elenco (+0xd7, 50 vagas) do clube humano? Devolve a vaga.
-unsafe fn vaga_no_humano(p: usize) -> Option<usize> {
-    let c = clube_humano();
-    if c == 0 || p == 0 || d(p) < d(0xae2364) {
+/// O cinzento `p` está no elenco (+0xd7, 50 vagas) do clube ou da seleção do técnico humano? Devolve a vaga e o time.
+unsafe fn vaga_no_humano(p: usize) -> Option<(usize, usize)> {
+    if p == 0 || d(p) < d(0xae2364) {
         return None;
     }
-    (0..50).map(|k| c + 0xd7 + 4 * k).find(|&a| d(a) == p)
+    times_humanos().into_iter().filter(|&c| c != 0).find_map(|c| (0..50).map(|k| c + 0xd7 + 4 * k).find(|&a| d(a) == p).map(|a| (a, c)))
 }
 
 fn em_portugues() -> bool {
@@ -144,10 +143,9 @@ unsafe fn id_da_nacao(n: usize) -> usize {
 
 /// Efetiva o cinzento `g` do clube humano; devolve a pessoa real.
 unsafe fn efetivar(g: usize) -> Option<usize> {
-    let vaga = vaga_no_humano(g)?;
+    let (vaga, clube) = vaga_no_humano(g)?;
     // o time do cinzento: o bit 0 do +0x5e (1 principal, 0 reservas), como o `get_squad_placement` 0x4cbb60 lê
     let no_principal = *((g + 0x5e) as *const u8) & 1 == 1;
-    let clube = clube_humano();
     let regen = d(0xb7434c);
     let ficha_g = d(g + 0x61);
     if regen == 0 || ficha_g == 0 {
@@ -199,6 +197,9 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         *((p + o) as *mut u8) = (5 + sorteio(16)) as u8;
     }
     *crate::fornada::registro79(d(p)) |= 0x40; // o +0xb do registro de 79 bytes
+    if clube == times_humanos()[1] {
+        return convocar(p, g, vaga, clube, ficha, da_fila);
+    }
     // o clube: a vaga do cinzento fica livre e a assinatura do regen põe o efetivado no elenco
     core::ptr::write_unaligned(vaga as *mut usize, 0);
     let assinar: unsafe extern "stdcall" fn(usize, usize) -> u32 = core::mem::transmute(0x7a6f10usize);
@@ -237,6 +238,21 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
     }
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
+    Some(p)
+}
+
+/// Na seleção (o técnico humano de uma seleção, `manage_any_team`): o efetivado fica sem clube e convocado, no lugar do
+/// cinzento na lista (+0xd7). O vínculo com a seleção (+0x24 a seleção, +0x28 o cargo, 0x0b para jogador, e as datas até
+/// +0x38) vem de um convocado real, ou, sem nenhum, do próprio cinzento, que o jogo cria convocado. Sem clube e convocado,
+/// a aposentadoria de quem fica um ano sem clube e sem seleção (0x7a8050) não o pega; qualquer clube pode contratá-lo.
+unsafe fn convocar(p: usize, g: usize, vaga: usize, selecao: usize, ficha: usize, da_fila: bool) -> Option<usize> {
+    let reais = d(0xae2364);
+    let modelo = (0..50).map(|k| d(selecao + 0xd7 + 4 * k)).find(|&q| q != 0 && d(q) < reais && d(q + 0x24) == selecao).unwrap_or(g);
+    core::ptr::copy_nonoverlapping((modelo + 0x24) as *const u8, (p + 0x24) as *mut u8, 0x15);
+    *((p + 0x5e) as *mut u8) |= 1;
+    core::ptr::write_unaligned(vaga as *mut usize, p);
+    registro::linha(&format!("grey signing\t{}\tperson {} made permanent and called up by {} (no club; CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
+        crate::nome(selecao), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
     Some(p)
 }
 

@@ -80,6 +80,8 @@ Nação com menos de 20 apelidos fica só com nome e sobrenome de uma palavra. O
 
 A surpresa dos cinzentos (`grey_players_surprise`, 5%, +15 a +35 de CA acima do nível) fica no [GUIA_DAS_CHAVES.md](GUIA_DAS_CHAVES.md).
 
+Na seleção do técnico humano (com `manage_any_team = 1`), o efetivado fica sem clube e convocado, sem contrato: ver [SELECOES.md](SELECOES.md) §3.
+
 ## 7. As provas e o que falta
 
 Provado (TESTES §6):
