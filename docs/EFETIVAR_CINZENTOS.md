@@ -1,10 +1,10 @@
-# Efetivar um jogador cinzento: o desenho
+# Os jogadores cinzentos: efetivar e o apelido
 
 *English version: [EFETIVAR_CINZENTOS.en.md](EFETIVAR_CINZENTOS.en.md)*
 
-Pedido do Lucas (16/11/2026): com todos os clubes jogáveis (a CLZ.DLL libera os clubes de estadual, que vivem de cinzentos), o técnico humano precisa poder ficar com os cinzentos do próprio elenco. Este documento é o desenho, antes do código. Parte do estudo de 03/11 do projeto CM0102 (`docs/EFETIVAR_CINZENTOS.md` de lá) e de dois estudos do exe de 16/11 (o menu de ações do perfil e a negociação de contrato).
+Pedido do Lucas (16/11/2026): com todos os clubes jogáveis (a CLZ.DLL libera os clubes de estadual, que vivem de cinzentos), o técnico humano precisa poder ficar com os cinzentos do próprio elenco. Em 17/11 entrou o apelido dos cinzentos, para evitar os nomes compostos longos. Este documento descreve como ficou; as provas estão em [TESTES.md](TESTES.md) §6.
 
-**[observado]** = lido no código; **[inferência]** = a provar.
+**[observado]** = lido no código ou na memória do jogo; **[inferência]** = a provar.
 
 ## 1. As decisões do Lucas
 
@@ -12,16 +12,21 @@ Pedido do Lucas (16/11/2026): com todos os clubes jogáveis (a CLZ.DLL libera os
 2. Pelo item **"Efetivar"** no menu Action do perfil do cinzento.
 3. A personalidade é **sorteada** na efetivação (o jogo dá 10 em tudo ao cinzento).
 4. O efetivado recebe a **marca de regen** (bit 0x40 do +0xb do registro de 79 bytes), para os editores o acharem no filtro "Só regens".
-5. O contrato é **negociado** na tela do próprio jogo, numa negociação **fácil**: o jogador fica seduzido pelo papel e nunca pede muito.
-6. Funciona com a fornada (`intake`) ligada ou desligada.
+5. **Sem negociação** (17/11): a primeira versão abria a tela de contrato do jogo, e nenhum efetivado aceitava a proposta. O efetivado chega com um **contrato normal de 12 meses** e um salário na medida do elenco.
+6. Ele **fica no time em que estava**: principal ou reservas.
+7. Funciona com a fornada (`intake`) ligada ou desligada.
+8. Os cinzentos ganham um **apelido** de uma palavra (`grey_players_names = nickname`), em todos os clubes.
 
 ## 2. O que acontece no jogo
 
-1. No perfil de um cinzento do seu clube aparece o botão **Action** com um item só, **Efetivar** (Make permanent). Hoje o jogo não mostra o Action para cinzentos.
-2. No clique, a DLL transforma o cinzento numa pessoa real: os mesmos nome, idade, nação, posições e atributos, a personalidade sorteada e a marca de regen. Ele entra no seu elenco com um **contrato provisório** curto e o perfil reabre já como jogador comum.
-3. Logo em seguida abre a tela do jogo **Set Role At Club** e, depois, a de oferta de contrato. Você escolhe o papel e oferece.
-4. Para o efetivado, o pedido é o **salário padrão do jogo para aquele papel** × `grey_signing_wage` (%), sem luvas, bônus nem cláusulas; ele nunca se recusa a conversar, e uma oferta que cubra o pedido é sempre aceita. A resposta vem no dia seguinte (no jogo, de 1 a 14 dias).
-5. Se você não renovar, o contrato provisório acaba e ele sai do clube como qualquer jogador.
+1. No perfil de um cinzento do seu clube aparece o botão **Action** com um item só, **Efetivar** (Make permanent). O jogo não mostra o Action para cinzentos.
+2. No clique, a DLL transforma o cinzento numa pessoa real, com os mesmos nome (e apelido), idade, nação, posições e atributos.
+   - O CA fica pelo menos no nível do clube (o dos cinzentos, `grey_players = squad`).
+   - O PA ganha espaço pela idade: até 18 anos, +30 a +50; de 19 a 21, +15 a +35; de 22 a 24, +5 a +20; depois, 0 a +8.
+   - A personalidade é sorteada e ele leva a marca de regen.
+3. Ele assina com o seu clube um contrato **normal** (não o mensal) de `grey_signing_months` meses (12). O salário é a mediana dos salários dos jogadores do elenco que não são regens × `grey_signing_wage` % (100), com o mínimo do jogo (55).
+4. Ele fica no time em que o cinzento estava: no principal, sobe pela rotina do próprio jogo; nas reservas, fica lá.
+5. A vaga do cinzento é liberada. Na partida seguinte o jogo cria outro cinzento, e a DLL garante que ele não nasça com o nome do efetivado: o sorteio do jogo é fixo por clube e vaga.
 
 ## 3. De onde vem a pessoa
 
@@ -30,38 +35,62 @@ O cinzento não tem linha nas tabelas por pessoa (contratos, disciplina, lesões
 | Ordem | Fonte | Quando existe | Custo |
 |---|---|---|---|
 | 1 | as **adormecidas da fornada** (aposentadas sem clube, com ficha, fora da fila: `adormecidos` em `src/regens/fornada.rs`) | carreira criada com `intake = 1` | uma adormecida a menos (sobram milhares) |
-| 2 | o **estoque dos cinzentos**: `grey_signing_stock` pessoas criadas com a carreira, pelo mesmo mecanismo da fornada | carreira nova criada com `intake = 0` | nenhum |
-| 3 | a **vaga da fila de regens + uma ficha da reserva** da regen (o caminho da regen) | qualquer save | um regen a menos; sem ficha livre, a DLL avisa e não efetiva |
+| 2 | a **cabeça da fila de regens + uma ficha da reserva** da regen | qualquer save | um regen a menos; sem ficha livre, a DLL registra e não efetiva |
 
-## 4. Os pontos no exe
+A pessoa vira regen pela rotina do próprio jogo (`regenerate_as_youth_player` 0x7abac0), sem a disputa dos clubes, e depois recebe a identidade do cinzento.
+
+Ainda não feito: um estoque próprio (`grey_signing_stock`, umas 300 pessoas criadas com a carreira) para a fornada desligada, sem custar regens.
+
+## 4. O apelido (`grey_players_names = nickname`)
+
+O jogo sorteia 20 nomes da nação do clube e fica com o de maior peso no banco. No CLZ, os nomes brasileiros compostos têm peso alto ("Pedro Henrique", "da Silva Santos"): 7.668 dos 9.270 sobrenomes brasileiros são compostos.
+
+Com o apelido, depois que o jogo cria o cinzento:
+
+1. Nome e sobrenome passam a ser de uma palavra (de 2 a 12 letras, sem ponto; até 10 sorteios cada).
+2. O apelido (+0xc, que no cinzento aponta para a linha vazia 0 da tabela de apelidos) recebe uma linha de apelido da nação, de uma palavra e ainda não usada por nenhuma pessoa real do banco. O sorteio é o mesmo dos nomes: 20 sorteios na faixa da nação, fica o de maior peso.
+3. O jogo mostra o apelido no lugar do nome, como faz com os jogadores reais.
+
+Nação com menos de 20 apelidos fica só com nome e sobrenome de uma palavra. O efetivado leva o apelido, e a linha passa a contar como usada. O sorteio usa o `rand()` que o jogo semeia por clube: o cinzento da mesma vaga mantém o apelido de uma partida para a outra.
+
+## 5. Os pontos no exe
 
 | O quê | Onde | Como |
 |---|---|---|
-| O item no menu | 0x874a58 (`33 F6 56 6A 04`), na montagem do perfil 0x870700, logo depois do menu Action | para cinzento (`id ≥ [0xAE2364]`) do clube humano: o botão Action (`add_button_item` 0x804030), a área (`Display::add_area` 0x55fba0) e o item (`Display::add_item` 0x55f990) com o id 0x50, livre [observado] |
-| O clique | `staff_screens_handle_profile_action` 0x888260 (`6A FF 68 9B 2F 96 00`) | id 0x50: efetivar, reabrir o perfil (0x8702a0) e abrir o contrato; o resto vai para o original [observado] |
-| O humano e o clube dele | `[0xb74c26 + 0x300 × [0xb77c7a]]`, clube em +0x39 | [observado] |
-| Pôr no clube | `player_regen_sign_for_club` 0x7a6f10 | o contrato do regen (no clube humano: reservas, situação 6); a DLL encurta o fim (+0x2d/+0x2f) [observado] |
-| Abrir o contrato | `contract_screens_offer_contract_to_staff` 0x4dd0f0 `(staff, 0, 0, 1)` | abre a tela Set Role e depois a oferta [observado] |
-| O pedido | `STAFF_CONTRACT::set_to_desired_contract` 0x85fc50 (`6A FF 68 76 2A 96 00`), depois do original | só para os efetivados: salário = `default_staff_contract` 0x864550 do papel × `grey_signing_wage`; luvas, bônus e cláusulas zerados [observado o ponto; o efeito, inferência] |
-| Sempre conversar | `CONTRACT_MANAGER::will_negotiate_offer` 0x4d4660 (`83 EC 10 53 8B 5C 24 18`) | devolve 1 para os efetivados [observado] |
-| O aceite | `resolve_contract_offers` 0x4ce4e0 | a oferta que cobre o pedido tem razão ≥ 0,9 e é aceita (3,15 × 0,9 > 2,75): nada a desviar [observado] |
-| A resposta no dia seguinte | `schedule_offer_decision` 0x4cd230 | opcional: a data da decisão = amanhã para os efetivados [observado o ponto] |
+| O item no menu | 0x874a58 (`33 F6 56 6A 04`), na montagem do perfil 0x870700, logo depois do menu Action | para cinzento (`id ≥ [0xAE2364]`) do clube humano: o botão Action (`add_button_item` 0x804030), a área (`Display::add_area` 0x55fba0) e o item (`Display::add_item` 0x55f990) com o id 0x50 |
+| O clique | `staff_screens_handle_profile_action` 0x888260 (`6A FF 68 9B 2F 96 00`) | id 0x50: efetivar; o resto vai para a original |
+| O humano e o clube dele | `[0xb74c26 + 0x300 × [0xb77c7a]]`, clube em +0x39 | |
+| A pessoa vira regen | as duas chamadas de clube da 0x7abac0 (0x7acea2, a disputa; 0x7acf4f, a lista da nação) | devolvem 0 durante a efetivação |
+| Pôr no clube | `player_regen_sign_for_club` 0x7a6f10 | no clube humano: reservas, contrato mensal, salário padrão |
+| O contrato | `CONTRACT_MANAGER::get_contract` 0x4cf5a0 | a DLL troca o tipo para normal (+0x35, 2), o fim (+0x2d dia, +0x2f ano) e o salário (+0xc) |
+| Subir ao principal | `move_to_first_team` 0x4cc0b0 | quando o cinzento estava no principal (bit 0 do +0x5e) |
+| O nome do cinzento | `create_virtual_player` 0x90e0a0 (`6A FF 68 A0 55 96 00`, thiscall, `ret 0x1c`) | depois da original: o apelido e o nome que não repete o de um jogador real do elenco |
+| Os sorteios de nome | 0x539c60 (primeiro nome), 0x53a1b0 (sobrenome), índice por nação `[0xae2338]` + id × 36 | apelidos: primeira linha em +8, quantos em +0x20; tabela `[0xae23f8]`, linhas de 60 bytes, nação em +0x37, peso em +0x3b |
 
-Todos conferem byte a byte no exe do CLZ 6.1 (NickPatcher) [observado no arquivo; a NickDLL pode mudar em memória: a conferência de desvios da DLL registra].
+**Armadilha:** o gerente dos contratos é `[0xae1050]`, e o vetor dos contratos é `[[0xae1050]]`. Passar `0xae1050` como `this` grava em memória errada; foi a causa do contrato que ficava mensal (16/11).
 
-## 5. As chaves
+## 6. As chaves
 
 | Chave | Padrão | O que faz |
 |---|---|---|
-| `grey_signing` | 0 (sem a linha) | 1 = o item Efetivar e a negociação fácil |
-| `grey_signing_wage` | 80 | o pedido do efetivado, em % do salário padrão do papel |
-| `grey_signing_days` | 30 | a duração do contrato provisório, em dias |
-| `grey_signing_stock` | 300 | as pessoas criadas com a carreira para isso, quando a fornada está desligada |
+| `grey_signing` | 0 (sem a linha) | 1 = o item Efetivar |
+| `grey_signing_months` | 12 | a duração do contrato do efetivado, em meses (1 a 60) |
+| `grey_signing_wage` | 100 | o salário do efetivado, em % da mediana do elenco sem os regens (10 a 300) |
+| `grey_players_names` | original | `nickname` = o apelido de uma palavra dos cinzentos |
 
-## 6. A conferir antes e durante o código
+A surpresa dos cinzentos (`grey_players_surprise`, 5%, +15 a +35 de CA acima do nível) fica no [GUIA_DAS_CHAVES.md](GUIA_DAS_CHAVES.md).
 
-- A limpeza da pessoa reaproveitada: a regen faz pela `regenerate_as_youth_player` 0x7abac0, que também escolhe o clube pela disputa; a efetivação precisa das mesmas limpezas, sem a disputa.
-- A lista dos efetivados que ainda negociam precisa sobreviver ao save (um arquivo ao lado do save, como o `.publico`, ou uma marca no contrato provisório).
-- Se `create_virtual_player` grava o clube em +0x39 do cinzento.
-- A tela Set Role pode recusar papéis pela nota da diretoria.
-- As provas: efetivar, negociar, gravar, carregar e conferir com o editor; com a fornada ligada e desligada; no 3.9.68 e no CLZ.
+## 7. As provas e o que falta
+
+Provado (TESTES §6):
+
+- a efetivação na tela, no CLZ v6;
+- o efetivado do time principal gravado e carregado, igual;
+- o apelido numa carreira escondida no 3.9.68 e no CLZ.
+
+Falta:
+
+- um efetivado das reservas gravado e carregado;
+- a efetivação com a fornada ligada;
+- a mesma prova no 3.9.68;
+- o estoque próprio para a fornada desligada.
