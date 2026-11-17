@@ -391,14 +391,29 @@ Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho
 - **10 temporadas, as 10 ligas do §4.4** (jogo de fábrica, 14/11): sem queda, sem caixa do jogo e sem `loan_end_noclub` até 2010-214, onde acabou o limite de 5 horas. Os jogadores ficaram em 86,6 a 86,7 mil por temporada (50,4 a 51,7 mil sem clube). Uns 33 minutos por temporada, contra uns 16 no §4.4: o registro teve 26 milhões de linhas `grey` (1,4 GB) e a máquina estava dividida com outras sessões; a 1.4 não foi repetida nas mesmas condições.
 - **Falta:** uma carreira com clube humano.
 
-## 6. Limites e próximos testes
+## 6. Os cinzentos: o apelido e a efetivação (`grey_players_names`, `grey_signing`)
+
+- **O apelido, numa carreira escondida** (3.9.68, banco mínimo, Inglaterra, Brasil e Itália jogáveis, até 2001-244, 17/11/2026) [medido na memória]:
+  - os 16 cinzentos de clubes brasileiros criados por último saíram com apelido, todos diferentes, e com nome e sobrenome de uma palavra;
+  - exemplos: no Flamengo, Duda, Formiga, Anselmo e Romero; no Atlético-PR, Lalo, Gilberto e Cruz;
+  - sem queda nem caixa de erro.
+- **O apelido no CLZ** (o jogo do Lucas, 17/11): todos os cinzentos do Friburguense passaram a aparecer com apelido.
+- **A efetivação, gravada e carregada** (CLZ v6 com a NickDLL de 15/11 e a CLZ.DLL, 17/11): o Lucas efetivou um cinzento do time principal e gravou; o save foi carregado escondido numa cópia da pasta e lido na memória. A pessoa 14792 voltou igual:
+  - apelido Piauí (Phelipe Lobo), com a marca de regen e a personalidade sorteada;
+  - CA 74 e PA 101;
+  - contrato normal (tipo 2) até 2028-036, 12 meses depois da efetivação;
+  - salário 100, a mediana do elenco;
+  - no time principal.
+- **Falta:** a efetivação nas reservas gravada e carregada (na tela ela ficou nas reservas, 16/11); a efetivação com a fornada ligada (a pessoa vem das adormecidas); a mesma prova no 3.9.68.
+
+## 7. Limites e próximos testes
 
 - **Cinco temporadas, uma carreira de cada configuração.** Falta repetir para ver a variação entre carreiras, e ir a 10 temporadas. As seleções ainda não entram na linha `season`.
 - **Uma carreira de cada:** o jogo é aleatório; os números grandes (o teto, a concentração) vêm da regra, os pequenos (o PA máximo) variam de uma carreira para outra.
 - **O acúmulo nas nações fora do jogo** (§4.3): decidir se vale um teto também ali.
 - **A ordem dos próximos bancos** (Lucas, 03/11): a base de fábrica do 3.9.68 é a referência (o banco de outubro de 2026 tem o time reserva do Manchester City curto e para em `match_eng..cpp 652`, também sem os ajustes); depois o CLZ, com o Lucas; depois outros pacotes da comunidade, quando saírem.
 
-## 7. Como reproduzir
+## 8. Como reproduzir
 
 - O `tweaks.cfg` com `log = 1`; o `tweaks.log` sai ao lado do exe.
 - A carreira automática: `auto_setup.cfg` na pasta do jogo com `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (nas longas: `ENG BRA ITA ESP GER FRA` e `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (guarde o `game.cfg` antes e apague o `auto_setup.cfg` depois).

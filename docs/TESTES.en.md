@@ -391,14 +391,29 @@ Automatic careers with **every league in the database**, July 2001 to July 2003.
 - **10 seasons, the 10 leagues of §4.4** (factory game, 11/14): no crash, no game box and no `loan_end_noclub` up to 2010-214, where the 5-hour limit ran out. Players stayed at 86.6 to 86.7 thousand per season (50.4 to 51.7 thousand without a club). About 33 minutes per season, against about 16 in §4.4: the log had 26 million `grey` lines (1.4 GB) and the machine was shared with other sessions; 1.4 was not repeated under the same conditions.
 - **Still to do:** a career with a human club.
 
-## 6. Limits and next tests
+## 6. Grey players: the nickname and making them permanent (`grey_players_names`, `grey_signing`)
+
+- **The nickname, in a hidden career** (3.9.68, minimum database, England, Brazil and Italy playable, to 2001-244, 17/11/2026) [measured in memory]:
+  - the 16 most recently created grey players at Brazilian clubs got a nickname, all different, and one-word first and second names;
+  - examples: at Flamengo, Duda, Formiga, Anselmo and Romero; at Atlético-PR, Lalo, Gilberto and Cruz;
+  - no crash and no error box.
+- **The nickname in CLZ** (Lucas's game, 17/11): every grey player at Friburguense now shows a nickname.
+- **Making permanent, saved and loaded** (CLZ v6 with the 15/11 NickDLL and CLZ.DLL, 17/11): Lucas made a first-team grey player permanent and saved; the save was loaded hidden in a copy of the folder and read in memory. Person 14792 came back the same:
+  - nickname Piauí (Phelipe Lobo), with the regen mark and the drawn personality;
+  - CA 74 and PA 101;
+  - a normal contract (type 2) to 2028-036, 12 months after he was made permanent;
+  - wage 100, the squad's median;
+  - in the first team.
+- **Still to do:** a reserve-team signing saved and loaded (on screen he stayed in the reserves, 16/11); a signing with the intake on (the person comes from the dormant ones); the same proof on 3.9.68.
+
+## 7. Limits and next tests
 
 - **Five seasons, one career per setup.** Still to do: repeat to see the variation between careers, and go to 10 seasons. National teams aren't in the `season` line yet.
 - **One career each:** the game is random; the big numbers (the cap, the concentration) come from the rule, the small ones (the top PA) vary between careers.
 - **Piling up in nations not in the game** (§4.3): decide whether a cap there too is worth it.
 - **The order of the next databases** (Lucas, 11/03): the 3.9.68 factory database is the reference (the October 2026 one has Manchester City's reserve team short and stops at `match_eng..cpp 652`, without the tweaks too); then CLZ, with Lucas; then other community packs, when they're out.
 
-## 7. How to reproduce
+## 8. How to reproduce
 
 - `tweaks.cfg` with `log = 1`; `tweaks.log` appears next to the exe.
 - The automatic career: `auto_setup.cfg` in the game folder with `LANGUAGE=ENG_UK`, `DATABASE=MINIMUM`, `FOREGROUND_LEAGUES=ENG BRA ITA` (in the long ones: `ENG BRA ITA ESP GER FRA` and `BACKGROUND_LEAGUES=ARG POR NED SCO`), `ENABLE_MATCH_ENGINE=NO`, `ENABLE_COMPUTER_BIDS=YES`, `ON_HOLIDAY=YES` (keep a copy of `game.cfg` first and delete `auto_setup.cfg` afterwards).
