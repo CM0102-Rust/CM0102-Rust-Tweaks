@@ -48,6 +48,7 @@ O plano está no [ROADMAP.pt.md](ROADMAP.pt.md).
 | ![Jogadores cinzentos](assets/screenshots/pt/07-grey-players.png) | |
 | ![Público (desenho da 1.4, em inglês)](assets/screenshots/en/09-attendance-light.png) | ![Estádio, modo escuro (desenho da 1.4, em inglês)](assets/screenshots/en/10-stadium-dark.png) |
 | ![Empréstimos (1.5)](assets/screenshots/pt/13-loans-light.png) | ![Empréstimos, modo escuro (1.5)](assets/screenshots/pt/13-loans-dark.png) |
+| ![Efetivar, no perfil do cinzento (1.6, no jogo em inglês)](assets/screenshots/en/14-grey-signing-menu.png) | ![O contrato depois de efetivar (1.6, no jogo em inglês)](assets/screenshots/en/15-grey-signing-contract.png) |
 
 ## Arquivos
 

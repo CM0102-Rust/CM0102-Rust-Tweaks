@@ -48,6 +48,7 @@ The plan is in [ROADMAP.md](ROADMAP.md).
 | ![Grey players](assets/screenshots/en/07-grey-players.png) | |
 | ![Attendance (1.4 design)](assets/screenshots/en/09-attendance-light.png) | ![Stadium, dark mode (1.4 design)](assets/screenshots/en/10-stadium-dark.png) |
 | ![Loans (1.5)](assets/screenshots/en/13-loans-light.png) | ![Loans, dark mode (1.5)](assets/screenshots/en/13-loans-dark.png) |
+| ![Make permanent, in the grey player's profile (1.6, in the game)](assets/screenshots/en/14-grey-signing-menu.png) | ![The contract after making him permanent (1.6, in the game)](assets/screenshots/en/15-grey-signing-contract.png) |
 
 ## Files
 
