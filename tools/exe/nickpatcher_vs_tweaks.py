@@ -41,6 +41,13 @@ def trechos_dos_ajustes():
         out.append(('loans', int(a, 16), int(a, 16) + 5))
     for a, b in re.findall(r'\((0x[0-9a-f]+), &\[([^\]]*)\], &\[', m):
         out.append(('loans', int(a, 16), int(a, 16) + len(b.split(','))))
+    # grey_signing e grey_players_names (src/regens/efetivar.rs) e match_text_guard (src/jogo/narracao.rs)
+    for ajuste, arq in (('grey_signing', 'regens/efetivar.rs'), ('match_text_guard', 'jogo/narracao.rs')):
+        m = open(os.path.join(RAIZ, 'src', *arq.split('/')), encoding='utf-8').read()
+        for a, b in re.findall(r'trampolim\((0x[0-9a-f]+), &\[([^\]]*)\]', m):
+            out.append((ajuste, int(a, 16), int(a, 16) + len(b.split(','))))
+        for a in re.findall(r'(?:desviar|trocar_call)\((0x[0-9a-f]+),', m):
+            out.append((ajuste, int(a, 16), int(a, 16) + 5))
     return out
 
 

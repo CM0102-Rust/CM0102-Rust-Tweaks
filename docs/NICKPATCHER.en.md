@@ -33,6 +33,8 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 
 **Loans** (1.5): no NickPatcher option or MiscPatches patch writes to the 28 spots `loans` hooks or changes (the owner's decision, the end of a loan, the youth listing and demand, the nations' budgets), checked by `tools/exe/nickpatcher_vs_tweaks.py`. On CLZ 6.1, loans turned on with no warning and ran to 2027 with no crash ([TESTES.en.md](TESTES.en.md) §5).
 
+**Grey players and commentary** (1.6): no NickPatcher option or MiscPatches patch writes to the 6 spots of `grey_signing`, `grey_players_names` and `match_text_guard` (the profile menu and click, the grey player's creation, the regen's two club calls, the event with no text), checked by `tools/exe/nickpatcher_vs_tweaks.py`. On CLZ v6 with the 15/11 NickDLL, making permanent and the nickname ran, and the saved game was loaded ([TESTES.en.md](TESTES.en.md) §6).
+
 ## NickDLL (packs like CLZ)
 
 NickDLL changes the exe in memory after it opens. Those with the "extended resolution" (`"resolucao"` in `NickDLL_config.json`) take care of the resolution: with a resolution chosen there, our `resolution` stays out. It also replaces the B-team routine (the contest uses its version, no problem) and may hook the message box (our `log` chains; to be confirmed in the game). Details in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md).

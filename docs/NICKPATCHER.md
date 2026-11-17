@@ -33,6 +33,8 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 
 **Empréstimos** (1.5): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 28 trechos que `loans` desvia ou troca (a decisão do dono, o fim do empréstimo, a lista e a procura dos jovens, a verba das nações), conferidos por `tools/exe/nickpatcher_vs_tweaks.py`. No CLZ 6.1, os empréstimos ligaram sem aviso e rodaram até 2027 sem queda ([TESTES.md](TESTES.md) §5).
 
+**Cinzentos e narração** (1.6): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 6 pontos de `grey_signing`, `grey_players_names` e `match_text_guard` (o menu e o clique do perfil, a criação do cinzento, as duas chamadas de clube da regen, o lance sem texto), conferidos por `tools/exe/nickpatcher_vs_tweaks.py`. No CLZ v6 com a NickDLL de 15/11, a efetivação e o apelido rodaram e o save gravado foi carregado ([TESTES.md](TESTES.md) §6).
+
 ## A NickDLL (pacotes como o CLZ)
 
 A NickDLL muda o exe em memória, depois de abrir. As que trazem a "resolução ampliada" (`"resolucao"` no `NickDLL_config.json`) cuidam da resolução: com uma resolução escolhida lá, a nossa `resolution` fica de fora. Ela também troca a rotina do time B (a disputa usa a dela, sem problema) e pode desviar a caixa de mensagem (o nosso `log` encadeia; a confirmar no jogo). Detalhes em [COMPATIBILIDADE.md](COMPATIBILIDADE.md).
