@@ -14,6 +14,8 @@ use crate::{d, registro, sorteio, w};
 
 static mut LIGADO: bool = false;
 static mut MESES: i32 = 12;
+/// grey_signing_wage: o salário do efetivado em % da mediana dos salários dos reais do elenco (100).
+static mut SALARIO: i32 = 100;
 /// Durante a efetivação, a disputa e a lista da nação (as duas chamadas de clube da 0x7abac0) devolvem 0.
 static mut EFETIVANDO: bool = false;
 static mut DISPUTA_ANTES: usize = 0;
@@ -33,6 +35,7 @@ fn ler() {
             match k {
                 "grey_signing" => LIGADO = v == "1" || v == "on",
                 "grey_signing_months" => MESES = v.parse().unwrap_or(12).clamp(1, 60),
+                "grey_signing_wage" => SALARIO = v.parse().unwrap_or(100).clamp(10, 300),
                 _ => {}
             }
         }
@@ -201,6 +204,7 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
     // o time: a assinatura do regen põe o efetivado nas reservas do clube humano; quem era do principal sobe
     // (`CONTRACT_MANAGER::move_to_first_team` 0x4cc0b0). O gerente dos contratos é [0xae1050] (o vetor, [[0xae1050]]).
     let cm = d(0xae1050);
+    let mediana = mediana_dos_salarios(cm, clube, p);
     if no_principal {
         let subir: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cc0b0usize);
         subir(cm, p, clube);
@@ -219,10 +223,33 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         // o tipo do contrato (os 6 bits baixos do +0x35): a assinatura do regen põe 1 (mensal: "Expira: A curto prazo",
         // preço de transferência 0) no clube humano; 2 é o contrato normal, com a data de fim. O 0x40 (reservas) e o 0x80 ficam.
         *((k + 0x35) as *mut u8) = (*((k + 0x35) as *const u8) & 0xc0) | 2;
+        // o salário: a assinatura do regen dá o padrão do jogo (250 no Friburguense, onde o elenco ganha 100); passa a ser
+        // a mediana do elenco × grey_signing_wage %, com o mínimo do jogo (55)
+        if let Some(m) = mediana {
+            core::ptr::write_unaligned((k + 0xc) as *mut i32, ((m as i64 * SALARIO as i64 / 100) as i32).max(55));
+        }
     }
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
     Some(p)
+}
+
+/// A mediana dos salários (+0xc do contrato) dos jogadores reais do elenco do clube que não são regens, sem `fora`;
+/// nada sem nenhum (aí fica o salário padrão do jogo).
+unsafe fn mediana_dos_salarios(cm: usize, clube: usize, fora: usize) -> Option<i32> {
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let reais = d(0xae2364);
+    let mut s: Vec<i32> = (0..50)
+        .map(|k| d(clube + 0xd7 + 4 * k))
+        // sem os regens (os efetivados têm a marca e ganhavam 250: puxariam a mediana para cima)
+        .filter(|&q| q != 0 && q != fora && d(q) < reais && d(q + 0x39) == clube && *crate::fornada::registro79(d(q)) & 0x40 == 0)
+        .filter_map(|q| {
+            let c = contrato(cm, q);
+            (c != 0).then(|| core::ptr::read_unaligned((c + 0xc) as *const i32)).filter(|&x| x > 0)
+        })
+        .collect();
+    s.sort_unstable();
+    (!s.is_empty()).then(|| s[s.len() / 2])
 }
 
 /// O CA e o PA do efetivado. Com `grey_players = original`, o cinzento de clube pequeno nasce com CA negativo (a conta
@@ -308,5 +335,5 @@ pub(crate) unsafe fn instalar() {
         Some(t) => T_CINZENTO = t,
         None => registro::linha("grey signing: create_virtual_player at 0x90e0a0 differs from 3.9.68; a new grey player may repeat a signed one's name"),
     }
-    registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item: a real player on a {}-month contract at the game's default wage)", { MESES }));
+    registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item: a real player on a {}-month contract at {}% of the squad's median wage)", { MESES }, { SALARIO }));
 }
