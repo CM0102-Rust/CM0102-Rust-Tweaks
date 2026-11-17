@@ -404,7 +404,13 @@ Carreiras automáticas com **todas as ligas do banco**, de julho de 2001 a julho
   - contrato normal (tipo 2) até 2028-036, 12 meses depois da efetivação;
   - salário 100, a mediana do elenco;
   - no time principal.
-- **Falta:** a efetivação nas reservas gravada e carregada (na tela ela ficou nas reservas, 16/11); a efetivação com a fornada ligada (a pessoa vem das adormecidas); a mesma prova no 3.9.68.
+- **Nas reservas, no CLZ** (17/11, o mesmo save): o Lucas efetivou um cinzento das reservas e gravou. A pessoa 16524 (Alexandre Marinho) voltou nas reservas, com contrato normal até 2028-036 e salário 100. Veio sem apelido: era um cinzento das reservas criado antes do apelido ligado, e o jogo só refaz os cinzentos das reservas nos jogos delas.
+- **Com a fornada ligada, no 3.9.68** (17/11, carreira nova com `intake = 1`, Olaria): o Lucas efetivou um cinzento das reservas e gravou. O registro diz `from a dormant person`: a pessoa 42273 veio das adormecidas da fornada, sem custar um regen. Depois da carga:
+  - apelido Joãozinho (Mateus Freitas), CA 87, PA 118;
+  - contrato normal até 2002-354, 12 meses depois;
+  - salário 476, a mediana dos 22 jogadores do Olaria;
+  - nas reservas.
+- **Falta:** o estoque próprio para a fornada desligada (hoje a pessoa vem da fila de regens e custa um regen).
 
 ## 7. Limites e próximos testes
 

@@ -404,7 +404,13 @@ Automatic careers with **every league in the database**, July 2001 to July 2003.
   - a normal contract (type 2) to 2028-036, 12 months after he was made permanent;
   - wage 100, the squad's median;
   - in the first team.
-- **Still to do:** a reserve-team signing saved and loaded (on screen he stayed in the reserves, 16/11); a signing with the intake on (the person comes from the dormant ones); the same proof on 3.9.68.
+- **In the reserves, in CLZ** (17/11, the same save): Lucas made a reserve grey player permanent and saved. Person 16524 (Alexandre Marinho) came back in the reserves, on a normal contract to 2028-036 at wage 100. He had no nickname: he was a reserve grey player created before the nickname was on, and the game only rebuilds reserve grey players at reserve matches.
+- **With the intake on, on 3.9.68** (17/11, a new career with `intake = 1`, Olaria): Lucas made a reserve grey player permanent and saved. The log says `from a dormant person`: person 42273 came from the intake's dormant people, without costing a regen. After loading:
+  - nickname Joãozinho (Mateus Freitas), CA 87, PA 118;
+  - a normal contract to 2002-354, 12 months later;
+  - wage 476, the median of Olaria's 22 players;
+  - in the reserves.
+- **Still to do:** the own stock for when the intake is off (today the person comes from the regen queue and costs a regen).
 
 ## 7. Limits and next tests
 

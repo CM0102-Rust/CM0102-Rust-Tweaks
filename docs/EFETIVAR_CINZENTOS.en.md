@@ -85,12 +85,7 @@ The grey players' surprise (`grey_players_surprise`, 5%, +15 to +35 CA above the
 Proven (TESTES §6):
 
 - making permanent on screen, in CLZ v6;
-- a first-team player made permanent, saved and loaded, unchanged;
+- saved and loaded: a first-team and a reserve player in CLZ (intake off, the person from the regen queue) and a reserve player on 3.9.68 with the intake on (the person from the dormant ones);
 - the nickname in a hidden 3.9.68 career and in CLZ.
 
-Still to do:
-
-- a reserve player made permanent, saved and loaded;
-- making permanent with the intake on;
-- the same proof on 3.9.68;
-- the own stock for when the intake is off.
+Still to do: the own stock for when the intake is off.

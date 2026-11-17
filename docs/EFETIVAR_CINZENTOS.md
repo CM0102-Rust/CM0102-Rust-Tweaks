@@ -85,12 +85,7 @@ A surpresa dos cinzentos (`grey_players_surprise`, 5%, +15 a +35 de CA acima do 
 Provado (TESTES §6):
 
 - a efetivação na tela, no CLZ v6;
-- o efetivado do time principal gravado e carregado, igual;
+- gravado e carregado: um do principal e um das reservas no CLZ (fornada desligada, a pessoa da fila de regens) e um das reservas no 3.9.68 com a fornada ligada (a pessoa das adormecidas);
 - o apelido numa carreira escondida no 3.9.68 e no CLZ.
 
-Falta:
-
-- um efetivado das reservas gravado e carregado;
-- a efetivação com a fornada ligada;
-- a mesma prova no 3.9.68;
-- o estoque próprio para a fornada desligada.
+Falta: o estoque próprio para a fornada desligada.
