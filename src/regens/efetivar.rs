@@ -207,6 +207,9 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
         }
         core::ptr::write_unaligned((k + 0x2d) as *mut u16, dia as u16);
         core::ptr::write_unaligned((k + 0x2f) as *mut u16, ano as u16);
+        // o tipo do contrato (os 6 bits baixos do +0x35): a assinatura do regen põe 1 (mensal: "Expira: A curto prazo",
+        // preço de transferência 0) no clube humano; 2 é o contrato normal, com a data de fim. O 0x40 (reservas) e o 0x80 ficam.
+        *((k + 0x35) as *mut u8) = (*((k + 0x35) as *const u8) & 0xc0) | 2;
     }
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent at {} (CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(clube), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));
