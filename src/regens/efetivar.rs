@@ -16,6 +16,8 @@ static mut LIGADO: bool = false;
 static mut MESES: i32 = 12;
 /// grey_signing_wage: o salário do efetivado em % da mediana dos salários dos reais do elenco (100).
 static mut SALARIO: i32 = 100;
+/// grey_players_names = nickname: os cinzentos (de todos os clubes) ganham um apelido da nação (`nomes::apelidar`).
+static mut APELIDO: bool = false;
 /// Durante a efetivação, a disputa e a lista da nação (as duas chamadas de clube da 0x7abac0) devolvem 0.
 static mut EFETIVANDO: bool = false;
 static mut DISPUTA_ANTES: usize = 0;
@@ -35,6 +37,7 @@ fn ler() {
             match k {
                 "grey_signing" => LIGADO = v == "1" || v == "on",
                 "grey_signing_months" => MESES = v.parse().unwrap_or(12).clamp(1, 60),
+                "grey_players_names" => APELIDO = v == "nickname",
                 "grey_signing_wage" => SALARIO = v.parse().unwrap_or(100).clamp(10, 300),
                 _ => {}
             }
@@ -187,6 +190,9 @@ unsafe fn efetivar(g: usize) -> Option<usize> {
     core::ptr::copy_nonoverlapping((g + 4) as *const u8, (p + 4) as *mut u8, 0x1e);
     core::ptr::copy_nonoverlapping(ficha_g as *const u8, ficha as *mut u8, 70);
     *(ficha as *mut usize) = id_ficha;
+    if APELIDO {
+        crate::nomes::marcar_apelido(p);
+    }
     nivelar(p, ficha, clube);
     // a personalidade sorteada (+0x56..+0x5d; o cinzento tem 10 em tudo) e a marca de regen
     for o in 0x56..=0x5d {
@@ -292,6 +298,9 @@ unsafe extern "thiscall" fn cinzento(this: usize, clube: usize, a2: usize, id: u
         return;
     }
     let p = d(0xae23bc) + 110 * id;
+    if APELIDO {
+        crate::nomes::apelidar(p, nacao);
+    }
     let reais = d(0xae2364);
     let repetido = |p: usize| (0..50).map(|k| d(clube + 0xd7 + 4 * k)).any(|q| q != 0 && q != p && d(q) < reais && d(q + 4) == d(p + 4) && d(q + 8) == d(p + 8));
     let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
@@ -300,6 +309,9 @@ unsafe extern "thiscall" fn cinzento(this: usize, clube: usize, a2: usize, id: u
     while repetido(p) && n < 10 {
         *((p + 4) as *mut usize) = nome(nacao);
         *((p + 8) as *mut usize) = sobrenome(nacao);
+        if APELIDO {
+            crate::nomes::apelidar(p, nacao);
+        }
         n += 1;
     }
 }
@@ -312,6 +324,19 @@ unsafe fn alvo_do_call(em: usize) -> Option<usize> {
 /// Depois da fornada (que pode já ter trocado as duas chamadas de clube: encadeia nelas).
 pub(crate) unsafe fn instalar() {
     ler();
+    // o desvio da criação do cinzento serve às duas chaves: o nome que não repete o do efetivado e o apelido
+    if LIGADO || APELIDO {
+        match crate::origem::trampolim(0x90e0a0, &[0x6a, 0xff, 0x68, 0xa0, 0x55, 0x96, 0x00], cinzento as *const () as usize) {
+            Some(t) => T_CINZENTO = t,
+            None => {
+                APELIDO = false;
+                registro::linha("grey players: create_virtual_player at 0x90e0a0 differs from 3.9.68; no nicknames, and a new grey player may repeat a signed one's name");
+            }
+        }
+    }
+    if APELIDO {
+        registro::linha("grey players: nicknames (a one-word nickname of the club's nation that no real person uses, and one-word names)");
+    }
     if !LIGADO {
         return;
     }
@@ -331,9 +356,5 @@ pub(crate) unsafe fn instalar() {
     crate::fornada::trocar_call(0x7acea2, disputa as *const () as usize);
     crate::fornada::trocar_call(0x7acf4f, lista as *const () as usize);
     crate::desviar(0x874a58, trecho_do_menu as *const () as usize);
-    match crate::origem::trampolim(0x90e0a0, &[0x6a, 0xff, 0x68, 0xa0, 0x55, 0x96, 0x00], cinzento as *const () as usize) {
-        Some(t) => T_CINZENTO = t,
-        None => registro::linha("grey signing: create_virtual_player at 0x90e0a0 differs from 3.9.68; a new grey player may repeat a signed one's name"),
-    }
     registro::linha(&format!("grey signing: on (the human club's grey players get a Make permanent item: a real player on a {}-month contract at {}% of the squad's median wage)", { MESES }, { SALARIO }));
 }

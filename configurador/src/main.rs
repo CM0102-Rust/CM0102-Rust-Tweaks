@@ -1386,6 +1386,8 @@ impl App {
             ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA()));
         });
         ui.add_space(10.0);
+        self.controle(ui, "grey_players_names", true);
+        ui.add_space(10.0);
         ui.label(RichText::new(self.t("A surpresa", "The surprise")).strong().size(15.0).color(VERDE()));
         for k in ["grey_players_surprise", "grey_players_surprise_min", "grey_players_surprise_max"] {
             self.controle(ui, k, ativo);

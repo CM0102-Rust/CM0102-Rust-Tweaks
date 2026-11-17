@@ -500,6 +500,12 @@ The surprise's largest bonus: how far above the club's level, at most, the surpr
 
 Values: from 0 to 200 (whole number). Default: `35`.
 
+### The grey players' names — `grey_players_names`
+
+Nickname: each grey player gets a one-word nickname from the club's nation, and the game shows the nickname instead of the name, as it does for real players; first and second names become one word too. Nicknames already used by a real person in the database are left out, so no famous star is born at a small club. Original: the first and second names the game draws, often compound ones. It applies to grey players at every club; the same club still gets the same grey player in the same place, and a player made permanent keeps his nickname.
+
+Values: `original` (Original (first and second name from the database)), `nickname` (One-word nickname). Default: `original`.
+
 ### Make your club's grey players permanent — `grey_signing`
 
 On the profile of a grey player in your club, the Action button appears with a Make permanent item. On the click he becomes a real player, with the same name, age, nation, positions and attributes; his CA is at least the club's level, his PA gets room by age, his personality is drawn at random and he carries the regen mark (editors find him under "Only regens"). He stays in the team he was in (first team or reserves), on a normal contract with the months and wage chosen below. Only for the human manager: the AI keeps using grey players as it does today. The person comes from those the intake has spare; without the intake, from a retired player in the regen queue (one regen fewer).

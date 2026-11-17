@@ -500,6 +500,12 @@ O maior bônus da surpresa: quanto acima do nível do clube, no máximo, nasce o
 
 Valores: de 0 a 200 (inteiro). Padrão: `35`.
 
+### O nome dos cinzentos — `grey_players_names`
+
+Apelido: cada cinzento ganha um apelido de uma palavra da nação do clube (Bruninho, Thiaguinho, Murilo), e o jogo mostra o apelido no lugar do nome, como faz com os jogadores reais; nome e sobrenome também passam a ser de uma palavra. Ficam de fora os apelidos que alguma pessoa real do banco já usa, para não nascer um craque famoso num clube pequeno. Original: o nome e o sobrenome que o jogo sorteia, muitas vezes compostos (Geovane Antonio Rodrigues Nunes). Vale para os cinzentos de todos os clubes; o mesmo clube continua recebendo o mesmo cinzento na mesma vaga, e o efetivado leva o apelido.
+
+Valores: `original` (Original (nome e sobrenome do banco)), `nickname` (Apelido de uma palavra). Padrão: `original`.
+
 ### Efetivar os cinzentos do seu clube — `grey_signing`
 
 No perfil de um cinzento do seu clube aparece o botão Ação com o item Efetivar. Ao clicar, ele vira um jogador de verdade, com o mesmo nome, idade, nação, posições e atributos; o CA fica pelo menos no nível do clube, o PA ganha espaço pela idade, a personalidade é sorteada e ele leva a marca de regen (os editores o acham em "Só regens"). Ele fica no time em que estava (principal ou reservas), com um contrato normal dos meses e do salário escolhidos abaixo. Só para o técnico humano: a IA segue usando cinzentos como hoje. A pessoa vem das que sobram da fornada; sem a fornada, de um aposentado da fila de regens (um regen a menos).
