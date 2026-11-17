@@ -482,6 +482,42 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
+### Surpresa (%) — `grey_players_surprise`
+
+A chance de um cinzento nascer acima do nível do clube: o jogador que se destaca no meio dos outros. Ele sai do mesmo sorteio do jogo, que é fixo por clube e posição: o cinzento-surpresa é o mesmo a cada partida enquanto a vaga existir, e dá para efetivá-lo. Só com os cinzentos no nível do clube. 0 = nunca.
+
+Valores: de 0 a 100 (inteiro). Padrão: `5`.
+
+### Surpresa: a partir de (CA acima do nível) — `grey_players_surprise_min`
+
+O menor bônus da surpresa: quanto acima do nível do clube, no mínimo, nasce o cinzento-surpresa. Com 15 a 35, num clube de nível 64 a surpresa vem de 79 a 99.
+
+Valores: de 0 a 200 (inteiro). Padrão: `15`.
+
+### Surpresa: até (CA acima do nível) — `grey_players_surprise_max`
+
+O maior bônus da surpresa: quanto acima do nível do clube, no máximo, nasce o cinzento-surpresa.
+
+Valores: de 0 a 200 (inteiro). Padrão: `35`.
+
+### Efetivar os cinzentos do seu clube — `grey_signing`
+
+No perfil de um cinzento do seu clube aparece o botão Ação com o item Efetivar. Ao clicar, ele vira um jogador de verdade, com o mesmo nome, idade, nação, posições e atributos; o CA fica pelo menos no nível do clube, o PA ganha espaço pela idade, a personalidade é sorteada e ele leva a marca de regen (os editores o acham em "Só regens"). Ele fica no time em que estava (principal ou reservas), com um contrato normal dos meses e do salário escolhidos abaixo. Só para o técnico humano: a IA segue usando cinzentos como hoje. A pessoa vem das que sobram da fornada; sem a fornada, de um aposentado da fila de regens (um regen a menos).
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+### Contrato do efetivado (meses) — `grey_signing_months`
+
+A duração do contrato do efetivado, em meses, a partir do dia da efetivação. É um contrato normal, com data de fim (não o mensal).
+
+Valores: de 1 a 60 (inteiro). Padrão: `12`.
+
+### Salário do efetivado (% da mediana do elenco) — `grey_signing_wage`
+
+O salário do efetivado, em % da mediana dos salários do seu elenco (sem os regens). 100 = o que o jogador do meio do seu elenco ganha. O padrão do jogo para um regen era alto demais num clube pequeno: no Friburguense, 250 contra 100 do elenco.
+
+Valores: de 10 a 300 (inteiro). Padrão: `100`.
+
 ## Empréstimos e trava
 
 Quem sai emprestado. No jogo original, o dono da IA recusa quase todo pedido de empréstimo, e o jovem que não joga fica parado. Aqui o dono empresta quem sobra, olhando os minutos que o jogador teria e a cobertura que fica no elenco, e os clubes procuram jovens para jogar. Os números da direita são de carreiras de teste com todas as ligas. As regras são uma proposta: o guia (docs/EMPRESTIMOS.md) explica cada uma, para a comunidade sugerir mudanças.
@@ -652,6 +688,12 @@ Valores: `1` liga, `0` desliga. Padrão: `0`.
 ### Proteção do elenco (jogador repetido) — `squad_guard`
 
 Corrige um defeito do jogo: ele pode pôr no elenco um jogador que já está lá (visto ao mandar jogadores entre o clube e o time B). As cópias se acumulam até a escalação automática colocar o mesmo jogador em duas posições e mostrar a caixa "match_man.cpp 1225". A proteção apaga a cópia repetida na hora, antes de cada escalação e ao carregar um save (limpa também saves antigos). Cada cópia apagada vai para o tweaks.log.
+
+Valores: `1` liga, `0` desliga. Padrão: `1`.
+
+### Proteção da narração (lance sem texto) — `match_text_guard`
+
+Contorna uma queda do jogo vista uma vez numa partida do CLZ: um lance da narração sem texto fechava o jogo. Com a proteção, o lance aparece como uma linha vazia e a partida segue; o tweaks.log anota o número do lance.
 
 Valores: `1` liga, `0` desliga. Padrão: `1`.
 

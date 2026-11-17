@@ -976,7 +976,7 @@ impl App {
     fn aba_jogo(&mut self, ui: &mut egui::Ui) {
         self.cabecalho(ui, Aba::Jogo);
         ui.label(RichText::new(self.t("O save e a instalação", "The save and the install")).strong().size(15.0).color(VERDE()));
-        for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes", "squad_guard"] {
+        for k in ["save_over_2gb", "portable_folder", "multiple_instances", "clear_admin_flag", "override_exe_changes", "squad_guard", "match_text_guard"] {
             self.controle(ui, k, true);
         }
         ui.add_space(8.0);
@@ -1385,6 +1385,18 @@ impl App {
             });
             ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA()));
         });
+        ui.add_space(10.0);
+        ui.label(RichText::new(self.t("A surpresa", "The surprise")).strong().size(15.0).color(VERDE()));
+        for k in ["grey_players_surprise", "grey_players_surprise_min", "grey_players_surprise_max"] {
+            self.controle(ui, k, ativo);
+        }
+        ui.add_space(10.0);
+        ui.label(RichText::new(self.t("Efetivar os cinzentos do seu clube", "Making your club's grey players permanent")).strong().size(15.0).color(VERDE()));
+        self.controle(ui, "grey_signing", true);
+        let efetivar = self.ligado("grey_signing");
+        for k in ["grey_signing_months", "grey_signing_wage"] {
+            self.controle(ui, k, efetivar);
+        }
     }
 
     /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.
@@ -2035,6 +2047,8 @@ impl eframe::App for App {
                         }
                     }
                     self.definir("squad_guard", if on { "1" } else { "0" });
+                    self.definir("match_text_guard", if on { "1" } else { "0" });
+                    self.definir("grey_signing", if on { "1" } else { "0" });
                 }
             });
             let mut grupo_atual = "";

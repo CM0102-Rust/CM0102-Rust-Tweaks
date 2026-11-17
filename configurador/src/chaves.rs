@@ -102,6 +102,12 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "regen_names_min", aba: Aba::Nomes, tipo: num(1.0, 101.0, 1.0, 100.0, true), padrao: "20", rotulo: ("Nomes próprios a partir de", "Own names from") },
     Chave { nome: "grey_players", aba: Aba::Cinzentos, tipo: Tipo::Escolha(&[("original", "Original (a conta do jogo)", "Original (the game's formula)"), ("squad", "No nível do clube", "At the club's level")]), padrao: "original", rotulo: ("O nível dos cinzentos", "The grey players' level") },
     Chave { nome: "grey_players_spread", aba: Aba::Cinzentos, tipo: num(0.0, 100.0, 0.0, 50.0, true), padrao: "10", rotulo: ("Variação em volta do nível", "Variation around the level") },
+    Chave { nome: "grey_players_surprise", aba: Aba::Cinzentos, tipo: num(0.0, 100.0, 0.0, 30.0, true), padrao: "5", rotulo: ("Surpresa (%)", "Surprise (%)") },
+    Chave { nome: "grey_players_surprise_min", aba: Aba::Cinzentos, tipo: num(0.0, 200.0, 0.0, 60.0, true), padrao: "15", rotulo: ("Surpresa: a partir de (CA acima do nível)", "Surprise: from (CA above the level)") },
+    Chave { nome: "grey_players_surprise_max", aba: Aba::Cinzentos, tipo: num(0.0, 200.0, 0.0, 80.0, true), padrao: "35", rotulo: ("Surpresa: até (CA acima do nível)", "Surprise: up to (CA above the level)") },
+    Chave { nome: "grey_signing", aba: Aba::Cinzentos, tipo: Tipo::Liga, padrao: "0", rotulo: ("Efetivar os cinzentos do seu clube", "Make your club's grey players permanent") },
+    Chave { nome: "grey_signing_months", aba: Aba::Cinzentos, tipo: num(1.0, 60.0, 1.0, 36.0, true), padrao: "12", rotulo: ("Contrato do efetivado (meses)", "Contract of the player made permanent (months)") },
+    Chave { nome: "grey_signing_wage", aba: Aba::Cinzentos, tipo: num(10.0, 300.0, 25.0, 200.0, true), padrao: "100", rotulo: ("Salário do efetivado (% da mediana do elenco)", "Wage of the player made permanent (% of the squad's median)") },
     Chave { nome: "intake", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("0", "Desligada (regens ao longo da temporada)", "Off (regens through the season)"), ("1", "Ligada (só numa carreira nova)", "On (new career only)")]), padrao: "0", rotulo: ("Fornada", "Intake") },
     Chave { nome: "intake_per_club", aba: Aba::Fornada, tipo: num(1.0, 20.0, 1.0, 10.0, true), padrao: "3", rotulo: ("Regens por clube em cada fornada", "Regens per club per intake") },
     Chave { nome: "intake_day", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("season_end", "Fim da temporada de cada nação", "Each nation's season end"), ("181", "1º de julho (dia 181), para todos", "1 July (day 181), for everyone"), ("0", "1º de janeiro (dia 0), para todos", "1 January (day 0), for everyone")]), padrao: "season_end", rotulo: ("Dia da fornada", "Intake day") },
@@ -154,6 +160,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "loan_unhappiness_gap", aba: Aba::Emprestimos, tipo: num(0.0, 10000.0, 0.0, 3000.0, true), padrao: "1000", rotulo: ("Quanto maior o clube que pede", "How much bigger the asking club is") },
     Chave { nome: "budget_caps", aba: Aba::Emprestimos, tipo: Tipo::Escolha(&[("original", "Com o freio por nação (original)", "With the per-nation brake (original)"), ("off", "Sem freio: toda nação como a Inglaterra", "No brake: every nation like England")]), padrao: "off", rotulo: ("Trava da verba por nação", "Per-nation budget brake") },
     Chave { nome: "squad_guard", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "1", rotulo: ("Proteção do elenco (jogador repetido)", "Squad guard (repeated player)") },
+    Chave { nome: "match_text_guard", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "1", rotulo: ("Proteção da narração (lance sem texto)", "Commentary guard (event with no text)") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
     Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];
@@ -206,8 +213,8 @@ pub fn mestres(aba: Aba) -> &'static [(&'static str, &'static str, &'static str)
 /// As predefinições (docs/CONFIGURADOR.md §4): (nome pt, nome en, valores). As chaves de instalação (pasta, marca,
 /// sobrescrever, log, vídeo, resolução, CD) ficam fora: dependem da instalação, não do gosto.
 pub const PREDEFINICOES: &[(&str, &str, &[(&str, &str)])] = &[
-    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
-    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
+    ("Original", "Original", &[("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("grey_signing", "0"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
+    ("Só o save", "Save only", &[("save_over_2gb", "1"), ("ages", "original"), ("ages_out_of_game", "original"), ("unattached", "original"), ("retire_idle_players", "0"), ("rule", "original"), ("grey_players", "original"), ("grey_signing", "0"), ("regen_names", "original"), ("intake", "0"), ("loans", "off"), ("budget_caps", "original")]),
     ("Equilibrado", "Balanced", &[("ages", "custom"), ("younger_from_age", "22"), ("younger_by", "6"), ("ages_out_of_game", "original"), ("ca_cap_skip", "0.5"), ("contest_max_age", "18"), ("unattached", "original"),
         ("retire_idle_players", "1"), ("idle_days", "180"), ("idle_min_age", "28"), ("idle_rep", "1500"), ("idle_rep_per_year", "250"), ("protect_young_unemployed", "0"), ("rule", "new"),
         ("target_k", "50"), ("target_ca", "0"), ("sigma", "2500"), ("sigma_below", "1200"), ("level_floor", "0.002"), ("facilities_base", "0.4"), ("facilities_k", "0.06"), ("staff_min", "0.8"),

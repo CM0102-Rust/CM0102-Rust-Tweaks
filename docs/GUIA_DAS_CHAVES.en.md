@@ -482,6 +482,42 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
+### Surprise (%) — `grey_players_surprise`
+
+The chance of a grey player being born above the club's level: the one who stands out among the others. It comes from the game's own draw, which is fixed per club and position: the surprise grey player is the same in every match while the place exists, and he can be made permanent. Only with grey players at the club's level. 0 = never.
+
+Values: from 0 to 100 (whole number). Default: `5`.
+
+### Surprise: from (CA above the level) — `grey_players_surprise_min`
+
+The surprise's smallest bonus: how far above the club's level, at least, the surprise grey player is born. With 15 to 35, at a level-64 club the surprise comes from 79 to 99.
+
+Values: from 0 to 200 (whole number). Default: `15`.
+
+### Surprise: up to (CA above the level) — `grey_players_surprise_max`
+
+The surprise's largest bonus: how far above the club's level, at most, the surprise grey player is born.
+
+Values: from 0 to 200 (whole number). Default: `35`.
+
+### Make your club's grey players permanent — `grey_signing`
+
+On the profile of a grey player in your club, the Action button appears with a Make permanent item. On the click he becomes a real player, with the same name, age, nation, positions and attributes; his CA is at least the club's level, his PA gets room by age, his personality is drawn at random and he carries the regen mark (editors find him under "Only regens"). He stays in the team he was in (first team or reserves), on a normal contract with the months and wage chosen below. Only for the human manager: the AI keeps using grey players as it does today. The person comes from those the intake has spare; without the intake, from a retired player in the regen queue (one regen fewer).
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Contract of the player made permanent (months) — `grey_signing_months`
+
+The length of the contract of a player made permanent, in months, from the day he's made permanent. It's a normal contract, with an end date (not a monthly one).
+
+Values: from 1 to 60 (whole number). Default: `12`.
+
+### Wage of the player made permanent (% of the squad's median) — `grey_signing_wage`
+
+The wage of a player made permanent, in % of your squad's median wage (regens left out). 100 = what the middle player in your squad earns. The game's default for a regen was far too high at a small club: at Friburguense, 250 against the squad's 100.
+
+Values: from 10 to 300 (whole number). Default: `100`.
+
 ## Loans & budget brake
 
 Who goes on loan. In the original game, the AI owner refuses almost every loan request, and a youngster who doesn't play sits still. Here the owner lends whoever is spare, looking at the minutes the player would get and the cover left in the squad, and clubs look for youngsters to play. The numbers on the right come from test careers with every league. The rules are a proposal: the guide (docs/EMPRESTIMOS.en.md) explains each one, so the community can suggest changes.
@@ -652,6 +688,12 @@ Values: `1` on, `0` off. Default: `0`.
 ### Squad guard (repeated player) — `squad_guard`
 
 Fixes a game defect: it can put in a squad a player who is already in it (seen when moving players between a club and its B team). The copies pile up until the automatic team selection puts the same player in two positions and shows the "match_man.cpp 1225" box. The guard removes the repeated copy at once, before every team selection and when a save is loaded (it also cleans old saves). Each copy removed goes to tweaks.log.
+
+Values: `1` on, `0` off. Default: `1`.
+
+### Commentary guard (event with no text) — `match_text_guard`
+
+Works around a game crash seen once in a CLZ match: a commentary event with no text closed the game. With the guard, the event shows as an empty line and the match goes on; tweaks.log notes the event's number.
 
 Values: `1` on, `0` off. Default: `1`.
 
