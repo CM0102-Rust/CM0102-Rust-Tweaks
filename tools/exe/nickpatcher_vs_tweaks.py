@@ -51,6 +51,8 @@ def trechos_dos_ajustes():
     # manage_any_team (src/jogo/assumir.rs): a entrada desviada e as trocas da tela de escolha
     out += [('manage_any_team', a, a + n) for a, n in ((0x544820, 5), (0x827d0b, 5), (0x8226b9, 4), (0x8227b1, 9), (0x822698, 11),
                                                        (0x82257a, 5), (0x822306, 5), (0x822693, 5), (0x90dc6d, 5))]
+    # as vagas nas seleções (src/jogo/assumir.rs, instalar_vagas): o jle do limite de 1.000 e a chamada da candidatura
+    out += [('national_team_jobs', a, a + n) for a, n in ((0x69bae5, 6), (0x69cd41, 5))]
     return out
 
 

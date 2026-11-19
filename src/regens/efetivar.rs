@@ -249,7 +249,10 @@ unsafe fn convocar(p: usize, g: usize, vaga: usize, selecao: usize, ficha: usize
     let reais = d(0xae2364);
     let modelo = (0..50).map(|k| d(selecao + 0xd7 + 4 * k)).find(|&q| q != 0 && d(q) < reais && d(q + 0x24) == selecao).unwrap_or(g);
     core::ptr::copy_nonoverlapping((modelo + 0x24) as *const u8, (p + 0x24) as *mut u8, 0x15);
-    *((p + 0x5e) as *mut u8) |= 1;
+    // a convocação está nos bits 2-3 do +0x5e (4 principal, 8 B; `staff_set_squad_flags` 0x540980), que o
+    // `national_teams_player_in_squad` (0x76da80) confere para tirar o jogador da lista; os bits 0-1 são do clube
+    let sel = match *((modelo + 0x5e) as *const u8) & 0xc { 0 => 4, b => b };
+    *((p + 0x5e) as *mut u8) = (*((p + 0x5e) as *const u8) & 3) | sel;
     core::ptr::write_unaligned(vaga as *mut usize, p);
     registro::linha(&format!("grey signing\t{}\tperson {} made permanent and called up by {} (no club; CA {}, PA {}; from {})", crate::data_do_jogo(), d(p),
         crate::nome(selecao), w(ficha + 5), w(ficha + 7), if da_fila { "the regen queue" } else { "a dormant person" }));

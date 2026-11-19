@@ -526,7 +526,13 @@ Values: from 10 to 300 (whole number). Default: `100`.
 
 ### Manage any national team (with grey players) — `manage_any_team`
 
-Any main national team can have a human manager: when starting a career (the National teams item at the end of the nation selector) and during it. The original only lets you take the national team of a nation with more than 150 people in the database: Puerto Rico, San Marino and other small ones were left out. The human manager's national team also gets grey players to fill its squad, like a club (in the original only the AI got them, and a small national team never filled its call-up); with Make permanent on, you can make them permanent. National teams of the second set (the under-21s) keep the original rule.
+Any main national team can have a human manager: when starting a career (the National teams item at the end of the nation selector) and during it. The original only lets you take the national team of a nation with more than 150 people in the database: Puerto Rico, San Marino and other small ones were left out. The human manager's national team also gets grey players to fill its squad, like a club (in the original only the AI got them, and a small national team never filled its call-up); with Make permanent on, you can make them permanent. National teams of the second set (the under-21s) keep the original rule. Applying for a small national team's job opens its vacancy (only that one: the others keep the original; for all of them, the Manager jobs at every national team key).
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Manager jobs at every national team — `national_team_jobs`
+
+Every national team can have a manager job vacancy, like the big ones. The original only opens one at a national team whose nation has more than 1,000 people in the database: the small ones (Puerto Rico, Comoros, San Marino...) never get one, and their manager's place stays as it is. On, the game opens those vacancies from the start of the career and the AI hires managers for them, taking them from clubs and other national teams: it changes the whole world, with or without you there. Applying for a small national team's job with Manage any national team already works without this key. Off by default.
 
 Values: `1` on, `0` off. Default: `0`.
 

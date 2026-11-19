@@ -526,7 +526,13 @@ Valores: de 10 a 300 (inteiro). Padrão: `100`.
 
 ### Assumir qualquer seleção (com cinzentos) — `manage_any_team`
 
-Qualquer seleção principal pode ter técnico humano: na criação da carreira (o item Seleções no fim do seletor de nação) e durante ela. O original só deixa assumir a seleção de uma nação com mais de 150 pessoas no banco: Porto Rico, São Marino e outras pequenas ficavam de fora. A seleção do técnico humano também passa a receber cinzentos para completar a lista, como um clube (no original, só a IA os recebia, e uma seleção pequena nunca completava a convocação); com Efetivar ligado, dá para efetivá-los. As seleções do segundo conjunto (a sub-21) seguem a regra original.
+Qualquer seleção principal pode ter técnico humano: na criação da carreira (o item Seleções no fim do seletor de nação) e durante ela. O original só deixa assumir a seleção de uma nação com mais de 150 pessoas no banco: Porto Rico, São Marino e outras pequenas ficavam de fora. A seleção do técnico humano também passa a receber cinzentos para completar a lista, como um clube (no original, só a IA os recebia, e uma seleção pequena nunca completava a convocação); com Efetivar ligado, dá para efetivá-los. As seleções do segundo conjunto (a sub-21) seguem a regra original. A candidatura à vaga de uma seleção pequena abre a vaga dela (só essa: as outras seguem o original; para todas, a chave Vagas de técnico em todas as seleções).
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+### Vagas de técnico em todas as seleções — `national_team_jobs`
+
+Toda seleção pode ter vaga de técnico, como as grandes. O original só abre vaga na seleção de uma nação com mais de 1.000 pessoas no banco: as pequenas (Porto Rico, Comores, São Marino...) nunca têm, e o lugar do técnico fica como está. Ligada, o jogo abre essas vagas desde o começo da carreira e a IA contrata técnicos para elas, tirando-os de clubes e de outras seleções: muda o mundo inteiro, com ou sem você lá. Candidatar-se à vaga de uma seleção pequena com Assumir qualquer seleção já funciona sem esta chave. Desligada por padrão.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 

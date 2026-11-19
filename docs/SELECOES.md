@@ -16,10 +16,15 @@ Pedido do fórum (17/11/2026): com uma seleção pequena (o exemplo era Porto Ri
 - Na escolha do time, um item **Seleções** (National teams) no fim do seletor de nação, que aparece também com uma nação só; nele, a lista mostra só as seleções. A linha de uma seleção de nação sem continente cadastrado (+0x71) caía; agora o texto fica vazio.
 - A carreira automática (`auto_setup.cfg`, a chamada de 0x827d0b) segue a regra original.
 - A seleção principal do técnico humano recebe cinzentos como um clube: a chamada de 0x90dc6d responde "sem técnico humano" para as seleções principais.
+- **A candidatura** (1.8). O botão de candidatura passou a aparecer para as seleções pequenas, mas a vaga é outra regra: `add_job_vacancy` (0x69ba50) não abre vaga numa seleção cuja nação tem até 1.000 pessoas no banco (o `jle` em 0x69bae5), e `apply_for_job` (0x69ca00), sem achar a vaga, dava a caixa de erro de manager_manager.cpp, linha 12456 (relato do fórum de 18/11: Porto Rico). Agora o limite cai só durante a chamada da candidatura (0x69cd41): a vaga daquela seleção abre e o resto segue o original.
+
+## 2.1. Vagas em todas as seleções (`national_team_jobs`)
+
+O jogo chama `add_job_vacancy` de 20 lugares: o começo da carreira (`init_club_board_records`), a rotina diária dos técnicos (seis chamadas), `fix_missing_jobs`, as demissões, as aposentadorias, a troca de divisão. Em todos, a seleção de uma nação com até 1.000 pessoas fica sem vaga, e o lugar do técnico fica como está. Com `national_team_jobs = 1`, o limite cai em todas as chamadas: o jogo abre essas vagas desde o começo da carreira e a IA contrata técnicos para elas, tirando-os de clubes e de outras seleções, o que abre vagas em cadeia. Muda o mundo inteiro, com ou sem o humano numa seleção, por isso fica desligada por padrão e não entra na candidatura (que só precisa da vaga de uma seleção). Vale também para o segundo conjunto (a sub-21), que passa pela mesma regra.
 
 ## 3. Efetivar na seleção
 
-Com `grey_signing = 1`, o item Efetivar aparece também no perfil de um cinzento da seleção do técnico humano (+0x24 do técnico). A efetivação é a mesma do clube (a pessoa, a identidade do cinzento, o CA e o PA, a personalidade e a marca de regen), com uma diferença: **ele fica sem clube e convocado**, no lugar do cinzento na lista (+0xd7), sem contrato e sem salário. O vínculo com a seleção (+0x24 a seleção, +0x28 o cargo, 0x0b para jogador, e as datas até +0x38) é copiado de um convocado real. Qualquer clube pode contratá-lo; a aposentadoria de quem fica um ano sem clube e sem seleção (0x7a8050) não o pega enquanto estiver convocado.
+Com `grey_signing = 1`, o item Efetivar aparece também no perfil de um cinzento da seleção do técnico humano (+0x24 do técnico). A efetivação é a mesma do clube (a pessoa, a identidade do cinzento, o CA e o PA, a personalidade e a marca de regen), com uma diferença: **ele fica sem clube e convocado**, no lugar do cinzento na lista (+0xd7), sem contrato e sem salário. O vínculo com a seleção (+0x24 a seleção, +0x28 o cargo, 0x0b para jogador, e as datas até +0x38) é copiado de um convocado real, e a convocação é marcada no +0x5e (bits 2-3: 4 principal, 8 B; `staff_set_squad_flags` 0x540980), que o jogo confere para tirar o jogador da lista (`national_teams_player_in_squad` 0x76da80). Até a 1.7.1 o efetivado ficava sem essa marca e só saía da lista depois de convocado de novo (relato do fórum de 18/11). Qualquer clube pode contratá-lo; a aposentadoria de quem fica um ano sem clube e sem seleção (0x7a8050) não o pega enquanto estiver convocado.
 
 ## 4. Os pontos no exe
 
@@ -33,6 +38,8 @@ Com `grey_signing = 1`, o item Efetivar aparece também no perfil de um cinzento
 | 0x82257a | o fim do seletor de nação | o item Seleções |
 | 0x822306, 0x822693 | o seletor só com mais de uma nação | com uma também |
 | 0x90dc6d | a seleção do humano sem cinzentos | `humano_na_selecao` |
+| 0x69bae5 (`0F 8E 3A 0A 00 00`) | `add_job_vacancy`: sem vaga numa seleção de até 1.000 pessoas | trecho novo: segue com a marca |
+| 0x69cd41 | a candidatura pede a vaga | `vaga_da_candidatura` (a marca durante a chamada; com `national_team_jobs = 1`, a marca fica sempre e este ponto não muda) |
 
 Trecho diferente do 3.9.68 em qualquer ponto da tela de escolha: a tela fica como está (a regra de quem pode ser assumido ainda vale). A entrada de 0x544820 diferente: a chave fica desligada e o log diz por quê. O `jle` de 0x822696 já apagado (o NickPatcher atual faz isso) conta como compatível: o ponto 0x822693 fica como está e o resto da tela liga ([NICKPATCHER.md](NICKPATCHER.md)).
 

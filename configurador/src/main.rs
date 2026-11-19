@@ -1402,6 +1402,7 @@ impl App {
         ui.add_space(10.0);
         ui.label(RichText::new(self.t("As seleções", "National teams")).strong().size(15.0).color(VERDE()));
         self.controle(ui, "manage_any_team", true);
+        self.controle(ui, "national_team_jobs", true);
     }
 
     /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.

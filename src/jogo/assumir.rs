@@ -27,26 +27,80 @@ static mut ORIGINAL: usize = 0;
 /// A chave no `tweaks.cfg`: `None` desligada; `Some(true)` tudo aqui; `Some(false)` a regra fica com o `clz.dll`.
 fn ligada() -> Option<bool> {
     let pasta = std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf())).unwrap_or_default();
-    let chave = |arq: &str| {
-        std::fs::read_to_string(pasta.join(arq)).ok().is_some_and(|t| {
-            t.lines().any(|l| {
-                let l = l.split('#').next().unwrap_or("");
-                l.split_once('=').is_some_and(|(k, v)| k.trim() == "manage_any_team" && matches!(v.trim(), "1" | "on"))
-            })
-        })
-    };
-    if !chave("tweaks.cfg") {
+    if !chave("tweaks.cfg", "manage_any_team") {
         return None;
     }
-    if pasta.join("clz.dll").exists() && chave("competitions.cfg") {
+    if pasta.join("clz.dll").exists() && chave("competitions.cfg", "manage_any_team") {
         registro::linha("manage any team: which teams can be taken is left to clz.dll (manage_any_team = 1 in competitions.cfg)");
         return Some(false);
     }
     Some(true)
 }
 
+/// `nome = 1` (ou `on`) no arquivo `arq` ao lado do exe.
+fn chave(arq: &str, nome: &str) -> bool {
+    let pasta = std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf())).unwrap_or_default();
+    std::fs::read_to_string(pasta.join(arq)).ok().is_some_and(|t| {
+        t.lines().any(|l| {
+            let l = l.split('#').next().unwrap_or("");
+            l.split_once('=').is_some_and(|(k, v)| k.trim() == nome && matches!(v.trim(), "1" | "on"))
+        })
+    })
+}
+
+/// As vagas de técnico nas seleções. `add_job_vacancy` (0x69ba50, thiscall(clube, anterior), ret 8) não abre vaga numa
+/// seleção cuja nação tem até 1.000 pessoas no banco (+0x88, NumberStaff; o `jle` em 0x69bae5 vai para a saída 0x69c525).
+/// O jogo a chama de 20 lugares (o começo da carreira, a rotina diária dos técnicos, as demissões, as aposentadorias...);
+/// a candidatura do humano (`apply_for_job` 0x69ca00) é a de 0x69cd41, e sem a vaga ela dava o erro de
+/// manager_manager.cpp, linha 12456 (0x69cdab). Um trecho novo no lugar do `jle`: com a marca, segue em 0x69bb08.
+/// - `manage_any_team = 1`: a marca só durante a chamada da candidatura (o botão aparece para as seleções pequenas);
+/// - `national_team_jobs = 1`: a marca sempre: todas as seleções, nas 20 chamadas, como as grandes.
+unsafe fn instalar_vagas(candidatura: bool) {
+    let todas = chave("tweaks.cfg", "national_team_jobs");
+    if !candidatura && !todas {
+        return;
+    }
+    VAGA_LIVRE = todas as u8;
+    let mut cav = Caverna::nova();
+    let flag = core::ptr::addr_of_mut!(VAGA_LIVRE) as usize;
+    let c = cav.aqui();
+    let mut k: Vec<u8> = vec![0x80, 0x3d]; // cmp byte [flag], 0
+    k.extend((flag as u32).to_le_bytes());
+    k.extend([0x00, 0x0f, 0x84]); // je 0x69c525 (a saída sem vaga)
+    k.extend(rel(c + k.len() + 4, 0x69c525));
+    k.extend(jmp(c + k.len(), 0x69bb08));
+    cav.por(&k);
+    let mut jle = vec![0x0f, 0x8e];
+    jle.extend(rel(0x69baeb, c));
+    let mut trocas = vec![(0x69bae5usize, vec![0x0f, 0x8e, 0x3a, 0x0a, 0x00, 0x00], jle)];
+    if candidatura && !todas {
+        trocas.push((0x69cd41, call(0x69cd41, 0x69ba50), call(0x69cd41, vaga_da_candidatura as *const () as usize)));
+    }
+    let lista: Vec<(usize, &[u8], &[u8])> = trocas.iter().map(|(a, b, c)| (*a, &b[..], &c[..])).collect();
+    if !crate::aplicar_trocas("national team jobs", &lista, true) {
+        return registro::linha("national team jobs: add_job_vacancy differs from 3.9.68 here; applying to a small national team may give the manager_manager.cpp error");
+    }
+    registro::linha(if todas {
+        "national team jobs: every national team can get a job vacancy (the original: only nations with more than 1,000 people)"
+    } else {
+        "national team jobs: applying for a small national team's job opens its vacancy (the other vacancies keep the original rule)"
+    });
+}
+
+static mut VAGA_LIVRE: u8 = 0;
+
+/// { 0x69cd41 } `add_job_vacancy(clube, anterior)` pedida pela candidatura: a marca só durante a chamada.
+unsafe extern "thiscall" fn vaga_da_candidatura(this: usize, clube: usize, anterior: usize) {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x69ba50usize);
+    VAGA_LIVRE = 1;
+    f(this, clube, anterior);
+    VAGA_LIVRE = 0;
+}
+
 pub(crate) unsafe fn instalar() {
-    let Some(tudo) = ligada() else { return };
+    let tudo = ligada();
+    instalar_vagas(tudo.is_some());
+    let Some(tudo) = tudo else { return };
     // os cinzentos da seleção do humano: a chamada de 0x90dc6d passa por `humano_na_selecao`
     let cinzentos = [(0x90dc6dusize, call(0x90dc6d, 0x600a50), call(0x90dc6d, humano_na_selecao as *const () as usize))];
     let lista: Vec<(usize, &[u8], &[u8])> = cinzentos.iter().map(|(a, b, c)| (*a, &b[..], &c[..])).collect();

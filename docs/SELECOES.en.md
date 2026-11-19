@@ -16,10 +16,15 @@ A forum request (17/11/2026): with a small national team (the example was Puerto
 - In the team choice, a **National teams** item at the end of the nation selector, which also shows with a single nation; with it, the list shows only national teams. The row of a national team whose nation has no continent (+0x71) crashed; now its text is empty.
 - The automatic career (`auto_setup.cfg`, the call at 0x827d0b) keeps the original rule.
 - The human manager's main national team gets grey players like a club: the call at 0x90dc6d answers "no human manager" for main national teams.
+- **Applying for the job** (1.8). The apply button now showed for small national teams, but the vacancy is another rule: `add_job_vacancy` (0x69ba50) opens no vacancy at a national team whose nation has 1,000 people or fewer in the database (the `jle` at 0x69bae5), and `apply_for_job` (0x69ca00), finding no vacancy, gave the manager_manager.cpp line 12456 error box (forum report of 11/18: Puerto Rico). Now the limit is lifted only during the application's call (0x69cd41): that national team's vacancy opens and the rest follows the original.
+
+## 2.1. Vacancies at every national team (`national_team_jobs`)
+
+The game calls `add_job_vacancy` from 20 places: the start of the career (`init_club_board_records`), the managers' daily routine (six calls), `fix_missing_jobs`, sackings, retirements, moving a club between divisions. In all of them, the national team of a nation with 1,000 people or fewer gets no vacancy, and its manager's place stays as it is. With `national_team_jobs = 1`, the limit is lifted in every call: the game opens those vacancies from the start of the career and the AI hires managers for them, taking them from clubs and other national teams, which opens vacancies in a chain. It changes the whole world, with or without the human at a national team, so it's off by default and isn't part of the application fix (which only needs one national team's vacancy). It also applies to the second set (the under-21s), which goes through the same rule.
 
 ## 3. Making permanent at a national team
 
-With `grey_signing = 1`, the Make permanent item also shows on the profile of a grey player in the human manager's national team (the manager's +0x24). It works as at a club (the person, the grey player's identity, CA and PA, personality and regen mark), with one difference: **he's called up with no club**, in the grey player's place in the list (+0xd7), with no contract and no wage. The link to the national team (+0x24 the team, +0x28 the job, 0x0b for a player, and the dates up to +0x38) is copied from a real called-up player. Any club can sign him; the retirement of anyone a year without a club and without a national team (0x7a8050) doesn't take him while he's called up.
+With `grey_signing = 1`, the Make permanent item also shows on the profile of a grey player in the human manager's national team (the manager's +0x24). It works as at a club (the person, the grey player's identity, CA and PA, personality and regen mark), with one difference: **he's called up with no club**, in the grey player's place in the list (+0xd7), with no contract and no wage. The link to the national team (+0x24 the team, +0x28 the job, 0x0b for a player, and the dates up to +0x38) is copied from a real called-up player, and the call-up is marked in +0x5e (bits 2-3: 4 main, 8 B; `staff_set_squad_flags` 0x540980), which the game checks to drop the player from the list (`national_teams_player_in_squad` 0x76da80). Up to 1.7.1 the player made permanent lacked that mark and only left the list after being called up again (forum report of 11/18). Any club can sign him; the retirement of anyone a year without a club and without a national team (0x7a8050) doesn't take him while he's called up.
 
 ## 4. The spots in the exe
 
@@ -33,6 +38,8 @@ With `grey_signing = 1`, the Make permanent item also shows on the profile of a 
 | 0x82257a | the end of the nation selector | the National teams item |
 | 0x822306, 0x822693 | the selector only with more than one nation | with one too |
 | 0x90dc6d | the human's national team with no grey players | `humano_na_selecao` |
+| 0x69bae5 (`0F 8E 3A 0A 00 00`) | `add_job_vacancy`: no vacancy at a national team of 1,000 people or fewer | new code: goes on with the mark |
+| 0x69cd41 | the application asks for the vacancy | `vaga_da_candidatura` (the mark during the call; with `national_team_jobs = 1`, the mark stays on and this spot isn't changed) |
 
 If any spot of the choice screen differs from 3.9.68, the screen stays as it is (the rule of who can be taken still applies). If 0x544820's entry differs, the key stays off and the log says why. The `jle` at 0x822696 already removed (the current NickPatcher does it) counts as compatible: the 0x822693 spot stays as it is and the rest of the screen turns on ([NICKPATCHER.en.md](NICKPATCHER.en.md)).
 
