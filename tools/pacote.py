@@ -14,7 +14,7 @@ def main():
     a = argparse.ArgumentParser()
     a.add_argument('--saida', default=os.path.join(RAIZ, 'target', 'pacote'))
     o = a.parse_args()
-    versao = re.search(r'^version = "(\d+\.\d+)', open(os.path.join(RAIZ, 'Cargo.toml'), encoding='utf-8').read(), re.M).group(1)
+    versao = re.search(r'^version = "(\d+\.\d+(?:\.[1-9]\d*)?)', open(os.path.join(RAIZ, 'Cargo.toml'), encoding='utf-8').read(), re.M).group(1)
     nome = f'CM0102-Rust-Tweaks-{versao}'
     os.makedirs(o.saida, exist_ok=True)
     arquivos = {
