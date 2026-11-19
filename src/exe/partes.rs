@@ -14,15 +14,18 @@ pub struct Parte {
 }
 
 /// O save: as entradas das três rotinas do contêiner e o começo das funções da CRT e do jogo que elas chamam; o corpo é
-/// o contêiner inteiro (zipdir.cpp), como em save/src/lib.rs.
+/// o contêiner inteiro (zipdir.cpp), como em save/src/lib.rs. A caixa de mensagem (`gui_show_message_box`, 0x5e8290), que o
+/// contêiner chama nos erros, fica fora das bordas: o NickPatcher atual (opção nova, de 11/2026) desvia a entrada dela para a
+/// seção .nick, só para calar um erro do formation.cpp, e o resto das chamadas continua na original; a LaMOHatesCD faz o mesmo
+/// em memória.
 pub const SAVE: Parte = Parte {
     nome: "save over 2 GB",
     bordas: &[
         (0x9326e0, 5), (0x933080, 5), (0x933170, 5), (0x944c94, 32), (0x944c9f, 32), (0x944cf1, 32), (0x944cff, 32),
         (0x945a09, 32), (0x945b00, 32), (0x945bfe, 32), (0x945ce6, 32), (0x946a22, 32), (0x94af9e, 32), (0x94fded, 32),
-        (0x94c552, 32), (0x90d130, 32), (0x5e8290, 32),
+        (0x94c552, 32), (0x90d130, 32),
     ],
-    assinatura_das_bordas: 0x1d251608b137c13d,
+    assinatura_das_bordas: 0x65a846bd5da8f541,
     corpo: &[(0x9326e0, 0x1180)],
     assinatura_do_corpo: 0x20103c4e062d80ac,
 };

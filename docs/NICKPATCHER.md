@@ -37,6 +37,10 @@ O quadro abaixo cruza as opções do NickPatcher com os trechos de cada ajuste, 
 
 **Seleções** (1.7): nenhuma opção do NickPatcher nem patch do MiscPatches escreve nos 9 pontos de `manage_any_team` (a entrada de `club_can_be_managed` 0x544820, a carreira automática, seis trechos da escolha do time e o teste de técnico humano na criação dos cinzentos, 0x90dc6d). A opção `manageanyteam` do NickPatcher muda outro byte da mesma rotina (0x5448aa) e não libera as seleções pequenas; as duas convivem ([SELECOES.md](SELECOES.md) §4).
 
+**O NickPatcher atual** (o de 04/11/2026, visto no exe de um jogador): duas mudanças novas caíam em pontos que o Tweaks confere, e as duas são compatíveis desde a 1.7.1:
+- um `jmp` na entrada da caixa de mensagem (`gui_show_message_box`, 0x5e8290) para a seção `.nick`, que só cala o erro "Error" do `formation.cpp` (a chamada que volta em 0x5b756a) e roda a original nas outras. O contêiner do save chama essa caixa nos erros, e ela estava nas bordas da parte do save, que por isso recusava ligar; saiu das bordas. O registro das caixas (`log = 1`) encadeia no `jmp` dele, mas, encadeado, o erro de formação que ele cala volta a aparecer [inferência: o desvio dele confere o endereço de volta, que o nosso muda];
+- o `jle` do filtro da escolha do time apagado (0x822696, `90 90`): o mesmo efeito da troca de `manage_any_team` em 0x822693 (o filtro também com uma nação só). Agora o ponto fica como o NickPatcher deixou, e o resto da tela liga.
+
 ## A NickDLL (pacotes como o CLZ)
 
 A NickDLL muda o exe em memória, depois de abrir. As que trazem a "resolução ampliada" (`"resolucao"` no `NickDLL_config.json`) cuidam da resolução: com uma resolução escolhida lá, a nossa `resolution` fica de fora. Ela também troca a rotina do time B (a disputa usa a dela, sem problema) e pode desviar a caixa de mensagem (o nosso `log` encadeia; a confirmar no jogo). Detalhes em [COMPATIBILIDADE.md](COMPATIBILIDADE.md).

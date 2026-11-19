@@ -34,7 +34,7 @@ With `grey_signing = 1`, the Make permanent item also shows on the profile of a 
 | 0x822306, 0x822693 | the selector only with more than one nation | with one too |
 | 0x90dc6d | the human's national team with no grey players | `humano_na_selecao` |
 
-If any spot of the choice screen differs from 3.9.68, the screen stays as it is (the rule of who can be taken still applies). If 0x544820's entry differs, the key stays off and the log says why.
+If any spot of the choice screen differs from 3.9.68, the screen stays as it is (the rule of who can be taken still applies). If 0x544820's entry differs, the key stays off and the log says why. The `jle` at 0x822696 already removed (the current NickPatcher does it) counts as compatible: the 0x822693 spot stays as it is and the rest of the screen turns on ([NICKPATCHER.en.md](NICKPATCHER.en.md)).
 
 **NickPatcher:** no option or MiscPatches patch writes to these spots (`tools/exe/nickpatcher_vs_tweaks.py`). Its `manageanyteam` option changes another byte of the same routine (0x5448aa, the active nation of a club with a division) and doesn't free small national teams; the two live together, because the hook calls the original first.
 

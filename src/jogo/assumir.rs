@@ -116,7 +116,10 @@ pub(crate) unsafe fn instalar() {
     }
     // o seletor também com uma nação só: o menu (0x822306) e o filtro (0x822693) comparavam [0xae2d04] com 1, agora com 0
     trocas.push((0x822306, vec![0x83, 0xf8, 0x01, 0x0f, 0x8e], vec![0x83, 0xf8, 0x00, 0x0f, 0x8e]));
-    trocas.push((0x822693, vec![0x83, 0xf8, 0x01, 0x7e, 0x0b], vec![0x83, 0xf8, 0x00, 0x7e, 0x0b]));
+    // o NickPatcher atual já apaga o `jle` do filtro (0x822696, `90 90`): o mesmo efeito; aí o ponto fica como está
+    if *(0x822696 as *const [u8; 2]) != [0x90, 0x90] {
+        trocas.push((0x822693, vec![0x83, 0xf8, 0x01, 0x7e, 0x0b], vec![0x83, 0xf8, 0x00, 0x7e, 0x0b]));
+    }
     let lista: Vec<(usize, &[u8], &[u8])> = trocas.iter().map(|(a, b, c)| (*a, &b[..], &c[..])).collect();
     if !crate::aplicar_trocas("manage any team (team choice screen)", &lista, true) {
         registro::linha("manage any team: national teams can be taken during the career, but not picked when starting one");

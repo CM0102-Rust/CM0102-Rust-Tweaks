@@ -34,7 +34,7 @@ Com `grey_signing = 1`, o item Efetivar aparece também no perfil de um cinzento
 | 0x822306, 0x822693 | o seletor só com mais de uma nação | com uma também |
 | 0x90dc6d | a seleção do humano sem cinzentos | `humano_na_selecao` |
 
-Trecho diferente do 3.9.68 em qualquer ponto da tela de escolha: a tela fica como está (a regra de quem pode ser assumido ainda vale). A entrada de 0x544820 diferente: a chave fica desligada e o log diz por quê.
+Trecho diferente do 3.9.68 em qualquer ponto da tela de escolha: a tela fica como está (a regra de quem pode ser assumido ainda vale). A entrada de 0x544820 diferente: a chave fica desligada e o log diz por quê. O `jle` de 0x822696 já apagado (o NickPatcher atual faz isso) conta como compatível: o ponto 0x822693 fica como está e o resto da tela liga ([NICKPATCHER.md](NICKPATCHER.md)).
 
 **NickPatcher:** nenhuma opção nem patch do MiscPatches escreve nesses pontos (`tools/exe/nickpatcher_vs_tweaks.py`). A opção `manageanyteam` dele muda outro byte da mesma rotina (0x5448aa, a nação ativa de um clube com divisão) e não libera as seleções pequenas; as duas convivem, porque o desvio chama a original antes.
 

@@ -37,6 +37,10 @@ The table below crosses NickPatcher's options with each tweak's code, from NickP
 
 **National teams** (1.7): no NickPatcher option or MiscPatches patch writes to the 9 spots of `manage_any_team` (the entry of `club_can_be_managed` 0x544820, the automatic career, six pieces of the team choice and the human-manager test in the grey players' creation, 0x90dc6d). NickPatcher's `manageanyteam` option changes another byte of the same routine (0x5448aa) and doesn't free small national teams; the two live together ([SELECOES.en.md](SELECOES.en.md) §4).
 
+**The current NickPatcher** (the one of 04/11/2026, seen in a player's exe): two new changes fell on spots the Tweaks checks, and both are compatible since 1.7.1:
+- a `jmp` at the entry of the message box (`gui_show_message_box`, 0x5e8290) to the `.nick` section, which only silences the "Error" box from `formation.cpp` (the call that returns at 0x5b756a) and runs the original for the others. The save container calls this box on errors, and it was among the save part's borders, which then refused to turn on; it left the borders. The message-box log (`log = 1`) chains to its `jmp`, but, chained, the formation error it silences shows again [inference: its hook checks the return address, which ours changes];
+- the team choice filter's `jle` removed (0x822696, `90 90`): the same effect as `manage_any_team`'s change at 0x822693 (the filter with a single nation too). Now that spot stays as the NickPatcher left it, and the rest of the screen turns on.
+
 ## NickDLL (packs like CLZ)
 
 NickDLL changes the exe in memory after it opens. Those with the "extended resolution" (`"resolucao"` in `NickDLL_config.json`) take care of the resolution: with a resolution chosen there, our `resolution` stays out. It also replaces the B-team routine (the contest uses its version, no problem) and may hook the message box (our `log` chains; to be confirmed in the game). Details in [COMPATIBILIDADE.en.md](COMPATIBILIDADE.en.md).
