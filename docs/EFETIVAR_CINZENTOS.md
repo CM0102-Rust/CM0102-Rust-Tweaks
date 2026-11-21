@@ -20,6 +20,7 @@ Pedido do Lucas (16/11/2026): com todos os clubes jogáveis (a CLZ.DLL libera os
 ## 2. O que acontece no jogo
 
 1. No perfil de um cinzento do seu clube aparece o botão **Action** com um item só, **Efetivar** (Make permanent). O jogo não mostra o Action para cinzentos.
+   - O cinzento precisa ser do seu clube (ou da sua seleção) pelo dono que o jogo grava nele, não só estar numa vaga do seu elenco. O original às vezes deixa a mesma linha de cinzento em dois elencos (semana com jogos continentais); até a 1.8 isso mostrava o item no perfil de cinzentos da IA, e a efetivação fazia uma cópia, deixando o cinzento lá (relato do fórum de 20/11, corrigido na 1.8.1).
 2. No clique, a DLL transforma o cinzento numa pessoa real, com os mesmos nome (e apelido), idade, nação, posições e atributos.
    - O CA fica pelo menos no nível do clube (o dos cinzentos, `grey_players = squad`).
    - O PA ganha espaço pela idade: até 18 anos, +30 a +50; de 19 a 21, +15 a +35; de 22 a 24, +5 a +20; depois, 0 a +8.
@@ -60,6 +61,7 @@ Nação com menos de 20 apelidos fica só com nome e sobrenome de uma palavra. O
 | O item no menu | 0x874a58 (`33 F6 56 6A 04`), na montagem do perfil 0x870700, logo depois do menu Action | para cinzento (`id ≥ [0xAE2364]`) do clube humano: o botão Action (`add_button_item` 0x804030), a área (`Display::add_area` 0x55fba0) e o item (`Display::add_item` 0x55f990) com o id 0x50 |
 | O clique | `staff_screens_handle_profile_action` 0x888260 (`6A FF 68 9B 2F 96 00`) | id 0x50: efetivar; o resto vai para a original |
 | O humano e o clube dele | `[0xb74c26 + 0x300 × [0xb77c7a]]`, clube em +0x39 | |
+| O dono do cinzento | +0x39 o clube (0x90e33d) ou +0x24 a seleção (0x90e330), gravados pela `create_virtual_player` | tem de ser o clube ou a seleção do humano: a `relocate_virtual_players` (0x90e9f6) pode deixar a mesma linha em dois elencos |
 | A pessoa vira regen | as duas chamadas de clube da 0x7abac0 (0x7acea2, a disputa; 0x7acf4f, a lista da nação) | devolvem 0 durante a efetivação |
 | Pôr no clube | `player_regen_sign_for_club` 0x7a6f10 | no clube humano: reservas, contrato mensal, salário padrão |
 | O contrato | `CONTRACT_MANAGER::get_contract` 0x4cf5a0 | a DLL troca o tipo para normal (+0x35, 2), o fim (+0x2d dia, +0x2f ano) e o salário (+0xc) |

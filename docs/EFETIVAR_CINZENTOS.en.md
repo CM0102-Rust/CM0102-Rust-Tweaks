@@ -20,6 +20,7 @@ Lucas's request (16/11/2026): with every club playable (CLZ.DLL opens up the sta
 ## 2. What happens in the game
 
 1. On the profile of a grey player in your club, the **Action** button appears with a single item, **Make permanent** (in Portuguese, Efetivar). The game doesn't show Action for grey players.
+   - The grey player must belong to your club (or your national team) by the owner the game writes in him, not just sit in a place of your squad. The original sometimes leaves the same grey player row in two squads (a week with continental matches); up to 1.8 this showed the item on AI grey players' profiles, and making one permanent made a copy, leaving the grey player there (forum report of 11/20, fixed in 1.8.1).
 2. On the click, the DLL turns the grey player into a real person, with the same name (and nickname), age, nation, positions and attributes.
    - His CA is at least the club's level (the grey players' one, `grey_players = squad`).
    - His PA gets room by age: up to 18, +30 to +50; 19 to 21, +15 to +35; 22 to 24, +5 to +20; after that, 0 to +8.
@@ -60,6 +61,7 @@ A nation with fewer than 20 nicknames gets only one-word first and second names.
 | The menu item | 0x874a58 (`33 F6 56 6A 04`), in the profile build 0x870700, right after the Action menu | for a grey player (`id ≥ [0xAE2364]`) of the human club: the Action button (`add_button_item` 0x804030), the area (`Display::add_area` 0x55fba0) and the item (`Display::add_item` 0x55f990) with id 0x50 |
 | The click | `staff_screens_handle_profile_action` 0x888260 (`6A FF 68 9B 2F 96 00`) | id 0x50: make permanent; the rest goes to the original |
 | The human and his club | `[0xb74c26 + 0x300 × [0xb77c7a]]`, club at +0x39 | |
+| The grey player's owner | +0x39 the club (0x90e33d) or +0x24 the national team (0x90e330), written by `create_virtual_player` | must be the human's club or national team: `relocate_virtual_players` (0x90e9f6) can leave the same row in two squads |
 | The person becomes a regen | the two club calls of 0x7abac0 (0x7acea2, the contest; 0x7acf4f, the nation list) | return 0 while making permanent |
 | Putting him in the club | `player_regen_sign_for_club` 0x7a6f10 | at a human club: reserves, monthly contract, default wage |
 | The contract | `CONTRACT_MANAGER::get_contract` 0x4cf5a0 | the DLL sets the type to normal (+0x35, 2), the end (+0x2d day, +0x2f year) and the wage (+0xc) |

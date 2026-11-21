@@ -51,12 +51,19 @@ unsafe fn times_humanos() -> [usize; 2] {
     if humano == 0 { [0, 0] } else { [d(humano + 0x39), d(humano + 0x24)] }
 }
 
-/// O cinzento `p` está no elenco (+0xd7, 50 vagas) do clube ou da seleção do técnico humano? Devolve a vaga e o time.
+/// O cinzento `p` é do clube ou da seleção do técnico humano e está no elenco (+0xd7, 50 vagas)? Devolve a vaga e o time.
+/// O dono vem do próprio cinzento (`create_virtual_player` grava o clube em +0x39, 0x90e33d, ou a seleção em +0x24,
+/// 0x90e330): a `relocate_virtual_players` (0x90e9f6) do original pode deixar a mesma linha em dois elencos (semana com
+/// jogos continentais), e só a vaga deixava efetivar o cinzento de um time da IA, que ficava lá (1.6 a 1.8).
 unsafe fn vaga_no_humano(p: usize) -> Option<(usize, usize)> {
     if p == 0 || d(p) < d(0xae2364) {
         return None;
     }
-    times_humanos().into_iter().filter(|&c| c != 0).find_map(|c| (0..50).map(|k| c + 0xd7 + 4 * k).find(|&a| d(a) == p).map(|a| (a, c)))
+    let [clube, selecao] = times_humanos();
+    [(clube, d(p + 0x39)), (selecao, d(p + 0x24))]
+        .into_iter()
+        .filter(|&(c, dono)| c != 0 && dono == c)
+        .find_map(|(c, _)| (0..50).map(|k| c + 0xd7 + 4 * k).find(|&a| d(a) == p).map(|a| (a, c)))
 }
 
 fn em_portugues() -> bool {
