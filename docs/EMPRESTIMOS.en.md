@@ -131,6 +131,15 @@ With `log = 1`, the `tick` line in `tweaks.log` shows, every game month:
 - `young_sought`: the times a youngster got the edge in a loan slot;
 - `unhappy`: the blocked starters who got upset.
 
+### 5.1 Two new options (11/23, forum report; off)
+
+The report showed whole squads on the loan list, Messi and Modric included, and Premier League players going to the 5th tier. Both causes are ours: rule B lists whoever rule A would lend, and rule A only blocks Key players and asks for cover; and rule A only checks whether the player would play at the destination, not the club's size.
+
+- `loan_list = spare`: only players the club can spare go on the list, that is, rotation status or below (3 to 7) and outside the first of their line at the owner (goalkeeper 2, defence 5, midfield 5, attack 3). `any` (the default) is the former rule B.
+- `loan_level = F`: an adult (above `loan_youth_age`) only accepts a club with reputation of at least F × his home reputation. 0 (the default) means no rule. A youngster follows the training rule.
+
+Measured (two hidden one-season careers, leagues ENG BRA ITA, with and without `loan_list = spare` and `loan_level = 0.75`): list markings fell 45% (from 86 thousand to 47 thousand), loaned players from 1,194 to 961, and adults loaned to a club with less than 75% of their reputation from 549 to 60. Not in the configurator yet.
+
 ## 6. What didn't go in, and what isn't known yet
 
 - **The blocked starter is rare** (6 cases in two seasons): a bigger club hardly ever asks for a starter on loan. To make it happen more, the way is transfers (the next study) or bigger values in the keys.

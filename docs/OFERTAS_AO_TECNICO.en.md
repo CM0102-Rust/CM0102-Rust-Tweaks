@@ -26,7 +26,9 @@ In the order the loop at 0x69ba50 tests them:
 | Interest | `staff_interest_in_job_at_club` 0x844780 | **0 in the first `(+0x59 + 8) × 15` days in the job** (420 days with 20), for any manager; 0 at a club below 2,750 of the same nation |
 | Score | `score_staff_for_job` 0x69d1b0 | the highest among the candidates; **for the human the attributes and personality part is skipped** (`id ≥ N − 16`): what's left is the reputation as the club sees it, plus 100 if he's already at the club |
 
-The manager's reputation changes only with the average match rating (`update_manager_reputation_after_match` 0x6d3610), capped by the competition's reputation: in national competitions the world one's cap is halved (at least 3,000); only continental ones let it go beyond that. Titles and promotions don't count.
+The manager's reputation changes after each match with the average rating (`update_manager_reputation_after_match` 0x6d3610), capped by the competition's reputation: in national competitions the world one's cap is halved (at least 3,000); only continental ones let it go beyond that. Titles, promotions and cups raise it too (`Staff_Records`: `add_league_champions_record` 0x868c50, `add_promotion_record` 0x869480, `add_cup_winners_record` 0x86a800), but with the same kind of cap: the league's reputation × 400 for the current and home ones. In a division of reputation 9, that's 3,600: winning in the lower divisions barely moves the reputation.
+
+The same `Staff_Records` (`[0xdd7f00]`) keeps, for each manager, a 210-byte record (`get_manager_record` 0x86f5b0) with the score the game itself works out: cups (+0x8a), league titles (+0x8c), games, wins, draws and losses (+0x8e to +0x94), and weighted achievement points (title, cup, rounds, by the competition's reputation) summed over the year (+0xb6), the season (+0xba) and, from what we see, the career (+0xca). It's the natural basis for a merit score.
 
 ## 3. Measurements
 
@@ -82,7 +84,7 @@ The `TWEAKS_LEALDADE_TECNICO=10` experiment (the humans' +0x59 at 10), two two-s
 
 The report asks for three things the game doesn't do today, and each has a cause:
 
-1. **"I won and nobody wanted me"**: the manager's reputation doesn't rise with promotions or titles (§2), and the human's even falls. Option D goes at the cause: a key for the human manager's reputation to grow with success (promotion, title, finishing above the board's expectation, continental run), through the same hook on `update_manager_reputation_after_match` 0x6d3610. With a higher reputation, the foreign and region filters pass and the score rises, without touching the selection rules.
+1. **"I won and nobody wanted me"**: the manager's reputation barely rises with promotions and titles, because of the league's cap (§2), and the human's even falls. Option D goes at the cause: a key for the human manager's reputation to grow with success (promotion, title, finishing above the board's expectation, continental run), through the same hook on `update_manager_reputation_after_match` 0x6d3610. With a higher reputation, the foreign and region filters pass and the score rises, without touching the selection rules.
 2. **"I never got an offer while employed"**: suitability. A key that treats the human as a manager of average loyalty (the human's +0x59 at 10: 270 days in the job) is the smallest change that opens the window, and touches only the 16 human places.
 3. **The human's score**, which lacks the attributes part: the bonus (B) completes the two above; on its own, it only helps the unemployed.
 
@@ -91,3 +93,14 @@ Before 2, it remains to check where else the game reads a manager's +0x59 (the s
 Suggested order: 2 (effect on the human only), then 1 (the big change, with a long test), and the bonus only if the two aren't enough. The AI keeps choosing by the same rules; the human becomes a real candidate.
 
 By the measurements, 2 alone opens the door but gives no offer: the score gap at the big clubs (4,000 to 9,000) calls for 1, reputation growing with success, or a bonus of around 5,000 to 8,000, which would be an arbitrary number. 1 is the answer the report asks for.
+
+## 5. The new logic: `manager_offers` (prototype, off)
+
+Lucas's request (11/23): change the logic instead of inflating values. The vacancy contest mixes two questions, and the prototype (`src/jogo/ofertas.rs`) separates them for human managers:
+
+- **"Would he come?"** (the manager's side: the interest 0x844780, the first year in the job, the requirement to move up in 0x69f810). For the human, the player answers when the offer arrives. With the key, the human's suitability in the two candidate loops of 0x69ba50 (the calls at 0x69bdf7 and 0x69bf77) is only a brake: being unemployed, or the vacancy being at a club with a higher reputation than his current one.
+- **"Does the club want him?"** (the score 0x69d1b0, called at 0x69be55). For the human, the attributes part the game skips becomes a merit score, from 0 to 6,000, from what the game itself records: 50% the current club's board confidence (the 0x49-byte record of MANAGER_MANAGER, +6 to +0xc, from 2,000 to 10,000), 30% the win rate (from 20% to 60% wins, with at least 10 games) and 20% the titles and cups (the manager's 210-byte record, +0x8c and +0x8a).
+
+The club's filters (foreign, region, running leagues) and national team vacancies stay as in the original. The key is `manager_offers = 1` in `tweaks.cfg`; without it, nothing changes. It's not in the configurator yet.
+
+**Measured** (two hidden two-season careers, 11/23, managers of Italian Serie C clubs with weak campaigns): employed, the human became a candidate for the vacancies at Napoli, Vicenza, Genoa, Triestina and Pistoiese (blocked by suitability before); his score rose from ~3,500 to 6,200 to 6,500; he won the Catania and Brescello vacancies and lost the big clubs' to managers with reputation 6,000 to 8,000, consistent with the campaign. **Still to do:** a career with a successful human manager (the automatic career wins nothing) and Lucas's decision on the scale and weights.

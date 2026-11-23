@@ -26,7 +26,9 @@ Na ordem em que o laço de 0x69ba50 testa:
 | Interesse | `staff_interest_in_job_at_club` 0x844780 | **0 nos primeiros `(+0x59 + 8) × 15` dias no cargo** (420 dias com 20), para qualquer técnico; 0 em clube abaixo de 2.750 da mesma nação |
 | Nota | `score_staff_for_job` 0x69d1b0 | a maior entre os candidatos; **para o humano a parte de atributos e personalidade é pulada** (`id ≥ N − 16`): sobra a reputação vista pelo clube, mais 100 se ele já for do clube |
 
-A reputação do técnico muda só pela nota média das partidas (`update_manager_reputation_after_match` 0x6d3610), com teto pela reputação da competição: nas competições nacionais o teto da mundial cai à metade (no mínimo 3.000); só as continentais a deixam passar disso. Título e acesso não entram na conta.
+A reputação do técnico muda a cada partida pela nota média (`update_manager_reputation_after_match` 0x6d3610), com teto pela reputação da competição: nas competições nacionais o teto da mundial cai à metade (no mínimo 3.000); só as continentais a deixam passar disso. Título, acesso e taça também a sobem (`Staff_Records`: `add_league_champions_record` 0x868c50, `add_promotion_record` 0x869480, `add_cup_winners_record` 0x86a800), mas com o mesmo tipo de teto: a reputação da liga × 400 na atual e na de casa. Numa divisão de reputação 9, isso dá 3.600: vencer nas divisões baixas quase não mexe na reputação.
+
+O mesmo `Staff_Records` (`[0xdd7f00]`) guarda, para cada técnico, um registro de 210 bytes (`get_manager_record` 0x86f5b0) com o placar que o próprio jogo calcula: taças (+0x8a), títulos de liga (+0x8c), jogos, vitórias, empates e derrotas (+0x8e a +0x94), e pontos ponderados de conquistas (título, taça, fases, pela reputação da competição) somados no ano (+0xb6), na temporada (+0xba) e, pelo que se vê, na carreira (+0xca). É a base natural para uma nota por mérito.
 
 ## 3. Medições
 
@@ -82,7 +84,7 @@ O experimento `TWEAKS_LEALDADE_TECNICO=10` (o +0x59 dos humanos em 10), duas car
 
 O relato pede três coisas que hoje o jogo não faz, e cada uma tem uma causa:
 
-1. **"Ganhei e ninguém me quis"**: a reputação do técnico não sobe com acesso nem com título (§2), e a do humano chega a cair. A opção D ataca a causa: uma chave para a reputação do técnico humano crescer com o sucesso (acesso, título, posição acima da expectativa da diretoria, fase continental), pelo mesmo desvio de `update_manager_reputation_after_match` 0x6d3610. Com reputação maior, os filtros de estrangeiro e região passam e a nota sobe, sem mexer nas regras de escolha.
+1. **"Ganhei e ninguém me quis"**: a reputação do técnico sobe pouco com acesso e título, pelo teto da liga (§2), e a do humano chega a cair. A opção D ataca a causa: uma chave para a reputação do técnico humano crescer com o sucesso (acesso, título, posição acima da expectativa da diretoria, fase continental), pelo mesmo desvio de `update_manager_reputation_after_match` 0x6d3610. Com reputação maior, os filtros de estrangeiro e região passam e a nota sobe, sem mexer nas regras de escolha.
 2. **"Nunca recebi proposta enquanto empregado"**: a adequação. Uma chave que trate o humano como um técnico de lealdade média (o +0x59 do humano em 10: 270 dias no cargo) é a menor mudança que abre a janela, e mexe só nos 16 lugares de humano.
 3. **A nota do humano**, que não tem a parte de atributos: o bônus (B) completa as duas acima; sozinho, só ajuda o desempregado.
 
@@ -91,3 +93,14 @@ Antes da 2, falta conferir onde mais o jogo lê o +0x59 de um técnico (a adequa
 Ordem sugerida: 2 (efeito só no humano), depois 1 (a mudança grande, com teste longo), e o bônus só se as duas não bastarem. A IA continua escolhendo pelas mesmas regras; o humano passa a ser candidato de verdade.
 
 Pelas medições, a 2 sozinha abre a porta mas não dá proposta: a diferença de nota nos clubes grandes (4.000 a 9.000) pede a 1, a reputação que cresce com o sucesso, ou um bônus da ordem de 5.000 a 8.000, que seria um número arbitrário. A 1 é a resposta que o relato pede.
+
+## 5. A lógica nova: `manager_offers` (protótipo, desligado)
+
+Pedido do Lucas (23/11): mudar a lógica em vez de inflar valores. A disputa da vaga mistura duas perguntas, e o protótipo (`src/jogo/ofertas.rs`) separa as duas para os técnicos humanos:
+
+- **"Ele aceitaria vir?"** (o lado do técnico: o interesse 0x844780, o primeiro ano no cargo, a exigência de subir em 0x69f810). Para o humano quem responde é o jogador, ao receber a proposta. Com a chave, a adequação do humano nos dois laços de candidatos de 0x69ba50 (as chamadas em 0x69bdf7 e 0x69bf77) é só um freio: estar desempregado, ou a vaga ser num clube de reputação maior que a do atual.
+- **"O clube o quer?"** (a nota 0x69d1b0, chamada em 0x69be55). Para o humano, a parte de atributos que o jogo pula vira uma nota por mérito, de 0 a 6.000, com o que o próprio jogo registra: 50% da confiança da diretoria do clube atual (o registro de 0x49 bytes do MANAGER_MANAGER, +6 a +0xc, de 2.000 a 10.000), 30% do aproveitamento (de 20% a 60% de vitórias, com pelo menos 10 jogos) e 20% dos títulos e taças (o registro de 210 bytes do técnico, +0x8c e +0x8a).
+
+Os filtros do clube (estrangeiro, região, ligas em andamento) e as vagas de seleção ficam como no original. A chave é `manager_offers = 1` no `tweaks.cfg`; sem ela, nada muda. Ainda não está no configurador.
+
+**Medido** (duas carreiras escondidas de duas temporadas, 23/11, técnicos de clubes da Série C italiana com campanhas fracas): empregado, o humano passou a ser candidato às vagas de Napoli, Vicenza, Genoa, Triestina e Pistoiese (antes barrado pela adequação); a nota dele subiu de ~3.500 para 6.200 a 6.500; venceu as vagas do Catania e do Brescello e perdeu as dos clubes grandes para técnicos de reputação 6.000 a 8.000, coerente com a campanha. **Falta:** uma carreira com técnico humano bem-sucedido (a carreira automática não ganha nada) e a decisão do Lucas sobre a escala e os pesos.

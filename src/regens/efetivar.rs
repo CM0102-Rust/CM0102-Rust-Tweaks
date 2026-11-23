@@ -319,6 +319,9 @@ static mut T_CINZENTO: usize = 0;
 unsafe extern "thiscall" fn cinzento(this: usize, clube: usize, a2: usize, id: usize, a4: usize, a5: usize, a6: usize, a7: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize) = core::mem::transmute(T_CINZENTO);
     f(this, clube, a2, id, a4, a5, a6, a7);
+    if crate::cinzentos::MOLDE && clube >= 0x10000 && d(0xae23c4) != 0 {
+        crate::cinzentos::molde_do_nivel(clube, a2 as u8, d(0xae23c4) + 0x46 * a4);
+    }
     let nacao = d(clube + 0x53);
     if clube < 0x10000 || nacao == 0 {
         return;
@@ -351,7 +354,7 @@ unsafe fn alvo_do_call(em: usize) -> Option<usize> {
 pub(crate) unsafe fn instalar() {
     ler();
     // o desvio da criação do cinzento serve às duas chaves: o nome que não repete o do efetivado e o apelido
-    if LIGADO || APELIDO {
+    if LIGADO || APELIDO || crate::cinzentos::MOLDE {
         match crate::origem::trampolim(0x90e0a0, &[0x6a, 0xff, 0x68, 0xa0, 0x55, 0x96, 0x00], cinzento as *const () as usize) {
             Some(t) => T_CINZENTO = t,
             None => {

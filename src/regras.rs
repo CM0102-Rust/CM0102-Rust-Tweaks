@@ -86,6 +86,9 @@ pub(crate) struct Regras {
     pub(crate) cinzentos_surpresa: i32,
     pub(crate) cinzentos_surpresa_min: i32,
     pub(crate) cinzentos_surpresa_max: i32,
+    /// grey_players_template = level: o molde dos atributos do cinzento sai entre os naturais da posição com CA perto do
+    /// dele; original = qualquer natural da posição (o jogo).
+    pub(crate) cinzentos_molde: bool,
     /// regen_names = own: a nação usa os próprios nomes a partir de `nomes_minimo` (a original, só acima de 100).
     pub(crate) nomes: bool,
     pub(crate) nomes_minimo: i32,
@@ -141,6 +144,7 @@ pub(crate) const PADRAO: Regras = Regras {
     cinzentos_surpresa: 5,
     cinzentos_surpresa_min: 15,
     cinzentos_surpresa_max: 35,
+    cinzentos_molde: false,
     nomes: false,
     nomes_minimo: 20,
 };
@@ -216,6 +220,10 @@ pub(crate) fn ler_regras() -> Regras {
         }
         if k == "regen_names" {
             r.nomes = v == "own"; // regen_names = original | own
+            continue;
+        }
+        if k == "grey_players_template" {
+            r.cinzentos_molde = v == "level";
             continue;
         }
         if k == "grey_players" {

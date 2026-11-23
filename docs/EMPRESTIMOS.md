@@ -131,6 +131,15 @@ Com `log = 1`, a linha `tick` do `tweaks.log` traz, a cada mês do jogo:
 - `young_sought`: as vezes em que um jovem levou vantagem numa vaga de empréstimo;
 - `unhappy`: os titulares barrados que ficaram chateados.
 
+### 5.1 Duas opções novas (23/11, relato do fórum; desligadas)
+
+O relato mostrou elencos inteiros na lista de empréstimos, Messi e Modric inclusive, e jogadores da Premier League indo para a quinta divisão. As duas causas são nossas: a regra B lista quem a regra A emprestaria, e a regra A só barra o Key e exige cobertura; e a regra A olha só se o jogador jogaria no destino, não o tamanho do clube.
+
+- `loan_list = spare`: só entra na lista quem sobra no próprio clube, ou seja, estatuto de rotação para baixo (3 a 7) e fora dos primeiros da linha dele no dono (goleiro 2, defesa 5, meio 5, ataque 3). `any` (o padrão) é a regra B de antes.
+- `loan_level = F`: o adulto (acima de `loan_youth_age`) só aceita um clube com reputação de pelo menos F × a reputação em casa dele. 0 (o padrão) é sem a regra. O jovem segue a regra do treino.
+
+Medido (duas carreiras escondidas de uma temporada, ligas ENG BRA ITA, com e sem `loan_list = spare` e `loan_level = 0.75`): as marcações na lista caíram 45% (de 86 mil para 47 mil), os emprestados de 1.194 para 961, e os adultos emprestados a um clube com menos de 75% da reputação deles de 549 para 60. Ainda fora do configurador.
+
 ## 6. O que não entrou, e o que ainda não se sabe
 
 - **O titular barrado é raro** (6 casos em duas temporadas): o clube maior quase nunca pede um titular emprestado. Para que ele aconteça mais, o caminho são as transferências (o próximo estudo) ou valores maiores nas chaves.

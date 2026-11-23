@@ -100,6 +100,11 @@ struct M {
     estr_banco: f64,
     estr_folga: i32,
     estr_emp: bool,
+    /// loan_list = spare (B): só entra na lista quem sobra no próprio clube (rotação para baixo e fora dos SOBRA primeiros
+    /// da linha); any = a regra B de antes (quem a regra A emprestaria).
+    lista_sobra: bool,
+    /// loan_level (A): o adulto só vai para um clube com reputação ≥ isso × a reputação em casa dele (0 = sem a regra).
+    emp_nivel: f64,
 }
 
 static mut C: M = M { jovem_aceita: false, jovem_lista: false, jovem_idade: 21, jovem_gap: 30, jovem_rep: 0.75, destaque: 1.0,
@@ -107,7 +112,7 @@ static mut C: M = M { jovem_aceita: false, jovem_lista: false, jovem_idade: 21, 
     emp_regra: false, lista_emp: false, idade_rodagem: 21, vaga_jovem: 2, vaga_outros: 2, treino_folga: 3, cobertura_min: 2,
     cobertura_reserva: 1, cobertura_ratio: 0.9, vontade_pedido: 3.5, pedido_div: 2, fator_casa: 1.0, fator_minutos: 1.0,
     insatisfacao: 0, insat_dif: 1000, sem_teto_nacao: false, procura_jovem: 1.0, elenco_min: 0, dest_rep: 0.0, dest_procura: 1.0, dest_jogos: 8, dest_min: 1.0, porta: 3.15, cont_dev: 0.2, cont_europa: 0.4, lista_verba: 0.0, lista_teto: 0.0, estr_usa: 0, estr_bra: 0,
-    estr_jogo: false, estr_custo: 0.25, estr_banco: 0.25, estr_folga: 1, estr_emp: false };
+    estr_jogo: false, estr_custo: 0.25, estr_banco: 0.25, estr_folga: 1, estr_emp: false, lista_sobra: false, emp_nivel: 0.0 };
 static PROCURADOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 static DESTACADOS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 static BONUS_REP: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
@@ -189,6 +194,16 @@ unsafe fn volta_para_casa(p: usize, dono: usize, destino: usize) -> bool {
     n != 0 && nacao(d(destino + 0x53)) == n && nacao(d(dono + 0x53)) != n
 }
 
+/// Os primeiros da linha que o dono nunca põe na lista (goleiro, defesa, meio, ataque): os titulares e um a mais.
+const SOBRA: [i32; 4] = [2, 5, 5, 3];
+
+/// loan_list = spare: o jogador sobra no próprio clube? Rotação ou abaixo (estatuto 3 a 7) e fora dos SOBRA primeiros da
+/// linha dele no dono.
+unsafe fn sobra(dono: usize, p: usize, k: usize) -> bool {
+    let st = (*((k + 0x4f) as *const u8) >> 4) as i32;
+    st >= 3 && posto(dono, p) > SOBRA[linha(d(p + 0x61))]
+}
+
 /// A regra A sem o destino: o dono da IA aceitaria emprestar este jogador (contrato `k`)? `casa` relaxa a cobertura.
 unsafe fn emprestavel(dono: usize, p: usize, k: usize, casa: bool) -> bool {
     let st = (*((k + 0x4f) as *const u8) >> 4) as i32;
@@ -224,6 +239,10 @@ unsafe fn regra_a(dono: usize, p: usize, destino: usize) -> Option<u8> {
         return Some(2);
     }
     if jovem && !casa && (b(destino + 0x7f) as i32) < b(dono + 0x7f) as i32 - C.treino_folga {
+        return Some(2);
+    }
+    // loan_level: o adulto não desce para um clube muito menor que ele (a reputação do clube contra a dele em casa)
+    if !jovem && C.emp_nivel > 0.0 && (w(destino + 0x80) as f64) < C.emp_nivel * w(d(p + 0x61) + 0xb) as f64 {
         return Some(2);
     }
     Some(0)
@@ -652,7 +671,8 @@ unsafe extern "thiscall" fn avaliar(t: usize, entrada: usize, clube: usize, diar
             continue;
         }
         let lista = (C.jovem_lista && jovem(p, clube, k)) || (C.lista_emp && d(p + 0x61) != 0 && d(p + 0x39) == clube
-            && *((k + 0x35) as *const u8) & 0x3f == 2 && *((k + 0x49) as *const u8) == 0 && emprestavel(clube, p, k, false));
+            && *((k + 0x35) as *const u8) & 0x3f == 2 && *((k + 0x49) as *const u8) == 0 && emprestavel(clube, p, k, false)
+            && (!C.lista_sobra || sobra(clube, p, k)));
         if lista {
             *((k + 0x4e) as *mut u8) |= 2;
             LISTADOS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
@@ -808,6 +828,8 @@ fn ler_cfg(original: M) -> M {
             "loan_youth_demand" => c.procura_jovem = num(c.procura_jovem, 0.1, 10.0),
             // felicidade do contrato (−100 a 100) que o titular perde quando o dono recusa o empréstimo para um clube maior
             "loan_unhappiness" => c.insatisfacao = num(c.insatisfacao as f64, 0.0, 200.0) as i32,
+            "loan_list" => c.lista_sobra = v == "spare",
+            "loan_level" => c.emp_nivel = num(c.emp_nivel, 0.0, 2.0),
             "loan_unhappiness_gap" => c.insat_dif = num(c.insat_dif as f64, 0.0, 10000.0) as i32,
             _ => {}
         }

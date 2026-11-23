@@ -492,8 +492,10 @@ unsafe fn humano(p: usize) -> bool {
     p != 0 && d(p) + 16 >= n && d(p) < n && b(p + 0x5f) == 1
 }
 
+static mut T_NOTA_ESTUDO: usize = 0x69d1b0;
+
 unsafe extern "thiscall" fn nota(this: usize, p: usize, clube: usize, visto: usize, cargo: u32) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(0x69d1b0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(T_NOTA_ESTUDO);
     let mut n = f(this, p, clube, visto, cargo);
     if BONUS != 0 && n > -10000 && humano(p) {
         n += BONUS;
@@ -502,6 +504,30 @@ unsafe extern "thiscall" fn nota(this: usize, p: usize, clube: usize, visto: usi
         MELHOR = (n, p);
     }
     n
+}
+
+/// O registro do técnico (210 bytes; `Staff_Records::get_manager_record` 0x86f5b0, sem criar): taças, títulos, jogos,
+/// vitórias e os pontos ponderados (+0xb6 o ano, +0xba a temporada, +0xca a carreira), em texto para o tsv.
+unsafe fn registro_tecnico(p: usize) -> String {
+    let sr = d(0xdd7f00);
+    if sr == 0 || p == 0 {
+        return "\t\t\t\t\t\t".into();
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let r = f(sr, p, 0);
+    if r == 0 {
+        return "\t\t\t\t\t\t".into();
+    }
+    format!("{}\t{}\t{}\t{}\t{}\t{}\t{}", w(r + 0x8a), w(r + 0x8c), w(r + 0x8e), w(r + 0x90), d(r + 0xb6) as i32, d(r + 0xba) as i32, d(r + 0xca) as i32)
+}
+
+/// As quatro notas da diretoria do clube `c` (o registro de 0x49 bytes do MANAGER_MANAGER), em texto para o tsv.
+unsafe fn diretoria(mm: usize, c: usize) -> String {
+    if mm == 0 || d(mm) == 0 || c == 0 {
+        return "\t\t\t".into();
+    }
+    let r = d(mm) + d(c) * 0x49;
+    format!("{}\t{}\t{}\t{}", w(r + 6), w(r + 8), w(r + 0xa), w(r + 0xc))
 }
 
 unsafe extern "thiscall" fn vaga(this: usize, clube: usize, anterior: usize) {
@@ -527,8 +553,10 @@ unsafe extern "thiscall" fn vaga(this: usize, clube: usize, anterior: usize) {
         return;
     }
     let jogavel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
-    let adequado: unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8 = core::mem::transmute(0x69f810usize);
-    let pontuar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(0x69d1b0usize);
+    // as chamadas do laço (a original, ou o `manager_offers` por cima): a adequação de 0x69bdf7 e a nota de antes do estudo
+    let alvo_adequacao = 0x69bdfcusize.wrapping_add(core::ptr::read_unaligned(0x69bdf8 as *const i32) as usize);
+    let adequado: unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8 = core::mem::transmute(alvo_adequacao);
+    let pontuar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(T_NOTA_ESTUDO);
     let nacao_clube = d(clube + 0x53);
     let rep_clube = w(clube + 0x80);
     let mut linhas = Vec::new();
@@ -571,12 +599,12 @@ unsafe extern "thiscall" fn vaga(this: usize, clube: usize, anterior: usize) {
         let lealdade = b(t + 0x59) as i32;
         let div = |c: usize| if d(c + 0x57) != 0 { w(d(c + 0x57) + 0x69) } else { -1 };
         let (meu_nome, meu_rep, meu_div) = if meu != 0 { (nome(meu), w(meu + 0x80), div(meu)) } else { (String::new(), 0, -1) };
-        linhas.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:#x}\t{:.2}\t{}\t{}\t{}",
+        linhas.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:#x}\t{:.2}\t{}\t{}\t{}\t{}\t{}\t{}",
             crate::data_do_jogo(), d(clube), nome(clube), rep_clube, div(clube), d(t), atual, casa, mundial, mesma_nacao as u8,
             mesmo_continente as u8, ok_adequado as u8, meu_nome, meu_rep, meu_div, p, melhor, vid, vrep,
-            if nacao != 0 { d(nacao) as i64 } else { -1 }, ih, bits, iv, dias, (lealdade + 8) * 15, barrado));
+            if nacao != 0 { d(nacao) as i64 } else { -1 }, ih, bits, iv, dias, (lealdade + 8) * 15, registro_tecnico(t), registro_tecnico(venc), diretoria(this, meu), barrado));
     }
-    gravar("estudo_vagas.tsv", "date\tclub_id\tclub\tclub_rep\tclub_div_rep\thuman_id\trep_current\trep_home\trep_world\tsame_nation\tsame_continent\tsuitable\thuman_club\thuman_club_rep\thuman_div_rep\thuman_score\tbest_score\twinner_id\twinner_rep\thuman_nation\tinterest\tinterest_bits\twinner_interest\tdays_in_job\tdays_needed\tresult", &linhas);
+    gravar("estudo_vagas.tsv", "date\tclub_id\tclub\tclub_rep\tclub_div_rep\thuman_id\trep_current\trep_home\trep_world\tsame_nation\tsame_continent\tsuitable\thuman_club\thuman_club_rep\thuman_div_rep\thuman_score\tbest_score\twinner_id\twinner_rep\thuman_nation\tinterest\tinterest_bits\twinner_interest\tdays_in_job\tdays_needed\th_cups\th_titles\th_games\th_wins\th_pts_year\th_pts_season\th_pts_career\tw_cups\tw_titles\tw_games\tw_wins\tw_pts_year\tw_pts_season\tw_pts_career\tboard_6\tboard_8\tboard_a\tboard_c\tresult", &linhas);
 }
 
 pub(crate) unsafe fn instalar_vagas() {
@@ -588,8 +616,10 @@ pub(crate) unsafe fn instalar_vagas() {
     }
     LEALDADE = std::env::var("TWEAKS_LEALDADE_TECNICO").ok().and_then(|v| v.trim().parse().ok());
     BONUS = std::env::var("TWEAKS_BONUS_TECNICO").ok().and_then(|v| v.trim().parse().ok()).unwrap_or(0);
-    let chama = *(0x69be55 as *const u8) == 0xe8 && 0x69be5ausize.wrapping_add(core::ptr::read_unaligned(0x69be56 as *const i32) as usize) == 0x69d1b0;
-    if !chama {
+    let chama = *(0x69be55 as *const u8) == 0xe8;
+    if chama {
+        T_NOTA_ESTUDO = 0x69be5ausize.wrapping_add(core::ptr::read_unaligned(0x69be56 as *const i32) as usize);
+    } else {
         return registro::linha("study: the vacancy loop's score call (0x69be55) differs; no vacancy study");
     }
     match crate::origem::trampolim(0x69ba50, &[0x6a, 0xff, 0x68, 0xa0, 0xcc, 0x95, 0x00], vaga as *const () as usize) {

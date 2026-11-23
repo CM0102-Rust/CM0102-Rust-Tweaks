@@ -38,7 +38,7 @@ fn ligada() -> Option<bool> {
 }
 
 /// `nome = 1` (ou `on`) no arquivo `arq` ao lado do exe.
-fn chave(arq: &str, nome: &str) -> bool {
+pub(crate) fn chave(arq: &str, nome: &str) -> bool {
     let pasta = std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf())).unwrap_or_default();
     std::fs::read_to_string(pasta.join(arq)).ok().is_some_and(|t| {
         t.lines().any(|l| {
