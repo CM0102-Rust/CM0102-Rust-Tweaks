@@ -4,6 +4,7 @@
 //!   o estádio (capacidade, teto de expansão) e a competição (id, reputação);
 //! - `estudo_jogadores.tsv`, em julho: cada jogador em clube de competição com idade, CA, PA, reputações e o clube;
 //! - `estudo_mudancas.tsv`, todo mês: quem mudou de clube desde o mês anterior (de, para, as reputações e o CA).
+//! - `estudo_vagas.tsv`, a cada vaga de técnico de clube: o que barra cada técnico humano e a nota dele contra a do vencedor (docs/OFERTAS_AO_TECNICO.md).
 //! ponytail: leitura sem trava de outra linha de execução, como a linha `season`; desvios nas rotinas só se a foto mensal
 //! não bastar para os estudos.
 
@@ -209,6 +210,7 @@ pub(crate) unsafe fn instalar() {
     }
     instalar_conferencia();
     instalar_mercado();
+    instalar_vagas();
 }
 
 unsafe fn elenco_repetido(c: usize) -> Vec<usize> {
@@ -467,4 +469,127 @@ pub(crate) unsafe fn instalar_mercado() {
         None => registro::linha("study: 0x8cb810 differs; completed transfers not watched"),
     }
     registro::linha("study: watching transfer and loan decisions (0x84af00) and completed transfers (0x8cb810)");
+}
+
+// ---- As vagas de técnico (estudo das propostas ao humano; docs/OFERTAS_AO_TECNICO.md) ----
+// `add_job_vacancy` 0x69ba50 escolhe o técnico de uma vaga: percorre todas as pessoas, filtra e fica com a maior nota de
+// `score_staff_for_job` 0x69d1b0 (a chamada do laço principal em 0x69be55). Se o escolhido é humano, sai a proposta
+// (0x6a4f80, pelo `daily_update`). Uma linha por vaga de clube e por humano ativo (os 16 últimos da tabela com +0x5f = 1)
+// em `estudo_vagas.tsv`: os filtros do laço, a adequação (0x69f810), o interesse dele (0x844780), a nota dele e a do
+// vencedor. `TWEAKS_REP_TECNICO=atual,casa,mundial` (+8, +0xa, +0xc do registro +0x69) põe essas reputações nos humanos a
+// cada vaga, para simular um técnico de sucesso. ponytail: chama as rotinas do jogo para o humano de novo (só no estudo).
+
+static mut T_VAGA: usize = 0;
+static mut MELHOR: (i32, usize) = (i32::MIN, 0);
+static mut REP_FORCADA: Option<[i16; 3]> = None;
+/// `TWEAKS_BONUS_TECNICO=N`: soma N à nota do humano no laço das vagas (o experimento da opção B).
+static mut BONUS: i32 = 0;
+
+unsafe fn humano(p: usize) -> bool {
+    let n = d(0xae2364);
+    p != 0 && d(p) + 16 >= n && d(p) < n && b(p + 0x5f) == 1
+}
+
+unsafe extern "thiscall" fn nota(this: usize, p: usize, clube: usize, visto: usize, cargo: u32) -> i32 {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(0x69d1b0usize);
+    let mut n = f(this, p, clube, visto, cargo);
+    if BONUS != 0 && n > -10000 && humano(p) {
+        n += BONUS;
+    }
+    if n > MELHOR.0 {
+        MELHOR = (n, p);
+    }
+    n
+}
+
+unsafe extern "thiscall" fn vaga(this: usize, clube: usize, anterior: usize) {
+    MELHOR = (i32::MIN, 0);
+    let (base, n) = (d(0xae23bc), d(0xae2364));
+    let humanos: Vec<usize> = (0..16usize.min(n)).map(|i| base + (n - 1 - i) * 0x6e).filter(|&t| b(t + 0x5f) == 1 && d(t + 0x69) != 0).collect();
+    if let Some(r) = REP_FORCADA {
+        for &t in &humanos {
+            for (k, o) in [8usize, 0xa, 0xc].into_iter().enumerate() {
+                *((d(t + 0x69) + o) as *mut i16) = r[k];
+            }
+        }
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(T_VAGA);
+    f(this, clube, anterior);
+    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b900usize);
+    if clube == 0 || selecao(clube) != 0 {
+        return;
+    }
+    let jogavel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
+    let adequado: unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8 = core::mem::transmute(0x69f810usize);
+    let pontuar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> i32 = core::mem::transmute(0x69d1b0usize);
+    let nacao_clube = d(clube + 0x53);
+    let rep_clube = w(clube + 0x80);
+    let mut linhas = Vec::new();
+    for t in humanos {
+        if d(t + 0x39) == clube {
+            continue;
+        }
+        let r = d(t + 0x69);
+        let (atual, casa, mundial) = (w(r + 8), w(r + 0xa), w(r + 0xc));
+        let nacao = d(t + 0x1a);
+        let mesma_nacao = nacao != 0 && nacao == nacao_clube;
+        let mesmo_continente = nacao != 0 && nacao_clube != 0 && b(nacao + 0x75) == b(nacao_clube + 0x75);
+        let f_nacao = mesma_nacao || casa > 0xea5;
+        let f_continente = mesmo_continente || (mundial > 0x1099 && rep_clube > 0x128d);
+        let ok_jogavel = jogavel(clube) != 0;
+        let ok_adequado = adequado(this, t, clube, 3.5) != 0;
+        let p = pontuar(this, t, clube, 0, 5) + if BONUS != 0 { BONUS } else { 0 };
+        let (melhor, venc) = MELHOR;
+        let (vid, vrep) = if venc != 0 && d(venc + 0x69) != 0 { (d(venc) as i64, w(d(venc + 0x69) + 8)) } else { (-1, 0) };
+        let barrado = if !ok_jogavel {
+            "club not manageable"
+        } else if !f_nacao {
+            "foreign: home rep"
+        } else if !f_continente {
+            "other continent: world rep"
+        } else if !ok_adequado {
+            "suitability"
+        } else if p < melhor {
+            "lower score"
+        } else {
+            "WINS"
+        };
+        let interesse: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut u32) -> f32 = core::mem::transmute(0x844780usize);
+        let lista = d(d(0xde1f54) + 0x856);
+        let meu = d(t + 0x39);
+        let mut bits = 0u32;
+        let ih = if lista != 0 { interesse(lista, t, clube, 0, 5, &mut bits) } else { -1.0 };
+        let iv = if lista != 0 && venc != 0 { interesse(lista, venc, clube, 0, 5, core::ptr::null_mut()) } else { -1.0 };
+        let dias = (w(0xae2c92) as i32 - *((t + 0x40) as *const u16) as i32) * 365 - w(t + 0x3e) as i32 + w(0xae2c90) as i32;
+        let lealdade = b(t + 0x59) as i32;
+        let div = |c: usize| if d(c + 0x57) != 0 { w(d(c + 0x57) + 0x69) } else { -1 };
+        let (meu_nome, meu_rep, meu_div) = if meu != 0 { (nome(meu), w(meu + 0x80), div(meu)) } else { (String::new(), 0, -1) };
+        linhas.push(format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:#x}\t{:.2}\t{}\t{}\t{}",
+            crate::data_do_jogo(), d(clube), nome(clube), rep_clube, div(clube), d(t), atual, casa, mundial, mesma_nacao as u8,
+            mesmo_continente as u8, ok_adequado as u8, meu_nome, meu_rep, meu_div, p, melhor, vid, vrep,
+            if nacao != 0 { d(nacao) as i64 } else { -1 }, ih, bits, iv, dias, (lealdade + 8) * 15, barrado));
+    }
+    gravar("estudo_vagas.tsv", "date\tclub_id\tclub\tclub_rep\tclub_div_rep\thuman_id\trep_current\trep_home\trep_world\tsame_nation\tsame_continent\tsuitable\thuman_club\thuman_club_rep\thuman_div_rep\thuman_score\tbest_score\twinner_id\twinner_rep\thuman_nation\tinterest\tinterest_bits\twinner_interest\tdays_in_job\tdays_needed\tresult", &linhas);
+}
+
+pub(crate) unsafe fn instalar_vagas() {
+    if let Ok(v) = std::env::var("TWEAKS_REP_TECNICO") {
+        let r: Vec<i16> = v.split(',').filter_map(|x| x.trim().parse().ok()).collect();
+        if r.len() == 3 {
+            REP_FORCADA = Some([r[0], r[1], r[2]]);
+        }
+    }
+    BONUS = std::env::var("TWEAKS_BONUS_TECNICO").ok().and_then(|v| v.trim().parse().ok()).unwrap_or(0);
+    let chama = *(0x69be55 as *const u8) == 0xe8 && 0x69be5ausize.wrapping_add(core::ptr::read_unaligned(0x69be56 as *const i32) as usize) == 0x69d1b0;
+    if !chama {
+        return registro::linha("study: the vacancy loop's score call (0x69be55) differs; no vacancy study");
+    }
+    match crate::origem::trampolim(0x69ba50, &[0x6a, 0xff, 0x68, 0xa0, 0xcc, 0x95, 0x00], vaga as *const () as usize) {
+        Some(t) => {
+            T_VAGA = t;
+            chamar(0x69be55, nota as *const () as usize);
+            registro::linha(&format!("study: manager vacancies to estudo_vagas.tsv (forced human reputations: {:?}; human score bonus {})", { REP_FORCADA }, { BONUS }));
+        }
+        None => registro::linha("study: add_job_vacancy 0x69ba50 differs; no vacancy study"),
+    }
 }
