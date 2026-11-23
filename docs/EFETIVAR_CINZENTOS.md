@@ -84,11 +84,11 @@ A surpresa dos cinzentos (`grey_players_surprise`, 5%, +15 a +35 de CA acima do 
 
 Na seleção do técnico humano (com `manage_any_team = 1`), o efetivado fica sem clube e convocado, sem contrato: ver [SELECOES.md](SELECOES.md) §3.
 
-### 6.1 O molde pelo nível (`grey_players_template = level`, desligado)
+### 6.1 O molde pelo nível (`grey_players_template = level`, 1.9, ligado no pacote)
 
 Relato do fórum (23/11): cinzentos de clube pequeno com atributos de divisão superior (um atacante 20 em finalização e desmarcação na Eerste Divisie). A causa é do jogo: a `create_virtual_player` (0x90e0a0) sorteia como molde qualquer natural da posição do banco (as primeiras 30.000 fichas), de qualquer nível, copia os 70 bytes e troca só o id, o número, o CA, o PA e as reputações. No original o CA despencava e escondia isso; com `grey_players = squad`, os atributos que não dependem do CA ficam os do molde.
 
-Com `grey_players_template = level` (só com `grey_players = squad`), depois da original o molde é trocado por um natural da mesma posição (o critério da original) com CA a até 8, 16 ou 32 do cinzento; os primeiros 15 bytes ficam. O sorteio é fixo pelo clube e pelo molde da original, então a mesma vaga recebe o mesmo molde. `original` (o padrão) é o jogo. Medido numa carreira de uma temporada: 1,8 milhão de cinzentos, todos com molde novo, a 4 de CA na mediana (95% a até 8). Ainda fora do configurador.
+Com `grey_players_template = level` (só com `grey_players = squad`), depois da original o molde é trocado por um natural da mesma posição (o critério da original) com CA a até 8, 16 ou 32 do cinzento; os primeiros 15 bytes ficam. O sorteio é fixo pelo clube e pelo molde da original, então a mesma vaga recebe o mesmo molde. `original` (o padrão) é o jogo. Medido numa carreira de uma temporada: 1,8 milhão de cinzentos, todos com molde novo, a 4 de CA na mediana (95% a até 8). Na 1.9 entra no configurador, e o `tweaks.cfg` do pacote vem com `level` e com a surpresa em 2% (era 5%: por vaga, num elenco com 20 cinzentos saía um por elenco, e dois relatos do fórum acharam generoso).
 
 ## 7. As provas e o que falta
 

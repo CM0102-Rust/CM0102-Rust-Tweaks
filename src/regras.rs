@@ -141,7 +141,7 @@ pub(crate) const PADRAO: Regras = Regras {
     origens: false,
     cinzentos: false,
     cinzentos_espalhar: 10,
-    cinzentos_surpresa: 5,
+    cinzentos_surpresa: 2,
     cinzentos_surpresa_min: 15,
     cinzentos_surpresa_max: 35,
     cinzentos_molde: false,
@@ -286,7 +286,7 @@ mod catalogo {
         let codigo = [
             include_str!("regras.rs"), include_str!("regens/fornada.rs"), include_str!("regens/nomes.rs"),
             include_str!("regens/cinzentos.rs"), include_str!("regens/origem.rs"), include_str!("lib.rs"),
-            include_str!("publico.rs"), include_str!("jogo/elenco.rs"), include_str!("mercado.rs"), include_str!("regens/efetivar.rs"), include_str!("jogo/narracao.rs"), include_str!("jogo/assumir.rs"),
+            include_str!("publico.rs"), include_str!("jogo/elenco.rs"), include_str!("mercado.rs"), include_str!("regens/efetivar.rs"), include_str!("jogo/narracao.rs"), include_str!("jogo/assumir.rs"), include_str!("jogo/ofertas.rs"),
         ]
         .concat();
         let configurador = [include_str!("../configurador/src/chaves.rs"), include_str!("../configurador/src/cfg.rs")].concat();

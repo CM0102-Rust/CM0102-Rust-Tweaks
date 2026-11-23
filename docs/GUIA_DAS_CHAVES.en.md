@@ -482,11 +482,17 @@ How far each grey player's CA can be above or below the club's level. With ± 5,
 
 Values: from 0 to 100 (whole number). Default: `10`.
 
+### The grey players' attributes — `grey_players_template`
+
+At the grey player's level: the grey player's attributes come from a player of the same position whose CA is close to his (within 8, 16 or 32). Original: the game copies the attributes of any player of the position in the database, at any level, and only changes the CA; with the CA at the club's level, a 5th tier grey player could have top-flight attributes (a striker with 20 finishing in a weak squad). The same club still gets the same grey player in the same place. Only with grey players at the club's level.
+
+Values: `original` (Original (from any level)), `level` (At the grey player's level). Default: `original`.
+
 ### Surprise (%) — `grey_players_surprise`
 
 The chance of a grey player being born above the club's level: the one who stands out among the others. It comes from the game's own draw, which is fixed per club and position: the surprise grey player is the same in every match while the place exists, and he can be made permanent. Only with grey players at the club's level. 0 = never.
 
-Values: from 0 to 100 (whole number). Default: `5`.
+Values: from 0 to 100 (whole number). Default: `2`.
 
 ### Surprise: from (CA above the level) — `grey_players_surprise_min`
 
@@ -533,6 +539,12 @@ Values: `1` on, `0` off. Default: `0`.
 ### Manager jobs at every national team — `national_team_jobs`
 
 Every national team can have a manager job vacancy, like the big ones. The original only opens one at a national team whose nation has more than 1,000 people in the database: the small ones (Puerto Rico, Comoros, San Marino...) never get one, and their manager's place stays as it is. On, the game opens those vacancies from the start of the career and the AI hires managers for them, taking them from clubs and other national teams: it changes the whole world, with or without you there. Applying for a small national team's job with Manage any national team already works without this key. Off by default.
+
+Values: `1` on, `0` off. Default: `0`.
+
+### Job offers on merit (experimental) — `manager_offers`
+
+Experimental. The human manager becomes a real candidate for club manager jobs. In the original, the game only offers you a job when you beat every AI manager for the vacancy, and judges you as if you were an AI manager who must want to come: no interest in the first 14 months in a job, only moving up, and a score made only of reputation (the attributes part, which the AI has, is skipped for the human). On: whether to accept is your decision when the offer arrives, so the only brake is a step up (you're unemployed, or the club has a higher reputation than yours); and the club judges you on merit, with what the game itself records: your board's confidence, your win rate and your titles and cups. The club's filters (foreigners, running leagues) and national team vacancies stay as in the original.
 
 Values: `1` on, `0` off. Default: `0`.
 
@@ -623,6 +635,18 @@ Values: from 0.1 to 10. Default: `2`.
 A player is more willing to go on loan where he'd be first or second choice of his line: minutes. 1 = the original.
 
 Values: from 0.1 to 10. Default: `1.3`.
+
+### Who goes on the loan list — `loan_list`
+
+Whom the AI owner puts on the loan list, where other clubs look. Whoever the owner would lend: every player the owner's rule would agree to lend, starters included (in a big squad, nearly everyone, stars too). Only players the club can spare: rotation status or below, and outside the first of his line at the club (goalkeepers 2, defence 5, midfield 5, attack 3). Measured over a season: list markings fall 45%.
+
+Values: `any` (Whoever the owner would lend), `spare` (Only players the club can spare). Default: `any`.
+
+### The destination club's level — `loan_level`
+
+An adult player (above the youngster age) only goes on loan to a club with reputation of at least this × his home reputation: a top-flight player doesn't go to the 5th tier. A youngster follows the Training margin. 0 = no limit. Measured over a season with 0.75: adults loaned to a club much smaller than them fall from 549 to 60.
+
+Values: from 0 to 2. Default: `0`.
 
 ### Demand for youngsters — `loan_youth_demand`
 

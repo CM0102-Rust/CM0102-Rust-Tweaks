@@ -123,6 +123,10 @@ fn original_de(nome: &str) -> Option<&'static str> {
         "stadium_occupancy" => "league",
         "stadium_size" | "stadium_seat_cost" | "stadium_ceiling_zero" => "original",
         "loans" => "off",
+        "loan_list" => "any",
+        "loan_level" => "0",
+        "grey_players_template" => "original",
+        "manager_offers" => "0",
         "budget_caps" => "original",
         "loan_request_willingness" => "3.5",
         "loan_requests" | "loan_home" | "loan_playing_time" | "loan_youth_demand" => "1",
@@ -230,6 +234,7 @@ fn unidade(nome: &str, en: bool) -> &'static str {
         "loan_squad_min" => t2(en, "jogadores no elenco", "players in the squad"),
         "loan_unhappiness" => t2(en, "de felicidade (−100 a 100)", "happiness (−100 to 100)"),
         "loan_unhappiness_gap" => t2(en, "de reputação a mais", "more reputation"),
+        "loan_level" => t2(en, "× a reputação dele", "× his reputation"),
         "loan_request_willingness" => t2(en, "(0 a 10; original 3,5)", "(0 to 10; original 3.5)"),
         "loan_requests" | "loan_home" | "loan_playing_time" | "loan_youth_demand" => t2(en, "× o original", "× the original"),
         "idle_rep" => t2(en, "de reputação (0 a 10.000)", "reputation (0 to 10,000)"),
@@ -859,6 +864,11 @@ impl App {
                 f(format!("O titular que o dono não deixa ir para um clube maior perde ⟦{}⟧ de felicidade: fica mais perto de pedir para sair.", x as i32),
                     format!("A starter the owner won't let go to a bigger club loses ⟦{}⟧ happiness: he gets closer to asking to leave.", x as i32))
             },
+            "loan_level" => if x <= 0.0 {
+                f("⟦Sem limite⟧: um jogador da primeira divisão pode ir emprestado a um clube da quinta, como hoje.".into(), "⟦No limit⟧: a top-flight player can go on loan to a 5th tier club, as today.".into())
+            } else {
+                f(format!("Um jogador de reputação 7.000 só vai emprestado a clubes de ⟦{} ou mais⟧.", self.milhar(7000.0 * x)), format!("A player of reputation 7,000 only goes on loan to clubs of ⟦{} or more⟧.", self.milhar(7000.0 * x)))
+            },
             "loan_unhappiness_gap" => f(format!("O titular de um clube de reputação 6.000 só se chateia se quem pede tem ⟦{} ou mais⟧.", self.milhar(6000.0 + x)),
                 format!("A starter at a 6,000 reputation club only gets upset if the asking club has ⟦{} or more⟧.", self.milhar(6000.0 + x))),
             "budget_caps" => if self.valor(nome) == "off" {
@@ -1386,6 +1396,7 @@ impl App {
             ui.label(RichText::new(t2(en, "O CA negativo do original é tratado pelo motor da partida como o pior jogador possível.", "The original's negative CA is treated by the match engine as the weakest possible player.")).size(11.5).color(CINZA()));
         });
         ui.add_space(10.0);
+        self.controle(ui, "grey_players_template", ativo);
         self.controle(ui, "grey_players_names", true);
         ui.add_space(10.0);
         ui.label(RichText::new(self.t("A surpresa", "The surprise")).strong().size(15.0).color(VERDE()));
@@ -1403,6 +1414,9 @@ impl App {
         ui.label(RichText::new(self.t("As seleções", "National teams")).strong().size(15.0).color(VERDE()));
         self.controle(ui, "manage_any_team", true);
         self.controle(ui, "national_team_jobs", true);
+        ui.add_space(10.0);
+        ui.label(RichText::new(self.t("Propostas de emprego", "Job offers")).strong().size(15.0).color(VERDE()));
+        self.controle(ui, "manager_offers", true);
     }
 
     /// O histórico de regens (`regen_origins.csv`): quantos, a busca por nome e limpar.
@@ -1608,7 +1622,7 @@ impl App {
                 self.controle(ui, "loans", true);
                 let e = self.ligado("loans");
                 App::cartao(ui, &self.t("Quem sai (a decisão do dono)", "Who goes (the owner's decision)"), |ui| {
-                    for k in ["loan_youth_age", "loan_youth_top", "loan_others_top", "loan_training_margin", "loan_cover_regular", "loan_cover_backup", "loan_cover_ratio", "loan_squad_min"] {
+                    for k in ["loan_list", "loan_youth_age", "loan_youth_top", "loan_others_top", "loan_level", "loan_training_margin", "loan_cover_regular", "loan_cover_backup", "loan_cover_ratio", "loan_squad_min"] {
                         self.controle(ui, k, e);
                     }
                 });

@@ -84,11 +84,11 @@ The grey players' surprise (`grey_players_surprise`, 5%, +15 to +35 CA above the
 
 At the human manager's national team (with `manage_any_team = 1`), the player made permanent is called up with no club and no contract: see [SELECOES.en.md](SELECOES.en.md) §3.
 
-### 6.1 The template by level (`grey_players_template = level`, off)
+### 6.1 The template by level (`grey_players_template = level`, 1.9, on in the package)
 
 Forum report (11/23): grey players at small clubs with attributes from a higher division (a striker with 20 finishing and off the ball in the Eerste Divisie). The cause is the game's: `create_virtual_player` (0x90e0a0) picks as template any natural of the position in the database (the first 30,000 records), at any level, copies the 70 bytes and changes only the id, the number, the CA, the PA and the reputations. In the original the CA plunged and hid this; with `grey_players = squad`, the attributes that don't depend on the CA stay the template's.
 
-With `grey_players_template = level` (only with `grey_players = squad`), after the original the template is swapped for a natural of the same position (the original's criterion) with CA within 8, 16 or 32 of the grey player's; the first 15 bytes stay. The draw is fixed by the club and the original's template, so the same place gets the same template. `original` (the default) is the game. Measured in a one-season career: 1.8 million grey players, all with a new template, 4 CA away at the median (95% within 8). Not in the configurator yet.
+With `grey_players_template = level` (only with `grey_players = squad`), after the original the template is swapped for a natural of the same position (the original's criterion) with CA within 8, 16 or 32 of the grey player's; the first 15 bytes stay. The draw is fixed by the club and the original's template, so the same place gets the same template. `original` (the default) is the game. Measured in a one-season career: 1.8 million grey players, all with a new template, 4 CA away at the median (95% within 8). In 1.9 it's in the configurator, and the package's `tweaks.cfg` comes with `level` and with the surprise at 2% (it was 5%: per place, a squad with 20 grey players got one, and two forum reports found it generous).
 
 ## 7. Proofs and what's left
 

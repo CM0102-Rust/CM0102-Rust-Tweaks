@@ -482,11 +482,17 @@ Quanto o CA de cada cinzento pode ficar acima ou abaixo do nível do clube. Com 
 
 Valores: de 0 a 100 (inteiro). Padrão: `10`.
 
+### Os atributos dos cinzentos — `grey_players_template`
+
+Do nível do cinzento: os atributos do cinzento vêm de um jogador da mesma posição com CA perto do dele (a até 8, 16 ou 32). Original: o jogo copia os atributos de qualquer jogador da posição no banco, de qualquer nível, e só troca o CA; com o CA no nível do clube, um cinzento da quinta divisão podia ter atributos de primeira divisão (um atacante com 20 em finalização no meio de um elenco fraco). O mesmo clube continua recebendo o mesmo cinzento na mesma vaga. Só com os cinzentos no nível do clube.
+
+Valores: `original` (Original (de qualquer nível)), `level` (Do nível do cinzento). Padrão: `original`.
+
 ### Surpresa (%) — `grey_players_surprise`
 
 A chance de um cinzento nascer acima do nível do clube: o jogador que se destaca no meio dos outros. Ele sai do mesmo sorteio do jogo, que é fixo por clube e posição: o cinzento-surpresa é o mesmo a cada partida enquanto a vaga existir, e dá para efetivá-lo. Só com os cinzentos no nível do clube. 0 = nunca.
 
-Valores: de 0 a 100 (inteiro). Padrão: `5`.
+Valores: de 0 a 100 (inteiro). Padrão: `2`.
 
 ### Surpresa: a partir de (CA acima do nível) — `grey_players_surprise_min`
 
@@ -533,6 +539,12 @@ Valores: `1` liga, `0` desliga. Padrão: `0`.
 ### Vagas de técnico em todas as seleções — `national_team_jobs`
 
 Toda seleção pode ter vaga de técnico, como as grandes. O original só abre vaga na seleção de uma nação com mais de 1.000 pessoas no banco: as pequenas (Porto Rico, Comores, São Marino...) nunca têm, e o lugar do técnico fica como está. Ligada, o jogo abre essas vagas desde o começo da carreira e a IA contrata técnicos para elas, tirando-os de clubes e de outras seleções: muda o mundo inteiro, com ou sem você lá. Candidatar-se à vaga de uma seleção pequena com Assumir qualquer seleção já funciona sem esta chave. Desligada por padrão.
+
+Valores: `1` liga, `0` desliga. Padrão: `0`.
+
+### Propostas de emprego pelo mérito (experimental) — `manager_offers`
+
+Experimental. O técnico humano passa a ser candidato de verdade às vagas de técnico de clube. No original, o jogo só oferece emprego quando você vence a disputa da vaga contra todos os técnicos da IA, e o avalia como se fosse um técnico da IA que precisa querer vir: sem interesse nos primeiros 14 meses no cargo, só aceitando subir, e com a nota feita só da reputação (a parte dos atributos, que a IA tem, é pulada para o humano). Ligada: aceitar ou não é decisão sua quando a proposta chega, então o único freio é ser um passo acima (você está desempregado, ou o clube tem reputação maior que o seu); e o clube o avalia pelo mérito, com o que o próprio jogo registra: a confiança da sua diretoria, o seu aproveitamento e os seus títulos e taças. Os filtros do clube (estrangeiros, ligas em andamento) e as vagas de seleção ficam como no original.
 
 Valores: `1` liga, `0` desliga. Padrão: `0`.
 
@@ -623,6 +635,18 @@ Valores: de 0.1 a 10. Padrão: `2`.
 O jogador topa mais ir emprestado para onde seria o primeiro ou o segundo da linha: minutos. 1 = o original.
 
 Valores: de 0.1 a 10. Padrão: `1.3`.
+
+### Quem entra na lista de empréstimos — `loan_list`
+
+Quem o dono da IA põe na lista de empréstimos, onde os outros clubes procuram. Quem o dono emprestaria: todo jogador que a regra do dono aceitaria emprestar, titulares inclusive (num elenco grande, quase todo mundo, até as estrelas). Só quem sobra no clube: estatuto de rotação para baixo e fora dos primeiros da linha dele no clube (goleiros 2, defesa 5, meio 5, ataque 3). Medido numa temporada: as marcações na lista caem 45%.
+
+Valores: `any` (Quem o dono emprestaria), `spare` (Só quem sobra no clube). Padrão: `any`.
+
+### O nível do clube de destino — `loan_level`
+
+O jogador adulto (acima da idade de jovem) só vai emprestado a um clube com reputação de pelo menos este tanto × a reputação dele em casa: um jogador da primeira divisão não vai para a quinta. O jovem segue a margem de treino. 0 = sem limite. Medido numa temporada com 0,75: os adultos emprestados a um clube muito menor que eles caem de 549 para 60.
+
+Valores: de 0 a 2. Padrão: `0`.
 
 ### Procura por jovens — `loan_youth_demand`
 

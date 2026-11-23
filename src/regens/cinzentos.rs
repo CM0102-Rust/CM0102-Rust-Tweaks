@@ -10,7 +10,7 @@ pub static mut ESPALHAR: i32 = 10;
 pub static mut REGISTRAR: bool = false;
 /// grey_players_surprise: (chance %, bônus mínimo, bônus máximo). A surpresa sai do mesmo `rand` semeado por clube e
 /// grupo, então o cinzento-surpresa é o mesmo a cada partida enquanto a vaga existir.
-pub static mut SURPRESA: (i32, i32, i32) = (5, 15, 35);
+pub static mut SURPRESA: (i32, i32, i32) = (2, 15, 35);
 /// grey_players_template = level: o molde dos atributos pelo nível (`molde_do_nivel`), chamado depois de
 /// `create_virtual_player` pelo desvio de efetivar.rs.
 pub static mut MOLDE: bool = false;

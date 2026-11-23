@@ -909,9 +909,9 @@ pub(crate) unsafe fn instalar() {
     }
     if c.emp_regra {
         registro::linha(&format!("loans: on (youth up to {} among the top {} of his line, others top {}, cover {}/{} at {}%, owner keeps {}+, \
-            request willingness {}, requests x{}, home x{}, playing time x{}, youth demand x{}, unhappiness {} at +{} reputation)", c.idade_rodagem, c.vaga_jovem, c.vaga_outros,
+            request willingness {}, requests x{}, home x{}, playing time x{}, youth demand x{}, unhappiness {} at +{} reputation, list {}, adults to clubs of {}x their reputation or more)", c.idade_rodagem, c.vaga_jovem, c.vaga_outros,
             c.cobertura_min, c.cobertura_reserva, (c.cobertura_ratio * 100.0).round(), c.elenco_min, c.vontade_pedido, 1 << (c.pedido_div - 2).clamp(0, 30),
-            c.fator_casa, c.fator_minutos, c.procura_jovem, c.insatisfacao, c.insat_dif));
+            c.fator_casa, c.fator_minutos, c.procura_jovem, c.insatisfacao, c.insat_dif, if c.lista_sobra { "spare" } else { "any" }, c.emp_nivel));
         instalar_fim_do_emprestimo();
         // a decisão do dono (0x84af00): nas carreiras de medição o embrulho do estudo já chama a regra
         if !estudo {
