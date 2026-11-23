@@ -484,6 +484,8 @@ static mut MELHOR: (i32, usize) = (i32::MIN, 0);
 static mut REP_FORCADA: Option<[i16; 3]> = None;
 /// `TWEAKS_BONUS_TECNICO=N`: soma N à nota do humano no laço das vagas (o experimento da opção B).
 static mut BONUS: i32 = 0;
+/// `TWEAKS_LEALDADE_TECNICO=N`: o +0x59 dos humanos em N a cada vaga (o experimento da opção 2: 20 no jogo).
+static mut LEALDADE: Option<i8> = None;
 
 unsafe fn humano(p: usize) -> bool {
     let n = d(0xae2364);
@@ -506,6 +508,11 @@ unsafe extern "thiscall" fn vaga(this: usize, clube: usize, anterior: usize) {
     MELHOR = (i32::MIN, 0);
     let (base, n) = (d(0xae23bc), d(0xae2364));
     let humanos: Vec<usize> = (0..16usize.min(n)).map(|i| base + (n - 1 - i) * 0x6e).filter(|&t| b(t + 0x5f) == 1 && d(t + 0x69) != 0).collect();
+    if let Some(l) = LEALDADE {
+        for &t in &humanos {
+            *((t + 0x59) as *mut i8) = l;
+        }
+    }
     if let Some(r) = REP_FORCADA {
         for &t in &humanos {
             for (k, o) in [8usize, 0xa, 0xc].into_iter().enumerate() {
@@ -579,6 +586,7 @@ pub(crate) unsafe fn instalar_vagas() {
             REP_FORCADA = Some([r[0], r[1], r[2]]);
         }
     }
+    LEALDADE = std::env::var("TWEAKS_LEALDADE_TECNICO").ok().and_then(|v| v.trim().parse().ok());
     BONUS = std::env::var("TWEAKS_BONUS_TECNICO").ok().and_then(|v| v.trim().parse().ok()).unwrap_or(0);
     let chama = *(0x69be55 as *const u8) == 0xe8 && 0x69be5ausize.wrapping_add(core::ptr::read_unaligned(0x69be56 as *const i32) as usize) == 0x69d1b0;
     if !chama {
@@ -588,7 +596,7 @@ pub(crate) unsafe fn instalar_vagas() {
         Some(t) => {
             T_VAGA = t;
             chamar(0x69be55, nota as *const () as usize);
-            registro::linha(&format!("study: manager vacancies to estudo_vagas.tsv (forced human reputations: {:?}; human score bonus {})", { REP_FORCADA }, { BONUS }));
+            registro::linha(&format!("study: manager vacancies to estudo_vagas.tsv (forced human reputations: {:?}; human score bonus {}; human loyalty {:?})", { REP_FORCADA }, { BONUS }, { LEALDADE }));
         }
         None => registro::linha("study: add_job_vacancy 0x69ba50 differs; no vacancy study"),
     }

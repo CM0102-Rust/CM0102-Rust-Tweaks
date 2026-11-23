@@ -69,6 +69,15 @@ O bônus funciona onde o humano já passa os filtros: na prática, quando está 
 
 Os humanos têm o +0x59 em 20 (o máximo): a regra do tempo no cargo pede `(20 + 8) × 15 = 420` dias, o mais longo possível. Para um técnico da IA com 10, são 270. O jogo trata o humano como o técnico mais leal que existe.
 
+O experimento `TWEAKS_LEALDADE_TECNICO=10` (o +0x59 dos humanos em 10), duas carreiras de duas temporadas com a reputação real:
+
+| Lealdade | Bônus | Vagas | Barrado (estrangeiro / região / adequação / nota) | Vence | O que aconteceu |
+|---|---|---|---|---|---|
+| 10 | 0 | 169 | 0 / 128 / 34 / 7 | 0 | no Stoke City (Championship), passou a adequação de Newcastle, Wolverhampton, Crystal Palace, Chelsea e West Bromwich (todos da Premier) e perdeu na nota: 5.400 a 6.900 contra 10.500 a 15.600 |
+| 10 | 3.000 | 153 | 114 / 0 / 29 / 9 | 1 | no Prato (Série C), passou para Milan, Bolonha e Reggiana e perdeu na nota (6.000 contra 6.700 a 13.000); desempregado, venceu a vaga da Ternana e foi contratado |
+
+**Com a lealdade em 10 a janela abre**: o humano empregado passa a ser considerado pelos clubes maiores da própria nação. A trava seguinte é a nota, com uma diferença de 4.000 a 9.000 pontos para os vencedores nos clubes grandes; um bônus de 3.000 não chega lá.
+
 ### 4.3 Recomendação
 
 O relato pede três coisas que hoje o jogo não faz, e cada uma tem uma causa:
@@ -80,3 +89,5 @@ O relato pede três coisas que hoje o jogo não faz, e cada uma tem uma causa:
 Antes da 2, falta conferir onde mais o jogo lê o +0x59 de um técnico (a adequação de 0x69f810 também o usa, `(+0x59 + 21) × 10` dias), para não mudar outra coisa do humano junto; a alternativa é trocar só a conta do tempo no cargo dentro da 0x844780 quando a pessoa é humana.
 
 Ordem sugerida: 2 (efeito só no humano), depois 1 (a mudança grande, com teste longo), e o bônus só se as duas não bastarem. A IA continua escolhendo pelas mesmas regras; o humano passa a ser candidato de verdade.
+
+Pelas medições, a 2 sozinha abre a porta mas não dá proposta: a diferença de nota nos clubes grandes (4.000 a 9.000) pede a 1, a reputação que cresce com o sucesso, ou um bônus da ordem de 5.000 a 8.000, que seria um número arbitrário. A 1 é a resposta que o relato pede.

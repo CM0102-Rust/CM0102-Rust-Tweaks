@@ -69,6 +69,15 @@ The bonus works where the human already passes the filters: in practice, when he
 
 Humans have +0x59 at 20 (the maximum): the time-in-job rule asks for `(20 + 8) × 15 = 420` days, the longest possible. For an AI manager with 10, it's 270. The game treats the human as the most loyal manager there is.
 
+The `TWEAKS_LEALDADE_TECNICO=10` experiment (the humans' +0x59 at 10), two two-season careers with the real reputation:
+
+| Loyalty | Bonus | Vacancies | Blocked (foreign / region / suitability / score) | Wins | What happened |
+|---|---|---|---|---|---|
+| 10 | 0 | 169 | 0 / 128 / 34 / 7 | 0 | at Stoke City (Championship), passed suitability for Newcastle, Wolverhampton, Crystal Palace, Chelsea and West Bromwich (all Premier League) and lost on score: 5,400 to 6,900 against 10,500 to 15,600 |
+| 10 | 3,000 | 153 | 114 / 0 / 29 / 9 | 1 | at Prato (Serie C), passed for Milan, Bologna and Reggiana and lost on score (6,000 against 6,700 to 13,000); unemployed, he won Ternana's vacancy and was hired |
+
+**With loyalty at 10 the window opens**: the employed human starts being considered by the bigger clubs of his own nation. The next block is the score, 4,000 to 9,000 points behind the winners at the big clubs; a 3,000 bonus doesn't get there.
+
 ### 4.3 Recommendation
 
 The report asks for three things the game doesn't do today, and each has a cause:
@@ -80,3 +89,5 @@ The report asks for three things the game doesn't do today, and each has a cause
 Before 2, it remains to check where else the game reads a manager's +0x59 (the suitability at 0x69f810 uses it too, `(+0x59 + 21) × 10` days), so as not to change something else about the human along with it; the alternative is to change only the time-in-job count inside 0x844780 when the person is human.
 
 Suggested order: 2 (effect on the human only), then 1 (the big change, with a long test), and the bonus only if the two aren't enough. The AI keeps choosing by the same rules; the human becomes a real candidate.
+
+By the measurements, 2 alone opens the door but gives no offer: the score gap at the big clubs (4,000 to 9,000) calls for 1, reputation growing with success, or a bonus of around 5,000 to 8,000, which would be an arbitrary number. 1 is the answer the report asks for.
