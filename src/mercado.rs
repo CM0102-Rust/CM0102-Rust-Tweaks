@@ -197,11 +197,24 @@ unsafe fn volta_para_casa(p: usize, dono: usize, destino: usize) -> bool {
 /// Os primeiros da linha que o dono nunca põe na lista (goleiro, defesa, meio, ataque): os titulares e um a mais.
 const SOBRA: [i32; 4] = [2, 5, 5, 3];
 
-/// loan_list = spare: o jogador sobra no próprio clube? Rotação ou abaixo (estatuto 3 a 7) e fora dos SOBRA primeiros da
-/// linha dele no dono.
+/// Os primeiros do elenco inteiro, pelo CA, que o dono nunca põe na lista: o time de jogo (11 titulares e 9 no banco, o
+/// limite das regras recentes).
+const TIME_DE_JOGO: i32 = 20;
+
+/// loan_list = spare: o jogador sobra no próprio clube? Rotação ou abaixo (estatuto 3 a 7), fora dos SOBRA primeiros da
+/// linha dele no dono e fora dos TIME_DE_JOGO melhores do elenco inteiro (relato do fórum de 25/11: no clube grande, o
+/// sexto meio pelo CA, como o Tchouaméni no Real Madrid, saía como sobra da linha, mas está no banco de qualquer jogo).
 unsafe fn sobra(dono: usize, p: usize, k: usize) -> bool {
     let st = (*((k + 0x4f) as *const u8) >> 4) as i32;
-    st >= 3 && posto(dono, p) > SOBRA[linha(d(p + 0x61))]
+    if st < 3 || posto(dono, p) <= SOBRA[linha(d(p + 0x61))] {
+        return false;
+    }
+    let ca = w(d(p + 0x61) + 5) as i32;
+    let acima = (0..50).map(|j| d(dono + 0xd7 + 4 * j))
+        .filter(|&q| q != p && crate::elenco::pessoa_valida(q) && d(q + 0x39) == dono && d(q + 0x61) != 0)
+        .filter(|&q| w(d(q + 0x61) + 5) as i32 > ca)
+        .count() as i32;
+    acima >= TIME_DE_JOGO
 }
 
 /// A regra A sem o destino: o dono da IA aceitaria emprestar este jogador (contrato `k`)? `casa` relaxa a cobertura.

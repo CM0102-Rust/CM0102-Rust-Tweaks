@@ -138,7 +138,11 @@ O relato mostrou elencos inteiros na lista de empréstimos, Messi e Modric inclu
 - `loan_list = spare`: só entra na lista quem sobra no próprio clube, ou seja, estatuto de rotação para baixo (3 a 7) e fora dos primeiros da linha dele no dono (goleiro 2, defesa 5, meio 5, ataque 3). `any` (o padrão) é a regra B de antes.
 - `loan_level = F`: o adulto (acima de `loan_youth_age`) só aceita um clube com reputação de pelo menos F × a reputação em casa dele. 0 (o padrão) é sem a regra. O jovem segue a regra do treino.
 
-Medido (duas carreiras escondidas de uma temporada, ligas ENG BRA ITA, com e sem `loan_list = spare` e `loan_level = 0.75`): as marcações na lista caíram 45% (de 86 mil para 47 mil), os emprestados de 1.194 para 961, e os adultos emprestados a um clube com menos de 75% da reputação deles de 549 para 60. Na 1.9 as duas entram no configurador, e o `tweaks.cfg` do pacote vem com `loan_list = spare` e `loan_level = 0.75`; sem a linha, vale o comportamento anterior.
+Medido (duas carreiras escondidas de uma temporada, ligas ENG BRA ITA, com e sem `loan_list = spare` e `loan_level = 0.75`): as marcações na lista caíram 45% (de 86 mil para 47 mil), os emprestados de 1.194 para 961, e os adultos emprestados a um clube com menos de 75% da reputação deles de 549 para 60.
+
+**Na 1.10** (relato do fórum de 25/11: Doku e Tchouaméni, titulares de fato, na lista), `spare` também exige que o jogador esteja fora dos 20 melhores do elenco inteiro pelo CA (o time de jogo: 11 titulares e 9 no banco, o limite das regras recentes). No clube grande, o sexto meio pelo CA saía como sobra da linha, mas está no banco de qualquer jogo. Medido numa temporada (ENG BRA ITA, `tweaks.cfg` do pacote): as marcações caíram de 47 mil para 35 mil (eram 86 mil sem `spare`).
+
+Na 1.9 as duas entram no configurador, e o `tweaks.cfg` do pacote vem com `loan_list = spare` e `loan_level = 0.75`; sem a linha, vale o comportamento anterior.
 
 ## 6. O que não entrou, e o que ainda não se sabe
 

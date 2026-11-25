@@ -124,6 +124,7 @@ fn original_de(nome: &str) -> Option<&'static str> {
         "stadium_size" | "stadium_seat_cost" | "stadium_ceiling_zero" => "original",
         "loans" => "off",
         "loan_list" => "any",
+        "scout_reputation" => "100",
         "loan_level" => "0",
         "grey_players_template" => "original",
         "manager_offers" => "0",
@@ -235,6 +236,7 @@ fn unidade(nome: &str, en: bool) -> &'static str {
         "loan_unhappiness" => t2(en, "de felicidade (−100 a 100)", "happiness (−100 to 100)"),
         "loan_unhappiness_gap" => t2(en, "de reputação a mais", "more reputation"),
         "loan_level" => t2(en, "× a reputação dele", "× his reputation"),
+        "scout_reputation" => t2(en, "% de fama (100 = o original)", "% fame (100 = the original)"),
         "loan_request_willingness" => t2(en, "(0 a 10; original 3,5)", "(0 to 10; original 3.5)"),
         "loan_requests" | "loan_home" | "loan_playing_time" | "loan_youth_demand" => t2(en, "× o original", "× the original"),
         "idle_rep" => t2(en, "de reputação (0 a 10.000)", "reputation (0 to 10,000)"),
@@ -863,6 +865,12 @@ impl App {
             } else {
                 f(format!("O titular que o dono não deixa ir para um clube maior perde ⟦{}⟧ de felicidade: fica mais perto de pedir para sair.", x as i32),
                     format!("A starter the owner won't let go to a bigger club loses ⟦{}⟧ happiness: he gets closer to asking to leave.", x as i32))
+            },
+            "scout_reputation" => if x >= 100.0 {
+                f("⟦Como o original⟧: um olheiro de julgamento 10 vê o jogador com um quarto de fama; o regen bom e desconhecido parece pior do que é.".into(), "⟦As in the original⟧: a scout with judging 10 sees the player with a quarter of fame; a good unknown regen looks worse than he is.".into())
+            } else {
+                let fama = 25.0 * x / 100.0;
+                f(format!("Um olheiro de julgamento 10 vê o jogador com ⟦{}% de fama⟧ (o original, 25%); o resto é a habilidade, com o erro do olheiro.", self.n(fama)), format!("A scout with judging 10 sees the player with ⟦{}% fame⟧ (the original, 25%); the rest is ability, with the scout's error.", self.n(fama)))
             },
             "loan_level" => if x <= 0.0 {
                 f("⟦Sem limite⟧: um jogador da primeira divisão pode ir emprestado a um clube da quinta, como hoje.".into(), "⟦No limit⟧: a top-flight player can go on loan to a 5th tier club, as today.".into())
@@ -1639,6 +1647,9 @@ impl App {
                 App::cartao(ui, &self.t("A trava da verba", "The budget brake"), |ui| {
                     self.controle(ui, "budget_caps", true);
                 });
+                App::cartao(ui, &self.t("Os seus olheiros", "Your scouts"), |ui| {
+                    self.controle(ui, "scout_reputation", true);
+                });
             });
             ui.add_space(18.0);
             let dir = ui.available_width();
@@ -2320,7 +2331,7 @@ mod testes {
         std::fs::write(pasta.join("tweaks.cfg"), cfg::DISTRIBUIDO).unwrap();
         let mut a = App::new(pasta.clone());
         assert_eq!(a.mudancas(), 0);
-        a.definir("log", "1");
+        a.definir("log", "0");
         a.definir("unattached", "original");
         a.definir_idade(27, 1.5, -1);
         a.definir("sigma", "2500"); // igual ao que está: nada muda

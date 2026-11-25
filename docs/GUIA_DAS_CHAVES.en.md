@@ -40,7 +40,7 @@ Values: `playable` (Playable leagues), `selected` (Background leagues too). Defa
 
 The day of the year for player retirements. In the original game each one retires on a date of its own (usually the country's season end). With a day (counted from 0 = 1 January), every retirement set from then on happens on it; a little before the intake, whoever retires is born in the next intake. Works with or without the intake. In tweaks.cfg any day from 0 to 365 works.
 
-Values: `original` (The game's own dates), `174` (24 June (day 174, a week before 1 July)), `358` (24 December (day 358)). Default: `original`.
+Values: `original` (The game's own dates), `174` (24 June (day 174, a week before 1 July)), `212` (1 August (day 212, after the World Cup and Copa América)), `358` (24 December (day 358)). Default: `original`.
 
 ### Intake message — `intake_news`
 
@@ -648,6 +648,12 @@ An adult player (above the youngster age) only goes on loan to a club with reput
 
 Values: from 0 to 2. Default: `0`.
 
+### Fame in your scouts' judgement (%) — `scout_reputation`
+
+How much of a player's fame goes into your club's scouts' judgement. In the original, a scout's estimate of a player's ability or potential blends the real value with his reputation; how much is fame depends on the scout's judging (with 10, a quarter). At the start the good players are the database's stars, and fame helps; years later the good ones are young unknown regens, and fame works against them: a regen with 190 potential can look like 140, and five-star reports disappear. 100 = the original; 0 = only ability, with the error that already depends on the scout. Stars stay relative to your club. The AI judges as in the original.
+
+Values: from 0 to 100 (whole number). Default: `100`.
+
 ### Demand for youngsters — `loan_youth_demand`
 
 When an AI club picks whom to ask for in a loan slot, a youngster who would play there (among the first of his line, going home or to Training within the margin) scores this much more. Without it, spare adults win the slots and youth loans fall by half. 1 = the original.
@@ -745,9 +751,9 @@ tweaks.log is the DLL's diary: the exe it found, what each tweak did and, with l
 
 ### Log (tweaks.log) — `log`
 
-Writes tweaks.log next to the exe: what each tweak did, each youngster and his club, error boxes and, every July, a picture of the population. For testing and to send when something goes wrong. Off in normal use.
+Writes tweaks.log next to the exe: what each tweak did, each youngster and his club, each intake, error boxes and, every July, a picture of the population. It's small, and it's what we need when something goes wrong: send it with your report. On by default; off, only the start-up lines.
 
-Values: `1` on, `0` off. Default: `0`.
+Values: `1` on, `0` off. Default: `1`.
 
 ## Regen origins
 

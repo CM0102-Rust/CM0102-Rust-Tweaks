@@ -105,7 +105,8 @@ unsafe extern "C" fn ca_do_cinzento(clube: usize, _jovem: i32, _reserva: i32, or
     if surpresa {
         ca = (base + min + rand() % (max - min + 1)).clamp(1, 200);
     }
-    if REGISTRAR {
+    // ponytail: uma linha por cinzento criado dá ~100 MB por temporada; com o log ligado por padrão, só no estudo
+    if REGISTRAR && crate::estudo::ligado() {
         registro::linha(&(format!("grey\t{}\t{}\t{}\t{}\t{}\t{}\t{}", data_do_jogo(), nome(clube), rep, fonte, base, original as i16, ca) + if surpresa { "\tsurprise" } else { "" }));
     }
     ca

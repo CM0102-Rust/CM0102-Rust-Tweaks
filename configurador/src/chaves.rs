@@ -117,7 +117,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "intake_per_club", aba: Aba::Fornada, tipo: num(1.0, 20.0, 1.0, 10.0, true), padrao: "3", rotulo: ("Regens por clube em cada fornada", "Regens per club per intake") },
     Chave { nome: "intake_day", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("season_end", "Fim da temporada de cada nação", "Each nation's season end"), ("181", "1º de julho (dia 181), para todos", "1 July (day 181), for everyone"), ("0", "1º de janeiro (dia 0), para todos", "1 January (day 0), for everyone")]), padrao: "season_end", rotulo: ("Dia da fornada", "Intake day") },
     Chave { nome: "intake_clubs", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("playable", "Ligas jogáveis", "Playable leagues"), ("selected", "Também as ligas de fundo", "Background leagues too")]), padrao: "playable", rotulo: ("Clubes que recebem", "Clubs that get them") },
-    Chave { nome: "retire_day", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("original", "Datas do próprio jogo", "The game's own dates"), ("174", "24 de junho (dia 174, uma semana antes do 1º de julho)", "24 June (day 174, a week before 1 July)"), ("358", "24 de dezembro (dia 358)", "24 December (day 358)")]), padrao: "original", rotulo: ("Dia das aposentadorias", "Retirement day") },
+    Chave { nome: "retire_day", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("original", "Datas do próprio jogo", "The game's own dates"), ("174", "24 de junho (dia 174, uma semana antes do 1º de julho)", "24 June (day 174, a week before 1 July)"), ("212", "1º de agosto (dia 212, depois das Copas e da Copa América)", "1 August (day 212, after the World Cup and Copa América)"), ("358", "24 de dezembro (dia 358)", "24 December (day 358)")]), padrao: "original", rotulo: ("Dia das aposentadorias", "Retirement day") },
     Chave { nome: "intake_news", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("1", "Mensagem na caixa de entrada", "Inbox message"), ("0", "Sem mensagem", "No message")]), padrao: "1", rotulo: ("Mensagem da fornada", "Intake message") },
     Chave { nome: "intake_news_numbers", aba: Aba::Fornada, tipo: Tipo::Escolha(&[("0", "Só o parecer do treinador", "Only the coach's view"), ("1", "Parecer, CA e PA", "View, CA and PA")]), padrao: "0", rotulo: ("Na mensagem", "In the message") },
     Chave { nome: "attendance", aba: Aba::Publico, tipo: Tipo::Escolha(&[("off", "Desligado (o jogo original)", "Off (the original game)"), ("on", "Ligado (a nossa regra)", "On (our rule)")]), padrao: "on", rotulo: ("Público", "Attendance") },
@@ -162,6 +162,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "loan_playing_time", aba: Aba::Emprestimos, tipo: num(0.1, 10.0, 1.0, 3.0, false), padrao: "1.3", rotulo: ("Vontade de ir para onde joga", "Willingness to go where he plays") },
     Chave { nome: "loan_list", aba: Aba::Emprestimos, tipo: Tipo::Escolha(&[("any", "Quem o dono emprestaria", "Whoever the owner would lend"), ("spare", "Só quem sobra no clube", "Only players the club can spare")]), padrao: "any", rotulo: ("Quem entra na lista de empréstimos", "Who goes on the loan list") },
     Chave { nome: "loan_level", aba: Aba::Emprestimos, tipo: num(0.0, 2.0, 0.0, 1.5, false), padrao: "0", rotulo: ("O nível do clube de destino", "The destination club's level") },
+    Chave { nome: "scout_reputation", aba: Aba::Emprestimos, tipo: num(0.0, 100.0, 0.0, 100.0, true), padrao: "100", rotulo: ("A fama no julgamento dos seus olheiros (%)", "Fame in your scouts' judgement (%)") },
     Chave { nome: "loan_youth_demand", aba: Aba::Emprestimos, tipo: num(0.1, 10.0, 1.0, 5.0, false), padrao: "3", rotulo: ("Procura por jovens", "Demand for youngsters") },
     Chave { nome: "loan_unhappiness", aba: Aba::Emprestimos, tipo: num(0.0, 200.0, 0.0, 100.0, true), padrao: "30", rotulo: ("O titular barrado perde de felicidade", "The blocked starter loses in happiness") },
     Chave { nome: "loan_unhappiness_gap", aba: Aba::Emprestimos, tipo: num(0.0, 10000.0, 0.0, 3000.0, true), padrao: "1000", rotulo: ("Quanto maior o clube que pede", "How much bigger the asking club is") },
@@ -169,7 +170,7 @@ pub const CHAVES: &[Chave] = &[
     Chave { nome: "squad_guard", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "1", rotulo: ("Proteção do elenco (jogador repetido)", "Squad guard (repeated player)") },
     Chave { nome: "match_text_guard", aba: Aba::Jogo, tipo: Tipo::Liga, padrao: "1", rotulo: ("Proteção da narração (lance sem texto)", "Commentary guard (event with no text)") },
     Chave { nome: "regen_origins", aba: Aba::Registro, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registrar de quem é cada regen", "Record where each regen comes from") },
-    Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "0", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
+    Chave { nome: "log", aba: Aba::Log, tipo: Tipo::Liga, padrao: "1", rotulo: ("Registro (tweaks.log)", "Log (tweaks.log)") },
 ];
 
 /// A tabela de idades sem as linhas (`PADRAO.peso_da_idade` e `teto_da_idade`), de 14 a 35.

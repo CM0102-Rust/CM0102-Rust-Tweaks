@@ -138,7 +138,11 @@ The report showed whole squads on the loan list, Messi and Modric included, and 
 - `loan_list = spare`: only players the club can spare go on the list, that is, rotation status or below (3 to 7) and outside the first of their line at the owner (goalkeeper 2, defence 5, midfield 5, attack 3). `any` (the default) is the former rule B.
 - `loan_level = F`: an adult (above `loan_youth_age`) only accepts a club with reputation of at least F × his home reputation. 0 (the default) means no rule. A youngster follows the training rule.
 
-Measured (two hidden one-season careers, leagues ENG BRA ITA, with and without `loan_list = spare` and `loan_level = 0.75`): list markings fell 45% (from 86 thousand to 47 thousand), loaned players from 1,194 to 961, and adults loaned to a club with less than 75% of their reputation from 549 to 60. In 1.9 both are in the configurator, and the package's `tweaks.cfg` comes with `loan_list = spare` and `loan_level = 0.75`; without the line, the former behaviour stays.
+Measured (two hidden one-season careers, leagues ENG BRA ITA, with and without `loan_list = spare` and `loan_level = 0.75`): list markings fell 45% (from 86 thousand to 47 thousand), loaned players from 1,194 to 961, and adults loaned to a club with less than 75% of their reputation from 549 to 60.
+
+**In 1.10** (forum report of 11/25: Doku and Tchouaméni, starters in practice, on the list), `spare` also requires the player to be outside his whole squad's 20 best by CA (the matchday squad: 11 starters and 9 on the bench, the limit in recent rules). At a big club, the sixth midfielder by CA counted as spare in his line, but he's on the bench every match. Measured over a season (ENG BRA ITA, the package's `tweaks.cfg`): list markings fell from 47 thousand to 35 thousand (86 thousand without `spare`).
+
+In 1.9 both are in the configurator, and the package's `tweaks.cfg` comes with `loan_list = spare` and `loan_level = 0.75`; without the line, the former behaviour stays.
 
 ## 6. What didn't go in, and what isn't known yet
 

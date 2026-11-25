@@ -40,7 +40,7 @@ Valores: `playable` (Ligas jogáveis), `selected` (Também as ligas de fundo). P
 
 O dia do ano das aposentadorias de jogadores. No jogo original, cada um se aposenta numa data própria (em geral o fim da temporada do país). Com um dia (contado de 0 = 1º de janeiro), todas as aposentadorias marcadas a partir de agora acontecem nele; um pouco antes da fornada, quem se aposenta já nasce na fornada seguinte. Vale com ou sem a fornada. No tweaks.cfg vale qualquer dia de 0 a 365.
 
-Valores: `original` (Datas do próprio jogo), `174` (24 de junho (dia 174, uma semana antes do 1º de julho)), `358` (24 de dezembro (dia 358)). Padrão: `original`.
+Valores: `original` (Datas do próprio jogo), `174` (24 de junho (dia 174, uma semana antes do 1º de julho)), `212` (1º de agosto (dia 212, depois das Copas e da Copa América)), `358` (24 de dezembro (dia 358)). Padrão: `original`.
 
 ### Mensagem da fornada — `intake_news`
 
@@ -648,6 +648,12 @@ O jogador adulto (acima da idade de jovem) só vai emprestado a um clube com rep
 
 Valores: de 0 a 2. Padrão: `0`.
 
+### A fama no julgamento dos seus olheiros (%) — `scout_reputation`
+
+Quanto da fama do jogador entra no julgamento dos olheiros do seu clube. No original, a estimativa do olheiro sobre a habilidade ou o potencial de um jogador mistura o valor real com a reputação dele; quanto é fama depende do julgamento do olheiro (com 10, um quarto). No começo do jogo os bons são as estrelas do banco, e a fama ajuda; anos depois, os bons são regens jovens e desconhecidos, e a fama atrapalha: um regen de potencial 190 pode parecer 140, e os relatórios de 5 estrelas somem. 100 = o original; 0 = só a habilidade, com o erro que já depende do olheiro. As estrelas continuam relativas ao seu clube. A IA julga como no original.
+
+Valores: de 0 a 100 (inteiro). Padrão: `100`.
+
 ### Procura por jovens — `loan_youth_demand`
 
 Quando um clube da IA escolhe quem pedir numa vaga de empréstimo, o jovem que jogaria ali (entre os primeiros da linha, indo para casa ou para um treino dentro da margem) vale este tanto a mais na nota. Sem isso, os adultos que sobram ganham as vagas e os jovens emprestados caem pela metade. 1 = o original.
@@ -745,9 +751,9 @@ O tweaks.log é o diário da DLL: o exe que ela encontrou, o que cada ajuste fez
 
 ### Registro (tweaks.log) — `log`
 
-Grava o tweaks.log ao lado do exe: o que cada ajuste fez, cada jovem e o clube, as caixas de erro e, todo julho, o retrato da população. Para testar e para mandar quando algo der errado. Desligado no uso normal.
+Grava o tweaks.log ao lado do exe: o que cada ajuste fez, cada jovem e o clube, cada fornada, as caixas de erro e, todo julho, o retrato da população. É pequeno e é o que precisamos quando algo dá errado: mande-o junto com o relato. Ligado por padrão; desligado, só as linhas da partida.
 
-Valores: `1` liga, `0` desliga. Padrão: `0`.
+Valores: `1` liga, `0` desliga. Padrão: `1`.
 
 ## De quem é cada regen
 
